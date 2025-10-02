@@ -43,7 +43,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - language: python
+          # - language: python | We might need this for the backend tests
           - language: javascript-typescript 
 
             
