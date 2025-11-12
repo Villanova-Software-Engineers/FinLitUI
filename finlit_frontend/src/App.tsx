@@ -6,6 +6,7 @@ import NeedsPage from './50-30-20/needs'
 import WantsPage from './50-30-20/wants'
 import SavingsPage from './50-30-20/savings'
 import CalculatorPage from './50-30-20/calculator'
+import MainPage from './50-30-20/MainPage'
 
 function Dashboard() {
   return <FinLitApp />
