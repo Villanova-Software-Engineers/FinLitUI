@@ -6,6 +6,7 @@ import NeedsPage from './50-30-20/needs'
 import WantsPage from './50-30-20/wants'
 import SavingsPage from './50-30-20/savings'
 import CalculatorPage from './50-30-20/calculator'
+import MainPage from './50-30-20/MainPage'
 
 function Dashboard() {
   return <FinLitApp />
@@ -19,7 +20,7 @@ function App() {
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/fin" element={<FinancialRoadmap />} />
-        <Route path="/" element={<MainPage />} />
+        <Route path="/mainpage" element={<MainPage />} />
         <Route path="/needs" element={<NeedsPage />} />
         <Route path="/wants" element={<WantsPage />} />
         <Route path="/savings" element={<SavingsPage />} />

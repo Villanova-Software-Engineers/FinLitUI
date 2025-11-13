@@ -1,15 +1,75 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 
 const CalculatorPage = () => {
   const [amount, setAmount] = useState('');
 
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   const num = parseFloat(amount) || 0;
   const needs = num * 0.5;
   const wants = num * 0.3;
   const savings = num * 0.2;
   const navigate = useNavigate();
+
+  // Limit numeric input to MAX_DIGITS digits (ignores non-digit chars like . or ,)
+  const MAX_DIGITS = 15;
+
+  const trimToMaxDigits = (value, max = MAX_DIGITS) => {
+    let digitsTaken = 0;
+    let out = '';
+    for (let i = 0; i < value.length; i++) {
+      const ch = value[i];
+      if (/\d/.test(ch)) {
+        if (digitsTaken < max) {
+          out += ch;
+          digitsTaken += 1;
+        } else {
+          // skip extra digits
+          continue;
+        }
+      } else {
+        // keep non-digit characters (decimal points, commas, currency symbols)
+        out += ch;
+      }
+    }
+    return out;
+  };
+
+  const handleChange = (e) => {
+    const val = e.target.value;
+    const digitCount = (val.match(/\d/g) || []).length;
+    if (digitCount <= MAX_DIGITS) {
+      setAmount(val);
+    } else {
+      // Trim any extra digits while preserving non-digit characters
+      setAmount(trimToMaxDigits(val, MAX_DIGITS));
+    }
+  };
+
+  const handlePaste = (e) => {
+    const paste = (e.clipboardData || window.clipboardData).getData('text');
+    const input = e.target;
+    const selStart = input.selectionStart;
+    const selEnd = input.selectionEnd;
+    const current = amount || '';
+    const proposed = current.slice(0, selStart) + paste + current.slice(selEnd);
+    const digitCount = (proposed.match(/\d/g) || []).length;
+    if (digitCount <= MAX_DIGITS) {
+      // allow default paste, but we still set state to keep in sync
+      // allow the browser to perform the paste, then sync in next tick
+      setTimeout(() => setAmount(input.value), 0);
+    } else {
+      // prevent default and insert a trimmed version
+      e.preventDefault();
+      const trimmed = trimToMaxDigits(proposed, MAX_DIGITS);
+      setAmount(trimmed);
+    }
+  };
 
   // Animated background elements
   const bgElements = [
@@ -155,9 +215,11 @@ const CalculatorPage = () => {
             whileFocus={{ scale: 1.02 }}
           >
             <input
-              type="number"
+              type="text"
+              inputMode="decimal"
               value={amount}
-              onChange={(e) => setAmount(e.target.value)}
+              onChange={handleChange}
+              onPaste={handlePaste}
               placeholder="$0.00"
               className="w-full px-6 py-4 rounded-2xl border-2 border-gray-300 bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition text-2xl font-semibold text-center shadow-lg"
             />

@@ -249,6 +249,11 @@ const BudgetRuleChartStep = ({ activeCategoryKey = '50' }) => {
   const activeIndex = categoryOrder.indexOf(activeCategoryKey);
   const activeCategory = categories[activeCategoryKey];
 
+  // Scroll to top when category changes
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [activeCategoryKey]);
+
   // Animated background elements
   const bgElements = [
     { emoji: "💰", size: "text-lg", delay: 0 },
