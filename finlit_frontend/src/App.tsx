@@ -8,6 +8,7 @@ import SavingsPage from './50-30-20/savings'
 import CalculatorPage from './50-30-20/calculator'
 import MainPage from './50-30-20/MainPage'
 
+import TrueFalseCard from './TrueFalse/TrueFalseCard'
 function Dashboard() {
   return <FinLitApp />
 }
