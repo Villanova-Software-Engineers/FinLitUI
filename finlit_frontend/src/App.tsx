@@ -21,7 +21,11 @@ function App() {
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/fin" element={<FinancialRoadmap />} />
-
+        <Route path="/mainpage" element={<MainPage />} />
+        <Route path="/needs" element={<NeedsPage />} />
+        <Route path="/wants" element={<WantsPage />} />
+        <Route path="/savings" element={<SavingsPage />} />
+        <Route path="/calculator" element={<CalculatorPage />} />
       </Routes>
     </BrowserRouter>
   )
