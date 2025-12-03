@@ -18,132 +18,102 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 2], [0.4, 2]);
     {
       id: 1,
       title: "Budgeting Basics",
-      subtitle: "50-30-20 Rule",
+      subtitle: "Starter World",
       status: "Completed",
       icon: "💰",
-      color: "#e3f2fd",
+      color: "#e8f5e9",
       position: "left",
-      route: "/50-30-20",
-      component: "50-30-20",
-      description: "Master the 50-30-20 budgeting rule for effective money management.",
-      quizType: "interactive-budget"
+      description: "Master the fundamentals of creating and maintaining a personal budget."
     },
     {
       id: 2,
-      title: "Needs vs Wants",
-      subtitle: "Financial Priorities",
-      status: "Completed",
-      icon: "⚖️",
-      color: "#e8f5e9",
+      title: "Savings & Emergency Fund",
+      subtitle: "Forest",
+      status: "In Progress",
+      icon: "🏦",
+      color: "#e3f2fd",
       position: "right",
-      route: "/needs-wants",
-      component: "needs-wants",
-      description: "Learn to distinguish between essential needs and desired wants.",
-      quizType: "swipe-categorize"
+      description: "Learn how to build a safety net for unexpected expenses."
     },
     {
       id: 3,
-      title: "Investment Banking",
-      subtitle: "IPO Knowledge",
+      title: "Credit Score",
+      subtitle: "Carnival",
       status: "Completed",
-      icon: "🏦",
-      color: "#e3f2fd",
+      icon: "📊",
+      color: "#e8f5e9",
       position: "left",
-      route: "/investment-quiz",
-      component: "truefalse",
-      description: "Test your knowledge about Initial Public Offerings and investment banking.",
-      quizType: "true-false"
+      description: "Understand what affects your credit score and how to improve it."
     },
     {
       id: 4,
-      title: "Credit Score Mastery",
-      subtitle: "Credit Management",
-      status: "In Progress",
-      icon: "📊",
-      color: "#e8f5e9",
+      title: "Investment",
+      subtitle: "Island",
+      status: "Next Up",
+      icon: "📈",
+      color: "#e3f2fd",
       position: "right",
-      route: "/credit-score",
-      component: "credit-module",
-      description: "Understand credit scores, factors that affect them, and improvement strategies.",
-      quizType: "mcq"
+      description: "Discover the basics of investing and growing your wealth."
     },
     {
       id: 5,
-      title: "Emergency Fund",
-      subtitle: "Financial Safety",
-      status: "Next Up",
-      icon: "🆘",
-      color: "#e3f2fd",
+      title: "Insurance Protection",
+      subtitle: "Plains",
+      status: "Completed",
+      icon: "🛡️", 
+      color: "#e8f5e9",
       position: "left",
-      route: "/emergency-fund",
-      component: "emergency-module",
-      description: "Build a robust emergency fund to protect against unexpected expenses.",
-      quizType: "calculation"
+      description: "Learn about different types of insurance and how to protect your assets."
     },
     {
       id: 6,
-      title: "Stock Market Basics",
-      subtitle: "Investment Fundamentals",
-      status: "Locked",
-      icon: "📈",
-      color: "#f5f5f5",
-      position: "right",
-      route: "/stock-market",
-      component: "stock-module",
-      description: "Learn the fundamentals of stock market investing and portfolio building.",
-      quizType: "matching"
-    },
-    {
-      id: 7,
-      title: "Insurance Protection",
-      subtitle: "Risk Management",
-      status: "Locked",
-      icon: "🛡️",
-      color: "#f5f5f5",
-      position: "left",
-      route: "/insurance",
-      component: "insurance-module",
-      description: "Understand different types of insurance and how to protect your assets.",
-      quizType: "drag-drop"
-    },
-    {
-      id: 8,
       title: "Debt Management",
-      subtitle: "Debt Freedom",
+      subtitle: "Kingdom",
       status: "Locked",
       icon: "🔓",
       color: "#f5f5f5",
       position: "right",
-      route: "/debt-management",
-      component: "debt-module",
-      description: "Strategies for managing and eliminating debt effectively.",
-      quizType: "scenario"
+      description: "Strategies for managing and eliminating debt effectively."
+    },
+    {
+      id: 7,
+      title: "Retirement Planning",
+      subtitle: "Mountain",
+      status: "Locked",
+      icon: "🏔️",
+      color: "#f5f5f5",
+      position: "left",
+      description: "Prepare for your future with smart retirement planning strategies."
+    },
+    {
+      id: 8,
+      title: "Tax Strategy",
+      subtitle: "Castle",
+      status: "Locked",
+      icon: "📝",
+      color: "#f5f5f5",
+      position: "right",
+      description: "Understand tax basics and learn how to optimize your tax situation."
     },
     {
       id: 9,
-      title: "Retirement Planning",
-      subtitle: "Future Security",
+      title: "Real Estate",
+      subtitle: "Empire",
       status: "Locked",
-      icon: "🏖️",
+      icon: "🏠",
       color: "#f5f5f5",
       position: "left",
-      route: "/retirement",
-      component: "retirement-module",
-      description: "Plan for retirement with 401(k), IRA, and investment strategies.",
-      quizType: "calculator"
+      description: "Learn about home buying, mortgages, and real estate investments."
     },
     {
       id: 10,
       title: "Advanced Wealth",
-      subtitle: "Wealth Building",
+      subtitle: "Summit",
       status: "Locked",
       icon: "👑",
       color: "#f5f5f5",
       position: "right",
-      route: "/advanced-wealth",
-      component: "wealth-module",
-      description: "Master advanced strategies for building and preserving wealth.",
-      quizType: "comprehensive"
+      description: "Master advanced strategies for building and preserving wealth."
     }
   ];
 
@@ -382,22 +352,17 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 2], [0.4, 2]);
                   >
                     <p className="py-3 text-gray-600 text-sm">{module.description}</p>
                     {module.status !== 'Locked' && (
-  <div className="space-y-2">
-    <button 
-      className="mt-1 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors w-full font-medium text-sm"
-      onClick={() => {
-        if (module.route) {
-          navigate(module.route);
-        }
-      }}
-    >
-      {module.status === 'Completed' ? 'Review Module' : 
-       module.status === 'In Progress' ? 'Continue Learning' : 'Start Module'}
-    </button>
-    <div className="text-xs text-gray-500 text-center">
-      Quiz Type: {module.quizType?.replace('-', ' ') || 'Interactive'}
-    </div>
-  </div>
+  <button 
+    className="mt-1 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors w-full font-medium text-sm"
+    onClick={() => {
+      if (module.title === "Budgeting Basics" && module.status === "Completed") {
+        navigate('/bud'); // assuming the route is /bud and linked to bud.jsx
+      }
+    }}
+  >
+    {module.status === 'Completed' ? 'Review Module' : 
+     module.status === 'In Progress' ? 'Continue Learning' : 'Start Module'}
+  </button>
 )}
 
                   </motion.div>

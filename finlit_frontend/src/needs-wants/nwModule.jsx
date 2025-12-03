@@ -1,8 +1,12 @@
 import { useEffect, useState } from "react";
 import { useSwipeable } from "react-swipeable";
 import { motion, AnimatePresence } from "framer-motion";
+import { ChevronLeft, ChevronRight, ArrowLeft, ArrowRight, RotateCcw, Zap } from "lucide-react";
+import { useNavigate } from 'react-router-dom';
 
 export default function NeedsWants() {
+  const navigate = useNavigate();
+  
   function getRandomItem(list, count) {
     return [...list].sort(() => Math.random() - 0.5).slice(0, count);
   }
@@ -17,25 +21,53 @@ export default function NeedsWants() {
   const [quizIndex, setQuizIndex] = useState(0);
   const [quizFeedback, setQuizFeedback] = useState("");
   const [showGray, setShowGray] = useState(false);
-  const [finished, setFinished] = useState(false); // NEW state for “🎉 done” message
+  const [finished, setFinished] = useState(false);
+  const [swipeDirection, setSwipeDirection] = useState(null);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
 
-  // Load JSON data once
+  // Hardcoded items for better control and fewer questions
+  const hardcodedItems = [
+    { id: 1, name: "Water", type: "need" },
+    { id: 2, name: "Gaming Console", type: "want" },
+    { id: 3, name: "Food", type: "need" },
+    { id: 4, name: "Designer Clothes", type: "want" },
+    { id: 5, name: "Shelter", type: "need" },
+    { id: 6, name: "Streaming Service", type: "want" },
+    { id: 7, name: "Medicine", type: "need" },
+    { id: 8, name: "Luxury Watch", type: "want" },
+    { id: 9, name: "Transportation", type: "need" },
+    { id: 10, name: "Expensive Restaurant", type: "want" },
+    { id: 11, name: "Phone", type: "need" },
+    { id: 12, name: "Concert Tickets", type: "want" },
+    { id: 13, name: "Basic Clothing", type: "need" },
+    { id: 14, name: "Spa Treatment", type: "want" },
+    { id: 15, name: "Internet", type: "need" }
+  ];
+
+  // Initialize with hardcoded items
   useEffect(() => {
-    fetch("/data/items.json")
-      .then((res) => res.json())
-      .then((data) => {
-        setItems(getRandomItem(data, 10));
-        setItems2(getRandomItem(data, 15));
-      })
-      .catch((err) => console.error("Error loading JSON:", err));
+    setItems(getRandomItem(hardcodedItems, 8));
+    setItems2(getRandomItem(hardcodedItems, 8)); // Reduced from 15 to 8 questions
   }, []);
 
-  // Ensure the `handlers` object is created inside the functional component body
+  // Enhanced swipe handlers
   const handlers = useSwipeable({
     onSwipedLeft: () => handleSwipe("left"),
     onSwipedRight: () => handleSwipe("right"),
+    onSwiping: (eventData) => {
+      if (step === 2 && !finished) {
+        setIsDragging(true);
+        setDragOffset({ x: eventData.deltaX, y: eventData.deltaY });
+      }
+    },
+    onSwiped: () => {
+      setIsDragging(false);
+      setDragOffset({ x: 0, y: 0 });
+    },
     preventDefaultTouchmoveEvent: true,
     trackMouse: true,
+    delta: 50
   });
 
   // toggle item
@@ -46,35 +78,56 @@ export default function NeedsWants() {
       setSelected([...selected, id]);
   }
 
-  // swipe logic
+  // Enhanced swipe logic with better animations
   function handleSwipe(direction) {
+    if (finished) return;
+    
     const item = items2[current];
     if (!item) return;
 
-    const msg =
-      direction === "right"
-        ? `${item.name} is a ${item.type}`
-        : `${item.name} is a ${item.type}!`;
+    setSwipeDirection(direction);
+    const isCorrect = (direction === "right" && item.type === "want") || 
+                     (direction === "left" && item.type === "need");
+
+    const msg = isCorrect 
+      ? `✅ Correct! ${item.name} is a ${item.type}` 
+      : `❌ Oops! ${item.name} is actually a ${item.type}`;
 
     setFeedback(msg);
 
     setTimeout(() => {
       setFeedback("");
+      setSwipeDirection(null);
       const nextIndex = current + 1;
       setCurrent(nextIndex);
 
-      // Automatically trigger quiz after final item
+      // Check if finished
       if (nextIndex >= items2.length) {
         setFinished(true);
         setTimeout(() => {
           setShowQuiz(true);
-        }, 1500); // small delay so “🎉” message shows first
+        }, 1000);
       }
-    }, 1000);
+    }, 1500);
   }
 
-  // quiz data
-  const quiz = [ // test change by hsun
+  // Navigation functions
+  const goToPrevious = () => {
+    if (current > 0) {
+      setCurrent(current - 1);
+      setFeedback("");
+      setSwipeDirection(null);
+    }
+  };
+
+  const goToNext = () => {
+    if (current < items2.length - 1) {
+      handleSwipe("skip");
+    }
+  };
+
+  // Reduced quiz data
+  const quiz = [
     {
       q: "Which expense is a need?",
       options: [
@@ -82,13 +135,6 @@ export default function NeedsWants() {
         { text: "Rent", correct: true },
         { text: "Designer shoes", correct: false },
         { text: "Streaming service", correct: false },
-      ],
-    },
-    {
-      q: "Needs are always more important than wants.",
-      options: [
-        { text: "True", correct: true },
-        { text: "False", correct: false },
       ],
     },
     {
@@ -101,19 +147,12 @@ export default function NeedsWants() {
       ],
     },
     {
-      q: "Are electronic devices neccesary in a circumstance where you are stranded?",
+      q: "What makes something a 'need' versus a 'want'?",
       options: [
-        { text: "Yes", correct: false },
-        { text: "No", correct: true },
-      ],
-    },
-    {
-      q: "Which of the following is not a question to consider when defining needs and wants?",
-      options: [
-        { text: "If I had less money, would I still get this", correct: false },
-        { text: "Is there a cheaper or simpler way to meet the same need", correct: false},
-        { text: "Does this item make me impressive or appear cool?", correct: true},
-        { text: "Am I choosing this because of peer pressure or trends rather than actual necessity", correct: false}
+        { text: "How much it costs", correct: false },
+        { text: "How trendy it is", correct: false},
+        { text: "If it's essential for survival", correct: true},
+        { text: "If your friends have it", correct: false}
       ]
     }
   ];
@@ -131,222 +170,428 @@ export default function NeedsWants() {
   }
 
   return (
-    <div
-      style={{
-        fontFamily: "Poppins, sans-serif",
-        minHeight: "100vh",
-        background: "linear-gradient(135deg, #cce5ff, #e0e7ff)",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        padding: "40px",
-      }}
-    >
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-blue-100 p-6">
+      {/* Header */}
       <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.6 }}
-        style={{
-          background: "white",
-          padding: "40px",
-          borderRadius: "20px",
-          boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
-          width: "90%",
-          maxWidth: "500px",
-          textAlign: "center",
-        }}
+        className="flex items-center justify-between mb-8 bg-white rounded-xl p-4 shadow-lg max-w-4xl mx-auto"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
       >
-        {/* STEP 1 */}
-        {step === 1 && (
-          <>
-            <h1>🏝️ Stranded on an Island</h1>
-            <p>
-              Pick <b>5 essential items</b> to take with you:
-            </p>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(3, 1fr)",
-                gap: "12px",
-                marginTop: "20px",
-              }}
-            >
-              {items.map((item) => (
-                <motion.button
-                  key={item.id}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => toggleItem(item.id)}
-                  style={{
-                    padding: "12px",
-                    borderRadius: "10px",
-                    border: "none",
-                    background: selected.includes(item.id)
-                      ? item.type === "need"
-                        ? "#E53E3E"
-                        : "#805AD5"
-                      : "#edf2f7",
-                    color: selected.includes(item.id) ? "white" : "#2d3748",
-                    fontWeight: "600",
-                    cursor: "pointer",
-                  }}
-                >
-                  {item.name}
-                </motion.button>
-              ))}
-            </div>
-            {selected.length === 5 && (
-              <motion.button
-                onClick={() => setStep(2)}
-                whileHover={{ scale: 1.1 }}
-                style={{
-                  marginTop: "30px",
-                  padding: "12px 25px",
-                  background: "#48bb78",
-                  color: "white",
-                  fontWeight: "600",
-                  border: "none",
-                  borderRadius: "10px",
-                  cursor: "pointer",
-                }}
-              >
-                Continue →
-              </motion.button>
-            )}
-          </>
-        )}
+        <button
+          onClick={() => navigate('/game')}
+          className="flex items-center gap-2 px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          Back to Roadmap
+        </button>
+        
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-800">Needs vs Wants</h1>
+          <p className="text-sm text-gray-600">Financial Decision Making</p>
+        </div>
 
-        {/* STEP 2 */}
-        {step === 2 && !showQuiz && !showGray && (
-          <div {...handlers}>
-            <h1>🤔 The Big Question</h1>
-            <p>
-              Can you survive <b>one month</b> without this item?
-            </p>
-            <p style={{ fontSize: "0.9rem", color: "#555" }}>
-              Swipe RIGHT = WANT | Swipe LEFT = NEED
-            </p>
-
-            <AnimatePresence mode="wait">
-              {items2[current] && !finished ? (
-                <motion.h2
-                  key={items2[current].id}
-                  initial={{ y: 50, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  exit={{ y: -50, opacity: 0 }}
-                  transition={{ duration: 0.5 }}
-                  style={{ margin: "40px 0", fontSize: "2rem" }}
-                >
-                  {items2[current].name}
-                </motion.h2>
-              ) : (
-                <motion.h2
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  style={{ margin: "40px 0", fontSize: "1.5rem" }}
-                >
-                  🎉 All done! Time for a quick quiz.
-                </motion.h2>
-              )}
-            </AnimatePresence>
-
-            {feedback && (
-              <motion.p
-                key={feedback}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
-                style={{ fontWeight: "bold", color: "#2d3748" }}
-              >
-                {feedback}
-              </motion.p>
-            )}
-          </div>
-        )}
-
-        {/* QUIZ */}
-        {showQuiz && !showGray && (
-          <div>
-            <h1>🧠 Quick Quiz</h1>
-            <p>{quiz[quizIndex].q}</p>
-            <div
-              style={{
-                display: "grid",
-                gap: "10px",
-                marginTop: "15px",
-              }}
-            >
-              {quiz[quizIndex].options.map((opt, i) => (
-                <motion.button
-                  key={i}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => handleQuizAnswer(opt.correct)}
-                  style={{
-                    padding: "10px",
-                    borderRadius: "8px",
-                    border: "none",
-                    background: "#edf2f7",
-                    cursor: "pointer",
-                    fontWeight: "600",
-                  }}
-                >
-                  {opt.text}
-                </motion.button>
-              ))}
-            </div>
-            {quizFeedback && (
-              <motion.p
-                key={quizFeedback}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                style={{ marginTop: "20px", fontWeight: "bold" }}
-              >
-                {quizFeedback}
-              </motion.p>
-            )}
-          </div>
-        )}
-
-        {/* GRAY AREA SECTION */}
-        {showGray && (
-          <div>
-            <h1>⚖️ Context Matters</h1>
-            <p>Some items change meaning based on situation:</p>
-            <ul style={{ textAlign: "left", marginTop: "15px" }}>
-              <li>📱 Phone → Need for work, Want for entertainment</li>
-              <li>🚗 Car → Need in rural areas, Want in cities</li>
-              <li>🌐 Internet → Need for remote work, Want for streaming</li>
-            </ul>
-
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              onClick={() => {
-                setStep(1);
-                setSelected([]);
-                setCurrent(0);
-                setShowQuiz(false);
-                setShowGray(false);
-                setFinished(false);
-                setQuizIndex(0);
-              }}
-              style={{
-                marginTop: "25px",
-                padding: "10px 20px",
-                background: "#4299e1",
-                color: "white",
-                border: "none",
-                borderRadius: "10px",
-                fontWeight: "600",
-                cursor: "pointer",
-              }}
-            >
-              ↩ Restart Module
-            </motion.button>
-          </div>
-        )}
+        <div className="flex items-center gap-2 text-purple-600">
+          <Zap className="w-5 h-5" />
+          <span className="font-semibold">60 XP</span>
+        </div>
       </motion.div>
+
+      <div className="max-w-4xl mx-auto">
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.6 }}
+          className="bg-white rounded-2xl shadow-xl overflow-hidden"
+        >
+          {/* STEP 1: Item Selection */}
+          {step === 1 && (
+            <div className="p-8 text-center">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                <h1 className="text-3xl font-bold text-gray-800 mb-4">🏝️ Stranded on an Island</h1>
+                <p className="text-lg text-gray-600 mb-8">
+                  Pick <span className="font-bold text-purple-600">5 essential items</span> to take with you:
+                </p>
+              </motion.div>
+
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+                {items.map((item, index) => (
+                  <motion.button
+                    key={item.id}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.3, delay: index * 0.1 }}
+                    whileHover={{ scale: 1.05, y: -5 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => toggleItem(item.id)}
+                    className={`p-4 rounded-xl font-semibold transition-all border-2 ${
+                      selected.includes(item.id)
+                        ? item.type === "need"
+                          ? "bg-red-500 text-white border-red-500 shadow-lg"
+                          : "bg-purple-500 text-white border-purple-500 shadow-lg"
+                        : "bg-gray-100 text-gray-700 border-gray-200 hover:border-gray-300"
+                    }`}
+                  >
+                    <div className="text-2xl mb-2">
+                      {selected.includes(item.id) ? "✓" : ""}
+                    </div>
+                    {item.name}
+                  </motion.button>
+                ))}
+              </div>
+
+              <div className="text-center">
+                <p className="text-sm text-gray-500 mb-4">
+                  Selected: {selected.length}/5
+                </p>
+                <AnimatePresence>
+                  {selected.length === 5 && (
+                    <motion.button
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setStep(2)}
+                      className="px-8 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl shadow-lg transition-colors"
+                    >
+                      Continue to Swiping →
+                    </motion.button>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 2: Enhanced Swipe Interface */}
+          {step === 2 && !showQuiz && !showGray && (
+            <div className="p-8">
+              {/* Progress Bar */}
+              <div className="mb-6">
+                <div className="flex justify-between text-sm text-gray-600 mb-2">
+                  <span>Question {current + 1} of {items2.length}</span>
+                  <span>{Math.round(((current + 1) / items2.length) * 100)}% Complete</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-3">
+                  <motion.div
+                    className="bg-gradient-to-r from-purple-500 to-blue-500 h-3 rounded-full"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${((current + 1) / items2.length) * 100}%` }}
+                    transition={{ duration: 0.5 }}
+                  />
+                </div>
+              </div>
+
+              <div className="text-center mb-8">
+                <motion.h1 
+                  className="text-3xl font-bold text-gray-800 mb-4"
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
+                  🤔 The Big Question
+                </motion.h1>
+                <p className="text-lg text-gray-600 mb-2">
+                  Can you survive <span className="font-bold">one month</span> without this item?
+                </p>
+                <div className="flex items-center justify-center gap-4 text-sm text-gray-500">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                    <span>Swipe LEFT = NEED</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                    <span>Swipe RIGHT = WANT</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card Container */}
+              <div className="relative h-96 flex items-center justify-center mb-8" {...handlers}>
+                <AnimatePresence mode="wait">
+                  {items2[current] && !finished ? (
+                    <motion.div
+                      key={items2[current].id}
+                      className="relative w-80 h-64 bg-gradient-to-br from-blue-400 to-purple-500 rounded-2xl shadow-2xl flex items-center justify-center text-white cursor-grab active:cursor-grabbing"
+                      initial={{ scale: 0.8, opacity: 0, rotateY: -90 }}
+                      animate={{ 
+                        scale: 1, 
+                        opacity: 1, 
+                        rotateY: 0,
+                        x: isDragging ? dragOffset.x * 0.1 : 0,
+                        rotate: isDragging ? dragOffset.x * 0.1 : 0
+                      }}
+                      exit={{ 
+                        scale: 0.8, 
+                        opacity: 0, 
+                        x: swipeDirection === 'left' ? -300 : swipeDirection === 'right' ? 300 : 0,
+                        rotate: swipeDirection === 'left' ? -30 : swipeDirection === 'right' ? 30 : 0
+                      }}
+                      transition={{ 
+                        duration: 0.6, 
+                        type: "spring", 
+                        stiffness: 200,
+                        damping: 25
+                      }}
+                      whileHover={{ scale: 1.05 }}
+                    >
+                      <div className="absolute inset-0 bg-black bg-opacity-20 rounded-2xl"></div>
+                      <div className="relative z-10 text-center">
+                        <motion.h2 
+                          className="text-3xl font-bold mb-4"
+                          animate={{ 
+                            scale: isDragging ? 1.1 : 1,
+                            color: isDragging 
+                              ? (dragOffset.x > 0 ? '#10B981' : dragOffset.x < 0 ? '#EF4444' : '#FFFFFF')
+                              : '#FFFFFF'
+                          }}
+                        >
+                          {items2[current].name}
+                        </motion.h2>
+                        <div className="text-sm opacity-80">
+                          Swipe to categorize
+                        </div>
+                      </div>
+
+                      {/* Swipe Indicators */}
+                      <motion.div 
+                        className="absolute left-4 top-1/2 transform -translate-y-1/2 text-red-400"
+                        animate={{ 
+                          opacity: isDragging && dragOffset.x < -50 ? 1 : 0,
+                          scale: isDragging && dragOffset.x < -50 ? 1.2 : 0.8
+                        }}
+                      >
+                        <div className="text-2xl font-bold">NEED</div>
+                        <ChevronLeft className="w-8 h-8" />
+                      </motion.div>
+
+                      <motion.div 
+                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-green-400"
+                        animate={{ 
+                          opacity: isDragging && dragOffset.x > 50 ? 1 : 0,
+                          scale: isDragging && dragOffset.x > 50 ? 1.2 : 0.8
+                        }}
+                      >
+                        <div className="text-2xl font-bold">WANT</div>
+                        <ChevronRight className="w-8 h-8" />
+                      </motion.div>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      className="text-center"
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      <div className="text-6xl mb-4">🎉</div>
+                      <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                        All done! Time for a quick quiz.
+                      </h2>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Navigation Buttons */}
+              {!finished && items2[current] && (
+                <div className="flex justify-center gap-4 mb-6">
+                  <motion.button
+                    className="flex items-center gap-2 px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-semibold shadow-lg disabled:opacity-50"
+                    onClick={() => handleSwipe('left')}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <ArrowLeft className="w-5 h-5" />
+                    NEED
+                  </motion.button>
+
+                  <motion.button
+                    className="flex items-center gap-2 px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl font-semibold shadow-lg"
+                    onClick={() => handleSwipe('right')}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    WANT
+                    <ArrowRight className="w-5 h-5" />
+                  </motion.button>
+                </div>
+              )}
+
+              {/* Pagination Dots */}
+              <div className="flex justify-center gap-2 mb-6">
+                {items2.map((_, index) => (
+                  <motion.div
+                    key={index}
+                    className={`w-3 h-3 rounded-full ${
+                      index < current ? 'bg-green-500' :
+                      index === current ? 'bg-blue-500' : 'bg-gray-300'
+                    }`}
+                    animate={{ scale: index === current ? 1.2 : 1 }}
+                  />
+                ))}
+              </div>
+
+              {/* Feedback */}
+              <AnimatePresence>
+                {feedback && (
+                  <motion.div
+                    className="fixed inset-x-0 top-1/2 transform -translate-y-1/2 flex justify-center z-50"
+                    initial={{ opacity: 0, scale: 0.5 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.5 }}
+                    transition={{ type: "spring", duration: 0.5 }}
+                  >
+                    <div className={`px-8 py-4 rounded-xl font-bold text-white text-lg shadow-2xl ${
+                      feedback.includes('Correct') ? 'bg-green-500' : 'bg-red-500'
+                    }`}>
+                      {feedback}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
+
+          {/* ENHANCED QUIZ */}
+          {showQuiz && !showGray && (
+            <div className="p-8">
+              <div className="text-center mb-8">
+                <motion.h1 
+                  className="text-3xl font-bold text-gray-800 mb-4"
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
+                  🧠 Quick Quiz
+                </motion.h1>
+                <div className="text-sm text-gray-500 mb-4">
+                  Question {quizIndex + 1} of {quiz.length}
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2 mb-6">
+                  <motion.div
+                    className="bg-purple-500 h-2 rounded-full"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${((quizIndex + 1) / quiz.length) * 100}%` }}
+                    transition={{ duration: 0.5 }}
+                  />
+                </div>
+              </div>
+
+              <motion.div
+                key={quizIndex}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5 }}
+                className="mb-8"
+              >
+                <h2 className="text-xl font-bold text-gray-800 mb-6 text-center">
+                  {quiz[quizIndex].q}
+                </h2>
+
+                <div className="space-y-3 max-w-md mx-auto">
+                  {quiz[quizIndex].options.map((opt, i) => (
+                    <motion.button
+                      key={i}
+                      className="w-full p-4 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold rounded-xl border-2 border-transparent hover:border-purple-300 transition-all text-left"
+                      whileHover={{ scale: 1.02, y: -2 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => handleQuizAnswer(opt.correct)}
+                    >
+                      {opt.text}
+                    </motion.button>
+                  ))}
+                </div>
+              </motion.div>
+
+              <AnimatePresence>
+                {quizFeedback && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    className="text-center"
+                  >
+                    <div className={`inline-block px-6 py-3 rounded-xl font-bold text-white ${
+                      quizFeedback.includes('Correct') ? 'bg-green-500' : 'bg-orange-500'
+                    }`}>
+                      {quizFeedback}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
+
+          {/* ENHANCED COMPLETION SECTION */}
+          {showGray && (
+            <div className="p-8 text-center">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.6 }}
+              >
+                <div className="text-6xl mb-6">⚖️</div>
+                <h1 className="text-3xl font-bold text-gray-800 mb-4">Context Matters!</h1>
+                <p className="text-lg text-gray-600 mb-8">
+                  Remember: Some items can be both needs and wants depending on the situation.
+                </p>
+
+                <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-6 mb-8 border border-blue-200">
+                  <h3 className="text-lg font-bold text-gray-800 mb-4">Examples:</h3>
+                  <div className="space-y-3 text-left max-w-md mx-auto">
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">📱</span>
+                      <span><strong>Phone:</strong> Need for work, Want for entertainment</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">🚗</span>
+                      <span><strong>Car:</strong> Need in rural areas, Want in cities with transit</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">🌐</span>
+                      <span><strong>Internet:</strong> Need for remote work, Want for streaming</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-4 justify-center">
+                  <motion.button
+                    className="flex items-center gap-2 px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl shadow-lg transition-colors"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => navigate('/game')}
+                  >
+                    Back to Roadmap
+                  </motion.button>
+
+                  <motion.button
+                    className="flex items-center gap-2 px-6 py-3 bg-gray-300 hover:bg-gray-400 text-gray-700 font-semibold rounded-xl shadow-lg transition-colors"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => {
+                      setStep(1);
+                      setSelected([]);
+                      setCurrent(0);
+                      setShowQuiz(false);
+                      setShowGray(false);
+                      setFinished(false);
+                      setQuizIndex(0);
+                      setFeedback("");
+                      setSwipeDirection(null);
+                      setDragOffset({ x: 0, y: 0 });
+                    }}
+                  >
+                    <RotateCcw className="w-5 h-5" />
+                    Play Again
+                  </motion.button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </motion.div>
+      </div>
     </div>
   );
 }
