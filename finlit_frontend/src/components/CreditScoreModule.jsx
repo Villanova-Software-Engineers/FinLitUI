@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Star, Trophy, CheckCircle, XCircle, Heart, Zap, Award } from 'lucide-react';
+import { ArrowLeft, Star, Trophy, CheckCircle, XCircle, Heart, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const CreditScoreModule = () => {
@@ -24,6 +24,11 @@ const CreditScoreModule = () => {
   const [currentGameType, setCurrentGameType] = useState('');
   const [draggedItem, setDraggedItem] = useState(null);
   const [gameCompleted, setGameCompleted] = useState(false);
+  const [matchedPairs, setMatchedPairs] = useState([]);
+  const [selectedTerm, setSelectedTerm] = useState(null);
+  const [selectedDefinition, setSelectedDefinition] = useState(null);
+  const [sliderValue, setSliderValue] = useState(0);
+  const [timelineOrder, setTimelineOrder] = useState([]);
 
   // Learning content with character-driven story
   const learningContent = [
@@ -269,8 +274,104 @@ const CreditScoreModule = () => {
       setGameStep(gameStep + 1);
       setGameCompleted(false);
       setCurrentGameType('');
+      resetGameState();
     } else {
       setCurrentStep('quiz');
+    }
+  };
+
+  const resetGameState = () => {
+    setMatchedPairs([]);
+    setSelectedTerm(null);
+    setSelectedDefinition(null);
+    setSliderValue(miniGames[gameStep + 1]?.scenarios?.[0]?.currentBalance || 0);
+    setTimelineOrder(miniGames[gameStep + 1]?.steps?.map((_, index) => index) || []);
+  };
+
+  const handleTermClick = (termIndex) => {
+    if (matchedPairs.includes(termIndex)) return;
+    
+    if (selectedTerm === termIndex) {
+      setSelectedTerm(null);
+    } else {
+      setSelectedTerm(termIndex);
+      setSelectedDefinition(null); // Clear definition selection
+      
+      // If both term and definition are selected, check for match
+      if (selectedDefinition !== null) {
+        if (termIndex === selectedDefinition) {
+          setMatchedPairs([...matchedPairs, termIndex]);
+          setSelectedTerm(null);
+          setSelectedDefinition(null);
+          
+          // Check if game completed
+          if (matchedPairs.length + 1 >= miniGames[gameStep].pairs.length) {
+            setGameCompleted(true);
+            setTotalXP(totalXP + 50);
+          }
+        }
+      }
+    }
+  };
+
+  const handleDefinitionClick = (defIndex) => {
+    if (matchedPairs.includes(defIndex)) return;
+    
+    if (selectedDefinition === defIndex) {
+      setSelectedDefinition(null);
+    } else {
+      setSelectedDefinition(defIndex);
+      setSelectedTerm(null); // Clear term selection
+      
+      // If both term and definition are selected, check for match
+      if (selectedTerm !== null) {
+        if (selectedTerm === defIndex) {
+          setMatchedPairs([...matchedPairs, defIndex]);
+          setSelectedTerm(null);
+          setSelectedDefinition(null);
+          
+          // Check if game completed
+          if (matchedPairs.length + 1 >= miniGames[gameStep].pairs.length) {
+            setGameCompleted(true);
+            setTotalXP(totalXP + 50);
+          }
+        }
+      }
+    }
+  };
+
+  const handleSliderChange = (value) => {
+    setSliderValue(value);
+    const scenario = miniGames[gameStep].scenarios[0];
+    const utilizationRate = (value / scenario.creditLimit) * 100;
+    
+    if (utilizationRate <= 30) {
+      setGameCompleted(true);
+      setTotalXP(totalXP + 50);
+    }
+  };
+
+  const handleTimelineDragStart = (e, index) => {
+    setDraggedItem(index);
+  };
+
+  const handleTimelineDrop = (e, dropIndex) => {
+    e.preventDefault();
+    if (draggedItem === null) return;
+    
+    const newOrder = [...timelineOrder];
+    const draggedContent = newOrder[draggedItem];
+    newOrder.splice(draggedItem, 1);
+    newOrder.splice(dropIndex, 0, draggedContent);
+    
+    setTimelineOrder(newOrder);
+    setDraggedItem(null);
+    
+    // Check if order is correct
+    const isCorrect = newOrder.every((item, index) => item === index);
+    if (isCorrect) {
+      setGameCompleted(true);
+      setTotalXP(totalXP + 50);
     }
   };
 
@@ -279,8 +380,17 @@ const CreditScoreModule = () => {
       setGameStep(gameStep - 1);
       setGameCompleted(false);
       setCurrentGameType('');
+      resetGameState();
     }
   };
+
+  // Initialize game state when component mounts or game changes
+  React.useEffect(() => {
+    if (currentStep === 'game') {
+      setSliderValue(miniGames[gameStep]?.scenarios?.[0]?.currentBalance || 0);
+      setTimelineOrder(miniGames[gameStep]?.steps?.map((_, index) => index) || []);
+    }
+  }, [gameStep, currentStep]);
 
   const prevLearningStep = () => {
     if (learningStep > 0) {
@@ -428,9 +538,18 @@ const CreditScoreModule = () => {
             <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 mb-6 shadow-lg border-l-4 border-blue-500">
               <div className="flex items-start gap-4">
                 <motion.div 
-                  className="text-5xl"
-                  animate={{ bounce: [0, -10, 0] }}
-                  transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 3 }}
+                  className="text-5xl cursor-pointer"
+                  animate={{ 
+                    y: [0, -10, 0],
+                    rotate: [0, 5, -5, 0]
+                  }}
+                  transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
+                  whileHover={{ 
+                    scale: 1.2,
+                    rotate: 15,
+                    transition: { duration: 0.2 }
+                  }}
+                  whileTap={{ scale: 0.9 }}
                 >
                   {learningContent[learningStep].characterImage}
                 </motion.div>
@@ -441,15 +560,34 @@ const CreditScoreModule = () => {
                       {learningContent[learningStep].character}
                     </div>
                   </div>
-                  <div className="bg-blue-50 rounded-lg p-4 mb-4 border-l-4 border-blue-400">
+                  <div className="bg-blue-50 rounded-lg p-4 mb-4 border-l-4 border-blue-400 relative">
+                    <motion.div
+                      className="absolute -left-2 top-4 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[8px] border-t-blue-50"
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: 0.5 }}
+                    />
                     <motion.p 
                       className="text-gray-700 italic text-lg leading-relaxed"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.7, delay: 0.3 }}
                     >
                       💬 "{learningContent[learningStep].dialogue}"
                     </motion.p>
+                    <motion.span
+                      className="inline-block ml-2"
+                      animate={{ 
+                        opacity: [1, 0.3, 1]
+                      }}
+                      transition={{ 
+                        duration: 1.5, 
+                        repeat: Infinity,
+                        delay: 1
+                      }}
+                    >
+                      💬
+                    </motion.span>
                   </div>
                 </div>
               </div>
@@ -563,39 +701,76 @@ const CreditScoreModule = () => {
 
             {/* Game Content Based on Type */}
             {miniGames[gameStep].type === 'matching' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Terms */}
-                <div className="space-y-3">
-                  <h3 className="font-bold text-gray-800 mb-4">Credit Factors</h3>
-                  {miniGames[gameStep].pairs.map((pair, index) => (
-                    <motion.div
-                      key={index}
-                      className="bg-white p-4 rounded-lg shadow-md border border-gray-200 cursor-pointer hover:bg-blue-50 transition"
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="text-2xl">{pair.emoji}</span>
-                        <span className="font-medium">{pair.term}</span>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
+              <div className="space-y-6">
+                <p className="text-center text-gray-600 mb-4">Click on a term, then click on its matching definition!</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Terms */}
+                  <div className="space-y-3">
+                    <h3 className="font-bold text-gray-800 mb-4">Credit Factors</h3>
+                    {miniGames[gameStep].pairs.map((pair, index) => (
+                      <motion.div
+                        key={`term-${index}`}
+                        className={`p-4 rounded-lg shadow-md border-2 cursor-pointer transition ${
+                          matchedPairs.includes(index) 
+                            ? 'bg-green-100 border-green-500 cursor-not-allowed' 
+                            : selectedTerm === index
+                            ? 'bg-blue-100 border-blue-500'
+                            : 'bg-white border-gray-200 hover:bg-blue-50 hover:border-blue-300'
+                        }`}
+                        whileHover={!matchedPairs.includes(index) ? { scale: 1.02 } : {}}
+                        whileTap={!matchedPairs.includes(index) ? { scale: 0.98 } : {}}
+                        onClick={() => handleTermClick(index)}
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="text-2xl">{pair.emoji}</span>
+                          <span className="font-medium">{pair.term}</span>
+                          {matchedPairs.includes(index) && <span className="text-green-500 ml-auto">✓</span>}
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
 
-                {/* Definitions */}
-                <div className="space-y-3">
-                  <h3 className="font-bold text-gray-800 mb-4">Impact & Description</h3>
-                  {miniGames[gameStep].pairs.map((pair, index) => (
-                    <motion.div
-                      key={index}
-                      className="bg-white p-4 rounded-lg shadow-md border border-gray-200"
-                      initial={{ opacity: 0.7 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: index * 0.1 }}
-                    >
-                      <span className="text-gray-700">{pair.definition}</span>
-                    </motion.div>
-                  ))}
+                  {/* Definitions */}
+                  <div className="space-y-3">
+                    <h3 className="font-bold text-gray-800 mb-4">Impact & Description</h3>
+                    {miniGames[gameStep].pairs.map((pair, index) => (
+                      <motion.div
+                        key={`def-${index}`}
+                        className={`p-4 rounded-lg shadow-md border-2 cursor-pointer transition ${
+                          matchedPairs.includes(index) 
+                            ? 'bg-green-100 border-green-500 cursor-not-allowed' 
+                            : selectedDefinition === index
+                            ? 'bg-purple-100 border-purple-500'
+                            : 'bg-white border-gray-200 hover:bg-purple-50 hover:border-purple-300'
+                        }`}
+                        initial={{ opacity: 0.7 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: index * 0.1 }}
+                        onClick={() => handleDefinitionClick(index)}
+                        whileHover={!matchedPairs.includes(index) ? { scale: 1.02 } : {}}
+                        whileTap={!matchedPairs.includes(index) ? { scale: 0.98 } : {}}
+                      >
+                        <span className="text-gray-700">{pair.definition}</span>
+                        {matchedPairs.includes(index) && <span className="text-green-500 float-right">✓</span>}
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Progress */}
+                <div className="text-center">
+                  <div className="bg-gray-200 rounded-full h-3 mb-2">
+                    <div 
+                      className="bg-purple-500 h-3 rounded-full transition-all duration-300"
+                      style={{ width: `${(matchedPairs.length / miniGames[gameStep].pairs.length) * 100}%` }}
+                    />
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    {matchedPairs.length} / {miniGames[gameStep].pairs.length} pairs matched
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Click a term, then click its matching definition!
+                  </p>
                 </div>
               </div>
             )}
@@ -625,16 +800,27 @@ const CreditScoreModule = () => {
                       min="0"
                       max={miniGames[gameStep].scenarios[0].creditLimit}
                       step="50"
-                      value={miniGames[gameStep].scenarios[0].currentBalance}
+                      value={sliderValue}
+                      onChange={(e) => handleSliderChange(parseInt(e.target.value))}
                       className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
                     />
                     <div className="text-center">
                       <span className="text-2xl font-bold text-purple-600">
-                        ${miniGames[gameStep].scenarios[0].currentBalance.toLocaleString()}
+                        ${sliderValue.toLocaleString()}
                       </span>
                       <p className="text-sm text-gray-600 mt-2">
-                        Utilization Rate: {((miniGames[gameStep].scenarios[0].currentBalance / miniGames[gameStep].scenarios[0].creditLimit) * 100).toFixed(0)}%
+                        Utilization Rate: {((sliderValue / miniGames[gameStep].scenarios[0].creditLimit) * 100).toFixed(0)}%
                       </p>
+                      {((sliderValue / miniGames[gameStep].scenarios[0].creditLimit) * 100) <= 30 && (
+                        <p className="text-green-600 font-medium mt-2">
+                          ✅ Excellent! This is a healthy utilization rate!
+                        </p>
+                      )}
+                      {((sliderValue / miniGames[gameStep].scenarios[0].creditLimit) * 100) > 30 && (
+                        <p className="text-orange-600 font-medium mt-2">
+                          ⚠️ Try to get below 30% for optimal credit health
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -648,23 +834,52 @@ const CreditScoreModule = () => {
                     Drag to Arrange the Steps in Order! 🎯
                   </h3>
                   <div className="space-y-3">
-                    {miniGames[gameStep].steps.map((step, index) => (
-                      <motion.div
-                        key={step.id}
-                        className="bg-gradient-to-r from-blue-100 to-purple-100 p-4 rounded-lg border border-gray-200 cursor-grab active:cursor-grabbing hover:shadow-md transition"
-                        draggable
-                        whileHover={{ scale: 1.02 }}
-                        whileDrag={{ scale: 1.05 }}
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className="text-2xl">{step.emoji}</span>
-                          <span className="font-medium flex-1">{step.text}</span>
-                          <span className="bg-white px-3 py-1 rounded-full text-sm font-bold text-purple-600">
-                            Step {index + 1}
-                          </span>
-                        </div>
-                      </motion.div>
-                    ))}
+                    {timelineOrder.map((stepIndex, displayIndex) => {
+                      const step = miniGames[gameStep].steps[stepIndex];
+                      const isCorrectPosition = stepIndex === displayIndex;
+                      return (
+                        <motion.div
+                          key={step.id}
+                          className={`p-4 rounded-lg border-2 cursor-grab active:cursor-grabbing hover:shadow-md transition ${
+                            isCorrectPosition 
+                              ? 'bg-gradient-to-r from-green-100 to-emerald-100 border-green-300' 
+                              : 'bg-gradient-to-r from-blue-100 to-purple-100 border-gray-200'
+                          }`}
+                          draggable
+                          onDragStart={(e) => handleTimelineDragStart(e, displayIndex)}
+                          onDragOver={(e) => e.preventDefault()}
+                          onDrop={(e) => handleTimelineDrop(e, displayIndex)}
+                          whileHover={{ scale: 1.02 }}
+                          whileDrag={{ scale: 1.05 }}
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className="text-2xl">{step.emoji}</span>
+                            <span className="font-medium flex-1">{step.text}</span>
+                            <span className={`px-3 py-1 rounded-full text-sm font-bold ${
+                              isCorrectPosition ? 'bg-green-500 text-white' : 'bg-white text-purple-600'
+                            }`}>
+                              Step {displayIndex + 1}
+                            </span>
+                            {isCorrectPosition && <span className="text-green-500">✓</span>}
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                  
+                  {/* Progress */}
+                  <div className="text-center mt-4">
+                    <div className="bg-gray-200 rounded-full h-3 mb-2">
+                      <div 
+                        className="bg-purple-500 h-3 rounded-full transition-all duration-300"
+                        style={{ 
+                          width: `${(timelineOrder.filter((stepIndex, displayIndex) => stepIndex === displayIndex).length / miniGames[gameStep].steps.length) * 100}%` 
+                        }}
+                      />
+                    </div>
+                    <p className="text-sm text-gray-600">
+                      {timelineOrder.filter((stepIndex, displayIndex) => stepIndex === displayIndex).length} / {miniGames[gameStep].steps.length} steps in correct order
+                    </p>
                   </div>
                 </div>
               </div>
@@ -673,15 +888,66 @@ const CreditScoreModule = () => {
             {/* Success/Completion State */}
             {gameCompleted && (
               <motion.div
-                className="mt-6 bg-green-100 border border-green-300 rounded-lg p-4"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
+                className="mt-6 bg-gradient-to-r from-green-100 to-emerald-100 border border-green-300 rounded-lg p-6 relative overflow-hidden"
+                initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.5, type: "spring", stiffness: 300 }}
               >
-                <div className="text-center">
-                  <div className="text-3xl mb-2">🎉</div>
-                  <div className="font-bold text-green-800">Amazing Job!</div>
-                  <div className="text-sm text-green-600">You've mastered this concept! +25 XP</div>
+                {/* Floating particles */}
+                {[...Array(5)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    className="absolute text-2xl"
+                    initial={{ 
+                      x: Math.random() * 400,
+                      y: 50,
+                      opacity: 0
+                    }}
+                    animate={{ 
+                      y: -50,
+                      opacity: [0, 1, 0],
+                      rotate: [0, 180, 360]
+                    }}
+                    transition={{ 
+                      duration: 3,
+                      delay: i * 0.2,
+                      repeat: 2
+                    }}
+                  >
+                    {['⭐', '✨', '🎉', '💫', '🌟'][i]}
+                  </motion.div>
+                ))}
+                
+                <div className="text-center relative z-10">
+                  <motion.div 
+                    className="text-4xl mb-3"
+                    animate={{ 
+                      scale: [1, 1.3, 1],
+                      rotate: [0, 15, -15, 0]
+                    }}
+                    transition={{ 
+                      duration: 0.8,
+                      repeat: 3
+                    }}
+                  >
+                    🎉
+                  </motion.div>
+                  <motion.div 
+                    className="font-bold text-green-800 text-xl mb-2"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                  >
+                    Amazing Job!
+                  </motion.div>
+                  <motion.div 
+                    className="text-green-600 font-medium"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.5 }}
+                  >
+                    You've mastered this concept! +25 XP 🌟
+                  </motion.div>
                 </div>
               </motion.div>
             )}
@@ -713,12 +979,25 @@ const CreditScoreModule = () => {
               ))}
             </div>
 
-            <button
+            <motion.button
               onClick={nextGameStep}
-              className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-xl font-medium transition shadow-lg"
+              className="px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-xl font-bold transition shadow-lg relative overflow-hidden"
+              whileHover={{ 
+                scale: 1.05,
+                boxShadow: "0 10px 25px rgba(168, 85, 247, 0.4)"
+              }}
+              whileTap={{ scale: 0.95 }}
             >
-              {gameStep === miniGames.length - 1 ? 'Start Quiz! 🎯' : 'Next Game →'}
-            </button>
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-orange-400 opacity-20"
+                initial={{ x: "-100%" }}
+                whileHover={{ x: "100%" }}
+                transition={{ duration: 0.5 }}
+              />
+              <span className="relative z-10">
+                {gameStep === miniGames.length - 1 ? 'Start Quiz! 🎯' : 'Next Game →'}
+              </span>
+            </motion.button>
           </div>
         </motion.div>
       ) : currentStep === 'quiz' && !showResults ? (
@@ -964,6 +1243,7 @@ const CreditScoreModule = () => {
                 onClick={() => {
                   setCurrentStep('learning');
                   setLearningStep(0);
+                  setGameStep(0);
                   setCurrentQuestion(0);
                   setSelectedAnswers({});
                   setShowResults(false);
@@ -973,6 +1253,14 @@ const CreditScoreModule = () => {
                   setStreak(0);
                   setTotalXP(0);
                   setAchievements([]);
+                  setGameScore(0);
+                  setCurrentGameType('');
+                  setGameCompleted(false);
+                  setMatchedPairs([]);
+                  setSelectedTerm(null);
+                  setSelectedDefinition(null);
+                  setSliderValue(miniGames[0]?.scenarios?.[0]?.currentBalance || 0);
+                  setTimelineOrder([0, 1, 2, 3, 4]);
                 }}
                 className="px-6 py-3 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-xl font-medium transition"
               >

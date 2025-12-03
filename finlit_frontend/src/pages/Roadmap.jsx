@@ -84,7 +84,7 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 2], [0.4, 2]);
       id: 6,
       title: "Stock Market Basics",
       subtitle: "Investment Fundamentals",
-      status: "Locked",
+      status: "Next Up",
       icon: "📈",
       color: "#f5f5f5",
       position: "right",
@@ -97,7 +97,7 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 2], [0.4, 2]);
       id: 7,
       title: "Insurance Protection",
       subtitle: "Risk Management",
-      status: "Locked",
+      status: "Next Up",
       icon: "🛡️",
       color: "#f5f5f5",
       position: "left",
@@ -254,7 +254,7 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 2], [0.4, 2]);
         >
           <div className="relative">
             <div className="w-14 h-14 rounded-full overflow-hidden bg-white shadow-md flex items-center justify-center border-2 border-gray-200">
-              <img src="av.jpg" alt="User avatar" className="w-full h-full object-cover" />
+              <img src="user1.jpg" alt="User avatar" className="w-full h-full object-cover" />
             </div>
             <div className="absolute bottom-0 right-0 text-xs bg-white rounded-full h-5 w-5 shadow flex items-center justify-center border border-gray-200">
               <span className="text-xs">pwc</span>

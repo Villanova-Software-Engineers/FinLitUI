@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Calculator, DollarSign, AlertTriangle, CheckCircle, TrendingUp, Heart, Star, Zap, Trophy } from 'lucide-react';
+import { ArrowLeft, Calculator, DollarSign, AlertTriangle, TrendingUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const EmergencyFundModule = () => {
   const navigate = useNavigate();
-  const [currentPhase, setCurrentPhase] = useState('story'); // 'story', 'calculator', 'results'
+  const [currentPhase, setCurrentPhase] = useState('story'); // 'story', 'game', 'calculator', 'results'
   const [storyStep, setStoryStep] = useState(0);
+  const [gameStep, setGameStep] = useState(0);
   const [step, setStep] = useState(1);
   const [monthlyExpenses, setMonthlyExpenses] = useState({
     housing: '',
@@ -93,6 +94,79 @@ const EmergencyFundModule = () => {
     }
   ];
 
+  // Interactive mini-games
+  const miniGames = [
+    {
+      id: 1,
+      type: "sorting",
+      title: "Emergency vs Non-Emergency",
+      character: "🧙‍♂️ Professor Fund",
+      instruction: "Sort these expenses into Emergency or Non-Emergency categories!",
+      expenses: [
+        { id: 1, name: "Car repair", amount: 800, category: "emergency", emoji: "🚗", sorted: false },
+        { id: 2, name: "Vacation to Hawaii", amount: 2000, category: "non-emergency", emoji: "🏖️", sorted: false },
+        { id: 3, name: "Medical bill", amount: 500, category: "emergency", emoji: "🏥", sorted: false },
+        { id: 4, name: "New gaming console", amount: 400, category: "non-emergency", emoji: "🎮", sorted: false },
+        { id: 5, name: "Job loss (3 months expenses)", amount: 6000, category: "emergency", emoji: "💼", sorted: false },
+        { id: 6, name: "Designer handbag", amount: 600, category: "non-emergency", emoji: "👜", sorted: false }
+      ]
+    },
+    {
+      id: 2,
+      type: "calculator",
+      title: "Emergency Fund Calculator Challenge", 
+      character: "📊 Calculator Kate",
+      instruction: "Help different people calculate their emergency fund needs!",
+      people: [
+        { 
+          name: "Alex", emoji: "👨‍💻", 
+          expenses: { rent: 1200, food: 400, utilities: 150, transport: 200 },
+          jobType: "stable", months: 3
+        },
+        { 
+          name: "Sarah", emoji: "👩‍🎨", 
+          expenses: { rent: 800, food: 300, utilities: 100, transport: 150 },
+          jobType: "freelancer", months: 6
+        }
+      ],
+      currentPerson: 0,
+      userAnswer: 0
+    },
+    {
+      id: 3,
+      type: "scenario",
+      title: "Real-Life Emergency Scenarios",
+      character: "🎭 Scenario Sam",
+      instruction: "Choose the best response to each emergency situation!",
+      scenarios: [
+        {
+          id: 1,
+          situation: "Your laptop breaks and you need it for work",
+          cost: 1200,
+          emoji: "💻",
+          options: [
+            { text: "Use emergency fund", correct: true, explanation: "Perfect use of emergency fund!" },
+            { text: "Put it on credit card", correct: false, explanation: "This adds debt when you have savings" },
+            { text: "Borrow from friends", correct: false, explanation: "Use your own emergency fund first" }
+          ]
+        },
+        {
+          id: 2,
+          situation: "You see a great deal on a dream vacation",
+          cost: 3000,
+          emoji: "✈️",
+          options: [
+            { text: "Use emergency fund", correct: false, explanation: "This isn't an emergency - it's a want!" },
+            { text: "Save up separately", correct: true, explanation: "Great choice! Keep emergency fund intact" },
+            { text: "Use credit card", correct: false, explanation: "Don't go into debt for vacations" }
+          ]
+        }
+      ],
+      currentScenario: 0,
+      selectedAnswer: null
+    }
+  ];
+
   const scenarios = [
     {
       id: 'conservative',
@@ -150,7 +224,21 @@ const EmergencyFundModule = () => {
     if (storyStep < storyContent.length - 1) {
       setStoryStep(storyStep + 1);
     } else {
+      setCurrentPhase('game');
+    }
+  };
+
+  const nextGameStep = () => {
+    if (gameStep < miniGames.length - 1) {
+      setGameStep(gameStep + 1);
+    } else {
       setCurrentPhase('calculator');
+    }
+  };
+
+  const prevGameStep = () => {
+    if (gameStep > 0) {
+      setGameStep(gameStep - 1);
     }
   };
 
@@ -314,7 +402,265 @@ const EmergencyFundModule = () => {
                 onClick={nextStoryStep}
                 className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-medium transition"
               >
-                {storyStep === storyContent.length - 1 ? 'Start Calculator! 🧮' : 'Next →'}
+                {storyStep === storyContent.length - 1 ? 'Play Games! 🎮' : 'Next →'}
+              </button>
+            </div>
+          </motion.div>
+        ) : currentPhase === 'game' ? (
+          /* Interactive Mini-Games Phase */
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+          >
+            {/* Game Progress */}
+            <div className="mb-8">
+              <div className="flex justify-between text-sm text-emerald-600 mb-2">
+                <span>Game {gameStep + 1} of {miniGames.length}</span>
+                <span>{Math.round(((gameStep + 1) / miniGames.length) * 100)}% Complete</span>
+              </div>
+              <div className="w-full bg-emerald-100 rounded-full h-3">
+                <motion.div
+                  className="bg-gradient-to-r from-emerald-500 to-blue-500 h-3 rounded-full"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${((gameStep + 1) / miniGames.length) * 100}%` }}
+                  transition={{ duration: 0.5 }}
+                />
+              </div>
+            </div>
+
+            {/* Mini-Game Card */}
+            <motion.div
+              key={gameStep}
+              className="bg-gradient-to-br from-emerald-50 to-blue-50 rounded-2xl p-8 shadow-lg mb-6 border-2 border-emerald-200"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+            >
+              {/* Game Header */}
+              <div className="text-center mb-8">
+                <motion.div 
+                  className="text-6xl mb-4"
+                  animate={{ 
+                    scale: [1, 1.2, 1],
+                    rotate: [0, 10, -10, 0]
+                  }}
+                  transition={{ duration: 3, repeat: Infinity, repeatDelay: 1 }}
+                >
+                  🎮
+                </motion.div>
+                <h2 className="text-3xl font-bold text-gray-800 mb-2">
+                  {miniGames[gameStep].title}
+                </h2>
+                <div className="text-lg font-semibold text-emerald-600 mb-4">
+                  {miniGames[gameStep].character}
+                </div>
+                <p className="text-gray-600 text-lg">
+                  {miniGames[gameStep].instruction}
+                </p>
+              </div>
+
+              {/* Sorting Game */}
+              {miniGames[gameStep].type === 'sorting' && (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Emergency Category */}
+                    <div className="bg-red-50 rounded-xl p-6 border-2 border-red-200">
+                      <h3 className="text-lg font-bold text-red-800 mb-4 text-center">
+                        🚨 Emergency Expenses
+                      </h3>
+                      <div className="space-y-3 min-h-[200px]">
+                        {miniGames[gameStep].expenses
+                          .filter(expense => expense.category === 'emergency')
+                          .map((expense) => (
+                            <motion.div
+                              key={expense.id}
+                              className="bg-white p-4 rounded-lg shadow-md border border-red-200 cursor-pointer"
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <span className="text-2xl">{expense.emoji}</span>
+                                  <div>
+                                    <div className="font-medium">{expense.name}</div>
+                                    <div className="text-sm text-gray-600">${expense.amount}</div>
+                                  </div>
+                                </div>
+                                <div className="text-green-600 font-bold">✓</div>
+                              </div>
+                            </motion.div>
+                          ))}
+                      </div>
+                    </div>
+
+                    {/* Non-Emergency Category */}
+                    <div className="bg-blue-50 rounded-xl p-6 border-2 border-blue-200">
+                      <h3 className="text-lg font-bold text-blue-800 mb-4 text-center">
+                        🛍️ Non-Emergency Expenses
+                      </h3>
+                      <div className="space-y-3 min-h-[200px]">
+                        {miniGames[gameStep].expenses
+                          .filter(expense => expense.category === 'non-emergency')
+                          .map((expense) => (
+                            <motion.div
+                              key={expense.id}
+                              className="bg-white p-4 rounded-lg shadow-md border border-blue-200"
+                              whileHover={{ scale: 1.02 }}
+                              initial={{ opacity: 0.7 }}
+                              animate={{ opacity: 1 }}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <span className="text-2xl">{expense.emoji}</span>
+                                  <div>
+                                    <div className="font-medium">{expense.name}</div>
+                                    <div className="text-sm text-gray-600">${expense.amount}</div>
+                                  </div>
+                                </div>
+                                <div className="text-green-600 font-bold">✓</div>
+                              </div>
+                            </motion.div>
+                          ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Success Message */}
+                  <motion.div
+                    className="bg-green-100 border border-green-300 rounded-lg p-4 text-center"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <div className="text-3xl mb-2">🎉</div>
+                    <div className="font-bold text-green-800">Perfect Sorting!</div>
+                    <div className="text-sm text-green-600">Now you know when to use your emergency fund! +25 XP</div>
+                  </motion.div>
+                </div>
+              )}
+
+              {/* Calculator Challenge Game */}
+              {miniGames[gameStep].type === 'calculator' && (
+                <div className="space-y-6">
+                  <div className="bg-white rounded-xl p-6 shadow-md">
+                    <div className="text-center mb-6">
+                      <span className="text-4xl mb-2 block">
+                        {miniGames[gameStep].people[0].emoji}
+                      </span>
+                      <h3 className="text-xl font-bold text-gray-800">
+                        Help {miniGames[gameStep].people[0].name} Calculate Their Emergency Fund!
+                      </h3>
+                      <p className="text-gray-600 mt-2">
+                        Job Type: {miniGames[gameStep].people[0].jobType === 'stable' ? 'Stable Employment' : 'Freelancer'}<br />
+                        Recommended: {miniGames[gameStep].people[0].months} months of expenses
+                      </p>
+                    </div>
+
+                    <div className="space-y-4 mb-6">
+                      <div className="grid grid-cols-2 gap-4">
+                        {Object.entries(miniGames[gameStep].people[0].expenses).map(([category, amount]) => (
+                          <div key={category} className="bg-gray-50 rounded-lg p-3">
+                            <div className="text-sm text-gray-600 capitalize">{category}</div>
+                            <div className="text-lg font-bold">${amount}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="text-center bg-emerald-50 rounded-lg p-6">
+                      <div className="text-sm text-gray-600 mb-2">Emergency Fund Needed:</div>
+                      <div className="text-3xl font-bold text-emerald-600">
+                        ${(Object.values(miniGames[gameStep].people[0].expenses).reduce((sum, val) => sum + val, 0) * miniGames[gameStep].people[0].months).toLocaleString()}
+                      </div>
+                      <div className="text-sm text-gray-500 mt-2">
+                        (${Object.values(miniGames[gameStep].people[0].expenses).reduce((sum, val) => sum + val, 0)} × {miniGames[gameStep].people[0].months} months)
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Scenario Game */}
+              {miniGames[gameStep].type === 'scenario' && (
+                <div className="space-y-6">
+                  <div className="bg-white rounded-xl p-6 shadow-md">
+                    <div className="text-center mb-6">
+                      <span className="text-4xl mb-4 block">
+                        {miniGames[gameStep].scenarios[0].emoji}
+                      </span>
+                      <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                        <h3 className="text-lg font-bold text-gray-800 mb-2">Scenario:</h3>
+                        <p className="text-gray-700">{miniGames[gameStep].scenarios[0].situation}</p>
+                        <p className="text-emerald-600 font-bold mt-2">Cost: ${miniGames[gameStep].scenarios[0].cost}</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      {miniGames[gameStep].scenarios[0].options.map((option, index) => (
+                        <motion.button
+                          key={index}
+                          className="w-full p-4 rounded-lg border-2 text-left transition-all bg-white hover:bg-emerald-50 border-gray-200 hover:border-emerald-300"
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full border-2 border-emerald-300 text-emerald-500 flex items-center justify-center font-bold">
+                              {String.fromCharCode(65 + index)}
+                            </div>
+                            <span className="text-lg">{option.text}</span>
+                          </div>
+                        </motion.button>
+                      ))}
+                    </div>
+
+                    {/* Explanation */}
+                    <motion.div
+                      className="mt-6 p-4 bg-emerald-50 border-l-4 border-emerald-400 rounded-r-lg"
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <p className="text-emerald-800">
+                        ✓ Correct! {miniGames[gameStep].scenarios[0].options.find(o => o.correct)?.explanation}
+                      </p>
+                    </motion.div>
+                  </div>
+                </div>
+              )}
+            </motion.div>
+
+            {/* Game Navigation */}
+            <div className="flex justify-between items-center">
+              <button
+                onClick={prevGameStep}
+                disabled={gameStep === 0}
+                className={`px-6 py-3 rounded-xl font-medium transition ${
+                  gameStep === 0
+                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                    : 'bg-gray-300 hover:bg-gray-400 text-gray-700'
+                }`}
+              >
+                ← Previous Game
+              </button>
+
+              <div className="flex gap-2">
+                {miniGames.map((_, index) => (
+                  <div
+                    key={index}
+                    className={`w-3 h-3 rounded-full ${
+                      index === gameStep ? 'bg-emerald-500' : 
+                      index < gameStep ? 'bg-green-500' : 'bg-gray-300'
+                    }`}
+                  />
+                ))}
+              </div>
+
+              <button
+                onClick={nextGameStep}
+                className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white rounded-xl font-medium transition shadow-lg"
+              >
+                {gameStep === miniGames.length - 1 ? 'Start Calculator! 🧮' : 'Next Game →'}
               </button>
             </div>
           </motion.div>

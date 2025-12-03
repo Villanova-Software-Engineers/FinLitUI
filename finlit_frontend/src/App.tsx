@@ -15,6 +15,7 @@ import EmergencyFundModule from "./components/EmergencyFundModule";
 import StockMarketModule from "./components/StockMarketModule";
 import InsuranceModule from "./components/InsuranceModule";
 import DebtManagementModule from "./components/DebtManagementModule";
+import InvestmentBankingModule from "./components/InvestmentBankingModule";
 
 function Dashboard() {
   return <FinLitApp />;
@@ -41,7 +42,7 @@ function App() {
         {/* Learning Modules */}
         <Route path="/needs-wants" element={<NeedsWants />} />
         <Route path="/need" element={<NeedsWants />} />
-        <Route path="/investment-quiz" element={<TrueFalseCard />} />
+        <Route path="/investment-quiz" element={<InvestmentBankingModule />} />
         <Route path="/truefalse" element={<TrueFalseCard />} />
         <Route path="/credit-score" element={<CreditScoreModule />} />
         <Route path="/emergency-fund" element={<EmergencyFundModule />} />
