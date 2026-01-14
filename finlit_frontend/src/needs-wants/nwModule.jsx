@@ -3,9 +3,11 @@ import { useSwipeable } from "react-swipeable";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, ArrowLeft, ArrowRight, RotateCcw, Zap } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
+import { useModuleScore, MODULES } from '../hooks/useModuleScore';
 
 export default function NeedsWants() {
   const navigate = useNavigate();
+  const { saveScore, isModulePassed, refreshProgress } = useModuleScore();
   
   function getRandomItem(list, count) {
     return [...list].sort(() => Math.random() - 0.5).slice(0, count);
@@ -25,6 +27,24 @@ export default function NeedsWants() {
   const [swipeDirection, setSwipeDirection] = useState(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
+  const [swipeCorrect, setSwipeCorrect] = useState(0);
+  const [quizCorrect, setQuizCorrect] = useState(0);
+  const [isSaving, setIsSaving] = useState(false);
+  const [scoreSaved, setScoreSaved] = useState(false);
+  const [shuffledQuiz, setShuffledQuiz] = useState([]);
+
+  // Check if module is already passed
+  const modulePassed = isModulePassed(MODULES.NEEDS_WANTS.id);
+
+  // Shuffle array helper
+  const shuffleArray = (array) => {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  };
 
   // Hardcoded items for better control and fewer questions
   const hardcodedItems = [
@@ -81,16 +101,20 @@ export default function NeedsWants() {
   // Enhanced swipe logic with better animations
   function handleSwipe(direction) {
     if (finished) return;
-    
+
     const item = items2[current];
     if (!item) return;
 
     setSwipeDirection(direction);
-    const isCorrect = (direction === "right" && item.type === "want") || 
+    const isCorrectAnswer = (direction === "right" && item.type === "want") ||
                      (direction === "left" && item.type === "need");
 
-    const msg = isCorrect 
-      ? `✅ Correct! ${item.name} is a ${item.type}` 
+    if (isCorrectAnswer) {
+      setSwipeCorrect(prev => prev + 1);
+    }
+
+    const msg = isCorrectAnswer
+      ? `✅ Correct! ${item.name} is a ${item.type}`
       : `❌ Oops! ${item.name} is actually a ${item.type}`;
 
     setFeedback(msg);
@@ -157,16 +181,97 @@ export default function NeedsWants() {
     }
   ];
 
+  // Initialize shuffled quiz when quiz is shown
+  useEffect(() => {
+    if (showQuiz && shuffledQuiz.length === 0) {
+      const shuffled = quiz.map(q => ({
+        ...q,
+        options: shuffleArray(q.options)
+      }));
+      setShuffledQuiz(shuffled);
+    }
+  }, [showQuiz]);
+
+  // Get current quiz question (shuffled or original)
+  const currentQuizQuestion = shuffledQuiz.length > 0 ? shuffledQuiz[quizIndex] : quiz[quizIndex];
+
   function handleQuizAnswer(correct) {
+    if (correct) {
+      setQuizCorrect(prev => prev + 1);
+    }
     setQuizFeedback(correct ? "✅ Correct!" : "❌ Try again!");
     setTimeout(() => {
       setQuizFeedback("");
-      if (quizIndex < quiz.length - 1) setQuizIndex(quizIndex + 1);
-      else {
+      if (quizIndex < quiz.length - 1) {
+        setQuizIndex(quizIndex + 1);
+      } else {
+        // Quiz finished - save score
+        handleSaveScore(correct);
         setShowGray(true);
         setShowQuiz(false);
       }
     }, 1000);
+  }
+
+  // Save score to Firestore
+  async function handleSaveScore(lastAnswerCorrect) {
+    if (scoreSaved) return; // Prevent duplicate saves
+
+    setIsSaving(true);
+    try {
+      // Total questions = swipe items + quiz questions
+      const totalQuestions = items2.length + quiz.length;
+      const totalCorrect = swipeCorrect + quizCorrect + (lastAnswerCorrect ? 1 : 0);
+      const percentageScore = Math.round((totalCorrect / totalQuestions) * 100);
+
+      await saveScore(MODULES.NEEDS_WANTS.id, percentageScore, 100);
+      await refreshProgress();
+      setScoreSaved(true);
+    } catch (error) {
+      console.error('Failed to save score:', error);
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  // If module is already passed, show completion screen
+  if (modulePassed) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-blue-100 p-6 flex items-center justify-center">
+        <motion.div
+          className="bg-white rounded-2xl shadow-xl p-8 max-w-md text-center"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          <motion.div
+            className="text-6xl mb-4"
+            animate={{ rotate: [0, -10, 10, -10, 0] }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+          >
+            🎉
+          </motion.div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Module Completed!</h2>
+          <p className="text-gray-600 mb-6">
+            You've already passed the Needs vs Wants module. Great job understanding the difference between needs and wants!
+          </p>
+          <div className="bg-green-50 rounded-xl p-4 mb-6">
+            <div className="flex items-center justify-center gap-2 text-green-600">
+              <span className="text-2xl">✓</span>
+              <span className="font-semibold">100% Complete</span>
+            </div>
+          </div>
+          <motion.button
+            onClick={() => navigate('/game')}
+            className="w-full px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold transition"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            Back to Learning Path
+          </motion.button>
+        </motion.div>
+      </div>
+    );
   }
 
   return (
@@ -487,11 +592,11 @@ export default function NeedsWants() {
                 className="mb-8"
               >
                 <h2 className="text-xl font-bold text-gray-800 mb-6 text-center">
-                  {quiz[quizIndex].q}
+                  {currentQuizQuestion.q}
                 </h2>
 
                 <div className="space-y-3 max-w-md mx-auto">
-                  {quiz[quizIndex].options.map((opt, i) => (
+                  {currentQuizQuestion.options.map((opt, i) => (
                     <motion.button
                       key={i}
                       className="w-full p-4 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold rounded-xl border-2 border-transparent hover:border-purple-300 transition-all text-left"
@@ -532,6 +637,34 @@ export default function NeedsWants() {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.6 }}
               >
+                {/* Score Display */}
+                <div className="bg-gray-100 rounded-xl p-6 mb-6">
+                  <div className="text-5xl mb-2">
+                    {(() => {
+                      const totalQuestions = items2.length + quiz.length;
+                      const totalCorrect = swipeCorrect + quizCorrect;
+                      const percentage = Math.round((totalCorrect / totalQuestions) * 100);
+                      return percentage === 100 ? '🎉' : percentage >= 70 ? '👍' : '📚';
+                    })()}
+                  </div>
+                  <div className="text-4xl font-bold text-blue-600 mb-1">
+                    {Math.round(((swipeCorrect + quizCorrect) / (items2.length + quiz.length)) * 100)}%
+                  </div>
+                  <div className="text-sm text-gray-600 mb-2">
+                    {swipeCorrect + quizCorrect} of {items2.length + quiz.length} correct
+                  </div>
+                  <div className={`text-sm font-semibold ${
+                    Math.round(((swipeCorrect + quizCorrect) / (items2.length + quiz.length)) * 100) === 100
+                      ? 'text-green-600'
+                      : 'text-orange-600'
+                  }`}>
+                    {Math.round(((swipeCorrect + quizCorrect) / (items2.length + quiz.length)) * 100) === 100
+                      ? '✅ Module Passed!'
+                      : 'Need 100% to pass'}
+                  </div>
+                  {isSaving && <div className="text-gray-500 mt-2">Saving score...</div>}
+                </div>
+
                 <div className="text-6xl mb-6">⚖️</div>
                 <h1 className="text-3xl font-bold text-gray-800 mb-4">Context Matters!</h1>
                 <p className="text-lg text-gray-600 mb-8">
@@ -556,7 +689,32 @@ export default function NeedsWants() {
                   </div>
                 </div>
 
-                <div className="flex gap-4 justify-center">
+                <div className="flex gap-4 justify-center flex-wrap">
+                  {Math.round(((swipeCorrect + quizCorrect) / (items2.length + quiz.length)) * 100) < 100 && (
+                    <motion.button
+                      className="flex items-center gap-2 px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl shadow-lg transition-colors"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => {
+                        setStep(1);
+                        setSelected([]);
+                        setCurrent(0);
+                        setShowQuiz(false);
+                        setShowGray(false);
+                        setFinished(false);
+                        setQuizIndex(0);
+                        setFeedback("");
+                        setSwipeDirection(null);
+                        setDragOffset({ x: 0, y: 0 });
+                        setSwipeCorrect(0);
+                        setQuizCorrect(0);
+                        setScoreSaved(false);
+                      }}
+                    >
+                      <RotateCcw className="w-5 h-5" />
+                      Retake Module
+                    </motion.button>
+                  )}
                   <motion.button
                     className="flex items-center gap-2 px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl shadow-lg transition-colors"
                     whileHover={{ scale: 1.05 }}
@@ -564,27 +722,6 @@ export default function NeedsWants() {
                     onClick={() => navigate('/game')}
                   >
                     Back to Roadmap
-                  </motion.button>
-
-                  <motion.button
-                    className="flex items-center gap-2 px-6 py-3 bg-gray-300 hover:bg-gray-400 text-gray-700 font-semibold rounded-xl shadow-lg transition-colors"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => {
-                      setStep(1);
-                      setSelected([]);
-                      setCurrent(0);
-                      setShowQuiz(false);
-                      setShowGray(false);
-                      setFinished(false);
-                      setQuizIndex(0);
-                      setFeedback("");
-                      setSwipeDirection(null);
-                      setDragOffset({ x: 0, y: 0 });
-                    }}
-                  >
-                    <RotateCcw className="w-5 h-5" />
-                    Play Again
                   </motion.button>
                 </div>
               </motion.div>

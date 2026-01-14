@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Star, Trophy, CheckCircle, XCircle, Heart, Zap } from 'lucide-react';
+import { ArrowLeft, Star, Trophy, CheckCircle, XCircle, Heart, Zap, RefreshCw, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useModuleScore, MODULES } from '../hooks/useModuleScore';
 
 const CreditScoreModule = () => {
   const navigate = useNavigate();
+  const { saveScore, getModuleScore, isModulePassed, resetModule, isLoading: progressLoading } = useModuleScore();
+
   const [currentStep, setCurrentStep] = useState('learning'); // 'learning', 'game', 'quiz', 'results'
   const [learningStep, setLearningStep] = useState(0);
   const [gameStep, setGameStep] = useState(0);
@@ -18,6 +21,11 @@ const CreditScoreModule = () => {
   const [streak, setStreak] = useState(0);
   const [totalXP, setTotalXP] = useState(0);
   const [achievements, setAchievements] = useState([]);
+
+  // Module score saving state
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveResult, setSaveResult] = useState(null); // { passed, attemptNumber, needsRetake }
+  const [isResetting, setIsResetting] = useState(false);
   
   // Game states
   const [gameScore, setGameScore] = useState(0);
@@ -29,6 +37,20 @@ const CreditScoreModule = () => {
   const [selectedDefinition, setSelectedDefinition] = useState(null);
   const [sliderValue, setSliderValue] = useState(0);
   const [timelineOrder, setTimelineOrder] = useState([]);
+  const [shuffledDefinitions, setShuffledDefinitions] = useState([]);
+
+  // Check if module is already passed
+  const modulePassed = isModulePassed(MODULES.CREDIT_SCORE?.id);
+
+  // Fisher-Yates shuffle function
+  const shuffleArray = (array) => {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  };
 
   // Learning content with character-driven story
   const learningContent = [
@@ -226,19 +248,21 @@ const CreditScoreModule = () => {
     }
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
       setShowExplanation(false);
     } else {
-      calculateScore();
+      const finalScore = calculateScore();
       setShowResults(true);
-      
+
       // Final achievements
-      const finalScore = Object.keys(selectedAnswers).length;
       if (finalScore === questions.length) {
         setAchievements([...achievements, { id: 'perfect', name: 'Credit Master!', desc: 'Perfect credit knowledge', emoji: '🏆' }]);
       }
+
+      // Save the score to Firestore
+      await saveModuleScore(finalScore);
     }
   };
 
@@ -259,6 +283,54 @@ const CreditScoreModule = () => {
       }
     });
     setScore(correctAnswers);
+    return correctAnswers;
+  };
+
+  // Save the module score when quiz is completed
+  const saveModuleScore = async (finalScore) => {
+    setIsSaving(true);
+    try {
+      // Convert score to percentage (0-100)
+      const percentageScore = Math.round((finalScore / questions.length) * 100);
+      const result = await saveScore('credit-score', percentageScore, 100);
+      setSaveResult(result);
+    } catch (err) {
+      console.error('Error saving score:', err);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Handle reset module
+  const handleResetModule = async () => {
+    setIsResetting(true);
+    try {
+      await resetModule('credit-score');
+      // Reset local state to start over
+      setCurrentStep('learning');
+      setLearningStep(0);
+      setGameStep(0);
+      setCurrentQuestion(0);
+      setSelectedAnswers({});
+      setShowResults(false);
+      setShowExplanation(false);
+      setScore(0);
+      setLives(3);
+      setStreak(0);
+      setTotalXP(0);
+      setAchievements([]);
+      setGameScore(0);
+      setCurrentGameType('');
+      setGameCompleted(false);
+      setMatchedPairs([]);
+      setSelectedTerm(null);
+      setSelectedDefinition(null);
+      setSaveResult(null);
+    } catch (err) {
+      console.error('Error resetting module:', err);
+    } finally {
+      setIsResetting(false);
+    }
   };
 
   const nextLearningStep = () => {
@@ -357,16 +429,17 @@ const CreditScoreModule = () => {
 
   const handleTimelineDrop = (e, dropIndex) => {
     e.preventDefault();
-    if (draggedItem === null) return;
-    
+    if (draggedItem === null || draggedItem === dropIndex) return;
+
+    // Swap the two items instead of inserting
     const newOrder = [...timelineOrder];
-    const draggedContent = newOrder[draggedItem];
-    newOrder.splice(draggedItem, 1);
-    newOrder.splice(dropIndex, 0, draggedContent);
-    
+    const temp = newOrder[draggedItem];
+    newOrder[draggedItem] = newOrder[dropIndex];
+    newOrder[dropIndex] = temp;
+
     setTimelineOrder(newOrder);
     setDraggedItem(null);
-    
+
     // Check if order is correct
     const isCorrect = newOrder.every((item, index) => item === index);
     if (isCorrect) {
@@ -388,7 +461,28 @@ const CreditScoreModule = () => {
   React.useEffect(() => {
     if (currentStep === 'game') {
       setSliderValue(miniGames[gameStep]?.scenarios?.[0]?.currentBalance || 0);
-      setTimelineOrder(miniGames[gameStep]?.steps?.map((_, index) => index) || []);
+
+      // For timeline game, shuffle the order so it's not already in correct order
+      if (miniGames[gameStep]?.type === 'timeline') {
+        const indices = miniGames[gameStep].steps.map((_, index) => index);
+        let shuffled = shuffleArray(indices);
+        // Make sure the shuffled array is not already in correct order
+        while (shuffled.every((val, idx) => val === idx)) {
+          shuffled = shuffleArray(indices);
+        }
+        setTimelineOrder(shuffled);
+      }
+
+      // For matching game, shuffle the definitions order
+      if (miniGames[gameStep]?.type === 'matching') {
+        const indices = miniGames[gameStep].pairs.map((_, index) => index);
+        let shuffled = shuffleArray(indices);
+        // Make sure the shuffled array is not already in correct order
+        while (shuffled.every((val, idx) => val === idx)) {
+          shuffled = shuffleArray(indices);
+        }
+        setShuffledDefinitions(shuffled);
+      }
     }
   }, [gameStep, currentStep]);
 
@@ -412,6 +506,46 @@ const CreditScoreModule = () => {
     if (percentage >= 60) return "text-blue-600";
     return "text-orange-600";
   };
+
+  // If module is already passed, show completion screen
+  if (modulePassed) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-100 to-blue-200 p-6 flex items-center justify-center">
+        <motion.div
+          className="bg-white rounded-2xl shadow-xl p-8 max-w-md text-center"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          <motion.div
+            className="text-6xl mb-4"
+            animate={{ rotate: [0, -10, 10, -10, 0] }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+          >
+            💳
+          </motion.div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Module Completed!</h2>
+          <p className="text-gray-600 mb-6">
+            You've already passed the Credit Score module. Great job understanding how credit scores work!
+          </p>
+          <div className="bg-green-50 rounded-xl p-4 mb-6">
+            <div className="flex items-center justify-center gap-2 text-green-600">
+              <span className="text-2xl">✓</span>
+              <span className="font-semibold">100% Complete</span>
+            </div>
+          </div>
+          <motion.button
+            onClick={() => navigate('/game')}
+            className="w-full px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold transition"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            Back to Learning Path
+          </motion.button>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-100 to-blue-200 p-6">
@@ -730,30 +864,33 @@ const CreditScoreModule = () => {
                     ))}
                   </div>
 
-                  {/* Definitions */}
+                  {/* Definitions - shuffled order */}
                   <div className="space-y-3">
                     <h3 className="font-bold text-gray-800 mb-4">Impact & Description</h3>
-                    {miniGames[gameStep].pairs.map((pair, index) => (
-                      <motion.div
-                        key={`def-${index}`}
-                        className={`p-4 rounded-lg shadow-md border-2 cursor-pointer transition ${
-                          matchedPairs.includes(index) 
-                            ? 'bg-green-100 border-green-500 cursor-not-allowed' 
-                            : selectedDefinition === index
-                            ? 'bg-purple-100 border-purple-500'
-                            : 'bg-white border-gray-200 hover:bg-purple-50 hover:border-purple-300'
-                        }`}
-                        initial={{ opacity: 0.7 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: index * 0.1 }}
-                        onClick={() => handleDefinitionClick(index)}
-                        whileHover={!matchedPairs.includes(index) ? { scale: 1.02 } : {}}
-                        whileTap={!matchedPairs.includes(index) ? { scale: 0.98 } : {}}
-                      >
-                        <span className="text-gray-700">{pair.definition}</span>
-                        {matchedPairs.includes(index) && <span className="text-green-500 float-right">✓</span>}
-                      </motion.div>
-                    ))}
+                    {(shuffledDefinitions.length > 0 ? shuffledDefinitions : miniGames[gameStep].pairs.map((_, i) => i)).map((originalIndex, displayIndex) => {
+                      const pair = miniGames[gameStep].pairs[originalIndex];
+                      return (
+                        <motion.div
+                          key={`def-${originalIndex}`}
+                          className={`p-4 rounded-lg shadow-md border-2 cursor-pointer transition ${
+                            matchedPairs.includes(originalIndex)
+                              ? 'bg-green-100 border-green-500 cursor-not-allowed'
+                              : selectedDefinition === originalIndex
+                              ? 'bg-purple-100 border-purple-500'
+                              : 'bg-white border-gray-200 hover:bg-purple-50 hover:border-purple-300'
+                          }`}
+                          initial={{ opacity: 0.7 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: displayIndex * 0.1 }}
+                          onClick={() => handleDefinitionClick(originalIndex)}
+                          whileHover={!matchedPairs.includes(originalIndex) ? { scale: 1.02 } : {}}
+                          whileTap={!matchedPairs.includes(originalIndex) ? { scale: 0.98 } : {}}
+                        >
+                          <span className="text-gray-700">{pair.definition}</span>
+                          {matchedPairs.includes(originalIndex) && <span className="text-green-500 float-right">✓</span>}
+                        </motion.div>
+                      );
+                    })}
                   </div>
                 </div>
                 
@@ -1231,14 +1368,76 @@ const CreditScoreModule = () => {
               })}
             </div>
 
+            {/* Pass/Fail Status Banner */}
+            {saveResult && (
+              <motion.div
+                className={`mb-6 p-4 rounded-xl border-2 ${
+                  saveResult.passed
+                    ? 'bg-green-50 border-green-300'
+                    : 'bg-orange-50 border-orange-300'
+                }`}
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <div className="flex items-center justify-center gap-3">
+                  {saveResult.passed ? (
+                    <>
+                      <CheckCircle className="text-green-600" size={28} />
+                      <div className="text-center">
+                        <p className="font-bold text-green-800 text-lg">Module Passed! 🎉</p>
+                        <p className="text-green-600 text-sm">
+                          You achieved 100% - Attempt #{saveResult.attemptNumber}
+                        </p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <XCircle className="text-orange-600" size={28} />
+                      <div className="text-center">
+                        <p className="font-bold text-orange-800 text-lg">Keep Practicing!</p>
+                        <p className="text-orange-600 text-sm">
+                          100% required to pass - Attempt #{saveResult.attemptNumber}
+                        </p>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </motion.div>
+            )}
+
+            {isSaving && (
+              <div className="mb-6 flex items-center justify-center gap-2 text-blue-600">
+                <Loader2 className="animate-spin" size={20} />
+                <span>Saving your progress...</span>
+              </div>
+            )}
+
             {/* Action Buttons */}
-            <div className="flex gap-4 justify-center">
+            <div className="flex gap-4 justify-center flex-wrap">
               <button
                 onClick={() => navigate('/game')}
                 className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-medium transition"
               >
                 Back to Roadmap
               </button>
+
+              {/* Show Reset & Retry button if not passed */}
+              {saveResult && !saveResult.passed && (
+                <button
+                  onClick={handleResetModule}
+                  disabled={isResetting}
+                  className="px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-medium transition flex items-center gap-2 disabled:opacity-50"
+                >
+                  {isResetting ? (
+                    <Loader2 className="animate-spin" size={18} />
+                  ) : (
+                    <RefreshCw size={18} />
+                  )}
+                  Reset & Try Again
+                </button>
+              )}
+
+              {/* Play Again (for practice, doesn't reset progress) */}
               <button
                 onClick={() => {
                   setCurrentStep('learning');
@@ -1261,6 +1460,7 @@ const CreditScoreModule = () => {
                   setSelectedDefinition(null);
                   setSliderValue(miniGames[0]?.scenarios?.[0]?.currentBalance || 0);
                   setTimelineOrder([0, 1, 2, 3, 4]);
+                  setSaveResult(null);
                 }}
                 className="px-6 py-3 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-xl font-medium transition"
               >

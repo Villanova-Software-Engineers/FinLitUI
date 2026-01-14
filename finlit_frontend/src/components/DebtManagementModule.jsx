@@ -2,9 +2,14 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, CreditCard, Calculator, TrendingDown, CheckCircle, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useModuleScore, MODULES } from '../hooks/useModuleScore';
 
 const DebtManagementModule = () => {
   const navigate = useNavigate();
+  const { isModulePassed } = useModuleScore();
+
+  // Check if module is already passed
+  const modulePassed = isModulePassed(MODULES.DEBT_MANAGEMENT?.id);
   const [currentScenario, setCurrentScenario] = useState(0);
   const [selectedStrategies, setSelectedStrategies] = useState({});
   const [showResults, setShowResults] = useState(false);
@@ -178,6 +183,46 @@ const DebtManagementModule = () => {
     setShowResults(false);
     setScore(0);
   };
+
+  // If module is already passed, show completion screen
+  if (modulePassed) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 p-6 flex items-center justify-center">
+        <motion.div
+          className="bg-white rounded-2xl shadow-xl p-8 max-w-md text-center"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          <motion.div
+            className="text-6xl mb-4"
+            animate={{ rotate: [0, -10, 10, -10, 0] }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+          >
+            💳
+          </motion.div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Module Completed!</h2>
+          <p className="text-gray-600 mb-6">
+            You've already passed the Debt Management module. Great job learning how to manage and eliminate debt!
+          </p>
+          <div className="bg-green-50 rounded-xl p-4 mb-6">
+            <div className="flex items-center justify-center gap-2 text-green-600">
+              <span className="text-2xl">✓</span>
+              <span className="font-semibold">100% Complete</span>
+            </div>
+          </div>
+          <motion.button
+            onClick={() => navigate('/game')}
+            className="w-full px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold transition"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            Back to Learning Path
+          </motion.button>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 p-6">

@@ -1,11 +1,15 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import type { AuthState, User } from '../types/auth.types';
 import { AuthService } from '../services/auth.service';
+import { authReady } from '../../firebase/config';
 
 interface AuthContextType extends AuthState {
   signOut: () => Promise<void>;
-  refreshAuth: () => Promise<void>;
+  refreshUser: () => Promise<void>;
   clearError: () => void;
+  setUser: (user: User) => void;
+  setError: (error: string) => void;
+  setLoading: (loading: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -31,32 +35,47 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   });
 
   useEffect(() => {
-    const initializeAuth = async () => {
-      const token = AuthService.getStoredToken();
-      const userData = AuthService.getStoredUserData();
+    let unsubscribe: (() => void) | null = null;
 
-      if (token && userData) {
-        try {
-          const response = await AuthService.refreshToken();
-          if (response.success) {
-            AuthService.storeAuthData(response.token, response.user);
-            setAuthState({
-              user: response.user,
-              isAuthenticated: true,
-              isLoading: false,
-              error: null,
-            });
-          } else {
-            await AuthService.signOut();
+    // Wait for persistence to be ready before subscribing to auth state
+    const initAuth = async () => {
+      // Wait for Firebase persistence to be configured
+      await authReady;
+
+      // Subscribe to Firebase auth state changes
+      unsubscribe = AuthService.onAuthStateChanged(async (firebaseUser) => {
+        if (firebaseUser) {
+          try {
+            // Get user profile from Firestore
+            const userProfile = await AuthService.getUserProfile(firebaseUser.uid);
+
+            if (userProfile) {
+              setAuthState({
+                user: userProfile,
+                isAuthenticated: true,
+                isLoading: false,
+                error: null,
+              });
+            } else {
+              // User exists in Firebase but not in Firestore
+              setAuthState({
+                user: null,
+                isAuthenticated: false,
+                isLoading: false,
+                error: 'User profile not found',
+              });
+            }
+          } catch (error) {
+            console.error('Error fetching user profile:', error);
             setAuthState({
               user: null,
               isAuthenticated: false,
               isLoading: false,
-              error: null,
+              error: 'Failed to load user profile',
             });
           }
-        } catch (error) {
-          await AuthService.signOut();
+        } else {
+          // No user signed in
           setAuthState({
             user: null,
             isAuthenticated: false,
@@ -64,22 +83,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             error: null,
           });
         }
-      } else {
-        setAuthState({
-          user: null,
-          isAuthenticated: false,
-          isLoading: false,
-          error: null,
-        });
-      }
+      });
     };
 
-    initializeAuth();
+    initAuth();
+
+    // Cleanup subscription on unmount
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
   }, []);
 
   const signOut = async () => {
     setAuthState(prev => ({ ...prev, isLoading: true }));
-    
+
     try {
       await AuthService.signOut();
       setAuthState({
@@ -89,28 +108,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         error: null,
       });
     } catch (error) {
-      setAuthState(prev => ({ 
-        ...prev, 
+      setAuthState(prev => ({
+        ...prev,
         isLoading: false,
-        error: 'Failed to sign out properly'
+        error: 'Failed to sign out properly',
       }));
     }
   };
 
-  const refreshAuth = async () => {
-    try {
-      const response = await AuthService.refreshToken();
-      if (response.success) {
-        AuthService.storeAuthData(response.token, response.user);
-        setAuthState(prev => ({
-          ...prev,
-          user: response.user,
-          isAuthenticated: true,
-          error: null,
-        }));
+  const refreshUser = async () => {
+    const firebaseUser = AuthService.getCurrentFirebaseUser();
+    if (firebaseUser) {
+      try {
+        const userProfile = await AuthService.getUserProfile(firebaseUser.uid);
+        if (userProfile) {
+          setAuthState(prev => ({
+            ...prev,
+            user: userProfile,
+            isAuthenticated: true,
+            error: null,
+          }));
+        }
+      } catch (error) {
+        console.error('Error refreshing user:', error);
       }
-    } catch (error) {
-      await signOut();
     }
   };
 
@@ -118,11 +139,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setAuthState(prev => ({ ...prev, error: null }));
   };
 
+  const setUser = (user: User) => {
+    setAuthState(prev => ({
+      ...prev,
+      user,
+      isAuthenticated: true,
+    }));
+  };
+
+  const setError = (error: string) => {
+    setAuthState(prev => ({ ...prev, error }));
+  };
+
+  const setLoading = (loading: boolean) => {
+    setAuthState(prev => ({ ...prev, isLoading: loading }));
+  };
+
   const contextValue: AuthContextType = {
     ...authState,
     signOut,
-    refreshAuth,
+    refreshUser,
     clearError,
+    setUser,
+    setError,
+    setLoading,
   };
 
   return (

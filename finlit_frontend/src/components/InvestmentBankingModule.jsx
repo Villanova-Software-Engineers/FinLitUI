@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Star, Trophy, CheckCircle, XCircle, Heart, Zap, Award, Target, Play, BookOpen, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Star, Trophy, CheckCircle, XCircle, Heart, Zap, Award, Target, Play, BookOpen, ChevronRight, RefreshCw, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import TrueFalseCard from '../TrueFalse/TrueFalseCard';
+import { useModuleScore, MODULES } from '../hooks/useModuleScore';
 
 const InvestmentBankingModule = () => {
   const navigate = useNavigate();
+  const { saveScore, resetModule, isModulePassed, isLoading: progressLoading } = useModuleScore();
+
+  // Check if module is already passed
+  const modulePassed = isModulePassed(MODULES.INVESTMENT_BANKING?.id);
+
   const [currentPhase, setCurrentPhase] = useState('lessons'); // 'lessons', 'practice', 'truefalse', 'results'
   const [currentLesson, setCurrentLesson] = useState(0);
   const [currentActivity, setCurrentActivity] = useState(0);
@@ -13,6 +19,11 @@ const InvestmentBankingModule = () => {
   const [totalXP, setTotalXP] = useState(0);
   const [streak, setStreak] = useState(0);
   const [achievements, setAchievements] = useState([]);
+
+  // Module score saving state
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveResult, setSaveResult] = useState(null);
+  const [isResetting, setIsResetting] = useState(false);
   
   // Game states
   const [selectedMatches, setSelectedMatches] = useState({});
@@ -291,12 +302,21 @@ const InvestmentBankingModule = () => {
     }
   };
 
-  // Initialize sequence game
+  // Shuffled definitions for matching game
+  const [shuffledDefinitions, setShuffledDefinitions] = useState([]);
+
+  // Initialize sequence game and shuffle matching definitions
   useEffect(() => {
     if (currentPhase === 'practice' && practiceActivities[currentActivity]?.type === 'sequence') {
       const activity = practiceActivities[currentActivity];
       const shuffled = [...activity.items].sort(() => Math.random() - 0.5);
       setDraggedItems(shuffled);
+    }
+    // Shuffle definitions for matching game
+    if (currentPhase === 'practice' && practiceActivities[currentActivity]?.type === 'matching') {
+      const activity = practiceActivities[currentActivity];
+      const shuffled = [...activity.pairs].sort(() => Math.random() - 0.5);
+      setShuffledDefinitions(shuffled);
     }
   }, [currentActivity, currentPhase]);
 
@@ -311,48 +331,88 @@ const InvestmentBankingModule = () => {
     return "🚀 Keep going! Building strong foundations!";
   };
 
+  // If module is already passed, show completion screen
+  if (modulePassed) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 p-6 flex items-center justify-center">
+        <motion.div
+          className="bg-white rounded-2xl shadow-xl p-8 max-w-md text-center"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          <motion.div
+            className="text-6xl mb-4"
+            animate={{ rotate: [0, -10, 10, -10, 0] }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+          >
+            🏦
+          </motion.div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Module Completed!</h2>
+          <p className="text-gray-600 mb-6">
+            You've already passed the Investment Banking module. Great job understanding capital markets!
+          </p>
+          <div className="bg-green-50 rounded-xl p-4 mb-6">
+            <div className="flex items-center justify-center gap-2 text-green-600">
+              <span className="text-2xl">✓</span>
+              <span className="font-semibold">100% Complete</span>
+            </div>
+          </div>
+          <motion.button
+            onClick={() => navigate('/game')}
+            className="w-full px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold transition"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            Back to Learning Path
+          </motion.button>
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      {/* Professional Header */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 p-6 font-['Inter',system-ui,sans-serif]">
+      {/* Premium Header */}
       <motion.div
-        className="flex items-center justify-between mb-8 bg-white rounded-lg p-6 shadow-sm border border-gray-200"
+        className="flex items-center justify-between mb-8 bg-white/80 backdrop-blur-xl rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-slate-200/60"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
         <button
           onClick={() => navigate('/game')}
-          className="flex items-center gap-2 px-4 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-colors"
+          className="flex items-center gap-2 px-4 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all duration-300 font-medium"
         >
           <ArrowLeft className="w-5 h-5" />
           Back to Roadmap
         </button>
-        
+
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-slate-900">Investment Banking</h1>
-          <p className="text-sm text-slate-600">Professional Development Module</p>
+          <h1 className="text-2xl font-semibold text-slate-800 tracking-tight">Investment Banking</h1>
+          <p className="text-sm text-slate-500 font-medium">Professional Development Module</p>
           <div className="flex gap-2 mt-3 justify-center">
-            <span className={`text-xs px-3 py-1 rounded-full ${currentPhase === 'lessons' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600'}`}>Lessons</span>
-            <span className={`text-xs px-3 py-1 rounded-full ${currentPhase === 'practice' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600'}`}>Practice</span>
-            <span className={`text-xs px-3 py-1 rounded-full ${currentPhase === 'truefalse' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600'}`}>Assessment</span>
+            <span className={`text-xs px-4 py-1.5 rounded-full font-semibold transition-all duration-300 ${currentPhase === 'lessons' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30' : 'bg-slate-100 text-slate-500'}`}>Lessons</span>
+            <span className={`text-xs px-4 py-1.5 rounded-full font-semibold transition-all duration-300 ${currentPhase === 'practice' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30' : 'bg-slate-100 text-slate-500'}`}>Practice</span>
+            <span className={`text-xs px-4 py-1.5 rounded-full font-semibold transition-all duration-300 ${currentPhase === 'truefalse' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30' : 'bg-slate-100 text-slate-500'}`}>Assessment</span>
           </div>
         </div>
 
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-2 text-slate-600">
-            <Trophy className="w-5 h-5" />
-            <span className="font-medium">{completedLessons.length}/{lessons.length}</span>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 text-slate-700 bg-slate-50 px-4 py-2 rounded-xl border border-slate-200">
+            <Trophy className="w-5 h-5 text-emerald-500" />
+            <span className="font-semibold">{completedLessons.length}/{lessons.length}</span>
           </div>
-          
-          <div className="flex items-center gap-2 text-slate-600">
-            <Star className="w-5 h-5" />
-            <span className="font-medium">{totalXP} XP</span>
+
+          <div className="flex items-center gap-2 text-slate-700 bg-slate-50 px-4 py-2 rounded-xl border border-slate-200">
+            <Star className="w-5 h-5 text-teal-500" />
+            <span className="font-semibold">{totalXP} XP</span>
           </div>
-          
+
           {streak > 0 && (
-            <div className="flex items-center gap-2 text-amber-600">
+            <div className="flex items-center gap-2 text-orange-600 bg-orange-50 px-4 py-2 rounded-xl border border-orange-200">
               <Zap className="w-5 h-5" />
-              <span className="font-medium">{streak}🔥</span>
+              <span className="font-semibold">{streak}🔥</span>
             </div>
           )}
         </div>
@@ -368,12 +428,12 @@ const InvestmentBankingModule = () => {
             exit={{ opacity: 0, x: 100 }}
           >
             {achievements.slice(-1).map(achievement => (
-              <div key={achievement.id} className="bg-white border border-amber-200 rounded-lg p-4 shadow-lg">
+              <div key={achievement.id} className="bg-white backdrop-blur-xl border border-emerald-200 rounded-2xl p-4 shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">{achievement.emoji}</span>
                   <div>
-                    <div className="font-semibold text-slate-900">{achievement.name}</div>
-                    <div className="text-sm text-slate-600">{achievement.desc}</div>
+                    <div className="font-semibold text-slate-800">{achievement.name}</div>
+                    <div className="text-sm text-slate-500">{achievement.desc}</div>
                   </div>
                 </div>
               </div>
@@ -384,9 +444,75 @@ const InvestmentBankingModule = () => {
 
       {/* Content Sections */}
       {currentPhase === 'truefalse' ? (
-        <TrueFalseCard />
+        <div className="max-w-4xl mx-auto">
+          <TrueFalseCard />
+          {/* Complete Module Section */}
+          <div className="mt-8 p-6 bg-white rounded-2xl shadow-lg border border-slate-200 text-center">
+            <h3 className="text-lg font-semibold text-slate-700 mb-4">Ready to complete the module?</h3>
+
+            {saveResult && (
+              <div className={`mb-4 p-3 rounded-xl ${saveResult.passed ? 'bg-green-50 border border-green-200' : 'bg-orange-50 border border-orange-200'}`}>
+                <div className="flex items-center justify-center gap-2">
+                  {saveResult.passed ? (
+                    <>
+                      <CheckCircle className="text-green-600" size={20} />
+                      <span className="font-semibold text-green-700">Module Passed! Attempt #{saveResult.attemptNumber}</span>
+                    </>
+                  ) : (
+                    <>
+                      <XCircle className="text-orange-600" size={20} />
+                      <span className="font-semibold text-orange-700">Complete the assessment for 100% to pass. Attempt #{saveResult.attemptNumber}</span>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <div className="flex gap-4 justify-center">
+              <button
+                onClick={async () => {
+                  setIsSaving(true);
+                  try {
+                    // For this module, completing the assessment = 100%
+                    const result = await saveScore('investment-banking', 100, 100);
+                    setSaveResult(result);
+                  } catch (err) {
+                    console.error('Error saving score:', err);
+                  } finally {
+                    setIsSaving(false);
+                  }
+                }}
+                disabled={isSaving || saveResult?.passed}
+                className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl font-semibold transition disabled:opacity-50 flex items-center gap-2"
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 className="animate-spin" size={18} />
+                    Saving...
+                  </>
+                ) : saveResult?.passed ? (
+                  <>
+                    <CheckCircle size={18} />
+                    Completed!
+                  </>
+                ) : (
+                  <>
+                    <Trophy size={18} />
+                    Complete Module
+                  </>
+                )}
+              </button>
+              <button
+                onClick={() => navigate('/game')}
+                className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold transition"
+              >
+                Back to Roadmap
+              </button>
+            </div>
+          </div>
+        </div>
       ) : currentPhase === 'lessons' ? (
-        /* Professional Lessons */
+        /* Premium Lessons */
         <motion.div
           className="max-w-4xl mx-auto"
           initial={{ opacity: 0 }}
@@ -395,13 +521,13 @@ const InvestmentBankingModule = () => {
         >
           {/* Progress Bar */}
           <div className="mb-8">
-            <div className="flex justify-between text-sm text-slate-600 mb-3">
+            <div className="flex justify-between text-sm text-slate-500 mb-3 font-medium">
               <span>Lesson {currentLesson + 1} of {lessons.length}</span>
               <span>{Math.round(((currentLesson + 1) / lessons.length) * 100)}% Complete</span>
             </div>
-            <div className="w-full bg-slate-200 rounded-full h-2">
+            <div className="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
               <motion.div
-                className="bg-slate-900 h-2 rounded-full"
+                className="bg-gradient-to-r from-emerald-500 to-teal-500 h-2.5 rounded-full"
                 initial={{ width: 0 }}
                 animate={{ width: `${((currentLesson + 1) / lessons.length) * 100}%` }}
                 transition={{ duration: 0.5 }}
@@ -409,10 +535,10 @@ const InvestmentBankingModule = () => {
             </div>
           </div>
 
-          {/* Lesson Card */}
+          {/* Lesson Card - Premium */}
           <motion.div
             key={currentLesson}
-            className="bg-white rounded-lg p-8 shadow-sm border border-gray-200 mb-8"
+            className="bg-white rounded-2xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-slate-200/60 mb-8"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
@@ -420,76 +546,80 @@ const InvestmentBankingModule = () => {
             {/* Header */}
             <div className="text-center mb-8">
               <div className="text-6xl mb-4">{lessons[currentLesson].icon}</div>
-              <h2 className="text-2xl font-bold text-slate-900 mb-3">
+              <h2 className="text-2xl font-semibold text-slate-800 mb-3 tracking-tight">
                 {lessons[currentLesson].title}
               </h2>
             </div>
 
             {/* Content */}
             <div className="space-y-6">
-              <div className="bg-slate-50 rounded-lg p-6 border border-slate-200">
-                <h3 className="text-lg font-semibold text-slate-900 mb-3">Key Concept</h3>
+              <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
+                <h3 className="text-lg font-semibold text-emerald-600 mb-3">Key Concept</h3>
                 <p className="text-slate-700 leading-relaxed">
                   {lessons[currentLesson].concept}
                 </p>
               </div>
 
-              <div className="bg-slate-50 rounded-lg p-6 border border-slate-200">
-                <h3 className="text-lg font-semibold text-slate-900 mb-3">Explanation</h3>
+              <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
+                <h3 className="text-lg font-semibold text-teal-600 mb-3">Explanation</h3>
                 <p className="text-slate-700 leading-relaxed">
                   {lessons[currentLesson].explanation}
                 </p>
               </div>
 
-              <div className="bg-amber-50 rounded-lg p-6 border border-amber-200">
-                <h3 className="text-lg font-semibold text-amber-800 mb-3">Key Takeaway</h3>
-                <p className="text-amber-800 font-medium">
+              <div className="bg-emerald-50 rounded-xl p-6 border border-emerald-200">
+                <h3 className="text-lg font-semibold text-emerald-700 mb-3">Key Takeaway</h3>
+                <p className="text-emerald-800 font-medium">
                   {lessons[currentLesson].keyPoint}
                 </p>
               </div>
             </div>
           </motion.div>
 
-          {/* Navigation */}
+          {/* Navigation - Premium */}
           <div className="flex justify-between items-center">
-            <button
+            <motion.button
               onClick={prevLesson}
               disabled={currentLesson === 0}
-              className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+              className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
                 currentLesson === 0
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  : 'bg-slate-200 hover:bg-slate-300 text-slate-700'
+                  ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                  : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-sm'
               }`}
+              whileHover={currentLesson !== 0 ? { scale: 1.02 } : {}}
+              whileTap={currentLesson !== 0 ? { scale: 0.98 } : {}}
             >
               ← Previous
-            </button>
+            </motion.button>
 
             <div className="flex gap-2">
               {lessons.map((_, index) => (
                 <div
                   key={index}
-                  className={`w-3 h-3 rounded-full ${
-                    index === currentLesson ? 'bg-slate-900' : 
-                    completedLessons.includes(index + 1) ? 'bg-slate-600' : 'bg-slate-300'
+                  className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                    index === currentLesson ? 'bg-emerald-500 shadow-lg shadow-emerald-500/40' :
+                    completedLessons.includes(index + 1) ? 'bg-teal-500' : 'bg-slate-300'
                   }`}
                 />
               ))}
             </div>
 
-            <button
+            <motion.button
               onClick={() => {
                 completeLesson(currentLesson + 1);
                 nextLesson();
               }}
-              className="px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+              className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl font-semibold transition-all duration-300 flex items-center gap-2 shadow-lg shadow-emerald-500/25"
+              whileHover={{ scale: 1.02, y: -2 }}
+              whileTap={{ scale: 0.98 }}
             >
               {currentLesson === lessons.length - 1 ? 'Start Practice' : 'Continue'}
               <ChevronRight className="w-4 h-4" />
-            </button>
+            </motion.button>
           </div>
         </motion.div>
       ) : currentPhase === 'practice' ? (
-        /* Practice Activities */
+        /* Practice Activities - Premium UI */
         <motion.div
           className="max-w-4xl mx-auto"
           initial={{ opacity: 0 }}
@@ -498,13 +628,13 @@ const InvestmentBankingModule = () => {
         >
           {/* Progress Bar */}
           <div className="mb-8">
-            <div className="flex justify-between text-sm text-slate-600 mb-3">
+            <div className="flex justify-between text-sm text-slate-500 mb-3 font-medium">
               <span>Activity {currentActivity + 1} of {practiceActivities.length}</span>
               <span>{Math.round(((currentActivity + 1) / practiceActivities.length) * 100)}% Complete</span>
             </div>
-            <div className="w-full bg-slate-200 rounded-full h-2">
+            <div className="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
               <motion.div
-                className="bg-slate-900 h-2 rounded-full"
+                className="bg-gradient-to-r from-emerald-500 to-teal-500 h-2.5 rounded-full"
                 initial={{ width: 0 }}
                 animate={{ width: `${((currentActivity + 1) / practiceActivities.length) * 100}%` }}
                 transition={{ duration: 0.5 }}
@@ -512,45 +642,45 @@ const InvestmentBankingModule = () => {
             </div>
           </div>
 
-          {/* Activity Card */}
+          {/* Activity Card - Premium */}
           <motion.div
             key={currentActivity}
-            className="bg-white rounded-lg p-8 shadow-sm border border-gray-200 mb-8"
+            className="bg-white rounded-2xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-slate-200/60 mb-8"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
             {/* Activity Header */}
             <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold text-slate-900 mb-2">
+              <h2 className="text-2xl font-semibold text-slate-800 mb-2 tracking-tight">
                 {practiceActivities[currentActivity].title}
               </h2>
-              <p className="text-slate-600">
+              <p className="text-slate-500 font-medium">
                 {practiceActivities[currentActivity].instruction}
               </p>
             </div>
 
             {/* Activity Content */}
             <div className="space-y-6">
-              {/* Matching Game */}
+              {/* Matching Game - Premium */}
               {practiceActivities[currentActivity].type === 'matching' && (
                 <div className="space-y-6">
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     {/* Terms Column */}
                     <div className="space-y-3">
-                      <h3 className="font-semibold text-slate-900 text-center pb-3 border-b border-slate-200">Services</h3>
+                      <h3 className="font-semibold text-slate-700 text-center pb-3 border-b border-slate-200">Services</h3>
                       {practiceActivities[currentActivity].pairs.map((pair, index) => (
                         <motion.button
                           key={`term-${pair.id}`}
                           onClick={() => handleTermClick(pair.id)}
-                          className={`w-full p-4 rounded-lg border-2 text-left transition-all ${
-                            matchedPairs.includes(pair.id) 
-                              ? 'bg-green-50 border-green-300 text-green-800' 
-                              : selectedTerm === pair.id 
-                                ? 'bg-blue-50 border-blue-300 text-blue-800'
-                                : 'bg-slate-50 border-slate-200 hover:border-slate-300 text-slate-700'
+                          className={`w-full p-4 rounded-xl border-2 text-left transition-all duration-300 ${
+                            matchedPairs.includes(pair.id)
+                              ? 'bg-emerald-50 border-emerald-400 text-emerald-700 shadow-lg shadow-emerald-500/15'
+                              : selectedTerm === pair.id
+                                ? 'bg-teal-50 border-teal-400 text-teal-700 shadow-lg shadow-teal-500/15'
+                                : 'bg-slate-50 border-slate-200 hover:border-slate-300 hover:bg-white text-slate-700'
                           }`}
-                          whileHover={!matchedPairs.includes(pair.id) ? { scale: 1.02 } : {}}
+                          whileHover={!matchedPairs.includes(pair.id) ? { scale: 1.02, y: -2 } : {}}
                           whileTap={{ scale: 0.98 }}
                         >
                           <div className="flex items-center gap-3">
@@ -560,22 +690,22 @@ const InvestmentBankingModule = () => {
                         </motion.button>
                       ))}
                     </div>
-                    
-                    {/* Definitions Column */}
+
+                    {/* Definitions Column - Using shuffled definitions */}
                     <div className="space-y-3">
-                      <h3 className="font-semibold text-slate-900 text-center pb-3 border-b border-slate-200">Descriptions</h3>
-                      {practiceActivities[currentActivity].pairs.map((pair, index) => (
+                      <h3 className="font-semibold text-slate-700 text-center pb-3 border-b border-slate-200">Descriptions</h3>
+                      {shuffledDefinitions.map((pair, index) => (
                         <motion.button
                           key={`def-${pair.id}`}
                           onClick={() => handleDefinitionClick(pair.id)}
-                          className={`w-full p-4 rounded-lg border-2 text-left transition-all ${
-                            matchedPairs.includes(pair.id) 
-                              ? 'bg-green-50 border-green-300 text-green-800' 
-                              : selectedDefinition === pair.id 
-                                ? 'bg-blue-50 border-blue-300 text-blue-800'
-                                : 'bg-slate-50 border-slate-200 hover:border-slate-300 text-slate-700'
+                          className={`w-full p-4 rounded-xl border-2 text-left transition-all duration-300 ${
+                            matchedPairs.includes(pair.id)
+                              ? 'bg-emerald-50 border-emerald-400 text-emerald-700 shadow-lg shadow-emerald-500/15'
+                              : selectedDefinition === pair.id
+                                ? 'bg-teal-50 border-teal-400 text-teal-700 shadow-lg shadow-teal-500/15'
+                                : 'bg-slate-50 border-slate-200 hover:border-slate-300 hover:bg-white text-slate-700'
                           }`}
-                          whileHover={!matchedPairs.includes(pair.id) ? { scale: 1.02 } : {}}
+                          whileHover={!matchedPairs.includes(pair.id) ? { scale: 1.02, y: -2 } : {}}
                           whileTap={{ scale: 0.98 }}
                         >
                           <span className="font-medium">{pair.definition}</span>
@@ -583,59 +713,61 @@ const InvestmentBankingModule = () => {
                       ))}
                     </div>
                   </div>
-                  
+
                   {gameCompleted && (
                     <motion.div
-                      className="bg-green-50 border border-green-300 rounded-lg p-6 text-center"
+                      className="bg-emerald-50 border border-emerald-300 rounded-2xl p-6 text-center"
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
                     >
                       <div className="text-3xl mb-2">✅</div>
-                      <div className="font-semibold text-green-800">Excellent Work!</div>
-                      <div className="text-sm text-green-600">All pairs matched correctly! +100 XP</div>
+                      <div className="font-semibold text-emerald-700">Excellent Work!</div>
+                      <div className="text-sm text-emerald-600">All pairs matched correctly! +100 XP</div>
                     </motion.div>
                   )}
                 </div>
               )}
 
-              {/* MCQ Game */}
+              {/* MCQ Game - Premium */}
               {practiceActivities[currentActivity].type === 'mcq' && (
                 <div className="space-y-8">
                   {practiceActivities[currentActivity].questions.map((question, qIndex) => (
-                    <div key={question.id} className="bg-slate-50 rounded-lg p-6 border border-slate-200">
+                    <div key={question.id} className="bg-slate-50 rounded-2xl p-6 border border-slate-200">
                       <div className="mb-4">
-                        <p className="text-slate-600 text-sm mb-2">Scenario:</p>
-                        <p className="text-slate-800 leading-relaxed mb-4">{question.scenario}</p>
-                        <p className="font-semibold text-slate-900">{question.question}</p>
+                        <p className="text-slate-500 text-sm font-medium mb-2">Scenario:</p>
+                        <p className="text-slate-700 leading-relaxed mb-4">{question.scenario}</p>
+                        <p className="font-semibold text-slate-800">{question.question}</p>
                       </div>
-                      
+
                       <div className="space-y-3 mb-4">
                         {question.options.map((option, index) => (
-                          <button
+                          <motion.button
                             key={option.id}
                             onClick={() => handleAnswerSelect(question.id, option.id)}
-                            className={`w-full p-3 rounded-lg border-2 text-left transition-all ${
+                            className={`w-full p-4 rounded-xl border-2 text-left transition-all duration-300 ${
                               selectedAnswers[question.id] === option.id
                                 ? option.correct
-                                  ? 'bg-green-50 border-green-300 text-green-800'
-                                  : 'bg-red-50 border-red-300 text-red-800'
+                                  ? 'bg-emerald-50 border-emerald-400 text-emerald-700 shadow-lg shadow-emerald-500/15'
+                                  : 'bg-red-50 border-red-400 text-red-700 shadow-lg shadow-red-500/15'
                                 : 'bg-white border-slate-200 hover:border-slate-300 text-slate-700'
                             }`}
                             disabled={showExplanations[question.id]}
+                            whileHover={!showExplanations[question.id] ? { scale: 1.01, y: -1 } : {}}
+                            whileTap={{ scale: 0.99 }}
                           >
                             <span className="font-medium">{option.text}</span>
-                          </button>
+                          </motion.button>
                         ))}
                       </div>
-                      
+
                       {showExplanations[question.id] && (
                         <motion.div
-                          className="bg-blue-50 border border-blue-300 rounded-lg p-4"
+                          className="bg-teal-50 border border-teal-300 rounded-xl p-4"
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: 'auto' }}
                         >
-                          <p className="text-blue-800 font-medium">Explanation:</p>
-                          <p className="text-blue-700">{question.explanation}</p>
+                          <p className="text-teal-700 font-semibold">Explanation:</p>
+                          <p className="text-teal-600">{question.explanation}</p>
                         </motion.div>
                       )}
                     </div>
@@ -643,26 +775,26 @@ const InvestmentBankingModule = () => {
                 </div>
               )}
 
-              {/* Sequence Game */}
+              {/* Sequence Game - Premium */}
               {practiceActivities[currentActivity].type === 'sequence' && (
                 <div className="space-y-6">
                   <div className="space-y-3">
                     {draggedItems.map((item, index) => (
                       <motion.div
                         key={item.id}
-                        className={`flex items-center gap-4 p-4 rounded-lg border-2 cursor-move ${
-                          sequenceCorrect 
-                            ? 'bg-green-50 border-green-300' 
-                            : 'bg-slate-50 border-slate-200 hover:border-slate-300'
+                        className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-move transition-all duration-300 ${
+                          sequenceCorrect
+                            ? 'bg-emerald-50 border-emerald-400 shadow-lg shadow-emerald-500/15'
+                            : 'bg-slate-50 border-slate-200 hover:border-slate-300 hover:bg-white'
                         }`}
-                        whileHover={{ scale: 1.01 }}
+                        whileHover={{ scale: 1.01, y: -2 }}
                         drag="y"
                         dragConstraints={{ top: 0, bottom: 0 }}
                         onDragEnd={(event, info) => {
                           const draggedIndex = index;
-                          const targetIndex = Math.max(0, Math.min(draggedItems.length - 1, 
+                          const targetIndex = Math.max(0, Math.min(draggedItems.length - 1,
                             Math.round(draggedIndex + info.offset.y / 80)));
-                          
+
                           if (draggedIndex !== targetIndex) {
                             const newItems = [...draggedItems];
                             const [removed] = newItems.splice(draggedIndex, 1);
@@ -671,71 +803,77 @@ const InvestmentBankingModule = () => {
                           }
                         }}
                       >
-                        <div className="w-8 h-8 bg-slate-200 text-slate-700 rounded-full flex items-center justify-center font-semibold text-sm">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm ${
+                          sequenceCorrect ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-600'
+                        }`}>
                           {index + 1}
                         </div>
                         <div className="text-2xl">{item.icon}</div>
                         <div className="flex-1">
-                          <span className="font-medium text-slate-700">{item.text}</span>
+                          <span className={`font-medium ${sequenceCorrect ? 'text-emerald-700' : 'text-slate-700'}`}>{item.text}</span>
                         </div>
                       </motion.div>
                     ))}
                   </div>
-                  
+
                   {!sequenceCorrect && (
                     <div className="text-center">
-                      <button
+                      <motion.button
                         onClick={handleSequenceSubmit}
-                        className="px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-medium transition-colors"
+                        className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg shadow-emerald-500/25"
+                        whileHover={{ scale: 1.02, y: -2 }}
+                        whileTap={{ scale: 0.98 }}
                       >
                         Submit Order
-                      </button>
+                      </motion.button>
                     </div>
                   )}
-                  
+
                   {sequenceCorrect && (
                     <motion.div
-                      className="bg-green-50 border border-green-300 rounded-lg p-6 text-center"
+                      className="bg-emerald-50 border border-emerald-300 rounded-2xl p-6 text-center"
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
                     >
                       <div className="text-3xl mb-2">✅</div>
-                      <div className="font-semibold text-green-800">Perfect Sequence!</div>
-                      <div className="text-sm text-green-600">Correct IPO process order! +100 XP</div>
+                      <div className="font-semibold text-emerald-700">Perfect Sequence!</div>
+                      <div className="text-sm text-emerald-600">Correct IPO process order! +100 XP</div>
                     </motion.div>
                   )}
                 </div>
               )}
 
-              {/* Analysis Game */}
+              {/* Analysis Game - Premium */}
               {practiceActivities[currentActivity].type === 'analysis' && (
                 <div className="space-y-6">
-                  <div className="bg-slate-50 rounded-lg p-6 border border-slate-200">
-                    <h3 className="font-semibold text-slate-900 mb-4">Company Analysis: {practiceActivities[currentActivity].company}</h3>
+                  <div className="bg-slate-50 rounded-2xl p-6 border border-slate-200">
+                    <h3 className="font-semibold text-slate-800 mb-4">Company Analysis: {practiceActivities[currentActivity].company}</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {Object.entries(practiceActivities[currentActivity].data).map(([key, value]) => (
-                        <div key={key} className="bg-white rounded-lg p-4 border border-slate-200">
-                          <div className="font-medium text-slate-700 capitalize">{key.replace(/([A-Z])/g, ' $1')}:</div>
-                          <div className="text-lg font-semibold text-slate-900">{value}</div>
+                        <div key={key} className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
+                          <div className="font-medium text-slate-500 capitalize text-sm">{key.replace(/([A-Z])/g, ' $1')}:</div>
+                          <div className="text-lg font-semibold text-slate-800">{value}</div>
                         </div>
                       ))}
                     </div>
                   </div>
-                  
+
                   <div className="text-center">
-                    <p className="font-semibold text-slate-900 mb-4">What is your investment recommendation?</p>
-                    <div className="flex justify-center gap-4">
+                    <p className="font-semibold text-slate-800 mb-4">What is your investment recommendation?</p>
+                    <div className="flex justify-center gap-4 flex-wrap">
                       {practiceActivities[currentActivity].options.map((option, index) => (
-                        <button
+                        <motion.button
                           key={index}
-                          className={`px-6 py-3 rounded-lg border-2 font-medium transition-all ${
-                            option.correct 
-                              ? 'border-green-300 bg-green-50 text-green-800 hover:bg-green-100'
-                              : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
+                          className={`px-6 py-3 rounded-xl border-2 font-semibold transition-all duration-300 ${
+                            option.correct
+                              ? 'border-emerald-400 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 shadow-lg shadow-emerald-500/15'
+                              : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-300'
                           }`}
+                          whileHover={{ scale: 1.02, y: -2 }}
+                          whileTap={{ scale: 0.98 }}
                         >
                           {option.rating}
-                        </button>
+                        </motion.button>
                       ))}
                     </div>
                   </div>
@@ -744,87 +882,91 @@ const InvestmentBankingModule = () => {
             </div>
           </motion.div>
 
-          {/* Navigation */}
+          {/* Navigation - Premium */}
           <div className="flex justify-between items-center">
-            <button
+            <motion.button
               onClick={prevActivity}
               disabled={currentActivity === 0}
-              className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+              className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
                 currentActivity === 0
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  : 'bg-slate-200 hover:bg-slate-300 text-slate-700'
+                  ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                  : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-sm'
               }`}
+              whileHover={currentActivity !== 0 ? { scale: 1.02 } : {}}
+              whileTap={currentActivity !== 0 ? { scale: 0.98 } : {}}
             >
               ← Previous
-            </button>
+            </motion.button>
 
             <div className="flex gap-2">
               {practiceActivities.map((_, index) => (
                 <div
                   key={index}
-                  className={`w-3 h-3 rounded-full ${
-                    index === currentActivity ? 'bg-slate-900' : 
-                    index < currentActivity ? 'bg-slate-600' : 'bg-slate-300'
+                  className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                    index === currentActivity ? 'bg-emerald-500 shadow-lg shadow-emerald-500/40' :
+                    index < currentActivity ? 'bg-teal-500' : 'bg-slate-300'
                   }`}
                 />
               ))}
             </div>
 
-            <button
+            <motion.button
               onClick={() => {
                 setTotalXP(totalXP + 75);
                 nextActivity();
               }}
-              className="px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+              className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl font-semibold transition-all duration-300 flex items-center gap-2 shadow-lg shadow-emerald-500/25"
+              whileHover={{ scale: 1.02, y: -2 }}
+              whileTap={{ scale: 0.98 }}
             >
               {currentActivity === practiceActivities.length - 1 ? 'Take Assessment' : 'Next Activity'}
               <ChevronRight className="w-4 h-4" />
-            </button>
+            </motion.button>
           </div>
         </motion.div>
       ) : (
-        /* Results/Completion Screen */
+        /* Results/Completion Screen - Premium */
         <motion.div
           className="max-w-2xl mx-auto text-center"
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
         >
-          <div className="bg-white rounded-lg p-8 shadow-sm border border-gray-200">
+          <div className="bg-white rounded-2xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-slate-200/60">
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
             >
-              <Trophy className="w-20 h-20 mx-auto text-amber-500 mb-6" />
+              <Trophy className="w-20 h-20 mx-auto text-emerald-500 mb-6" />
             </motion.div>
-            
-            <h2 className="text-3xl font-bold text-slate-900 mb-4">Module Completed!</h2>
+
+            <h2 className="text-3xl font-semibold text-slate-800 mb-4 tracking-tight">Module Completed!</h2>
             <p className="text-xl text-slate-600 mb-8">
               {getProgressMessage()}
             </p>
 
             {/* Final Stats */}
             <div className="grid grid-cols-2 gap-6 mb-8">
-              <div className="bg-slate-50 rounded-lg p-6 border border-slate-200">
-                <div className="text-3xl font-bold text-slate-900">{totalXP}</div>
-                <div className="text-sm text-slate-600 font-medium">Total XP Earned</div>
+              <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
+                <div className="text-3xl font-bold text-emerald-600">{totalXP}</div>
+                <div className="text-sm text-slate-500 font-medium">Total XP Earned</div>
               </div>
-              <div className="bg-slate-50 rounded-lg p-6 border border-slate-200">
-                <div className="text-3xl font-bold text-slate-900">{completedLessons.length}</div>
-                <div className="text-sm text-slate-600 font-medium">Lessons Completed</div>
+              <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
+                <div className="text-3xl font-bold text-teal-600">{completedLessons.length}</div>
+                <div className="text-sm text-slate-500 font-medium">Lessons Completed</div>
               </div>
             </div>
 
             {/* Achievements */}
             {achievements.length > 0 && (
               <div className="mb-8">
-                <h3 className="text-lg font-semibold text-slate-900 mb-4">🏆 Achievements Unlocked:</h3>
+                <h3 className="text-lg font-semibold text-slate-800 mb-4">Achievements Unlocked</h3>
                 <div className="flex flex-wrap justify-center gap-3">
                   {achievements.map(achievement => (
-                    <div key={achievement.id} className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-2">
+                    <div key={achievement.id} className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-2">
                       <span className="text-lg mr-2">{achievement.emoji}</span>
-                      <span className="text-sm font-medium text-amber-800">{achievement.name}</span>
+                      <span className="text-sm font-semibold text-emerald-700">{achievement.name}</span>
                     </div>
                   ))}
                 </div>
@@ -833,13 +975,15 @@ const InvestmentBankingModule = () => {
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button
+              <motion.button
                 onClick={() => navigate('/game')}
-                className="px-8 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-medium transition-colors"
+                className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg shadow-emerald-500/25"
+                whileHover={{ scale: 1.02, y: -2 }}
+                whileTap={{ scale: 0.98 }}
               >
                 Back to Roadmap
-              </button>
-              <button
+              </motion.button>
+              <motion.button
                 onClick={() => {
                   setCurrentPhase('lessons');
                   setCurrentLesson(0);
@@ -849,10 +993,12 @@ const InvestmentBankingModule = () => {
                   setTotalXP(0);
                   setAchievements([]);
                 }}
-                className="px-8 py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg font-medium transition-colors"
+                className="px-8 py-3 bg-white hover:bg-slate-50 text-slate-700 rounded-xl font-semibold transition-all duration-300 border border-slate-200 shadow-sm"
+                whileHover={{ scale: 1.02, y: -2 }}
+                whileTap={{ scale: 0.98 }}
               >
                 Restart Module
-              </button>
+              </motion.button>
             </div>
           </div>
         </motion.div>

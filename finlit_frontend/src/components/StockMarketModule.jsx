@@ -1,53 +1,129 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Star, Trophy, CheckCircle, XCircle, Heart, Zap, TrendingUp, Coins, Gamepad2, Rocket, Target, DollarSign, BarChart3, Activity } from 'lucide-react';
+import { ArrowLeft, Star, Trophy, CheckCircle, XCircle, Heart, Zap, TrendingUp, Coins, Gamepad2, Rocket, Target, DollarSign, BarChart3, Activity, BookOpen, GraduationCap, Play, RefreshCw, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useModuleScore, MODULES } from '../hooks/useModuleScore';
 
 const StockMarketModule = () => {
   const navigate = useNavigate();
-  const [currentPhase, setCurrentPhase] = useState('adventure'); // 'adventure', 'trading-sim', 'portfolio-challenge', 'boss-battle'
-  const [adventureLevel, setAdventureLevel] = useState(1);
-  const [characterChoice, setCharacterChoice] = useState('');
+  const { saveScore, resetModule, isModulePassed, isLoading: progressLoading } = useModuleScore();
+
+  // Check if module is already passed
+  const modulePassed = isModulePassed(MODULES.STOCK_MARKET?.id);
+
+  const [currentPhase, setCurrentPhase] = useState('teaching'); // 'teaching', 'test', 'trading-sim', 'final-results'
+  const [teachingStep, setTeachingStep] = useState(0);
+  const [testQuestion, setTestQuestion] = useState(0);
+  const [testScore, setTestScore] = useState(0);
+  const [testAnswers, setTestAnswers] = useState([]);
   const [playerStats, setPlayerStats] = useState({ coins: 10000, experience: 0, level: 1, reputation: 0 });
   const [portfolio, setPortfolio] = useState([]);
   const [marketData, setMarketData] = useState([]);
   const [gameTime, setGameTime] = useState(0);
-  const [activeChallenges, setActiveChallenges] = useState([]);
   const [achievements, setAchievements] = useState([]);
   const [currentEvent, setCurrentEvent] = useState(null);
-  const [choices, setChoices] = useState([]);
   const [tradingActive, setTradingActive] = useState(false);
   const [selectedStock, setSelectedStock] = useState(null);
   const [actionHistory, setActionHistory] = useState([]);
+  const [buyQuantity, setBuyQuantity] = useState(1);
+  const [sellQuantity, setSellQuantity] = useState(1);
+  const [notifications, setNotifications] = useState([]);
 
+  // Module score saving state
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveResult, setSaveResult] = useState(null);
+  const [isResetting, setIsResetting] = useState(false);
 
-  // Adventure Storylines - Choose Your Path
-  const adventureStories = [
+  // Teaching Content - Stock Market Basics
+  const teachingContent = [
     {
-      id: 1,
-      title: "The Trading Academy Entrance Exam",
-      background: "bg-gradient-to-br from-slate-100 via-gray-100 to-stone-100",
-      scene: "Elite Trading Academy",
-      narrator: "Academy Director",
-      story: "Welcome to the prestigious Trading Academy! You're one of 100 candidates competing for 10 spots. Your mission: Turn $10,000 into $15,000 in 30 days using real market strategies.",
-      choices: [
-        { id: 'A', text: "Choose the Aggressive Trader path (High risk, high reward)", effect: { coins: 0, trait: 'aggressive' }, next: 2 },
-        { id: 'B', text: "Choose the Conservative Investor path (Steady and safe)", effect: { coins: 2000, trait: 'conservative' }, next: 3 },
-        { id: 'C', text: "Choose the Tech Innovator path (Focus on growth stocks)", effect: { coins: 0, trait: 'tech-focused' }, next: 4 }
+      title: "What is the Stock Market?",
+      icon: "📈",
+      content: "The stock market is like a giant marketplace where people buy and sell tiny pieces of companies called 'shares' or 'stocks'. When you buy a share, you become a part-owner of that company!",
+      example: "If Apple has 1 million shares and you buy 1 share, you own 1/1,000,000th of Apple!",
+      keyPoints: [
+        "Stocks represent ownership in a company",
+        "Stock prices change based on supply and demand",
+        "You make money when stock prices go up after you buy"
       ]
     },
     {
-      id: 2,
-      title: "🔥 The Wolf of Wall Street Challenge",
-      background: "bg-gradient-to-br from-red-500 via-orange-500 to-yellow-500",
-      scene: "📈 High-Frequency Trading Floor",
-      narrator: "🐺 Trading Mentor",
-      story: "You've chosen the aggressive path! Your mentor throws you into the deep end: 'Kid, I'm giving you access to day trading. You can make or lose thousands in minutes. What's your first move?'",
-      choices: [
-        { id: 'A', text: "🎯 Focus on momentum stocks - ride the waves!", effect: { experience: 50 }, next: 'momentum-game' },
-        { id: 'B', text: "🔍 Analyze earnings reports for quick gains", effect: { experience: 30 }, next: 'analysis-game' },
-        { id: 'C', text: "🎰 Go all-in on a hot tip (YOLO!)", effect: { coins: -2000, experience: 10 }, next: 'risk-management' }
+      title: "How Do Stock Prices Move?",
+      icon: "📊",
+      content: "Stock prices go up when more people want to buy than sell (demand > supply), and go down when more people want to sell than buy (supply > demand).",
+      example: "If a company announces a new amazing product, more people want to buy their stock, so the price goes up!",
+      keyPoints: [
+        "Good news = more buyers = price goes UP",
+        "Bad news = more sellers = price goes DOWN",
+        "Prices change every second during trading hours"
       ]
+    },
+    {
+      title: "Buy Low, Sell High",
+      icon: "💰",
+      content: "The golden rule of investing is simple: Buy stocks when prices are low, and sell them when prices are high. The difference is your profit!",
+      example: "Buy 10 shares at $100 each = $1,000 invested. Sell when price is $150 = $1,500. Your profit = $500!",
+      keyPoints: [
+        "Profit = Selling Price - Buying Price",
+        "Never invest money you can't afford to lose",
+        "Patience is key - don't panic sell!"
+      ]
+    },
+    {
+      title: "Diversification",
+      icon: "🌈",
+      content: "Don't put all your eggs in one basket! Spreading your money across different stocks and sectors reduces risk. If one stock drops, others might go up.",
+      example: "Instead of putting $1,000 in just Apple, put $200 each in Apple, Google, Amazon, Tesla, and Microsoft.",
+      keyPoints: [
+        "Spread investments across multiple stocks",
+        "Invest in different sectors (tech, health, energy)",
+        "This protects you from big losses"
+      ]
+    },
+    {
+      title: "Understanding Risk",
+      icon: "⚠️",
+      content: "Higher potential rewards usually come with higher risks. Blue-chip stocks (big, stable companies) are safer but grow slower. Growth stocks are riskier but can grow faster.",
+      example: "A small startup might double your money or lose it all. Apple is unlikely to double quickly, but also unlikely to crash.",
+      keyPoints: [
+        "Risk and reward go hand in hand",
+        "Young investors can take more risks",
+        "Always research before investing"
+      ]
+    }
+  ];
+
+  // Test Questions
+  const testQuestions = [
+    {
+      question: "What happens to a stock's price when more people want to BUY than SELL?",
+      options: ["Price goes DOWN", "Price goes UP", "Price stays the same", "The stock disappears"],
+      correct: 1,
+      explanation: "When demand (buyers) exceeds supply (sellers), prices increase!"
+    },
+    {
+      question: "What is the golden rule of investing?",
+      options: ["Buy high, sell low", "Buy low, sell high", "Never sell anything", "Only buy expensive stocks"],
+      correct: 1,
+      explanation: "Buy low, sell high - this is how you make profit!"
+    },
+    {
+      question: "Why is diversification important?",
+      options: ["It makes trading more fun", "It reduces risk by spreading investments", "It guarantees profits", "It's not important"],
+      correct: 1,
+      explanation: "Diversification protects you - if one stock drops, others might rise!"
+    },
+    {
+      question: "If you buy 5 shares at $20 each and sell them at $30 each, what's your profit?",
+      options: ["$20", "$50", "$100", "$150"],
+      correct: 1,
+      explanation: "5 shares x ($30 - $20) = 5 x $10 = $50 profit!"
+    },
+    {
+      question: "What typically happens to stock prices when a company announces bad news?",
+      options: ["Prices go up", "Prices go down", "Nothing happens", "Trading stops"],
+      correct: 1,
+      explanation: "Bad news causes more people to sell, which drives prices down."
     }
   ];
 
@@ -120,16 +196,15 @@ const StockMarketModule = () => {
     }
   ];
 
-  // Simplified market mechanics with slower price movements
+  // Market update mechanics
   const updateMarketData = useCallback(() => {
-    setMarketData(prevData => 
+    setMarketData(prevData =>
       prevData.map(stock => {
-        // Much smaller volatility for easier understanding
-        const volatilityFactor = (Math.random() - 0.5) * stock.volatility * 0.5; // Reduced by 75%
+        const volatilityFactor = (Math.random() - 0.5) * stock.volatility * 0.5;
         const newPrice = Math.max(stock.price * (1 + volatilityFactor), 1);
         const change = newPrice - stock.price;
         const changePercent = ((change / stock.price) * 100).toFixed(2);
-        
+
         return {
           ...stock,
           price: parseFloat(newPrice.toFixed(2)),
@@ -145,19 +220,28 @@ const StockMarketModule = () => {
     setMarketData(initialStocks);
   }, []);
 
-  // Market simulation timer - slower updates for better understanding
+  // Market simulation timer
   useEffect(() => {
     if (tradingActive) {
       const interval = setInterval(() => {
         updateMarketData();
         setGameTime(prev => prev + 1);
-      }, 5000); // Update every 5 seconds instead of 2
-      
+      }, 5000);
+
       return () => clearInterval(interval);
     }
   }, [tradingActive, updateMarketData]);
 
-  // Trading functions
+  // Add notification helper
+  const addNotification = (type, title, message, details = null) => {
+    const id = Date.now();
+    setNotifications(prev => [...prev, { id, type, title, message, details, timestamp: new Date() }]);
+    setTimeout(() => {
+      setNotifications(prev => prev.filter(n => n.id !== id));
+    }, 5000);
+  };
+
+  // Trading functions with bulk support
   const buyStock = (stock, shares) => {
     const totalCost = stock.price * shares;
     if (playerStats.coins >= totalCost) {
@@ -165,12 +249,12 @@ const StockMarketModule = () => {
         ...prev,
         coins: prev.coins - totalCost
       }));
-      
+
       setPortfolio(prev => {
         const existing = prev.find(p => p.id === stock.id);
         if (existing) {
-          return prev.map(p => 
-            p.id === stock.id 
+          return prev.map(p =>
+            p.id === stock.id
               ? { ...p, shares: p.shares + shares, avgPrice: ((p.avgPrice * p.shares) + totalCost) / (p.shares + shares) }
               : p
           );
@@ -178,125 +262,118 @@ const StockMarketModule = () => {
           return [...prev, { ...stock, shares, avgPrice: stock.price, purchaseTime: gameTime }];
         }
       });
-      
+
       setActionHistory(prev => [...prev, {
         type: 'buy',
         stock: stock.symbol,
         shares,
         price: stock.price,
+        total: totalCost,
         time: gameTime
       }]);
+
+      addNotification('success', 'Purchase Complete!', `Bought ${shares} ${stock.symbol} shares`, {
+        shares,
+        price: stock.price,
+        total: totalCost
+      });
     }
   };
 
   const sellStock = (portfolioStock, shares) => {
-    const totalValue = portfolioStock.price * shares;
-    const profit = (portfolioStock.price - portfolioStock.avgPrice) * shares;
-    
+    const currentStock = marketData.find(m => m.id === portfolioStock.id);
+    const currentPrice = currentStock?.price || portfolioStock.price;
+    const totalValue = currentPrice * shares;
+    const profit = (currentPrice - portfolioStock.avgPrice) * shares;
+
     setPlayerStats(prev => ({
       ...prev,
       coins: prev.coins + totalValue,
       experience: prev.experience + Math.max(Math.floor(profit), 0)
     }));
-    
-    setPortfolio(prev => 
-      prev.map(p => 
+
+    setPortfolio(prev =>
+      prev.map(p =>
         p.id === portfolioStock.id
           ? { ...p, shares: p.shares - shares }
           : p
       ).filter(p => p.shares > 0)
     );
-    
+
     setActionHistory(prev => [...prev, {
       type: 'sell',
       stock: portfolioStock.symbol,
       shares,
-      price: portfolioStock.price,
+      price: currentPrice,
+      total: totalValue,
       profit,
       time: gameTime
     }]);
+
+    addNotification(profit >= 0 ? 'success' : 'warning', 'Sale Complete!', `Sold ${shares} ${portfolioStock.symbol} shares`, {
+      shares,
+      price: currentPrice,
+      total: totalValue,
+      profit
+    });
   };
 
-  // Challenge system
-  const challenges = [
-    {
-      id: 'rookie-trader',
-      title: '🥉 Rookie Trader Challenge',
-      description: 'Make your first profitable trade',
-      target: { type: 'profit', amount: 100 },
-      reward: { coins: 500, experience: 100, badge: '🥉 First Profit!' },
-      completed: false
-    },
-    {
-      id: 'diversifier',
-      title: '🌈 Portfolio Diversifier',
-      description: 'Own stocks from 3 different sectors',
-      target: { type: 'sectors', count: 3 },
-      reward: { coins: 1000, experience: 200, badge: '🌈 Diversification Master!' },
-      completed: false
-    },
-    {
-      id: 'day-trader',
-      title: '⚡ Lightning Trader',
-      description: 'Complete 5 trades in one session',
-      target: { type: 'trades', count: 5 },
-      reward: { coins: 1500, experience: 300, badge: '⚡ Speed Demon!' },
-      completed: false
-    }
-  ];
-
-  // Market events that affect prices
+  // Market events
   const marketEvents = [
     {
       id: 'tech-boom',
-      title: '🚀 AI Revolution Announcement!',
+      title: 'AI Revolution Announcement!',
       description: 'Major breakthrough in artificial intelligence sends tech stocks soaring!',
       effect: { sector: 'Technology', multiplier: 1.15 },
       duration: 10
     },
     {
       id: 'market-crash',
-      title: '📉 Flash Crash Alert!',
+      title: 'Flash Crash Alert!',
       description: 'Unexpected economic news causes market-wide selloff!',
       effect: { sector: 'all', multiplier: 0.9 },
       duration: 8
     },
     {
       id: 'earnings-season',
-      title: '📊 Earnings Surprise!',
+      title: 'Earnings Surprise!',
       description: 'Companies beating expectations left and right!',
       effect: { sector: 'random', multiplier: 1.1 },
       duration: 12
     }
   ];
 
-  // Character progression and achievements
+  // Check achievements
   const checkAchievements = useCallback(() => {
     const newAchievements = [];
-    
-    // First profit achievement
+
     if (!achievements.some(a => a.id === 'first-profit')) {
       const totalProfit = actionHistory.filter(a => a.type === 'sell').reduce((sum, a) => sum + (a.profit || 0), 0);
       if (totalProfit > 0) {
-        newAchievements.push({ id: 'first-profit', title: '💰 First Profit!', description: 'Made your first profitable trade!' });
+        newAchievements.push({ id: 'first-profit', title: 'First Profit!', description: 'Made your first profitable trade!' });
       }
     }
-    
-    // Portfolio diversification
+
     if (!achievements.some(a => a.id === 'diversified')) {
       const sectors = new Set(portfolio.map(p => p.sector));
       if (sectors.size >= 3) {
-        newAchievements.push({ id: 'diversified', title: '🌈 Diversified!', description: 'Portfolio spans 3+ sectors!' });
+        newAchievements.push({ id: 'diversified', title: 'Diversified!', description: 'Portfolio spans 3+ sectors!' });
       }
     }
-    
+
+    if (!achievements.some(a => a.id === 'big-trader')) {
+      const totalTrades = actionHistory.filter(a => a.type === 'buy' || a.type === 'sell').length;
+      if (totalTrades >= 10) {
+        newAchievements.push({ id: 'big-trader', title: 'Active Trader!', description: 'Completed 10 trades!' });
+      }
+    }
+
     if (newAchievements.length > 0) {
       setAchievements(prev => [...prev, ...newAchievements]);
       setPlayerStats(prev => ({ ...prev, experience: prev.experience + 100 }));
     }
   }, [actionHistory, portfolio, achievements]);
 
-  // Check achievements after each action
   useEffect(() => {
     checkAchievements();
   }, [checkAchievements]);
@@ -308,107 +385,6 @@ const StockMarketModule = () => {
       setPlayerStats(prev => ({ ...prev, level: newLevel }));
     }
   }, [playerStats.experience]);
-
-  // Render stock card component
-  const StockCard = ({ stock, canTrade = true }) => {
-    const isOwned = portfolio.some(p => p.id === stock.id);
-    const ownedStock = portfolio.find(p => p.id === stock.id);
-    
-    return (
-      <motion.div
-        className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
-          stock.changePercent >= 0 
-            ? 'border-blue-400 bg-gradient-to-r from-blue-50 to-indigo-50'
-            : 'border-slate-400 bg-gradient-to-r from-slate-50 to-gray-50'
-        } ${selectedStock?.id === stock.id ? 'ring-4 ring-blue-300' : ''}`}
-        whileHover={{ scale: 1.02, y: -2 }}
-        whileTap={{ scale: 0.98 }}
-        onClick={() => setSelectedStock(selectedStock?.id === stock.id ? null : stock)}
-      >
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <span className="text-2xl">{stock.emoji}</span>
-            <div>
-              <div className="font-bold text-gray-800">{stock.symbol}</div>
-              <div className="text-sm text-gray-600">{stock.name}</div>
-            </div>
-          </div>
-          {isOwned && (
-            <div className="bg-blue-100 px-2 py-1 rounded-full">
-              <span className="text-xs font-bold text-blue-800">You own {ownedStock.shares} shares</span>
-            </div>
-          )}
-        </div>
-        
-        <div className="flex justify-between items-end">
-          <div>
-            <div className="text-2xl font-bold">${stock.price.toFixed(2)}</div>
-            <div className={`text-sm font-semibold ${
-              stock.changePercent >= 0 ? 'text-blue-600' : 'text-slate-600'
-            }`}>
-              {stock.changePercent >= 0 ? '▲' : '▼'} {Math.abs(stock.changePercent)}%
-              <div className="text-xs text-gray-500">
-                {stock.changePercent >= 0 ? 'Going up!' : 'Going down'}
-              </div>
-            </div>
-          </div>
-          
-          {canTrade && selectedStock?.id === stock.id && (
-            <div className="flex gap-2">
-              <motion.button
-                className="px-3 py-1 bg-blue-500 text-white rounded-lg font-semibold text-sm disabled:bg-gray-300"
-                whileTap={{ scale: 0.95 }}
-                onClick={(e) => { e.stopPropagation(); buyStock(stock, 1); }}
-                disabled={playerStats.coins < stock.price}
-              >
-                {playerStats.coins < stock.price ? 'Not enough $' : 'Buy 1 Share'}
-              </motion.button>
-              {isOwned && (
-                <motion.button
-                  className="px-3 py-1 bg-slate-500 text-white rounded-lg font-semibold text-sm"
-                  whileTap={{ scale: 0.95 }}
-                  onClick={(e) => { e.stopPropagation(); sellStock(ownedStock, 1); }}
-                >
-                  Sell 1 Share
-                </motion.button>
-              )}
-            </div>
-          )}
-        </div>
-      </motion.div>
-    );
-  };
-
-  // Adventure choice handler
-  const makeChoice = (choice) => {
-    const currentStory = adventureStories[adventureLevel - 1];
-    const selectedChoice = currentStory.choices.find(c => c.id === choice.id);
-    
-    // Apply choice effects
-    setPlayerStats(prev => ({
-      ...prev,
-      coins: prev.coins + (selectedChoice.effect.coins || 0),
-      experience: prev.experience + (selectedChoice.effect.experience || 0)
-    }));
-    
-    // Add to action history
-    setActionHistory(prev => [...prev, {
-      type: 'choice',
-      description: selectedChoice.text,
-      time: gameTime
-    }]);
-    
-    // Progress to next level or transition to trading
-    if (selectedChoice.next === 'momentum-game' || selectedChoice.next === 'analysis-game') {
-      setCurrentPhase('trading-sim');
-      setTradingActive(true);
-    } else if (typeof selectedChoice.next === 'number') {
-      setAdventureLevel(selectedChoice.next);
-    } else {
-      setCurrentPhase('trading-sim');
-      setTradingActive(true);
-    }
-  };
 
   // Calculate portfolio value
   const getPortfolioValue = () => {
@@ -435,9 +411,8 @@ const StockMarketModule = () => {
     if (tradingActive && gameTime > 0 && gameTime % 15 === 0) {
       const randomEvent = marketEvents[Math.floor(Math.random() * marketEvents.length)];
       setCurrentEvent(randomEvent);
-      
-      // Apply event effects
-      setMarketData(prevData => 
+
+      setMarketData(prevData =>
         prevData.map(stock => {
           if (randomEvent.effect.sector === 'all' || stock.sector === randomEvent.effect.sector || randomEvent.effect.sector === 'random') {
             return {
@@ -448,377 +423,690 @@ const StockMarketModule = () => {
           return stock;
         })
       );
-      
-      // Clear event after duration
+
       setTimeout(() => setCurrentEvent(null), randomEvent.duration * 1000);
     }
   }, [gameTime, tradingActive]);
 
-  // Portfolio challenge handler
-  const startPortfolioChallenge = () => {
-    setCurrentPhase('portfolio-challenge');
-    setPlayerStats(prev => ({ ...prev, coins: 25000 })); // Give more money for challenge
-    setActiveChallenges([
-      {
-        id: 'beat-market',
-        title: '📈 Beat the Market',
-        description: 'Achieve 15% return in 60 seconds',
-        target: 0.15,
-        timeLimit: 60,
-        reward: 2000
-      }
-    ]);
+  // Handle test answer
+  const handleTestAnswer = (answerIndex) => {
+    const currentQ = testQuestions[testQuestion];
+    const isCorrect = answerIndex === currentQ.correct;
+
+    setTestAnswers(prev => [...prev, { question: testQuestion, answer: answerIndex, correct: isCorrect }]);
+
+    if (isCorrect) {
+      setTestScore(prev => prev + 1);
+    }
+
+    if (testQuestion < testQuestions.length - 1) {
+      setTimeout(() => setTestQuestion(prev => prev + 1), 1500);
+    } else {
+      setTimeout(() => {
+        if (testScore + (isCorrect ? 1 : 0) >= 3) {
+          setCurrentPhase('trading-sim');
+          setTradingActive(true);
+          addNotification('success', 'Test Passed!', 'You\'re ready to start trading!');
+        }
+      }, 2000);
+    }
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-slate-50 to-indigo-50 p-6">
-      {/* Gamified Header */}
+  // Start trading simulation
+  const startTradingSimulation = () => {
+    setCurrentPhase('trading-sim');
+    setTradingActive(true);
+    setPlayerStats({ coins: 10000, experience: 0, level: 1, reputation: 0 });
+    setPortfolio([]);
+    setActionHistory([]);
+    setGameTime(0);
+  };
+
+  // Stock Card Component
+  const StockCard = ({ stock, canTrade = true }) => {
+    const isOwned = portfolio.some(p => p.id === stock.id);
+    const ownedStock = portfolio.find(p => p.id === stock.id);
+    const isSelected = selectedStock?.id === stock.id;
+
+    return (
       <motion.div
-        className="flex items-center justify-between mb-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl p-4 shadow-lg text-white"
+        className={`p-5 rounded-2xl border-2 cursor-pointer transition-all ${
+          stock.changePercent >= 0
+            ? 'border-emerald-400 bg-gradient-to-br from-emerald-50 to-green-50'
+            : 'border-rose-400 bg-gradient-to-br from-rose-50 to-red-50'
+        } ${isSelected ? 'ring-4 ring-blue-400 shadow-xl' : 'shadow-md hover:shadow-lg'}`}
+        whileHover={{ scale: 1.02, y: -4 }}
+        whileTap={{ scale: 0.98 }}
+        onClick={() => setSelectedStock(isSelected ? null : stock)}
+      >
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-3">
+            <span className="text-4xl">{stock.emoji}</span>
+            <div>
+              <div className="font-bold text-xl tracking-tight text-gray-900" style={{ fontFamily: "'Inter', 'SF Pro Display', -apple-system, sans-serif" }}>{stock.symbol}</div>
+              <div className="text-sm text-gray-500 font-medium">{stock.name}</div>
+            </div>
+          </div>
+          {isOwned && (
+            <div className="bg-blue-100 px-3 py-1.5 rounded-full">
+              <span className="text-sm font-bold text-blue-700">{ownedStock.shares} owned</span>
+            </div>
+          )}
+        </div>
+
+        <div className="flex justify-between items-end">
+          <div>
+            <div className="text-3xl font-black text-gray-900" style={{ fontFamily: "'Inter', 'SF Pro Display', -apple-system, sans-serif" }}>${stock.price.toFixed(2)}</div>
+            <div className={`text-base font-bold flex items-center gap-1 ${
+              stock.changePercent >= 0 ? 'text-emerald-600' : 'text-rose-600'
+            }`}>
+              {stock.changePercent >= 0 ? '▲' : '▼'} {Math.abs(stock.changePercent)}%
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    );
+  };
+
+  // Notification Component with Table
+  const NotificationPanel = () => (
+    <AnimatePresence>
+      {notifications.length > 0 && (
+        <motion.div
+          className="fixed top-24 right-6 z-50 w-96"
+          initial={{ opacity: 0, x: 100 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: 100 }}
+        >
+          {notifications.map(notification => (
+            <motion.div
+              key={notification.id}
+              className={`mb-3 rounded-2xl shadow-2xl border-2 overflow-hidden ${
+                notification.type === 'success'
+                  ? 'bg-white border-emerald-400'
+                  : notification.type === 'warning'
+                  ? 'bg-white border-amber-400'
+                  : 'bg-white border-blue-400'
+              }`}
+              initial={{ opacity: 0, y: -20, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.9 }}
+              style={{ fontFamily: "'Inter', 'SF Pro Display', -apple-system, sans-serif" }}
+            >
+              <div className={`px-5 py-3 ${
+                notification.type === 'success'
+                  ? 'bg-gradient-to-r from-emerald-500 to-green-500'
+                  : notification.type === 'warning'
+                  ? 'bg-gradient-to-r from-amber-500 to-orange-500'
+                  : 'bg-gradient-to-r from-blue-500 to-indigo-500'
+              }`}>
+                <div className="flex items-center gap-3 text-white">
+                  <span className="text-2xl">
+                    {notification.type === 'success' ? '✓' : notification.type === 'warning' ? '!' : 'ℹ'}
+                  </span>
+                  <div>
+                    <div className="font-bold text-lg tracking-tight">{notification.title}</div>
+                    <div className="text-sm opacity-90">{notification.message}</div>
+                  </div>
+                </div>
+              </div>
+
+              {notification.details && (
+                <div className="p-4">
+                  <table className="w-full text-sm" style={{ fontFamily: "'Inter', 'SF Pro Display', -apple-system, sans-serif" }}>
+                    <tbody>
+                      <tr className="border-b border-gray-100">
+                        <td className="py-2 text-gray-500 font-medium">Shares</td>
+                        <td className="py-2 text-right font-bold text-gray-900">{notification.details.shares}</td>
+                      </tr>
+                      <tr className="border-b border-gray-100">
+                        <td className="py-2 text-gray-500 font-medium">Price/Share</td>
+                        <td className="py-2 text-right font-bold text-gray-900">${notification.details.price?.toFixed(2)}</td>
+                      </tr>
+                      <tr className="border-b border-gray-100">
+                        <td className="py-2 text-gray-500 font-medium">Total</td>
+                        <td className="py-2 text-right font-bold text-gray-900">${notification.details.total?.toFixed(2)}</td>
+                      </tr>
+                      {notification.details.profit !== undefined && (
+                        <tr>
+                          <td className="py-2 text-gray-500 font-medium">Profit/Loss</td>
+                          <td className={`py-2 text-right font-bold ${notification.details.profit >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                            {notification.details.profit >= 0 ? '+' : ''}${notification.details.profit?.toFixed(2)}
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </motion.div>
+          ))}
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+
+  // If module is already passed, show completion screen
+  if (modulePassed) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6 flex items-center justify-center">
+        <motion.div
+          className="bg-white rounded-2xl shadow-xl p-8 max-w-md text-center"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          <motion.div
+            className="text-6xl mb-4"
+            animate={{ rotate: [0, -10, 10, -10, 0] }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+          >
+            📈
+          </motion.div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Module Completed!</h2>
+          <p className="text-gray-600 mb-6">
+            You've already passed the Stock Market module. Great job learning how to invest wisely!
+          </p>
+          <div className="bg-green-50 rounded-xl p-4 mb-6">
+            <div className="flex items-center justify-center gap-2 text-green-600">
+              <span className="text-2xl">✓</span>
+              <span className="font-semibold">100% Complete</span>
+            </div>
+          </div>
+          <motion.button
+            onClick={() => navigate('/game')}
+            className="w-full px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold transition"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            Back to Learning Path
+          </motion.button>
+        </motion.div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6" style={{ fontFamily: "'Inter', 'SF Pro Display', -apple-system, sans-serif" }}>
+      {/* Premium Header */}
+      <motion.div
+        className="flex items-center justify-between mb-8 bg-gradient-to-r from-slate-800 via-slate-900 to-black rounded-2xl p-5 shadow-2xl"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
         <button
           onClick={() => navigate('/game')}
-          className="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition backdrop-blur-sm"
+          className="flex items-center gap-2 px-5 py-2.5 bg-white/10 hover:bg-white/20 rounded-xl transition backdrop-blur-sm text-white font-semibold"
         >
           <ArrowLeft className="w-5 h-5" />
-          Back to Roadmap
+          Back
         </button>
-        
-        <div className="text-center">
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            🚀 Trading Academy Adventure
+
+        <div className="text-center text-white">
+          <h1 className="text-2xl font-black tracking-tight">
+            Stock Market Mastery
           </h1>
-          <p className="text-sm opacity-90">Interactive Stock Market Mastery</p>
+          <p className="text-sm opacity-70 font-medium">Learn. Test. Trade.</p>
         </div>
 
-        <div className="flex items-center gap-6">
-          {/* Player Stats */}
-          <div className="flex items-center gap-2 bg-white/20 rounded-lg px-3 py-2 backdrop-blur-sm">
-            <Coins className="w-5 h-5" />
-            <span className="font-bold">${playerStats.coins.toLocaleString()}</span>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 bg-white/10 rounded-xl px-4 py-2.5 backdrop-blur-sm text-white">
+            <DollarSign className="w-5 h-5 text-emerald-400" />
+            <span className="font-bold text-lg">${playerStats.coins.toLocaleString()}</span>
           </div>
-          
-          <div className="flex items-center gap-2 bg-white/20 rounded-lg px-3 py-2 backdrop-blur-sm">
-            <Star className="w-5 h-5" />
-            <span className="font-semibold">LVL {playerStats.level}</span>
-          </div>
-          
-          <div className="flex items-center gap-2 bg-white/20 rounded-lg px-3 py-2 backdrop-blur-sm">
-            <Trophy className="w-5 h-5" />
-            <span className="font-semibold">{playerStats.experience} XP</span>
+
+          <div className="flex items-center gap-2 bg-white/10 rounded-xl px-4 py-2.5 backdrop-blur-sm text-white">
+            <Star className="w-5 h-5 text-amber-400" />
+            <span className="font-bold">LVL {playerStats.level}</span>
           </div>
         </div>
       </motion.div>
 
-      {/* Achievement Notifications */}
-      <AnimatePresence>
-        {achievements.length > 0 && (
-          <motion.div
-            className="fixed top-4 right-4 z-50"
-            initial={{ opacity: 0, x: 100 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 100 }}
-          >
-            {achievements.slice(-1).map(achievement => (
-              <div key={achievement.id} className="bg-gradient-to-r from-blue-500 to-indigo-500 border border-blue-600 rounded-lg p-4 shadow-lg text-white">
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">🏆</span>
-                  <div>
-                    <div className="font-bold">{achievement.title}</div>
-                    <div className="text-sm opacity-90">{achievement.description}</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Notification Panel */}
+      <NotificationPanel />
 
       {/* Market Event Notification */}
       <AnimatePresence>
         {currentEvent && (
           <motion.div
-            className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50"
+            className="fixed top-24 left-1/2 transform -translate-x-1/2 z-40"
             initial={{ opacity: 0, y: -50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -50 }}
           >
-            <div className="bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-lg p-4 shadow-xl border-2 border-white">
+            <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-2xl p-5 shadow-2xl border-2 border-white/30" style={{ fontFamily: "'Inter', 'SF Pro Display', -apple-system, sans-serif" }}>
               <div className="text-center">
-                <div className="text-xl font-bold mb-1">{currentEvent.title}</div>
-                <div className="text-sm opacity-90">{currentEvent.description}</div>
+                <div className="text-2xl font-black tracking-tight mb-1">{currentEvent.title}</div>
+                <div className="text-sm opacity-90 font-medium">{currentEvent.description}</div>
               </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {currentPhase === 'adventure' ? (
-        /* Choose Your Adventure */
+      {/* Phase Progress Indicator */}
+      <div className="max-w-4xl mx-auto mb-8">
+        <div className="flex items-center justify-center gap-4">
+          {[
+            { phase: 'teaching', label: 'Learn', icon: BookOpen },
+            { phase: 'test', label: 'Test', icon: GraduationCap },
+            { phase: 'trading-sim', label: 'Trade', icon: TrendingUp }
+          ].map((step, index) => (
+            <React.Fragment key={step.phase}>
+              <div className={`flex items-center gap-2 px-5 py-3 rounded-xl font-bold transition-all ${
+                currentPhase === step.phase
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg scale-110'
+                  : currentPhase === 'trading-sim' || (currentPhase === 'test' && step.phase === 'teaching')
+                  ? 'bg-emerald-100 text-emerald-700'
+                  : 'bg-gray-100 text-gray-400'
+              }`} style={{ fontFamily: "'Inter', 'SF Pro Display', -apple-system, sans-serif" }}>
+                <step.icon className="w-5 h-5" />
+                {step.label}
+              </div>
+              {index < 2 && (
+                <div className={`w-12 h-1 rounded-full ${
+                  (currentPhase === 'test' && index === 0) || currentPhase === 'trading-sim'
+                    ? 'bg-emerald-400'
+                    : 'bg-gray-200'
+                }`} />
+              )}
+            </React.Fragment>
+          ))}
+        </div>
+      </div>
+
+      {/* TEACHING PHASE */}
+      {currentPhase === 'teaching' && (
         <motion.div
           className="max-w-4xl mx-auto"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
         >
-          {/* Adventure Progress */}
-          <div className="mb-8">
-            <div className="flex justify-between text-sm text-orange-600 mb-2">
-              <span>Adventure Level {adventureLevel}</span>
-              <span>Choose your path wisely!</span>
+          {/* Progress */}
+          <div className="mb-6">
+            <div className="flex justify-between text-sm font-semibold text-gray-600 mb-2" style={{ fontFamily: "'Inter', 'SF Pro Display', -apple-system, sans-serif" }}>
+              <span>Lesson {teachingStep + 1} of {teachingContent.length}</span>
+              <span>{Math.round(((teachingStep + 1) / teachingContent.length) * 100)}% Complete</span>
             </div>
-            <div className="w-full bg-orange-100 rounded-full h-3">
+            <div className="w-full bg-gray-200 rounded-full h-3">
               <motion.div
-                className="bg-gradient-to-r from-orange-500 to-red-500 h-3 rounded-full"
+                className="bg-gradient-to-r from-blue-500 to-indigo-500 h-3 rounded-full"
                 initial={{ width: 0 }}
-                animate={{ width: `${(adventureLevel / adventureStories.length) * 100}%` }}
-                transition={{ duration: 0.5 }}
+                animate={{ width: `${((teachingStep + 1) / teachingContent.length) * 100}%` }}
               />
             </div>
           </div>
 
-          {/* Adventure Story Card */}
+          {/* Lesson Card */}
           <motion.div
-            key={adventureLevel}
-            className={`${adventureStories[adventureLevel - 1]?.background || 'bg-gradient-to-br from-blue-400 to-emerald-500'} rounded-2xl p-8 shadow-lg mb-6 border-2 border-gray-200 ${adventureLevel === 1 ? 'text-gray-800' : 'text-white'}`}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            key={teachingStep}
+            className="bg-white rounded-3xl p-8 shadow-xl border border-gray-100"
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            style={{ fontFamily: "'Inter', 'SF Pro Display', -apple-system, sans-serif" }}
           >
-            {/* Scene Header */}
-            <div className="text-center mb-6">
-              <motion.div 
-                className="text-6xl mb-4"
-                animate={{ 
-                  scale: [1, 1.1, 1],
-                  rotate: [0, 5, -5, 0]
-                }}
-                transition={{ duration: 2, repeat: Infinity, repeatDelay: 2 }}
+            <div className="text-center mb-8">
+              <motion.div
+                className="text-7xl mb-4"
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
               >
-                {adventureLevel === 1 ? '📋' : '🎮'}
+                {teachingContent[teachingStep].icon}
               </motion.div>
-              <div className="text-lg opacity-90 font-semibold mb-2">
-                {adventureStories[adventureLevel - 1]?.scene}
-              </div>
-              <h2 className="text-3xl font-bold mb-2">
-                {adventureStories[adventureLevel - 1]?.title}
+              <h2 className="text-3xl font-black text-gray-900 tracking-tight">
+                {teachingContent[teachingStep].title}
               </h2>
             </div>
 
-            {/* Narrator Introduction */}
-            <div className={`backdrop-blur-sm rounded-xl p-6 mb-6 shadow-lg border-l-4 ${
-              adventureLevel === 1 
-                ? 'bg-gray-50/80 border-blue-500' 
-                : 'bg-white/20 border-blue-400'
-            }`}>
-              <div className="flex items-start gap-4">
-                <motion.div 
-                  className="text-5xl"
-                  animate={{ bounce: [0, -10, 0] }}
-                  transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 3 }}
-                >
-                  {adventureLevel === 1 ? '👤' : '🎭'}
-                </motion.div>
-                <div className="flex-1">
-                  <div className="flex items-center mb-3">
-                    <div className="font-bold text-xl">
-                      {adventureStories[adventureLevel - 1]?.narrator}
-                    </div>
-                  </div>
-                  <div className={`rounded-lg p-4 mb-4 border-l-4 ${
-                    adventureLevel === 1 
-                      ? 'bg-gray-100/80 border-gray-300' 
-                      : 'bg-white/30 border-white/50'
-                  }`}>
-                    <p className={`italic text-lg leading-relaxed ${
-                      adventureLevel === 1 ? 'text-gray-800' : 'text-white'
-                    }`}>
-                      {adventureLevel === 1 ? adventureStories[adventureLevel - 1]?.story : `📢 ${adventureStories[adventureLevel - 1]?.story}`}
-                    </p>
-                  </div>
-                </div>
+            <div className="space-y-6">
+              <p className="text-lg text-gray-700 leading-relaxed font-medium">
+                {teachingContent[teachingStep].content}
+              </p>
+
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-5 border-l-4 border-blue-500">
+                <div className="font-bold text-blue-800 mb-2 text-lg">Example:</div>
+                <p className="text-blue-700 font-medium">{teachingContent[teachingStep].example}</p>
+              </div>
+
+              <div className="bg-gray-50 rounded-2xl p-5">
+                <div className="font-bold text-gray-800 mb-3 text-lg">Key Points:</div>
+                <ul className="space-y-2">
+                  {teachingContent[teachingStep].keyPoints.map((point, i) => (
+                    <li key={i} className="flex items-start gap-3">
+                      <CheckCircle className="w-5 h-5 text-emerald-500 mt-0.5 flex-shrink-0" />
+                      <span className="text-gray-700 font-medium">{point}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
             </div>
 
-            {/* Adventure Choices */}
-            <div className="space-y-4">
-              <h3 className="text-xl font-bold text-center mb-6">{adventureLevel === 1 ? 'What\'s your choice? Choose wisely!' : '⚡ What\'s your move? Choose wisely!'}</h3>
-              {adventureStories[adventureLevel - 1]?.choices.map((choice, index) => (
-                <motion.button
-                  key={choice.id}
-                  className={`w-full p-6 backdrop-blur-sm rounded-xl border-2 text-left transition-all group ${
-                    adventureLevel === 1 
-                      ? 'bg-gray-50/80 border-gray-300 hover:border-blue-400 text-gray-800' 
-                      : 'bg-white/20 border-white/30 hover:border-blue-400 text-white'
-                  }`}
-                  whileHover={{ scale: 1.02, y: -2 }}
-                  whileTap={{ scale: 0.98 }}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.2 }}
-                  onClick={() => makeChoice(choice)}
+            {/* Navigation */}
+            <div className="flex justify-between mt-8 pt-6 border-t border-gray-100">
+              <button
+                onClick={() => setTeachingStep(prev => Math.max(0, prev - 1))}
+                disabled={teachingStep === 0}
+                className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold disabled:opacity-40 disabled:cursor-not-allowed transition"
+              >
+                Previous
+              </button>
+
+              {teachingStep < teachingContent.length - 1 ? (
+                <button
+                  onClick={() => setTeachingStep(prev => prev + 1)}
+                  className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-bold shadow-lg transition transform hover:scale-105"
                 >
-                  <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl group-hover:scale-110 transition-transform ${
-                      adventureLevel === 1 
-                        ? 'bg-blue-500 text-white' 
-                        : 'bg-blue-400 text-slate-800'
-                    }`}>
-                      {choice.id}
-                    </div>
-                    <div className="flex-1">
-                      <p className={`text-lg font-semibold ${
-                        adventureLevel === 1 ? 'text-gray-800' : 'text-white'
-                      }`}>{choice.text}</p>
-                      {choice.effect.coins && (
-                        <p className={`text-sm mt-1 ${
-                          adventureLevel === 1 ? 'text-blue-600' : 'text-blue-200'
-                        }`}>💰 {choice.effect.coins > 0 ? '+' : ''}{choice.effect.coins} coins</p>
-                      )}
-                      {choice.effect.experience && (
-                        <p className={`text-sm mt-1 ${
-                          adventureLevel === 1 ? 'text-blue-600' : 'text-blue-200'
-                        }`}>⭐ +{choice.effect.experience} XP</p>
-                      )}
-                    </div>
-                  </div>
-                </motion.button>
-              ))}
+                  Next Lesson
+                </button>
+              ) : (
+                <button
+                  onClick={() => setCurrentPhase('test')}
+                  className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white rounded-xl font-bold shadow-lg transition transform hover:scale-105"
+                >
+                  Take the Test
+                </button>
+              )}
             </div>
           </motion.div>
-
-          {/* Skip to Trading Button */}
-          <div className="text-center">
-            <button
-              onClick={() => { setCurrentPhase('trading-sim'); setTradingActive(true); }}
-              className="px-8 py-4 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white rounded-xl font-bold text-lg transition shadow-lg transform hover:scale-105"
-            >
-              📊 Start Trading Practice! 📊
-            </button>
-          </div>
         </motion.div>
-      ) : currentPhase === 'trading-sim' ? (
-        /* Live Trading Simulation */
+      )}
+
+      {/* TEST PHASE */}
+      {currentPhase === 'test' && (
+        <motion.div
+          className="max-w-3xl mx-auto"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
+          {testQuestion < testQuestions.length ? (
+            <motion.div
+              key={testQuestion}
+              className="bg-white rounded-3xl p-8 shadow-xl border border-gray-100"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              style={{ fontFamily: "'Inter', 'SF Pro Display', -apple-system, sans-serif" }}
+            >
+              {/* Progress */}
+              <div className="flex justify-between items-center mb-6">
+                <span className="text-sm font-bold text-gray-500">Question {testQuestion + 1}/{testQuestions.length}</span>
+                <span className="px-4 py-2 bg-emerald-100 text-emerald-700 rounded-full font-bold">
+                  Score: {testScore}/{testQuestion}
+                </span>
+              </div>
+
+              <div className="w-full bg-gray-200 rounded-full h-2 mb-8">
+                <div
+                  className="bg-gradient-to-r from-blue-500 to-indigo-500 h-2 rounded-full transition-all"
+                  style={{ width: `${((testQuestion) / testQuestions.length) * 100}%` }}
+                />
+              </div>
+
+              {/* Question */}
+              <h3 className="text-2xl font-black text-gray-900 mb-8 leading-tight tracking-tight">
+                {testQuestions[testQuestion].question}
+              </h3>
+
+              {/* Options */}
+              <div className="space-y-4">
+                {testQuestions[testQuestion].options.map((option, index) => {
+                  const answered = testAnswers.find(a => a.question === testQuestion);
+                  const isSelected = answered?.answer === index;
+                  const isCorrect = index === testQuestions[testQuestion].correct;
+
+                  return (
+                    <motion.button
+                      key={index}
+                      onClick={() => !answered && handleTestAnswer(index)}
+                      disabled={!!answered}
+                      className={`w-full p-5 rounded-2xl text-left font-semibold text-lg transition-all border-2 ${
+                        answered
+                          ? isCorrect
+                            ? 'bg-emerald-100 border-emerald-500 text-emerald-800'
+                            : isSelected
+                            ? 'bg-rose-100 border-rose-500 text-rose-800'
+                            : 'bg-gray-50 border-gray-200 text-gray-500'
+                          : 'bg-gray-50 border-gray-200 hover:border-blue-400 hover:bg-blue-50 text-gray-800'
+                      }`}
+                      whileHover={!answered ? { scale: 1.02 } : {}}
+                      whileTap={!answered ? { scale: 0.98 } : {}}
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg ${
+                          answered
+                            ? isCorrect
+                              ? 'bg-emerald-500 text-white'
+                              : isSelected
+                              ? 'bg-rose-500 text-white'
+                              : 'bg-gray-300 text-gray-600'
+                            : 'bg-gray-200 text-gray-600'
+                        }`}>
+                          {answered && isCorrect ? '✓' : answered && isSelected && !isCorrect ? '✗' : String.fromCharCode(65 + index)}
+                        </div>
+                        <span>{option}</span>
+                      </div>
+                    </motion.button>
+                  );
+                })}
+              </div>
+
+              {/* Explanation */}
+              {testAnswers.find(a => a.question === testQuestion) && (
+                <motion.div
+                  className="mt-6 p-5 bg-blue-50 rounded-2xl border-l-4 border-blue-500"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
+                  <div className="font-bold text-blue-800 mb-1">Explanation:</div>
+                  <p className="text-blue-700 font-medium">{testQuestions[testQuestion].explanation}</p>
+                </motion.div>
+              )}
+            </motion.div>
+          ) : (
+            /* Test Results */
+            <motion.div
+              className="bg-white rounded-3xl p-8 shadow-xl text-center"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              style={{ fontFamily: "'Inter', 'SF Pro Display', -apple-system, sans-serif" }}
+            >
+              <motion.div
+                className="text-8xl mb-6"
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 0.5 }}
+              >
+                {testScore >= 3 ? '🎉' : '📚'}
+              </motion.div>
+
+              <h2 className="text-4xl font-black text-gray-900 mb-4 tracking-tight">
+                {testScore >= 3 ? 'Congratulations!' : 'Keep Learning!'}
+              </h2>
+
+              <p className="text-xl text-gray-600 mb-6 font-medium">
+                You scored {testScore} out of {testQuestions.length}
+              </p>
+
+              <div className="w-full max-w-md mx-auto bg-gray-100 rounded-full h-4 mb-8">
+                <div
+                  className={`h-4 rounded-full transition-all ${testScore >= 3 ? 'bg-gradient-to-r from-emerald-500 to-green-500' : 'bg-gradient-to-r from-amber-500 to-orange-500'}`}
+                  style={{ width: `${(testScore / testQuestions.length) * 100}%` }}
+                />
+              </div>
+
+              {testScore >= 3 ? (
+                <button
+                  onClick={startTradingSimulation}
+                  className="px-10 py-4 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white rounded-2xl font-bold text-xl shadow-xl transition transform hover:scale-105"
+                >
+                  Start Trading Simulation
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    setCurrentPhase('teaching');
+                    setTeachingStep(0);
+                    setTestQuestion(0);
+                    setTestScore(0);
+                    setTestAnswers([]);
+                  }}
+                  className="px-10 py-4 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white rounded-2xl font-bold text-xl shadow-xl transition transform hover:scale-105"
+                >
+                  Review Lessons
+                </button>
+              )}
+            </motion.div>
+          )}
+        </motion.div>
+      )}
+
+      {/* TRADING SIMULATION PHASE */}
+      {currentPhase === 'trading-sim' && (
         <motion.div
           className="max-w-7xl mx-auto"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
+          style={{ fontFamily: "'Inter', 'SF Pro Display', -apple-system, sans-serif" }}
         >
-          {/* Trading Dashboard Header */}
+          {/* Stats Dashboard */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-4 text-white">
+            <div className="bg-gradient-to-br from-emerald-500 to-green-600 rounded-2xl p-5 text-white shadow-lg">
               <div className="flex items-center gap-2 mb-2">
-                <DollarSign className="w-5 h-5" />
-                <span className="font-semibold">Your Money</span>
+                <DollarSign className="w-6 h-6" />
+                <span className="font-bold text-lg">Cash Balance</span>
               </div>
-              <div className="text-2xl font-bold">${playerStats.coins.toLocaleString()}</div>
-              <div className="text-xs opacity-80">Available to invest</div>
+              <div className="text-3xl font-black">${playerStats.coins.toLocaleString()}</div>
+              <div className="text-sm opacity-80 font-medium">Available to invest</div>
             </div>
-            
-            <div className="bg-gradient-to-r from-slate-500 to-slate-600 rounded-xl p-4 text-white">
+
+            <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-5 text-white shadow-lg">
               <div className="flex items-center gap-2 mb-2">
-                <BarChart3 className="w-5 h-5" />
-                <span className="font-semibold">Your Stocks</span>
+                <BarChart3 className="w-6 h-6" />
+                <span className="font-bold text-lg">Portfolio Value</span>
               </div>
-              <div className="text-2xl font-bold">${getPortfolioValue().toLocaleString()}</div>
-              <div className="text-xs opacity-80">Value of owned stocks</div>
+              <div className="text-3xl font-black">${getPortfolioValue().toLocaleString()}</div>
+              <div className="text-sm opacity-80 font-medium">Your stock holdings</div>
             </div>
-            
-            <div className={`rounded-xl p-4 text-white ${
-              getPortfolioReturn() >= 0 
-                ? 'bg-gradient-to-r from-blue-500 to-indigo-500'
-                : 'bg-gradient-to-r from-slate-500 to-gray-500'
+
+            <div className={`rounded-2xl p-5 text-white shadow-lg ${
+              getPortfolioReturn() >= 0
+                ? 'bg-gradient-to-br from-emerald-500 to-teal-600'
+                : 'bg-gradient-to-br from-rose-500 to-red-600'
             }`}>
               <div className="flex items-center gap-2 mb-2">
-                <TrendingUp className="w-5 h-5" />
-                <span className="font-semibold">{getPortfolioReturn() >= 0 ? 'Profit' : 'Learning'}</span>
+                <TrendingUp className="w-6 h-6" />
+                <span className="font-bold text-lg">Total Return</span>
               </div>
-              <div className="text-2xl font-bold">
-                {getPortfolioReturn() >= 0 ? '+' : ''}${getPortfolioReturn().toLocaleString()}
+              <div className="text-3xl font-black">
+                {getPortfolioReturn() >= 0 ? '+' : ''}${getPortfolioReturn().toFixed(2)}
               </div>
-              <div className="text-xs opacity-80">
-                {getPortfolioReturn() >= 0 ? 'Great job!' : "Don't worry, keep learning!"}
+              <div className="text-sm opacity-80 font-medium">
+                {getPortfolioReturn() >= 0 ? 'Great job!' : 'Keep learning!'}
               </div>
             </div>
-            
-            <div className="bg-gradient-to-r from-purple-400 to-purple-600 rounded-xl p-4 text-white">
+
+            <div className="bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl p-5 text-white shadow-lg">
               <div className="flex items-center gap-2 mb-2">
-                <Activity className="w-5 h-5" />
-                <span className="font-semibold">Time Trading</span>
+                <Target className="w-6 h-6" />
+                <span className="font-bold text-lg">Goal Progress</span>
               </div>
-              <div className="text-2xl font-bold">{Math.floor(gameTime / 12)}:{((gameTime % 12) * 5).toString().padStart(2, '0')}</div>
-              <div className="text-xs opacity-80">Minutes in market</div>
+              <div className="text-3xl font-black">
+                ${((playerStats.coins + getPortfolioValue())).toLocaleString()}
+              </div>
+              <div className="text-sm opacity-80 font-medium">Target: $15,000</div>
             </div>
+          </div>
+
+          {/* Goal Progress Bar */}
+          <div className="mb-8 p-5 bg-white rounded-2xl shadow-lg border border-gray-100">
+            <div className="flex justify-between items-center mb-3">
+              <span className="font-bold text-gray-800 text-lg">Challenge: Turn $10,000 into $15,000</span>
+              <span className="font-black text-2xl text-gray-900">
+                {Math.round(((playerStats.coins + getPortfolioValue()) / 15000) * 100)}%
+              </span>
+            </div>
+            <div className="bg-gray-200 rounded-full h-5">
+              <motion.div
+                className={`h-5 rounded-full transition-all duration-500 ${
+                  (playerStats.coins + getPortfolioValue()) >= 15000
+                    ? 'bg-gradient-to-r from-emerald-500 to-green-500'
+                    : 'bg-gradient-to-r from-blue-500 to-indigo-500'
+                }`}
+                style={{ width: `${Math.min(((playerStats.coins + getPortfolioValue()) / 15000) * 100, 100)}%` }}
+              />
+            </div>
+            {(playerStats.coins + getPortfolioValue()) >= 15000 && (
+              <motion.div
+                className="mt-4"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+              >
+                <p className="text-center text-emerald-600 font-bold text-lg mb-4">
+                  🎉 Challenge Complete! You're a Trading Master! 🎉
+                </p>
+                <div className="flex justify-center gap-4">
+                  <button
+                    onClick={async () => {
+                      setIsSaving(true);
+                      try {
+                        // Score 100% for completing the challenge
+                        const result = await saveScore('stock-market', 100, 100);
+                        setSaveResult(result);
+                      } catch (err) {
+                        console.error('Error saving score:', err);
+                      } finally {
+                        setIsSaving(false);
+                      }
+                    }}
+                    disabled={isSaving || saveResult?.passed}
+                    className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white rounded-xl font-bold transition disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {isSaving ? (
+                      <>
+                        <Loader2 className="animate-spin" size={18} />
+                        Saving...
+                      </>
+                    ) : saveResult?.passed ? (
+                      <>
+                        <CheckCircle size={18} />
+                        Module Passed!
+                      </>
+                    ) : (
+                      <>
+                        <Trophy size={18} />
+                        Complete Module
+                      </>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => navigate('/game')}
+                    className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-bold transition"
+                  >
+                    Back to Roadmap
+                  </button>
+                </div>
+              </motion.div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Stock Market */}
-            <div className="lg:col-span-2 space-y-4">
-              {/* Trading Guide */}
-              <div className="mb-6 p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
-                <h4 className="font-bold text-gray-800 mb-2 flex items-center gap-2">
-                  📚 Quick Guide: How to Trade Stocks
-                </h4>
-                <div className="text-sm text-gray-700 space-y-1">
-                  <p>• <strong>Rising prices</strong> = Stock going up (good time to sell if you own it)</p>
-                  <p>• <strong>Falling prices</strong> = Stock going down (might be good time to buy)</p>
-                  <p>• <strong>Goal:</strong> Buy low, sell high to make profit!</p>
-                  <p>• <strong>Challenge:</strong> Try to grow your money from $10,000 to $12,000 (20% profit)</p>
-                </div>
-              </div>
-              
-              {/* Progress Tracker */}
-              {tradingActive && (
-                <div className="mb-4 p-3 bg-slate-50 rounded-lg border border-slate-200">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-semibold text-gray-700">Challenge Progress:</span>
-                    <span className="text-lg font-bold text-slate-700">
-                      ${(playerStats.coins + getPortfolioValue()).toLocaleString()} / $12,000
-                    </span>
-                  </div>
-                  <div className="mt-2 bg-white rounded-full h-2">
-                    <div 
-                      className="bg-gradient-to-r from-blue-500 to-indigo-500 h-2 rounded-full transition-all duration-500"
-                      style={{ width: `${Math.min(((playerStats.coins + getPortfolioValue()) / 12000) * 100, 100)}%` }}
-                    ></div>
-                  </div>
-                  <div className="text-xs text-gray-600 mt-1">
-                    {((playerStats.coins + getPortfolioValue()) >= 12000) 
-                      ? "🎉 Challenge Complete! You're a trading master!" 
-                      : `$${(12000 - (playerStats.coins + getPortfolioValue())).toLocaleString()} more to go!`
-                    }
-                  </div>
-                </div>
-              )}
-              
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                  📋 Simple Trading Market
+            <div className="lg:col-span-2 space-y-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-2xl font-black text-gray-900 tracking-tight">
+                  Live Market
                 </h3>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setTradingActive(!tradingActive)}
-                    className={`px-4 py-2 rounded-lg font-semibold transition ${
-                      tradingActive 
-                        ? 'bg-slate-500 hover:bg-slate-600 text-white'
-                        : 'bg-blue-500 hover:bg-blue-600 text-white'
-                    }`}
-                  >
-                    {tradingActive ? '⏸️ Pause' : '▶️ Start'} Trading
-                  </button>
-                  <button
-                    onClick={startPortfolioChallenge}
-                    className="px-4 py-2 bg-gradient-to-r from-slate-600 to-gray-600 text-white rounded-lg font-semibold hover:from-slate-700 hover:to-gray-700 transition"
-                  >
-                    🏆 Challenge Mode
-                  </button>
-                </div>
+                <button
+                  onClick={() => setTradingActive(!tradingActive)}
+                  className={`px-6 py-3 rounded-xl font-bold text-lg transition shadow-lg ${
+                    tradingActive
+                      ? 'bg-gradient-to-r from-rose-500 to-red-500 hover:from-rose-600 hover:to-red-600 text-white'
+                      : 'bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white'
+                  }`}
+                >
+                  {tradingActive ? '⏸ Pause' : '▶ Start'} Trading
+                </button>
               </div>
-              
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {marketData.map((stock, index) => (
                   <motion.div
@@ -831,89 +1119,186 @@ const StockMarketModule = () => {
                   </motion.div>
                 ))}
               </div>
-              
+
               {/* Trading Interface */}
               {selectedStock && (
                 <motion.div
-                  className="bg-white rounded-xl p-6 shadow-lg border-2 border-blue-400"
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
+                  className="bg-white rounded-3xl p-6 shadow-xl border-2 border-blue-400"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
                 >
-                  <h4 className="text-xl font-bold mb-4 flex items-center gap-2">
-                    {selectedStock.emoji} Trading {selectedStock.symbol}
+                  <h4 className="text-2xl font-black mb-6 flex items-center gap-3 text-gray-900 tracking-tight">
+                    {selectedStock.emoji} Trade {selectedStock.symbol}
+                    <span className="text-lg font-bold text-gray-500">@ ${selectedStock.price.toFixed(2)}</span>
                   </h4>
-                  
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Shares to Buy/Sell</label>
-                      <div className="flex gap-2">
-                        <input 
-                          type="number" 
-                          min="1" 
-                          defaultValue="1" 
-                          className="flex-1 border rounded-lg px-3 py-2"
-                          id="shareInput"
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* BUY Section */}
+                    <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-2xl p-5 border-2 border-emerald-200">
+                      <h5 className="font-bold text-emerald-800 text-lg mb-4">Buy Shares</h5>
+
+                      {/* Quantity Selector */}
+                      <div className="mb-4">
+                        <label className="block text-sm font-semibold text-gray-600 mb-2">Quantity</label>
+                        <div className="flex gap-2 flex-wrap mb-3">
+                          {[1, 5, 10, 25, 50].map(qty => (
+                            <button
+                              key={qty}
+                              onClick={() => setBuyQuantity(qty)}
+                              className={`px-4 py-2 rounded-xl font-bold transition ${
+                                buyQuantity === qty
+                                  ? 'bg-emerald-500 text-white'
+                                  : 'bg-white text-gray-700 hover:bg-emerald-100'
+                              }`}
+                            >
+                              {qty}
+                            </button>
+                          ))}
+                        </div>
+                        <input
+                          type="number"
+                          min="1"
+                          value={buyQuantity}
+                          onChange={(e) => setBuyQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                          className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-lg font-bold focus:border-emerald-400 focus:outline-none"
                         />
-                        <button
-                          onClick={() => {
-                            const shares = parseInt(document.getElementById('shareInput').value) || 1;
-                            buyStock(selectedStock, shares);
-                          }}
-                          disabled={!tradingActive || playerStats.coins < selectedStock.price}
-                          className="px-4 py-2 bg-green-500 text-white rounded-lg font-semibold disabled:bg-gray-300"
-                        >
-                          💰 Buy
-                        </button>
                       </div>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Current Position</label>
-                      <div className="text-lg font-bold text-gray-800">
-                        {portfolio.find(p => p.id === selectedStock.id)?.shares || 0} shares
+
+                      <div className="text-sm text-gray-600 mb-4">
+                        <div className="flex justify-between py-1">
+                          <span>Cost:</span>
+                          <span className="font-bold">${(selectedStock.price * buyQuantity).toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between py-1">
+                          <span>Your Balance:</span>
+                          <span className="font-bold">${playerStats.coins.toLocaleString()}</span>
+                        </div>
                       </div>
+
+                      <button
+                        onClick={() => buyStock(selectedStock, buyQuantity)}
+                        disabled={!tradingActive || playerStats.coins < selectedStock.price * buyQuantity}
+                        className="w-full py-4 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white rounded-2xl font-black text-xl disabled:opacity-50 disabled:cursor-not-allowed transition shadow-lg"
+                      >
+                        BUY {buyQuantity} SHARE{buyQuantity > 1 ? 'S' : ''}
+                      </button>
                     </div>
-                  </div>
-                  
-                  <div className="text-sm text-gray-600">
-                    <p><strong>Sector:</strong> {selectedStock.sector}</p>
-                    <p><strong>Recent News:</strong> {selectedStock.news[0]}</p>
+
+                    {/* SELL Section */}
+                    <div className="bg-gradient-to-br from-rose-50 to-red-50 rounded-2xl p-5 border-2 border-rose-200">
+                      <h5 className="font-bold text-rose-800 text-lg mb-4">Sell Shares</h5>
+
+                      {portfolio.find(p => p.id === selectedStock.id) ? (
+                        <>
+                          {/* Quantity Selector */}
+                          <div className="mb-4">
+                            <label className="block text-sm font-semibold text-gray-600 mb-2">Quantity</label>
+                            <div className="flex gap-2 flex-wrap mb-3">
+                              {[1, 5, 10, 25].map(qty => {
+                                const owned = portfolio.find(p => p.id === selectedStock.id)?.shares || 0;
+                                if (qty > owned) return null;
+                                return (
+                                  <button
+                                    key={qty}
+                                    onClick={() => setSellQuantity(qty)}
+                                    className={`px-4 py-2 rounded-xl font-bold transition ${
+                                      sellQuantity === qty
+                                        ? 'bg-rose-500 text-white'
+                                        : 'bg-white text-gray-700 hover:bg-rose-100'
+                                    }`}
+                                  >
+                                    {qty}
+                                  </button>
+                                );
+                              })}
+                              <button
+                                onClick={() => setSellQuantity(portfolio.find(p => p.id === selectedStock.id)?.shares || 1)}
+                                className={`px-4 py-2 rounded-xl font-bold transition ${
+                                  sellQuantity === (portfolio.find(p => p.id === selectedStock.id)?.shares || 0)
+                                    ? 'bg-rose-500 text-white'
+                                    : 'bg-white text-gray-700 hover:bg-rose-100'
+                                }`}
+                              >
+                                ALL
+                              </button>
+                            </div>
+                            <input
+                              type="number"
+                              min="1"
+                              max={portfolio.find(p => p.id === selectedStock.id)?.shares || 1}
+                              value={sellQuantity}
+                              onChange={(e) => setSellQuantity(Math.max(1, Math.min(parseInt(e.target.value) || 1, portfolio.find(p => p.id === selectedStock.id)?.shares || 1)))}
+                              className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-lg font-bold focus:border-rose-400 focus:outline-none"
+                            />
+                          </div>
+
+                          <div className="text-sm text-gray-600 mb-4">
+                            <div className="flex justify-between py-1">
+                              <span>You Own:</span>
+                              <span className="font-bold">{portfolio.find(p => p.id === selectedStock.id)?.shares} shares</span>
+                            </div>
+                            <div className="flex justify-between py-1">
+                              <span>Value:</span>
+                              <span className="font-bold">${(selectedStock.price * sellQuantity).toFixed(2)}</span>
+                            </div>
+                          </div>
+
+                          <button
+                            onClick={() => {
+                              const ownedStock = portfolio.find(p => p.id === selectedStock.id);
+                              if (ownedStock) sellStock(ownedStock, sellQuantity);
+                            }}
+                            disabled={!tradingActive}
+                            className="w-full py-4 bg-gradient-to-r from-rose-500 to-red-500 hover:from-rose-600 hover:to-red-600 text-white rounded-2xl font-black text-xl disabled:opacity-50 disabled:cursor-not-allowed transition shadow-lg"
+                          >
+                            SELL {sellQuantity} SHARE{sellQuantity > 1 ? 'S' : ''}
+                          </button>
+                        </>
+                      ) : (
+                        <div className="text-center py-8 text-gray-500 font-medium">
+                          <p>You don't own any {selectedStock.symbol} shares yet.</p>
+                          <p className="text-sm mt-2">Buy some first!</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </motion.div>
               )}
             </div>
-            
-            {/* Portfolio & Stats */}
+
+            {/* Sidebar */}
             <div className="space-y-6">
               {/* Portfolio */}
-              <div className="bg-white rounded-xl p-6 shadow-lg">
-                <h4 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                <h4 className="text-xl font-black mb-4 flex items-center gap-2 text-gray-900 tracking-tight">
                   💼 Your Portfolio
                 </h4>
                 {portfolio.length === 0 ? (
-                  <p className="text-gray-500 text-center py-8">No positions yet. Start trading!</p>
+                  <p className="text-gray-500 text-center py-8 font-medium">No stocks yet. Start trading!</p>
                 ) : (
                   <div className="space-y-3">
                     {portfolio.map(stock => {
                       const currentStock = marketData.find(m => m.id === stock.id);
-                      const profit = currentStock ? (currentStock.price - stock.avgPrice) * stock.shares : 0;
+                      const currentPrice = currentStock?.price || stock.price;
+                      const profit = (currentPrice - stock.avgPrice) * stock.shares;
                       return (
                         <motion.div
                           key={stock.id}
-                          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                          className="flex items-center justify-between p-4 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition"
+                          onClick={() => setSelectedStock(currentStock)}
                           layout
                         >
-                          <div className="flex items-center gap-2">
-                            <span className="text-xl">{stock.emoji}</span>
+                          <div className="flex items-center gap-3">
+                            <span className="text-2xl">{stock.emoji}</span>
                             <div>
-                              <div className="font-semibold">{stock.symbol}</div>
-                              <div className="text-sm text-gray-600">{stock.shares} shares</div>
+                              <div className="font-bold text-gray-900">{stock.symbol}</div>
+                              <div className="text-sm text-gray-500">{stock.shares} shares</div>
                             </div>
                           </div>
                           <div className="text-right">
-                            <div className="font-bold">${(currentStock?.price * stock.shares).toFixed(2) || 0}</div>
-                            <div className={`text-sm ${
-                              profit >= 0 ? 'text-green-600' : 'text-red-600'
+                            <div className="font-bold text-gray-900">${(currentPrice * stock.shares).toFixed(2)}</div>
+                            <div className={`text-sm font-bold ${
+                              profit >= 0 ? 'text-emerald-600' : 'text-rose-600'
                             }`}>
                               {profit >= 0 ? '+' : ''}${profit.toFixed(2)}
                             </div>
@@ -924,213 +1309,54 @@ const StockMarketModule = () => {
                   </div>
                 )}
               </div>
-              
-              {/* Recent Actions */}
-              <div className="bg-white rounded-xl p-6 shadow-lg">
-                <h4 className="text-xl font-bold mb-4 flex items-center gap-2">
+
+              {/* Trade History */}
+              <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                <h4 className="text-xl font-black mb-4 flex items-center gap-2 text-gray-900 tracking-tight">
                   📜 Trade History
                 </h4>
                 <div className="space-y-2 max-h-60 overflow-y-auto">
-                  {actionHistory.slice(-5).reverse().map((action, index) => (
-                    <div key={index} className="text-sm p-2 bg-gray-50 rounded">
-                      <span className={`font-semibold ${
-                        action.type === 'buy' ? 'text-green-600' : 
-                        action.type === 'sell' ? 'text-red-600' : 'text-blue-600'
-                      }`}>
-                        {action.type.toUpperCase()}
-                      </span>
-                      {action.stock && (
-                        <span> {action.shares} {action.stock} @ ${action.price}</span>
-                      )}
-                      {action.profit && (
-                        <span className={action.profit >= 0 ? 'text-green-600' : 'text-red-600'}>
-                          {' '}(${action.profit.toFixed(2)})
-                        </span>
-                      )}
-                    </div>
-                  ))}
+                  {actionHistory.length === 0 ? (
+                    <p className="text-gray-500 text-center py-4 font-medium">No trades yet</p>
+                  ) : (
+                    actionHistory.slice(-8).reverse().map((action, index) => (
+                      <div key={index} className="text-sm p-3 bg-gray-50 rounded-xl">
+                        <div className="flex items-center justify-between">
+                          <span className={`font-bold ${
+                            action.type === 'buy' ? 'text-emerald-600' : 'text-rose-600'
+                          }`}>
+                            {action.type.toUpperCase()}
+                          </span>
+                          <span className="text-gray-500 text-xs">
+                            {action.shares} {action.stock}
+                          </span>
+                        </div>
+                        <div className="flex justify-between mt-1">
+                          <span className="text-gray-500">@ ${action.price?.toFixed(2)}</span>
+                          <span className="font-bold text-gray-700">${action.total?.toFixed(2)}</span>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
-              
+
               {/* Achievements */}
               {achievements.length > 0 && (
-                <div className="bg-gradient-to-r from-slate-100 to-blue-100 rounded-xl p-6 border-2 border-slate-300">
-                  <h4 className="text-xl font-bold mb-4 flex items-center gap-2 text-slate-800">
+                <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-2xl p-6 shadow-lg border-2 border-amber-200">
+                  <h4 className="text-xl font-black mb-4 flex items-center gap-2 text-amber-800 tracking-tight">
                     🏆 Achievements
                   </h4>
                   <div className="space-y-2">
                     {achievements.map(achievement => (
-                      <div key={achievement.id} className="bg-white/80 p-3 rounded-lg">
-                        <div className="font-semibold text-slate-800">{achievement.title}</div>
-                        <div className="text-sm text-slate-600">{achievement.description}</div>
+                      <div key={achievement.id} className="bg-white p-3 rounded-xl border border-amber-100">
+                        <div className="font-bold text-amber-800">{achievement.title}</div>
+                        <div className="text-sm text-amber-600">{achievement.description}</div>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
-            </div>
-          </div>
-
-        </motion.div>
-      ) : currentPhase === 'portfolio-challenge' ? (
-        /* Portfolio Challenge Mode */
-        <motion.div
-          className="max-w-5xl mx-auto"
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          {/* Challenge Header */}
-          <div className="text-center mb-8">
-            <motion.div 
-              className="text-6xl mb-4"
-              animate={{ rotate: 360 }}
-              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-            >
-              🏆
-            </motion.div>
-            <h2 className="text-3xl font-bold text-gray-800 mb-2">
-              Portfolio Challenge Arena
-            </h2>
-            <p className="text-lg text-gray-600">
-              Beat the market with smart trading decisions!
-            </p>
-          </div>
-
-          {/* Challenge Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl p-6 text-white text-center">
-              <div className="text-3xl font-bold">${playerStats.coins.toLocaleString()}</div>
-              <div className="text-sm opacity-90">Starting Capital</div>
-            </div>
-            <div className="bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl p-6 text-white text-center">
-              <div className="text-3xl font-bold">15%</div>
-              <div className="text-sm opacity-90">Target Return</div>
-            </div>
-            <div className="bg-gradient-to-r from-red-500 to-orange-500 rounded-xl p-6 text-white text-center">
-              <div className="text-3xl font-bold">60s</div>
-              <div className="text-sm opacity-90">Time Limit</div>
-            </div>
-          </div>
-
-          {/* Challenge Arena */}
-          <div className="bg-gradient-to-r from-slate-100 to-blue-100 rounded-2xl p-8 border-2 border-slate-300">
-            <div className="text-center mb-6">
-              <h3 className="text-2xl font-bold text-blue-800 mb-2">
-                ⚡ Simple Trading Challenge ⚡
-              </h3>
-              <p className="text-blue-700">
-                Practice your trading skills! Try to grow your money from $25,000 to $28,750 (15% return)
-              </p>
-            </div>
-            
-            {/* Quick Trade Interface */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-              {marketData.map(stock => (
-                <motion.div
-                  key={stock.id}
-                  className="bg-white rounded-xl p-4 shadow-lg cursor-pointer border-2 border-transparent hover:border-blue-500 transition-all"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <div className="text-center">
-                    <div className="text-3xl mb-2">{stock.emoji}</div>
-                    <div className="font-bold text-sm">{stock.symbol}</div>
-                    <div className="text-lg font-bold">${stock.price.toFixed(2)}</div>
-                    <div className={`text-sm font-semibold ${
-                      stock.changePercent >= 0 ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      {stock.changePercent >= 0 ? '▲' : '▼'} {Math.abs(stock.changePercent)}%
-                    </div>
-                    <div className="mt-2 space-x-1">
-                      <button
-                        onClick={() => buyStock(stock, 10)}
-                        className="px-2 py-1 bg-blue-500 text-white rounded text-xs font-bold"
-                      >
-                        BUY 10
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-            
-            {/* Challenge Controls */}
-            <div className="text-center mt-6">
-              <button
-                onClick={() => setCurrentPhase('trading-sim')}
-                className="px-8 py-4 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white rounded-xl font-bold text-lg transition shadow-lg"
-              >
-                📊 Start Trading Challenge! 📊
-              </button>
-            </div>
-          </div>
-        </motion.div>
-      ) : (
-        /* Victory Screen */
-        <motion.div
-          className="max-w-2xl mx-auto text-center"
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          <div className="bg-gradient-to-r from-blue-500 via-indigo-500 to-slate-600 rounded-2xl p-8 shadow-lg text-white">
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1, rotate: [0, 10, -10, 0] }}
-              transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-            >
-              <div className="text-8xl mb-6">🏆</div>
-            </motion.div>
-            
-            <h2 className="text-4xl font-bold mb-4">Trading Master!</h2>
-            <p className="text-xl opacity-90 mb-6">
-              You've conquered the markets and learned the art of investing!
-            </p>
-
-            {/* Final Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-              <div className="bg-white/20 rounded-lg p-4 backdrop-blur-sm">
-                <div className="text-3xl font-bold">${playerStats.coins.toLocaleString()}</div>
-                <div className="text-sm opacity-90">Final Cash</div>
-              </div>
-              <div className="bg-white/20 rounded-lg p-4 backdrop-blur-sm">
-                <div className="text-3xl font-bold">${getPortfolioValue().toLocaleString()}</div>
-                <div className="text-sm opacity-90">Portfolio Value</div>
-              </div>
-              <div className="bg-white/20 rounded-lg p-4 backdrop-blur-sm">
-                <div className="text-3xl font-bold">LVL {playerStats.level}</div>
-                <div className="text-sm opacity-90">Level Reached</div>
-              </div>
-              <div className="bg-white/20 rounded-lg p-4 backdrop-blur-sm">
-                <div className="text-3xl font-bold">{achievements.length}</div>
-                <div className="text-sm opacity-90">Achievements</div>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex gap-4 justify-center">
-              <button
-                onClick={() => navigate('/game')}
-                className="px-8 py-4 bg-white/20 hover:bg-white/30 text-white rounded-xl font-bold transition backdrop-blur-sm"
-              >
-                🚀 Back to Roadmap
-              </button>
-              <button
-                onClick={() => {
-                  setCurrentPhase('adventure');
-                  setAdventureLevel(1);
-                  setPlayerStats({ coins: 10000, experience: 0, level: 1, reputation: 0 });
-                  setPortfolio([]);
-                  setActionHistory([]);
-                  setAchievements([]);
-                  setGameTime(0);
-                  setTradingActive(false);
-                }}
-                className="px-8 py-4 bg-white/20 hover:bg-white/30 text-white rounded-xl font-bold transition backdrop-blur-sm"
-              >
-                🔄 Play Again
-              </button>
             </div>
           </div>
         </motion.div>

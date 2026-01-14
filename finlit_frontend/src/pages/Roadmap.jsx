@@ -1,25 +1,66 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-
-
-// In component
+import { useAuthContext } from '../auth/context/AuthContext';
+import { useModuleScore, MODULES } from '../hooks/useModuleScore';
 
 const FinancialRoadmap = () => {
-    const { scrollYProgress } = useScroll();
-const pathDrawProgress = useTransform(scrollYProgress, [0, 2], [0.4, 2]); 
+  const { scrollYProgress } = useScroll();
+  const pathDrawProgress = useTransform(scrollYProgress, [0, 2], [0.4, 2]);
 
   const [visibleModules, setVisibleModules] = useState(3);
+  const [lockedMessage, setLockedMessage] = useState(null);
   const scrollRef = useRef(null);
   const navigate = useNavigate();
+  const { user } = useAuthContext();
+  const { isModulePassed, progress } = useModuleScore();
 
-  // All modules in one continuous journey
-  const allModules = [
+  // Show locked message temporarily
+  const showLockedMessage = (moduleIndex) => {
+    const previousModule = allModulesBase[moduleIndex - 1];
+    const message = `Complete "${previousModule?.title}" first to unlock this module!`;
+    setLockedMessage(message);
+    setTimeout(() => setLockedMessage(null), 3000);
+  };
+
+  // Module order for sequential access enforcement
+  const moduleOrder = [
+    MODULES.BUDGETING_50_30_20.id,    // 1. Budgeting Basics
+    MODULES.NEEDS_WANTS.id,            // 2. Needs vs Wants
+    MODULES.INVESTMENT_BANKING.id,     // 3. Investment Banking
+    MODULES.CREDIT_SCORE.id,           // 4. Credit Score
+    MODULES.EMERGENCY_FUND.id,         // 5. Emergency Fund
+    MODULES.STOCK_MARKET.id,           // 6. Stock Market
+    MODULES.INSURANCE.id,              // 7. Insurance
+    MODULES.DEBT_MANAGEMENT.id,        // 8. Debt Management
+    'retirement',                       // 9. Retirement (not in MODULES yet)
+    'advanced-wealth'                   // 10. Advanced Wealth (not in MODULES yet)
+  ];
+
+  // Check if a module is accessible (previous module passed or is first module)
+  const isModuleAccessible = (moduleIndex) => {
+    if (moduleIndex === 0) return true; // First module always accessible
+    const previousModuleId = moduleOrder[moduleIndex - 1];
+    return isModulePassed(previousModuleId);
+  };
+
+  // Get module status based on progress
+  const getModuleStatus = (moduleId, moduleIndex) => {
+    if (isModulePassed(moduleId)) return 'Completed';
+    if (!isModuleAccessible(moduleIndex)) return 'Locked';
+    // Check if there's any progress on this module
+    const moduleScore = progress?.moduleScores?.find(s => s.moduleId === moduleId);
+    if (moduleScore && moduleScore.attempts > 0) return 'In Progress';
+    return 'Next Up';
+  };
+
+  // All modules in one continuous journey - status is now dynamically calculated
+  const allModulesBase = [
     {
       id: 1,
+      moduleId: MODULES.BUDGETING_50_30_20.id,
       title: "Budgeting Basics",
       subtitle: "50-30-20 Rule",
-      status: "Completed",
       icon: "💰",
       color: "#e3f2fd",
       position: "left",
@@ -30,9 +71,9 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 2], [0.4, 2]);
     },
     {
       id: 2,
+      moduleId: MODULES.NEEDS_WANTS.id,
       title: "Needs vs Wants",
       subtitle: "Financial Priorities",
-      status: "Completed",
       icon: "⚖️",
       color: "#e8f5e9",
       position: "right",
@@ -43,9 +84,9 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 2], [0.4, 2]);
     },
     {
       id: 3,
+      moduleId: MODULES.INVESTMENT_BANKING.id,
       title: "Investment Banking",
       subtitle: "IPO Knowledge",
-      status: "Completed",
       icon: "🏦",
       color: "#e3f2fd",
       position: "left",
@@ -56,9 +97,9 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 2], [0.4, 2]);
     },
     {
       id: 4,
+      moduleId: MODULES.CREDIT_SCORE.id,
       title: "Credit Score Mastery",
       subtitle: "Credit Management",
-      status: "In Progress",
       icon: "📊",
       color: "#e8f5e9",
       position: "right",
@@ -69,9 +110,9 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 2], [0.4, 2]);
     },
     {
       id: 5,
+      moduleId: MODULES.EMERGENCY_FUND.id,
       title: "Emergency Fund",
       subtitle: "Financial Safety",
-      status: "Next Up",
       icon: "🆘",
       color: "#e3f2fd",
       position: "left",
@@ -82,9 +123,9 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 2], [0.4, 2]);
     },
     {
       id: 6,
+      moduleId: MODULES.STOCK_MARKET.id,
       title: "Stock Market Basics",
       subtitle: "Investment Fundamentals",
-      status: "Next Up",
       icon: "📈",
       color: "#f5f5f5",
       position: "right",
@@ -95,9 +136,9 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 2], [0.4, 2]);
     },
     {
       id: 7,
+      moduleId: MODULES.INSURANCE.id,
       title: "Insurance Protection",
       subtitle: "Risk Management",
-      status: "Next Up",
       icon: "🛡️",
       color: "#f5f5f5",
       position: "left",
@@ -108,9 +149,9 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 2], [0.4, 2]);
     },
     {
       id: 8,
+      moduleId: MODULES.DEBT_MANAGEMENT.id,
       title: "Debt Management",
       subtitle: "Debt Freedom",
-      status: "Locked",
       icon: "🔓",
       color: "#f5f5f5",
       position: "right",
@@ -121,9 +162,9 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 2], [0.4, 2]);
     },
     {
       id: 9,
+      moduleId: 'retirement',
       title: "Retirement Planning",
       subtitle: "Future Security",
-      status: "Locked",
       icon: "🏖️",
       color: "#f5f5f5",
       position: "left",
@@ -134,9 +175,9 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 2], [0.4, 2]);
     },
     {
       id: 10,
+      moduleId: 'advanced-wealth',
       title: "Advanced Wealth",
       subtitle: "Wealth Building",
-      status: "Locked",
       icon: "👑",
       color: "#f5f5f5",
       position: "right",
@@ -146,6 +187,14 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 2], [0.4, 2]);
       quizType: "comprehensive"
     }
   ];
+
+  // Compute modules with dynamic status
+  const allModules = useMemo(() => {
+    return allModulesBase.map((module, index) => ({
+      ...module,
+      status: getModuleStatus(module.moduleId, index)
+    }));
+  }, [progress]);
 
   // Handle scroll to reveal more modules
   useEffect(() => {
@@ -246,27 +295,42 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 2], [0.4, 2]);
 
       {/* Header with profile and streak */}
       <div className="flex items-center justify-between mb-10 sticky top-0 z-50 bg-gradient-to-r from-blue-50 to-green-50 p-4 rounded-lg shadow-md">
-        <motion.div 
-          className="flex items-center"
+        {/* Back to Dashboard Button */}
+        <motion.button
+          onClick={() => navigate('/dashboard')}
+          className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 text-gray-700 rounded-lg shadow-sm transition border border-gray-200"
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+        >
+          <span>←</span>
+          <span className="font-medium">Dashboard</span>
+        </motion.button>
+
+        {/* User Profile */}
+        <motion.div
+          className="flex items-center"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
         >
           <div className="relative">
-            <div className="w-14 h-14 rounded-full overflow-hidden bg-white shadow-md flex items-center justify-center border-2 border-gray-200">
-              <img src="user1.jpg" alt="User avatar" className="w-full h-full object-cover" />
-            </div>
-            <div className="absolute bottom-0 right-0 text-xs bg-white rounded-full h-5 w-5 shadow flex items-center justify-center border border-gray-200">
-              <span className="text-xs">pwc</span>
+            <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-purple-500 shadow-md flex items-center justify-center border-2 border-white">
+              <span className="text-white text-lg font-bold">
+                {user?.displayName?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || '?'}
+              </span>
             </div>
           </div>
           <div className="ml-3">
-            <h1 className="text-2xl font-bold text-gray-800">Cornell Staeger</h1>
+            <h1 className="text-xl font-bold text-gray-800">{user?.displayName || 'Student'}</h1>
+            <p className="text-xs text-gray-500">{user?.email || ''}</p>
           </div>
         </motion.div>
-        
+
         {/* Daily Streak */}
-        <motion.div 
+        <motion.div
           className="bg-white p-2 rounded-xl shadow-lg"
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -276,7 +340,7 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 2], [0.4, 2]);
             <span className="text-orange-500 text-xl mr-2">🔥</span>
             <div>
               <div className="text-xs font-semibold text-gray-600">Daily Streak</div>
-              <div className="text-2xl font-bold text-orange-500">7 days</div>
+              <div className="text-2xl font-bold text-orange-500">{progress?.streak || 0} days</div>
             </div>
           </div>
         </motion.div>
@@ -381,24 +445,33 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 2], [0.4, 2]);
                     transition={{ duration: 0.3 }}
                   >
                     <p className="py-3 text-gray-600 text-sm">{module.description}</p>
-                    {module.status !== 'Locked' && (
-  <div className="space-y-2">
-    <button 
-      className="mt-1 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors w-full font-medium text-sm"
-      onClick={() => {
-        if (module.route) {
-          navigate(module.route);
-        }
-      }}
-    >
-      {module.status === 'Completed' ? 'Review Module' : 
-       module.status === 'In Progress' ? 'Continue Learning' : 'Start Module'}
-    </button>
-    <div className="text-xs text-gray-500 text-center">
-      Quiz Type: {module.quizType?.replace('-', ' ') || 'Interactive'}
-    </div>
-  </div>
-)}
+                    <div className="space-y-2">
+                      {module.status !== 'Locked' ? (
+                        <>
+                          <button
+                            className="mt-1 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors w-full font-medium text-sm"
+                            onClick={() => {
+                              if (module.route) {
+                                navigate(module.route);
+                              }
+                            }}
+                          >
+                            {module.status === 'Completed' ? 'Review Module' :
+                             module.status === 'In Progress' ? 'Continue Learning' : 'Start Module'}
+                          </button>
+                          <div className="text-xs text-gray-500 text-center">
+                            Quiz Type: {module.quizType?.replace('-', ' ') || 'Interactive'}
+                          </div>
+                        </>
+                      ) : (
+                        <div className="mt-2 p-3 bg-gray-100 rounded-lg text-center">
+                          <div className="text-gray-500 text-sm font-medium mb-1">Module Locked</div>
+                          <div className="text-xs text-gray-400">
+                            Complete the previous module to unlock
+                          </div>
+                        </div>
+                      )}
+                    </div>
 
                   </motion.div>
                 )}

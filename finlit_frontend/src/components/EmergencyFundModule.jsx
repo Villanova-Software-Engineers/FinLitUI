@@ -2,9 +2,14 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Calculator, DollarSign, AlertTriangle, TrendingUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useModuleScore, MODULES } from '../hooks/useModuleScore';
 
 const EmergencyFundModule = () => {
   const navigate = useNavigate();
+  const { isModulePassed } = useModuleScore();
+
+  // Check if module is already passed
+  const modulePassed = isModulePassed(MODULES.EMERGENCY_FUND?.id);
   const [currentPhase, setCurrentPhase] = useState('story'); // 'story', 'game', 'calculator', 'results'
   const [storyStep, setStoryStep] = useState(0);
   const [gameStep, setGameStep] = useState(0);
@@ -24,6 +29,15 @@ const EmergencyFundModule = () => {
   const [totalXP, setTotalXP] = useState(0);
   const [achievements, setAchievements] = useState([]);
   const [milestone, setMilestone] = useState(0);
+
+  // Game state for interactive games
+  const [sortedItems, setSortedItems] = useState({}); // { itemId: 'emergency' | 'non-emergency' }
+  const [sortingComplete, setSortingComplete] = useState(false);
+  const [calculatorAnswer, setCalculatorAnswer] = useState('');
+  const [calculatorComplete, setCalculatorComplete] = useState(false);
+  const [scenarioAnswer, setScenarioAnswer] = useState(null);
+  const [scenarioFeedback, setScenarioFeedback] = useState('');
+  const [scenarioComplete, setScenarioComplete] = useState(false);
 
   // Interactive story content
   const storyContent = [
@@ -228,9 +242,68 @@ const EmergencyFundModule = () => {
     }
   };
 
+  // Check if current game is complete
+  const isCurrentGameComplete = () => {
+    const currentGame = miniGames[gameStep];
+    if (currentGame.type === 'sorting') return sortingComplete;
+    if (currentGame.type === 'calculator') return calculatorComplete;
+    if (currentGame.type === 'scenario') return scenarioComplete;
+    return false;
+  };
+
+  // Handle sorting item click
+  const handleSortItem = (itemId, category) => {
+    const newSorted = { ...sortedItems, [itemId]: category };
+    setSortedItems(newSorted);
+
+    // Check if all items are sorted correctly
+    const allExpenses = miniGames[0].expenses;
+    const allSorted = allExpenses.every(expense => newSorted[expense.id]);
+    const allCorrect = allExpenses.every(expense =>
+      newSorted[expense.id] === expense.category
+    );
+
+    if (allSorted && allCorrect) {
+      setSortingComplete(true);
+      setTotalXP(prev => prev + 25);
+    }
+  };
+
+  // Handle calculator game answer
+  const handleCalculatorCheck = () => {
+    const person = miniGames[1].people[0];
+    const correct = Object.values(person.expenses).reduce((sum, val) => sum + val, 0) * person.months;
+    const userAnswer = parseFloat(calculatorAnswer);
+
+    if (Math.abs(userAnswer - correct) < 100) { // Allow some margin
+      setCalculatorComplete(true);
+      setTotalXP(prev => prev + 25);
+    }
+  };
+
+  // Handle scenario answer
+  const handleScenarioAnswer = (optionIndex) => {
+    const option = miniGames[2].scenarios[0].options[optionIndex];
+    setScenarioAnswer(optionIndex);
+    setScenarioFeedback(option.explanation);
+
+    if (option.correct) {
+      setScenarioComplete(true);
+      setTotalXP(prev => prev + 25);
+    }
+  };
+
   const nextGameStep = () => {
     if (gameStep < miniGames.length - 1) {
+      // Reset game state for next game
       setGameStep(gameStep + 1);
+      setSortedItems({});
+      setSortingComplete(false);
+      setCalculatorAnswer('');
+      setCalculatorComplete(false);
+      setScenarioAnswer(null);
+      setScenarioFeedback('');
+      setScenarioComplete(false);
     } else {
       setCurrentPhase('calculator');
     }
@@ -239,6 +312,14 @@ const EmergencyFundModule = () => {
   const prevGameStep = () => {
     if (gameStep > 0) {
       setGameStep(gameStep - 1);
+      // Reset game state for previous game
+      setSortedItems({});
+      setSortingComplete(false);
+      setCalculatorAnswer('');
+      setCalculatorComplete(false);
+      setScenarioAnswer(null);
+      setScenarioFeedback('');
+      setScenarioComplete(false);
     }
   };
 
@@ -263,6 +344,46 @@ const EmergencyFundModule = () => {
     { key: 'insurance', label: 'Insurance', icon: '🛡️', placeholder: '200' },
     { key: 'other', label: 'Other Essential Expenses', icon: '📝', placeholder: '250' }
   ];
+
+  // If module is already passed, show completion screen
+  if (modulePassed) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-emerald-50 to-blue-100 p-6 flex items-center justify-center">
+        <motion.div
+          className="bg-white rounded-2xl shadow-xl p-8 max-w-md text-center"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          <motion.div
+            className="text-6xl mb-4"
+            animate={{ rotate: [0, -10, 10, -10, 0] }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+          >
+            🏦
+          </motion.div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Module Completed!</h2>
+          <p className="text-gray-600 mb-6">
+            You've already passed the Emergency Fund module. Great job learning how to build your financial safety net!
+          </p>
+          <div className="bg-green-50 rounded-xl p-4 mb-6">
+            <div className="flex items-center justify-center gap-2 text-green-600">
+              <span className="text-2xl">✓</span>
+              <span className="font-semibold">100% Complete</span>
+            </div>
+          </div>
+          <motion.button
+            onClick={() => navigate('/game')}
+            className="w-full px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold transition"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            Back to Learning Path
+          </motion.button>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-emerald-50 to-blue-100 p-6">
@@ -463,21 +584,65 @@ const EmergencyFundModule = () => {
               {/* Sorting Game */}
               {miniGames[gameStep].type === 'sorting' && (
                 <div className="space-y-6">
+                  {/* Unsorted Items - Click to sort */}
+                  {!sortingComplete && (
+                    <div className="bg-gray-50 rounded-xl p-6 border-2 border-gray-200 mb-6">
+                      <h3 className="text-lg font-bold text-gray-800 mb-4 text-center">
+                        Click items to sort them into categories
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {miniGames[gameStep].expenses
+                          .filter(expense => !sortedItems[expense.id])
+                          .map((expense) => (
+                            <motion.div
+                              key={expense.id}
+                              className="bg-white p-4 rounded-lg shadow-md border border-gray-200"
+                              whileHover={{ scale: 1.02 }}
+                            >
+                              <div className="flex items-center gap-3 mb-3">
+                                <span className="text-2xl">{expense.emoji}</span>
+                                <div>
+                                  <div className="font-medium">{expense.name}</div>
+                                  <div className="text-sm text-gray-600">${expense.amount}</div>
+                                </div>
+                              </div>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => handleSortItem(expense.id, 'emergency')}
+                                  className="flex-1 px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-sm font-medium transition"
+                                >
+                                  Emergency
+                                </button>
+                                <button
+                                  onClick={() => handleSortItem(expense.id, 'non-emergency')}
+                                  className="flex-1 px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg text-sm font-medium transition"
+                                >
+                                  Non-Emergency
+                                </button>
+                              </div>
+                            </motion.div>
+                          ))}
+                      </div>
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Emergency Category */}
                     <div className="bg-red-50 rounded-xl p-6 border-2 border-red-200">
                       <h3 className="text-lg font-bold text-red-800 mb-4 text-center">
                         🚨 Emergency Expenses
                       </h3>
-                      <div className="space-y-3 min-h-[200px]">
+                      <div className="space-y-3 min-h-[150px]">
                         {miniGames[gameStep].expenses
-                          .filter(expense => expense.category === 'emergency')
+                          .filter(expense => sortedItems[expense.id] === 'emergency')
                           .map((expense) => (
                             <motion.div
                               key={expense.id}
-                              className="bg-white p-4 rounded-lg shadow-md border border-red-200 cursor-pointer"
-                              whileHover={{ scale: 1.02 }}
-                              whileTap={{ scale: 0.98 }}
+                              className={`bg-white p-4 rounded-lg shadow-md border ${
+                                expense.category === 'emergency' ? 'border-green-400' : 'border-red-400'
+                              }`}
+                              initial={{ opacity: 0, scale: 0.8 }}
+                              animate={{ opacity: 1, scale: 1 }}
                             >
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
@@ -487,10 +652,19 @@ const EmergencyFundModule = () => {
                                     <div className="text-sm text-gray-600">${expense.amount}</div>
                                   </div>
                                 </div>
-                                <div className="text-green-600 font-bold">✓</div>
+                                {expense.category === 'emergency' ? (
+                                  <div className="text-green-600 font-bold">✓</div>
+                                ) : (
+                                  <div className="text-red-600 font-bold">✗</div>
+                                )}
                               </div>
                             </motion.div>
                           ))}
+                        {Object.values(sortedItems).filter(v => v === 'emergency').length === 0 && (
+                          <div className="text-center text-gray-400 py-8">
+                            Drop emergency items here
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -499,16 +673,17 @@ const EmergencyFundModule = () => {
                       <h3 className="text-lg font-bold text-blue-800 mb-4 text-center">
                         🛍️ Non-Emergency Expenses
                       </h3>
-                      <div className="space-y-3 min-h-[200px]">
+                      <div className="space-y-3 min-h-[150px]">
                         {miniGames[gameStep].expenses
-                          .filter(expense => expense.category === 'non-emergency')
+                          .filter(expense => sortedItems[expense.id] === 'non-emergency')
                           .map((expense) => (
                             <motion.div
                               key={expense.id}
-                              className="bg-white p-4 rounded-lg shadow-md border border-blue-200"
-                              whileHover={{ scale: 1.02 }}
-                              initial={{ opacity: 0.7 }}
-                              animate={{ opacity: 1 }}
+                              className={`bg-white p-4 rounded-lg shadow-md border ${
+                                expense.category === 'non-emergency' ? 'border-green-400' : 'border-red-400'
+                              }`}
+                              initial={{ opacity: 0, scale: 0.8 }}
+                              animate={{ opacity: 1, scale: 1 }}
                             >
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
@@ -518,25 +693,41 @@ const EmergencyFundModule = () => {
                                     <div className="text-sm text-gray-600">${expense.amount}</div>
                                   </div>
                                 </div>
-                                <div className="text-green-600 font-bold">✓</div>
+                                {expense.category === 'non-emergency' ? (
+                                  <div className="text-green-600 font-bold">✓</div>
+                                ) : (
+                                  <div className="text-red-600 font-bold">✗</div>
+                                )}
                               </div>
                             </motion.div>
                           ))}
+                        {Object.values(sortedItems).filter(v => v === 'non-emergency').length === 0 && (
+                          <div className="text-center text-gray-400 py-8">
+                            Drop non-emergency items here
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
 
+                  {/* Progress indicator */}
+                  <div className="text-center text-sm text-gray-600">
+                    Sorted: {Object.keys(sortedItems).length} / {miniGames[gameStep].expenses.length}
+                  </div>
+
                   {/* Success Message */}
-                  <motion.div
-                    className="bg-green-100 border border-green-300 rounded-lg p-4 text-center"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <div className="text-3xl mb-2">🎉</div>
-                    <div className="font-bold text-green-800">Perfect Sorting!</div>
-                    <div className="text-sm text-green-600">Now you know when to use your emergency fund! +25 XP</div>
-                  </motion.div>
+                  {sortingComplete && (
+                    <motion.div
+                      className="bg-green-100 border border-green-300 rounded-lg p-4 text-center"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <div className="text-3xl mb-2">🎉</div>
+                      <div className="font-bold text-green-800">Perfect Sorting!</div>
+                      <div className="text-sm text-green-600">Now you know when to use your emergency fund! +25 XP</div>
+                    </motion.div>
+                  )}
                 </div>
               )}
 
@@ -568,15 +759,46 @@ const EmergencyFundModule = () => {
                       </div>
                     </div>
 
-                    <div className="text-center bg-emerald-50 rounded-lg p-6">
-                      <div className="text-sm text-gray-600 mb-2">Emergency Fund Needed:</div>
-                      <div className="text-3xl font-bold text-emerald-600">
-                        ${(Object.values(miniGames[gameStep].people[0].expenses).reduce((sum, val) => sum + val, 0) * miniGames[gameStep].people[0].months).toLocaleString()}
+                    {!calculatorComplete ? (
+                      <div className="text-center">
+                        <div className="text-sm text-gray-600 mb-2">
+                          Calculate the total emergency fund needed ({miniGames[gameStep].people[0].months} months):
+                        </div>
+                        <div className="flex items-center justify-center gap-4 mb-4">
+                          <span className="text-2xl">$</span>
+                          <input
+                            type="number"
+                            value={calculatorAnswer}
+                            onChange={(e) => setCalculatorAnswer(e.target.value)}
+                            placeholder="Enter amount"
+                            className="w-48 px-4 py-3 text-xl border-2 border-gray-300 rounded-lg focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 text-center"
+                          />
+                        </div>
+                        <button
+                          onClick={handleCalculatorCheck}
+                          disabled={!calculatorAnswer}
+                          className={`px-6 py-3 rounded-lg font-medium transition ${
+                            !calculatorAnswer
+                              ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                              : 'bg-emerald-500 hover:bg-emerald-600 text-white'
+                          }`}
+                        >
+                          Check Answer
+                        </button>
                       </div>
-                      <div className="text-sm text-gray-500 mt-2">
-                        (${Object.values(miniGames[gameStep].people[0].expenses).reduce((sum, val) => sum + val, 0)} × {miniGames[gameStep].people[0].months} months)
+                    ) : (
+                      <div className="text-center bg-emerald-50 rounded-lg p-6">
+                        <div className="text-3xl mb-2">🎉</div>
+                        <div className="text-sm text-gray-600 mb-2">Correct! Emergency Fund Needed:</div>
+                        <div className="text-3xl font-bold text-emerald-600">
+                          ${(Object.values(miniGames[gameStep].people[0].expenses).reduce((sum, val) => sum + val, 0) * miniGames[gameStep].people[0].months).toLocaleString()}
+                        </div>
+                        <div className="text-sm text-gray-500 mt-2">
+                          (${Object.values(miniGames[gameStep].people[0].expenses).reduce((sum, val) => sum + val, 0)} × {miniGames[gameStep].people[0].months} months)
+                        </div>
+                        <div className="text-sm text-green-600 mt-2">+25 XP</div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -600,13 +822,27 @@ const EmergencyFundModule = () => {
                       {miniGames[gameStep].scenarios[0].options.map((option, index) => (
                         <motion.button
                           key={index}
-                          className="w-full p-4 rounded-lg border-2 text-left transition-all bg-white hover:bg-emerald-50 border-gray-200 hover:border-emerald-300"
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
+                          onClick={() => handleScenarioAnswer(index)}
+                          disabled={scenarioAnswer !== null}
+                          className={`w-full p-4 rounded-lg border-2 text-left transition-all ${
+                            scenarioAnswer === index
+                              ? option.correct
+                                ? 'bg-green-100 border-green-500'
+                                : 'bg-red-100 border-red-500'
+                              : scenarioAnswer !== null
+                                ? 'bg-gray-100 border-gray-200'
+                                : 'bg-white hover:bg-emerald-50 border-gray-200 hover:border-emerald-300'
+                          }`}
+                          whileHover={scenarioAnswer === null ? { scale: 1.02 } : {}}
+                          whileTap={scenarioAnswer === null ? { scale: 0.98 } : {}}
                         >
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full border-2 border-emerald-300 text-emerald-500 flex items-center justify-center font-bold">
-                              {String.fromCharCode(65 + index)}
+                            <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center font-bold ${
+                              scenarioAnswer === index
+                                ? option.correct ? 'border-green-500 bg-green-500 text-white' : 'border-red-500 bg-red-500 text-white'
+                                : 'border-emerald-300 text-emerald-500'
+                            }`}>
+                              {scenarioAnswer === index ? (option.correct ? '✓' : '✗') : String.fromCharCode(65 + index)}
                             </div>
                             <span className="text-lg">{option.text}</span>
                           </div>
@@ -615,16 +851,21 @@ const EmergencyFundModule = () => {
                     </div>
 
                     {/* Explanation */}
-                    <motion.div
-                      className="mt-6 p-4 bg-emerald-50 border-l-4 border-emerald-400 rounded-r-lg"
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <p className="text-emerald-800">
-                        ✓ Correct! {miniGames[gameStep].scenarios[0].options.find(o => o.correct)?.explanation}
-                      </p>
-                    </motion.div>
+                    {scenarioFeedback && (
+                      <motion.div
+                        className={`mt-6 p-4 border-l-4 rounded-r-lg ${
+                          scenarioComplete ? 'bg-emerald-50 border-emerald-400' : 'bg-orange-50 border-orange-400'
+                        }`}
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <p className={scenarioComplete ? 'text-emerald-800' : 'text-orange-800'}>
+                          {scenarioComplete ? '✓ Correct!' : '✗ Not quite.'} {scenarioFeedback}
+                        </p>
+                        {scenarioComplete && <div className="text-sm text-green-600 mt-1">+25 XP</div>}
+                      </motion.div>
+                    )}
                   </div>
                 </div>
               )}
@@ -658,7 +899,12 @@ const EmergencyFundModule = () => {
 
               <button
                 onClick={nextGameStep}
-                className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white rounded-xl font-medium transition shadow-lg"
+                disabled={!isCurrentGameComplete()}
+                className={`px-6 py-3 rounded-xl font-medium transition shadow-lg ${
+                  isCurrentGameComplete()
+                    ? 'bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white'
+                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                }`}
               >
                 {gameStep === miniGames.length - 1 ? 'Start Calculator! 🧮' : 'Next Game →'}
               </button>

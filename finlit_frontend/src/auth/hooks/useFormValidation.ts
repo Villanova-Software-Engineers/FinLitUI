@@ -1,5 +1,5 @@
-import { useState, useCallback } from 'react';
-import type { FormValidation, PasswordStrength } from '../types/auth.types';
+import { useCallback } from 'react';
+import type { PasswordStrength } from '../types/auth.types';
 
 export const useFormValidation = () => {
   const validateEmail = useCallback((email: string): string => {

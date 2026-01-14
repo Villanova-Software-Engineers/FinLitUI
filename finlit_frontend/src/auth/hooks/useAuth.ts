@@ -1,98 +1,92 @@
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AuthService } from '../services/auth.service';
-import type { SignInRequest, SignUpRequest, AuthState, User } from '../types/auth.types';
+import { useAuthContext } from '../context/AuthContext';
+import type { SignInRequest, SignUpRequest } from '../types/auth.types';
 
 export const useAuth = () => {
-  const [authState, setAuthState] = useState<AuthState>({
-    user: AuthService.getStoredUserData(),
-    isAuthenticated: !!AuthService.getStoredToken(),
-    isLoading: false,
-    error: null,
-  });
+  const authContext = useAuthContext();
+  const navigate = useNavigate();
 
   const signIn = useCallback(async (credentials: SignInRequest) => {
-    setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
-    
+    authContext.setLoading(true);
+    authContext.clearError();
+
     try {
       const response = await AuthService.signIn(credentials);
-      
+
       if (response.success) {
-        AuthService.storeAuthData(response.token, response.user);
-        setAuthState({
-          user: response.user,
-          isAuthenticated: true,
-          isLoading: false,
-          error: null,
-        });
+        authContext.setUser(response.user);
+
+        // Redirect based on role
+        if (response.user.role === 'admin') {
+          navigate('/admin');
+        } else {
+          navigate('/dashboard');
+        }
         return { success: true, user: response.user };
       } else {
         throw new Error('Sign in failed');
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Sign in failed';
-      setAuthState(prev => ({ 
-        ...prev, 
-        isLoading: false, 
-        error: errorMessage 
-      }));
+      authContext.setError(errorMessage);
+      authContext.setLoading(false);
       return { success: false, error: errorMessage };
     }
-  }, []);
+  }, [authContext, navigate]);
 
   const signUp = useCallback(async (userData: SignUpRequest) => {
-    setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
-    
+    authContext.setLoading(true);
+    authContext.clearError();
+
     try {
       const response = await AuthService.signUp(userData);
-      
+
       if (response.success) {
-        AuthService.storeAuthData(response.token, response.user);
-        setAuthState({
-          user: response.user,
-          isAuthenticated: true,
-          isLoading: false,
-          error: null,
-        });
+        authContext.setUser(response.user);
+        navigate('/dashboard');
         return { success: true, user: response.user };
       } else {
         throw new Error('Sign up failed');
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Sign up failed';
-      setAuthState(prev => ({ 
-        ...prev, 
-        isLoading: false, 
-        error: errorMessage 
-      }));
+      authContext.setError(errorMessage);
+      authContext.setLoading(false);
       return { success: false, error: errorMessage };
     }
-  }, []);
+  }, [authContext, navigate]);
 
   const signOut = useCallback(async () => {
-    setAuthState(prev => ({ ...prev, isLoading: true }));
-    
-    try {
-      await AuthService.signOut();
-      setAuthState({
-        user: null,
-        isAuthenticated: false,
-        isLoading: false,
-        error: null,
-      });
-    } catch (error) {
-      setAuthState(prev => ({ ...prev, isLoading: false }));
-    }
+    await authContext.signOut();
+    navigate('/auth');
+  }, [authContext, navigate]);
+
+  const validateClassCode = useCallback(async (code: string) => {
+    return AuthService.validateClassCode(code);
   }, []);
 
-  const clearError = useCallback(() => {
-    setAuthState(prev => ({ ...prev, error: null }));
+  const forgotPassword = useCallback(async (email: string) => {
+    try {
+      const response = await AuthService.forgotPassword(email);
+      return response;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to send reset email';
+      return { success: false, message: errorMessage };
+    }
   }, []);
 
   return {
-    ...authState,
+    user: authContext.user,
+    isAuthenticated: authContext.isAuthenticated,
+    isLoading: authContext.isLoading,
+    error: authContext.error,
     signIn,
     signUp,
     signOut,
-    clearError,
+    clearError: authContext.clearError,
+    validateClassCode,
+    forgotPassword,
   };
 };
