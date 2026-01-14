@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Eye, EyeOff, Mail, Lock, AlertCircle, CheckCircle, Building, Shield } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, AlertCircle, CheckCircle, Users, Shield, User } from 'lucide-react';
 import { useFormValidation } from '../hooks/useFormValidation';
-import type { SignUpRequest, PasswordStrength } from '../types/auth.types';
+import type { SignUpRequest, PasswordStrength, CodeValidation } from '../types/auth.types';
 import { AuthService } from '../services/auth.service';
 
 interface SignUpFormProps {
@@ -17,33 +17,32 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
 }) => {
   const [formData, setFormData] = useState({
     email: '',
+    displayName: '',
     password: '',
     confirmPassword: '',
-    organizationCode: '',
+    classCode: '',
     acceptedTerms: false,
   });
-  
+
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [passwordStrength, setPasswordStrength] = useState<PasswordStrength | null>(null);
-  const [orgValidation, setOrgValidation] = useState<{
+  const [codeValidation, setCodeValidation] = useState<{
     isValidating: boolean;
-    isValid: boolean | null;
-    organizationName: string | null;
+    result: CodeValidation | null;
   }>({
     isValidating: false,
-    isValid: null,
-    organizationName: null,
+    result: null,
   });
 
-  const { 
-    validateEmail, 
-    validatePassword, 
+  const {
+    validateEmail,
+    validatePassword,
     getPasswordStrength,
     validateConfirmPassword,
-    validateOrganizationCode 
+    validateOrganizationCode
   } = useFormValidation();
 
   useEffect(() => {
@@ -54,41 +53,39 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
     }
   }, [formData.password, getPasswordStrength]);
 
+  // Validate class code with debounce
   useEffect(() => {
-    const validateOrgCode = async () => {
-      if (formData.organizationCode && formData.organizationCode.length >= 3) {
-        setOrgValidation(prev => ({ ...prev, isValidating: true }));
-        
+    const validateCode = async () => {
+      if (formData.classCode && formData.classCode.length >= 3) {
+        setCodeValidation(prev => ({ ...prev, isValidating: true }));
+
         try {
-          const result = await AuthService.validateOrganizationCode(formData.organizationCode);
-          setOrgValidation({
+          const result = await AuthService.validateClassCode(formData.classCode);
+          setCodeValidation({
             isValidating: false,
-            isValid: result.valid,
-            organizationName: result.organizationName || null,
+            result,
           });
         } catch (error) {
-          setOrgValidation({
+          setCodeValidation({
             isValidating: false,
-            isValid: false,
-            organizationName: null,
+            result: { valid: false },
           });
         }
       } else {
-        setOrgValidation({
+        setCodeValidation({
           isValidating: false,
-          isValid: null,
-          organizationName: null,
+          result: null,
         });
       }
     };
 
-    const debounceTimer = setTimeout(validateOrgCode, 500);
+    const debounceTimer = setTimeout(validateCode, 500);
     return () => clearTimeout(debounceTimer);
-  }, [formData.organizationCode]);
+  }, [formData.classCode]);
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    
+
     if (touched[field]) {
       validateField(field, value);
     }
@@ -96,7 +93,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
 
   const validateField = (field: string, value: string | boolean) => {
     const errors = { ...fieldErrors };
-    
+
     switch (field) {
       case 'email':
         const emailError = validateEmail(value as string);
@@ -106,7 +103,17 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
           delete errors.email;
         }
         break;
-        
+
+      case 'displayName':
+        if (!(value as string).trim()) {
+          errors.displayName = 'Display name is required';
+        } else if ((value as string).length < 2) {
+          errors.displayName = 'Display name must be at least 2 characters';
+        } else {
+          delete errors.displayName;
+        }
+        break;
+
       case 'password':
         const passwordError = validatePassword(value as string);
         if (passwordError) {
@@ -114,7 +121,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
         } else {
           delete errors.password;
         }
-        
+
         if (formData.confirmPassword && touched.confirmPassword) {
           const confirmError = validateConfirmPassword(value as string, formData.confirmPassword);
           if (confirmError) {
@@ -124,7 +131,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
           }
         }
         break;
-        
+
       case 'confirmPassword':
         const confirmError = validateConfirmPassword(formData.password, value as string);
         if (confirmError) {
@@ -133,17 +140,17 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
           delete errors.confirmPassword;
         }
         break;
-        
-      case 'organizationCode':
-        const orgError = validateOrganizationCode(value as string);
-        if (orgError) {
-          errors.organizationCode = orgError;
+
+      case 'classCode':
+        const codeError = validateOrganizationCode(value as string);
+        if (codeError) {
+          errors.classCode = codeError;
         } else {
-          delete errors.organizationCode;
+          delete errors.classCode;
         }
         break;
     }
-    
+
     setFieldErrors(errors);
   };
 
@@ -166,51 +173,57 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const errors: Record<string, string> = {};
-    
+
     const emailError = validateEmail(formData.email);
     if (emailError) errors.email = emailError;
-    
+
+    if (!formData.displayName.trim()) {
+      errors.displayName = 'Display name is required';
+    }
+
     const passwordError = validatePassword(formData.password);
     if (passwordError) errors.password = passwordError;
-    
+
     const confirmError = validateConfirmPassword(formData.password, formData.confirmPassword);
     if (confirmError) errors.confirmPassword = confirmError;
-    
-    const orgError = validateOrganizationCode(formData.organizationCode);
-    if (orgError) errors.organizationCode = orgError;
-    
+
+    const codeError = validateOrganizationCode(formData.classCode);
+    if (codeError) errors.classCode = codeError;
+
     if (!formData.acceptedTerms) {
       errors.acceptedTerms = 'You must accept the terms and conditions';
     }
-    
-    if (orgValidation.isValid === false) {
-      errors.organizationCode = 'Invalid organization code';
+
+    if (!codeValidation.result?.valid) {
+      errors.classCode = 'Invalid class code. Please check with your instructor.';
     }
-    
+
     setFieldErrors(errors);
     setTouched({
       email: true,
+      displayName: true,
       password: true,
       confirmPassword: true,
-      organizationCode: true,
+      classCode: true,
       acceptedTerms: true,
     });
-    
+
     if (Object.keys(errors).length === 0) {
       await onSubmit({
         email: formData.email,
         password: formData.password,
         confirmPassword: formData.confirmPassword,
-        organizationCode: formData.organizationCode,
+        displayName: formData.displayName,
+        classCode: formData.classCode,
         acceptedTerms: formData.acceptedTerms,
       });
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-5">
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-md p-4 flex items-center gap-3">
           <AlertCircle className="text-red-500" size={20} />
@@ -243,44 +256,71 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
       </div>
 
       <div>
-        <label htmlFor="organizationCode" className="block text-sm font-medium text-gray-700 mb-2">
-          Organization Code
+        <label htmlFor="displayName" className="block text-sm font-medium text-gray-700 mb-2">
+          Display Name
         </label>
         <div className="relative">
-          <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+          <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
           <input
-            id="organizationCode"
+            id="displayName"
             type="text"
-            value={formData.organizationCode}
-            onChange={(e) => handleInputChange('organizationCode', e.target.value.toUpperCase())}
-            onBlur={() => handleBlur('organizationCode')}
+            value={formData.displayName}
+            onChange={(e) => handleInputChange('displayName', e.target.value)}
+            onBlur={() => handleBlur('displayName')}
+            className={`w-full pl-10 pr-4 py-3 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
+              fieldErrors.displayName ? 'border-red-300 bg-red-50' : 'border-gray-300'
+            }`}
+            placeholder="Enter your name"
+            disabled={isLoading}
+          />
+        </div>
+        {fieldErrors.displayName && (
+          <p className="mt-1 text-sm text-red-600">{fieldErrors.displayName}</p>
+        )}
+      </div>
+
+      <div>
+        <label htmlFor="classCode" className="block text-sm font-medium text-gray-700 mb-2">
+          Class Code
+        </label>
+        <div className="relative">
+          <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+          <input
+            id="classCode"
+            type="text"
+            value={formData.classCode}
+            onChange={(e) => handleInputChange('classCode', e.target.value.toUpperCase())}
+            onBlur={() => handleBlur('classCode')}
             className={`w-full pl-10 pr-12 py-3 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
-              fieldErrors.organizationCode ? 'border-red-300 bg-red-50' : 
-              orgValidation.isValid === true ? 'border-green-300 bg-green-50' :
+              fieldErrors.classCode ? 'border-red-300 bg-red-50' :
+              codeValidation.result?.valid ? 'border-green-300 bg-green-50' :
               'border-gray-300'
             }`}
-            placeholder="Enter organization code"
+            placeholder="Enter class code from instructor"
             disabled={isLoading}
           />
           <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-            {orgValidation.isValidating && (
+            {codeValidation.isValidating && (
               <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
             )}
-            {!orgValidation.isValidating && orgValidation.isValid === true && (
+            {!codeValidation.isValidating && codeValidation.result?.valid && (
               <CheckCircle className="text-green-500" size={20} />
             )}
-            {!orgValidation.isValidating && orgValidation.isValid === false && (
+            {!codeValidation.isValidating && codeValidation.result && !codeValidation.result.valid && (
               <AlertCircle className="text-red-500" size={20} />
             )}
           </div>
         </div>
-        {fieldErrors.organizationCode && (
-          <p className="mt-1 text-sm text-red-600">{fieldErrors.organizationCode}</p>
+        {fieldErrors.classCode && (
+          <p className="mt-1 text-sm text-red-600">{fieldErrors.classCode}</p>
         )}
-        {orgValidation.organizationName && (
-          <p className="mt-1 text-sm text-green-600">
-            Organization: {orgValidation.organizationName}
-          </p>
+        {codeValidation.result?.valid && codeValidation.result.codeName && (
+          <div className="mt-1 text-sm text-green-600">
+            <p>Class: {codeValidation.result.codeName}</p>
+            <p className="text-xs text-gray-500">
+              {codeValidation.result.organizationName}
+            </p>
+          </div>
         )}
       </div>
 
@@ -311,7 +351,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
             {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
           </button>
         </div>
-        
+
         {passwordStrength && formData.password && (
           <div className="mt-2 space-y-2">
             <div className="flex items-center justify-between text-sm">
@@ -353,7 +393,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
             </div>
           </div>
         )}
-        
+
         {fieldErrors.password && (
           <p className="mt-1 text-sm text-red-600">{fieldErrors.password}</p>
         )}
@@ -372,7 +412,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
             onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
             onBlur={() => handleBlur('confirmPassword')}
             className={`w-full pl-10 pr-12 py-3 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
-              fieldErrors.confirmPassword ? 'border-red-300 bg-red-50' : 
+              fieldErrors.confirmPassword ? 'border-red-300 bg-red-50' :
               formData.confirmPassword && !fieldErrors.confirmPassword && formData.password === formData.confirmPassword ? 'border-green-300 bg-green-50' :
               'border-gray-300'
             }`}
@@ -420,7 +460,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
 
       <button
         type="submit"
-        disabled={isLoading || Object.keys(fieldErrors).length > 0 || !formData.acceptedTerms || orgValidation.isValid !== true}
+        disabled={isLoading || Object.keys(fieldErrors).length > 0 || !formData.acceptedTerms || !codeValidation.result?.valid}
         className="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
       >
         {isLoading ? (

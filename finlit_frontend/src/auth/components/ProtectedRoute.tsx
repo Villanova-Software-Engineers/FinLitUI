@@ -1,17 +1,16 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuthContext } from '../context/AuthContext';
+import type { UserRole } from '../types/auth.types';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredPermissions?: string[];
-  requiredRole?: string;
+  requiredRole?: UserRole;
   fallbackPath?: string;
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children,
-  requiredPermissions = [],
   requiredRole,
   fallbackPath = '/auth',
 }) => {
@@ -35,16 +34,6 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   if (requiredRole && user.role !== requiredRole) {
     return <Navigate to="/unauthorized" replace />;
-  }
-
-  if (requiredPermissions.length > 0) {
-    const hasPermission = requiredPermissions.every(permission =>
-      user.permissions.includes(permission)
-    );
-    
-    if (!hasPermission) {
-      return <Navigate to="/unauthorized" replace />;
-    }
   }
 
   return <>{children}</>;

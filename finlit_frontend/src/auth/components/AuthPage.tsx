@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, UserPlus, LogIn, TrendingUp, Award, Target, Star, Sparkles } from 'lucide-react';
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { BookOpen, UserPlus, LogIn, Sparkles } from 'lucide-react';
 import { SignInForm } from './SignInForm';
 import { SignUpForm } from './SignUpForm';
 import { ForgotPasswordModal } from './ForgotPasswordModal';
 import { useAuth } from '../hooks/useAuth';
 import type { AuthMode, SignInRequest, SignUpRequest } from '../types/auth.types';
+
+// Note: navigation is handled in useAuth hook after successful login/signup
 
 const MovingFinanceKeywords: React.FC = () => {
   const keywords = [
@@ -47,26 +48,19 @@ const MovingFinanceKeywords: React.FC = () => {
 export const AuthPage: React.FC = () => {
   const [authMode, setAuthMode] = useState<AuthMode>('signin');
   const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const navigate = useNavigate();
-  
+
   const { signIn, signUp, isLoading, error, clearError } = useAuth();
 
   const handleSignIn = async (credentials: SignInRequest) => {
     clearError();
-    const result = await signIn(credentials);
-    
-    if (result.success && result.user) {
-      navigate(result.user.redirectUrl || '/dashboard');
-    }
+    await signIn(credentials);
+    // Navigation is handled in useAuth hook
   };
 
   const handleSignUp = async (userData: SignUpRequest) => {
     clearError();
-    const result = await signUp(userData);
-    
-    if (result.success && result.user) {
-      navigate(result.user.redirectUrl || '/dashboard');
-    }
+    await signUp(userData);
+    // Navigation is handled in useAuth hook
   };
 
   const handleModeSwitch = (mode: AuthMode) => {

@@ -1,105 +1,122 @@
-import type { SignInRequest, SignUpRequest, AuthResponse, AuthError } from '../types/auth.types';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut as firebaseSignOut,
+  sendPasswordResetEmail,
+  onAuthStateChanged,
+  updateProfile,
+  type User as FirebaseUser,
+} from 'firebase/auth';
+import { auth } from '../../firebase/config';
+import {
+  validateClassCode,
+  createUserProfile,
+  getUserProfile,
+  initializeStudentProgress,
+} from '../../firebase/firestore.service';
+import type {
+  SignInRequest,
+  SignUpRequest,
+  AuthResponse,
+  User,
+  CodeValidation,
+} from '../types/auth.types';
 
 export class AuthService {
-  private static async request<T>(
-    endpoint: string, 
-    options: RequestInit = {}
-  ): Promise<T> {
-    const url = `${API_BASE_URL}${endpoint}`;
-    
-    const config: RequestInit = {
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-      ...options,
+  // Sign in with email and password
+  static async signIn(credentials: SignInRequest): Promise<AuthResponse> {
+    const { email, password } = credentials;
+
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const firebaseUser = userCredential.user;
+
+    // Get user profile from Firestore
+    const userProfile = await getUserProfile(firebaseUser.uid);
+
+    if (!userProfile) {
+      throw new Error('User profile not found. Please contact support.');
+    }
+
+    return {
+      success: true,
+      user: userProfile,
+    };
+  }
+
+  // Sign up as a student with class code
+  static async signUp(userData: SignUpRequest): Promise<AuthResponse> {
+    const { email, password, displayName, classCode } = userData;
+
+    // Validate class code first
+    const codeValidation = await validateClassCode(classCode);
+    if (!codeValidation.valid) {
+      throw new Error('Invalid class code. Please check with your instructor.');
+    }
+
+    // Create Firebase auth user
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const firebaseUser = userCredential.user;
+
+    // Update display name
+    await updateProfile(firebaseUser, { displayName });
+
+    // Create user profile in Firestore
+    const user: Omit<User, 'createdAt'> = {
+      id: firebaseUser.uid,
+      email: firebaseUser.email!,
+      role: 'student',
+      displayName,
+      organizationId: codeValidation.organizationId!,
+      organizationName: codeValidation.organizationName!,
+      classCode: classCode.toUpperCase(),
     };
 
-    try {
-      const response = await fetch(url, config);
-      const data = await response.json();
+    await createUserProfile(user);
 
-      if (!response.ok) {
-        throw new Error(data.message || 'Request failed');
-      }
+    // Initialize student progress
+    await initializeStudentProgress(
+      firebaseUser.uid,
+      classCode.toUpperCase(),
+      codeValidation.organizationId!
+    );
 
-      return data;
-    } catch (error) {
-      if (error instanceof Error) {
-        throw error;
-      }
-      throw new Error('Network error occurred');
-    }
+    return {
+      success: true,
+      user: { ...user, createdAt: new Date() },
+    };
   }
 
-  static async signIn(credentials: SignInRequest): Promise<AuthResponse> {
-    return this.request<AuthResponse>('/auth/signin', {
-      method: 'POST',
-      body: JSON.stringify(credentials),
-    });
-  }
-
-  static async signUp(userData: SignUpRequest): Promise<AuthResponse> {
-    return this.request<AuthResponse>('/auth/signup', {
-      method: 'POST',
-      body: JSON.stringify(userData),
-    });
-  }
-
-  static async forgotPassword(email: string): Promise<{ success: boolean; message: string }> {
-    return this.request('/auth/forgot-password', {
-      method: 'POST',
-      body: JSON.stringify({ email }),
-    });
-  }
-
-  static async validateOrganizationCode(code: string): Promise<{ valid: boolean; organizationName?: string }> {
-    return this.request(`/auth/validate-org-code/${code}`, {
-      method: 'GET',
-    });
-  }
-
-  static async refreshToken(): Promise<AuthResponse> {
-    const token = localStorage.getItem('authToken');
-    return this.request<AuthResponse>('/auth/refresh', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
-  }
-
+  // Sign out
   static async signOut(): Promise<void> {
-    const token = localStorage.getItem('authToken');
-    if (token) {
-      try {
-        await this.request('/auth/signout', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
-      } catch (error) {
-        console.warn('Sign out request failed:', error);
-      }
-    }
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('userData');
+    await firebaseSignOut(auth);
   }
 
-  static getStoredToken(): string | null {
-    return localStorage.getItem('authToken');
+  // Send password reset email
+  static async forgotPassword(email: string): Promise<{ success: boolean; message: string }> {
+    await sendPasswordResetEmail(auth, email);
+    return {
+      success: true,
+      message: 'Password reset email sent. Please check your inbox.',
+    };
   }
 
-  static storeAuthData(token: string, userData: any): void {
-    localStorage.setItem('authToken', token);
-    localStorage.setItem('userData', JSON.stringify(userData));
+  // Validate class code
+  static async validateClassCode(code: string): Promise<CodeValidation> {
+    return validateClassCode(code);
   }
 
-  static getStoredUserData(): any | null {
-    const data = localStorage.getItem('userData');
-    return data ? JSON.parse(data) : null;
+  // Get current Firebase user
+  static getCurrentFirebaseUser(): FirebaseUser | null {
+    return auth.currentUser;
+  }
+
+  // Subscribe to auth state changes
+  static onAuthStateChanged(callback: (user: FirebaseUser | null) => void): () => void {
+    return onAuthStateChanged(auth, callback);
+  }
+
+  // Get user profile from Firestore
+  static async getUserProfile(userId: string): Promise<User | null> {
+    return getUserProfile(userId);
   }
 }

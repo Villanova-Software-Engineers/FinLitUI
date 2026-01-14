@@ -14,6 +14,13 @@ export { AuthService } from './services/auth.service';
 
 export type {
   User,
+  UserRole,
+  Organization,
+  ClassCode,
+  RegisteredStudent,
+  ModuleScore,
+  ModuleAttempt,
+  StudentProgress,
   SignInRequest,
   SignUpRequest,
   AuthResponse,
@@ -22,4 +29,7 @@ export type {
   PasswordStrength,
   AuthMode,
   AuthState,
+  CodeValidation,
+  StudentWithProgress,
+  UserDashboardData,
 } from './types/auth.types';
