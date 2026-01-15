@@ -1,4 +1,4 @@
-import { initializeApp } from 'firebase/app';
+import { initializeApp, getApps, deleteApp } from 'firebase/app';
 import { getAuth, browserLocalPersistence, setPersistence } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getAnalytics, isSupported } from 'firebase/analytics';
@@ -15,6 +15,21 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
+
+// Secondary app for creating users without affecting current auth state
+export const getSecondaryAuth = async () => {
+  const secondaryApp = initializeApp(firebaseConfig, 'secondary');
+  const secondaryAuth = getAuth(secondaryApp);
+  return { secondaryApp, secondaryAuth };
+};
+
+export const cleanupSecondaryApp = async () => {
+  const apps = getApps();
+  const secondaryApp = apps.find(a => a.name === 'secondary');
+  if (secondaryApp) {
+    await deleteApp(secondaryApp);
+  }
+};
 
 // Initialize Firebase Authentication with LOCAL persistence
 // This ensures auth state persists across browser sessions and page refreshes

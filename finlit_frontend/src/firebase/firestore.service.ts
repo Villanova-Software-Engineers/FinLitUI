@@ -13,7 +13,7 @@ import {
   orderBy,
 } from 'firebase/firestore';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth, db } from './config';
+import { db, getSecondaryAuth, cleanupSecondaryApp } from './config';
 import type {
   Organization,
   ClassCode,
@@ -58,7 +58,20 @@ function generatePassword(): string {
   return password;
 }
 
-// ============== Organization Functions (Owner Only) ==============
+// ============== Super Admin Functions ==============
+
+export async function checkIsSuperAdmin(userId: string): Promise<boolean> {
+  try {
+    const superAdminRef = doc(db, 'superAdmins', userId);
+    const snapshot = await getDoc(superAdminRef);
+    return snapshot.exists();
+  } catch (error) {
+    console.error('Error checking super admin status:', error);
+    return false;
+  }
+}
+
+// ============== Organization Functions (Super Admin Only) ==============
 
 export async function createOrganizationWithAdmin(
   orgName: string,
@@ -68,44 +81,52 @@ export async function createOrganizationWithAdmin(
   // Generate a random password for the admin
   const password = generatePassword();
 
-  // Create Firebase Auth account for the admin
-  const userCredential = await createUserWithEmailAndPassword(auth, contactEmail, password);
-  const adminUser = userCredential.user;
+  // Use secondary auth instance to create admin user without signing out super admin
+  const { secondaryAuth } = await getSecondaryAuth();
 
-  // Create organization in Firestore
-  const orgRef = doc(collection(db, ORGANIZATIONS));
-  const orgData: WithServerTimestamp<Omit<Organization, 'id'>, 'createdAt'> = {
-    name: orgName,
-    contactEmail,
-    adminId: adminUser.uid,
-    createdBy,
-    createdAt: serverTimestamp(),
-  };
+  try {
+    // Create Firebase Auth account for the admin using secondary auth
+    const userCredential = await createUserWithEmailAndPassword(secondaryAuth, contactEmail, password);
+    const adminUser = userCredential.user;
 
-  await setDoc(orgRef, orgData);
-
-  // Create admin user profile in Firestore
-  await setDoc(doc(db, USERS, adminUser.uid), {
-    id: adminUser.uid,
-    email: contactEmail,
-    role: 'admin',
-    displayName: orgName + ' Admin',
-    organizationId: orgRef.id,
-    organizationName: orgName,
-    createdAt: serverTimestamp(),
-  });
-
-  return {
-    organization: {
-      id: orgRef.id,
+    // Create organization in Firestore
+    const orgRef = doc(collection(db, ORGANIZATIONS));
+    const orgData: WithServerTimestamp<Omit<Organization, 'id'>, 'createdAt'> = {
       name: orgName,
       contactEmail,
       adminId: adminUser.uid,
       createdBy,
-      createdAt: new Date(),
-    },
-    password,
-  };
+      createdAt: serverTimestamp(),
+    };
+
+    await setDoc(orgRef, orgData);
+
+    // Create admin user profile in Firestore
+    await setDoc(doc(db, USERS, adminUser.uid), {
+      id: adminUser.uid,
+      email: contactEmail,
+      role: 'admin',
+      displayName: orgName + ' Admin',
+      organizationId: orgRef.id,
+      organizationName: orgName,
+      createdAt: serverTimestamp(),
+    });
+
+    return {
+      organization: {
+        id: orgRef.id,
+        name: orgName,
+        contactEmail,
+        adminId: adminUser.uid,
+        createdBy,
+        createdAt: new Date(),
+      },
+      password,
+    };
+  } finally {
+    // Clean up secondary app
+    await cleanupSecondaryApp();
+  }
 }
 
 export async function getAllOrganizations(): Promise<Organization[]> {
@@ -172,24 +193,36 @@ export async function toggleClassCodeActive(codeId: string, isActive: boolean): 
 }
 
 export async function validateClassCode(code: string): Promise<CodeValidation> {
+  console.log('[validateClassCode] Validating code:', code.toUpperCase());
+
+  // Query only by code to avoid needing a composite index
   const q = query(
     collection(db, CLASS_CODES),
-    where('code', '==', code.toUpperCase()),
-    where('isActive', '==', true)
+    where('code', '==', code.toUpperCase())
   );
 
   const snapshot = await getDocs(q);
+  console.log('[validateClassCode] Found documents:', snapshot.size);
 
   if (snapshot.empty) {
+    console.log('[validateClassCode] No matching code found in database');
     return { valid: false };
   }
 
   const codeDoc = snapshot.docs[0];
   const data = codeDoc.data();
+  console.log('[validateClassCode] Code data:', data);
+
+  // Check if code is active
+  if (!data.isActive) {
+    console.log('[validateClassCode] Code exists but is not active');
+    return { valid: false };
+  }
 
   // Get organization name
   const orgDoc = await getDoc(doc(db, ORGANIZATIONS, data.organizationId));
   const orgData = orgDoc.data();
+  console.log('[validateClassCode] Organization data:', orgData);
 
   return {
     valid: true,
