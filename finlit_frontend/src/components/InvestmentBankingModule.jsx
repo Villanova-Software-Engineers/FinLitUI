@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Reorder } from 'framer-motion';
 import { ArrowLeft, Star, Trophy, CheckCircle, XCircle, Heart, Zap, Award, Target, Play, BookOpen, ChevronRight, RefreshCw, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import TrueFalseCard from '../TrueFalse/TrueFalseCard';
@@ -39,6 +39,10 @@ const InvestmentBankingModule = () => {
   // Sequence game states
   const [draggedItems, setDraggedItems] = useState([]);
   const [sequenceCorrect, setSequenceCorrect] = useState(false);
+  const [selectedSequenceIndex, setSelectedSequenceIndex] = useState(null);
+
+  // Quiz completion state
+  const [quizPassed, setQuizPassed] = useState(false);
 
   // Professional lessons with working activities
   const lessons = [
@@ -228,11 +232,30 @@ const InvestmentBankingModule = () => {
     });
   };
 
-  // Sequence game logic
+  // Sequence game logic - click to swap
+  const handleSequenceItemClick = (index) => {
+    if (sequenceCorrect) return;
+
+    if (selectedSequenceIndex === null) {
+      // First selection
+      setSelectedSequenceIndex(index);
+    } else if (selectedSequenceIndex === index) {
+      // Clicking same item deselects it
+      setSelectedSequenceIndex(null);
+    } else {
+      // Swap the two items
+      const newItems = [...draggedItems];
+      const temp = newItems[selectedSequenceIndex];
+      newItems[selectedSequenceIndex] = newItems[index];
+      newItems[index] = temp;
+      setDraggedItems(newItems);
+      setSelectedSequenceIndex(null);
+    }
+  };
+
   const handleSequenceSubmit = () => {
-    const activity = practiceActivities[currentActivity];
     const isCorrect = draggedItems.every((item, index) => item.order === index + 1);
-    
+
     if (isCorrect) {
       setSequenceCorrect(true);
       setTotalXP(totalXP + 100);
@@ -277,7 +300,8 @@ const InvestmentBankingModule = () => {
     setShowExplanations({});
     setDraggedItems([]);
     setSequenceCorrect(false);
-    
+    setSelectedSequenceIndex(null);
+
     if (currentActivity < practiceActivities.length - 1) {
       setCurrentActivity(currentActivity + 1);
     } else {
@@ -296,7 +320,8 @@ const InvestmentBankingModule = () => {
     setShowExplanations({});
     setDraggedItems([]);
     setSequenceCorrect(false);
-    
+    setSelectedSequenceIndex(null);
+
     if (currentActivity > 0) {
       setCurrentActivity(currentActivity - 1);
     }
@@ -445,10 +470,21 @@ const InvestmentBankingModule = () => {
       {/* Content Sections */}
       {currentPhase === 'truefalse' ? (
         <div className="max-w-4xl mx-auto">
-          <TrueFalseCard />
+          <TrueFalseCard onQuizComplete={(result) => setQuizPassed(result.passed)} />
           {/* Complete Module Section */}
           <div className="mt-8 p-6 bg-white rounded-2xl shadow-lg border border-slate-200 text-center">
-            <h3 className="text-lg font-semibold text-slate-700 mb-4">Ready to complete the module?</h3>
+            <h3 className="text-lg font-semibold text-slate-700 mb-4">
+              {quizPassed ? 'Congratulations! You passed the quiz!' : 'Complete the quiz above to unlock module completion'}
+            </h3>
+
+            {!quizPassed && (
+              <div className="mb-4 p-3 rounded-xl bg-amber-50 border border-amber-200">
+                <div className="flex items-center justify-center gap-2">
+                  <span className="text-amber-600 text-lg">📝</span>
+                  <span className="font-semibold text-amber-700">Score at least 70% on the quiz to pass</span>
+                </div>
+              </div>
+            )}
 
             {saveResult && (
               <div className={`mb-4 p-3 rounded-xl ${saveResult.passed ? 'bg-green-50 border border-green-200' : 'bg-orange-50 border border-orange-200'}`}>
@@ -482,8 +518,8 @@ const InvestmentBankingModule = () => {
                     setIsSaving(false);
                   }
                 }}
-                disabled={isSaving || saveResult?.passed}
-                className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl font-semibold transition disabled:opacity-50 flex items-center gap-2"
+                disabled={isSaving || saveResult?.passed || !quizPassed}
+                className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 {isSaving ? (
                   <>
@@ -494,6 +530,11 @@ const InvestmentBankingModule = () => {
                   <>
                     <CheckCircle size={18} />
                     Completed!
+                  </>
+                ) : !quizPassed ? (
+                  <>
+                    <Trophy size={18} />
+                    Pass Quiz First
                   </>
                 ) : (
                   <>
@@ -778,30 +819,23 @@ const InvestmentBankingModule = () => {
               {/* Sequence Game - Premium */}
               {practiceActivities[currentActivity].type === 'sequence' && (
                 <div className="space-y-6">
-                  <div className="space-y-3">
+                  <p className="text-center text-slate-500 text-sm">Drag items to reorder them</p>
+                  <Reorder.Group
+                    axis="y"
+                    values={draggedItems}
+                    onReorder={setDraggedItems}
+                    className="space-y-3"
+                  >
                     {draggedItems.map((item, index) => (
-                      <motion.div
+                      <Reorder.Item
                         key={item.id}
-                        className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-move transition-all duration-300 ${
+                        value={item}
+                        className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-grab active:cursor-grabbing transition-colors ${
                           sequenceCorrect
                             ? 'bg-emerald-50 border-emerald-400 shadow-lg shadow-emerald-500/15'
                             : 'bg-slate-50 border-slate-200 hover:border-slate-300 hover:bg-white'
                         }`}
-                        whileHover={{ scale: 1.01, y: -2 }}
-                        drag="y"
-                        dragConstraints={{ top: 0, bottom: 0 }}
-                        onDragEnd={(event, info) => {
-                          const draggedIndex = index;
-                          const targetIndex = Math.max(0, Math.min(draggedItems.length - 1,
-                            Math.round(draggedIndex + info.offset.y / 80)));
-
-                          if (draggedIndex !== targetIndex) {
-                            const newItems = [...draggedItems];
-                            const [removed] = newItems.splice(draggedIndex, 1);
-                            newItems.splice(targetIndex, 0, removed);
-                            setDraggedItems(newItems);
-                          }
-                        }}
+                        whileDrag={{ scale: 1.02, boxShadow: '0 10px 30px rgba(0,0,0,0.15)' }}
                       >
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm ${
                           sequenceCorrect ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-600'
@@ -812,9 +846,9 @@ const InvestmentBankingModule = () => {
                         <div className="flex-1">
                           <span className={`font-medium ${sequenceCorrect ? 'text-emerald-700' : 'text-slate-700'}`}>{item.text}</span>
                         </div>
-                      </motion.div>
+                      </Reorder.Item>
                     ))}
-                  </div>
+                  </Reorder.Group>
 
                   {!sequenceCorrect && (
                     <div className="text-center">
