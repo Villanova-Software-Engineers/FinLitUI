@@ -1,16 +1,14 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { Trophy, Star, Book, BookOpen, Home, Calendar, User, Brain, Check, Flame, GraduationCap, Loader2, Lock, Play } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Star, BookOpen, Home, Target, User, Check, Flame, GraduationCap, Loader2, Lock, Play, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../auth/context/AuthContext';
 import { useModuleScore, MODULES } from '../hooks/useModuleScore';
 
-// Crossword puzzle data structure
+// Crossword Data
 interface CrosswordCell {
   letter: string;
   isBlack: boolean;
   number?: number;
-  acrossClue?: number;
-  downClue?: number;
 }
 
 interface ClueData {
@@ -22,20 +20,16 @@ interface ClueData {
   direction: 'across' | 'down';
 }
 
-// Financial crossword puzzle definition
 const CROSSWORD_CLUES: ClueData[] = [
-  // Across clues
-  { number: 1, clue: "Money set aside for future use", answer: "SAVINGS", startRow: 0, startCol: 0, direction: 'across' },
-  { number: 4, clue: "Money earned on deposits or investments", answer: "INTEREST", startRow: 2, startCol: 0, direction: 'across' },
-  { number: 6, clue: "Financial spending plan", answer: "BUDGET", startRow: 4, startCol: 1, direction: 'across' },
-  { number: 7, clue: "Ownership share in a company", answer: "STOCK", startRow: 6, startCol: 0, direction: 'across' },
-  // Down clues
-  { number: 2, clue: "Money you owe to others", answer: "DEBT", startRow: 0, startCol: 2, direction: 'down' },
-  { number: 3, clue: "Protection against financial loss", answer: "INSURANCE", startRow: 0, startCol: 5, direction: 'down' },
-  { number: 5, clue: "Yearly percentage rate on loans", answer: "APR", startRow: 2, startCol: 6, direction: 'down' },
+  { number: 1, clue: "Money set aside for future", answer: "SAVINGS", startRow: 0, startCol: 0, direction: 'across' },
+  { number: 4, clue: "Earnings on deposits", answer: "INTEREST", startRow: 2, startCol: 0, direction: 'across' },
+  { number: 6, clue: "Spending plan", answer: "BUDGET", startRow: 4, startCol: 1, direction: 'across' },
+  { number: 7, clue: "Company ownership share", answer: "STOCK", startRow: 6, startCol: 0, direction: 'across' },
+  { number: 2, clue: "Money owed", answer: "DEBT", startRow: 0, startCol: 2, direction: 'down' },
+  { number: 3, clue: "Risk protection", answer: "INSURANCE", startRow: 0, startCol: 5, direction: 'down' },
+  { number: 5, clue: "Yearly rate", answer: "APR", startRow: 2, startCol: 6, direction: 'down' },
 ];
 
-// Generate the crossword grid
 const generateGrid = (): CrosswordCell[][] => {
   const rows = 9;
   const cols = 9;
@@ -43,237 +37,104 @@ const generateGrid = (): CrosswordCell[][] => {
     Array(cols).fill(null).map(() => ({ letter: '', isBlack: true }))
   );
 
-  // Place all words on the grid
   CROSSWORD_CLUES.forEach(clue => {
     const { answer, startRow, startCol, direction, number } = clue;
     for (let i = 0; i < answer.length; i++) {
       const row = direction === 'across' ? startRow : startRow + i;
       const col = direction === 'across' ? startCol + i : startCol;
-
       if (row < rows && col < cols) {
         grid[row][col] = {
           ...grid[row][col],
           letter: answer[i],
           isBlack: false,
         };
-
-        // Add clue number to the first cell
         if (i === 0) {
-          if (direction === 'across') {
-            grid[row][col].acrossClue = number;
-          } else {
-            grid[row][col].downClue = number;
-          }
           grid[row][col].number = number;
         }
       }
     }
   });
-
   return grid;
 };
 
 const GRID = generateGrid();
 
-// Module definitions matching the Roadmap
+// Daily Questions
+const DAILY_QUESTIONS = [
+  { question: "What is compound interest?", options: ["Interest earned on interest", "Tax on investment gains", "Diversification of assets", "Money added to an account"], correct: 0 },
+  { question: "What's the 50-30-20 rule?", options: ["50% save, 30% needs, 20% wants", "50% needs, 30% wants, 20% savings", "50% invest, 30% spend, 20% save", "50% wants, 30% save, 20% needs"], correct: 1 },
+  { question: "What does APR stand for?", options: ["Annual Profit Rate", "Annual Percentage Rate", "Average Payment Ratio", "Asset Price Return"], correct: 1 },
+  { question: "What is an emergency fund?", options: ["Money for vacation", "Savings for unexpected expenses", "Stock investment account", "Credit card limit"], correct: 1 },
+  { question: "What most affects your credit score?", options: ["Your income level", "Payment history", "Number of bank accounts", "Your age"], correct: 1 },
+];
+
+// Modules
 const LEARNING_MODULES = [
-  {
-    id: MODULES.BUDGETING_50_30_20.id,
-    title: "Budgeting Basics",
-    subtitle: "50-30-20 Rule",
-    description: "Master the 50-30-20 budgeting rule for effective money management.",
-    icon: "💰",
-    route: "/50-30-20",
-    points: 100,
-  },
-  {
-    id: MODULES.NEEDS_WANTS.id,
-    title: "Needs vs Wants",
-    subtitle: "Financial Priorities",
-    description: "Learn to distinguish between essential needs and desired wants.",
-    icon: "⚖️",
-    route: "/needs-wants",
-    points: 100,
-  },
-  {
-    id: MODULES.INVESTMENT_BANKING.id,
-    title: "Investment Banking",
-    subtitle: "IPO Knowledge",
-    description: "Test your knowledge about Initial Public Offerings.",
-    icon: "🏦",
-    route: "/investment-quiz",
-    points: 150,
-  },
-  {
-    id: MODULES.CREDIT_SCORE.id,
-    title: "Credit Score Mastery",
-    subtitle: "Credit Management",
-    description: "Understand credit scores and improvement strategies.",
-    icon: "📊",
-    route: "/credit-score",
-    points: 150,
-  },
-  {
-    id: MODULES.EMERGENCY_FUND.id,
-    title: "Emergency Fund",
-    subtitle: "Financial Safety",
-    description: "Build a robust emergency fund for unexpected expenses.",
-    icon: "🆘",
-    route: "/emergency-fund",
-    points: 150,
-  },
-  {
-    id: MODULES.STOCK_MARKET.id,
-    title: "Stock Market Basics",
-    subtitle: "Investment Fundamentals",
-    description: "Learn the fundamentals of stock market investing.",
-    icon: "📈",
-    route: "/stock-market",
-    points: 200,
-  },
-  {
-    id: MODULES.INSURANCE.id,
-    title: "Insurance Protection",
-    subtitle: "Risk Management",
-    description: "Understand different types of insurance and protection.",
-    icon: "🛡️",
-    route: "/insurance",
-    points: 150,
-  },
-  {
-    id: MODULES.DEBT_MANAGEMENT.id,
-    title: "Debt Management",
-    subtitle: "Debt Freedom",
-    description: "Strategies for managing and eliminating debt effectively.",
-    icon: "🔓",
-    route: "/debt-management",
-    points: 200,
-  },
+  { id: MODULES.BUDGETING_50_30_20.id, title: "Budgeting Basics", subtitle: "50-30-20 Rule", icon: "💰", route: "/50-30-20", points: 100 },
+  { id: MODULES.NEEDS_WANTS.id, title: "Needs vs Wants", subtitle: "Financial Priorities", icon: "⚖️", route: "/needs-wants", points: 100 },
+  { id: MODULES.INVESTMENT_BANKING.id, title: "Investment Banking", subtitle: "IPO Knowledge", icon: "🏦", route: "/investment-quiz", points: 150 },
+  { id: MODULES.CREDIT_SCORE.id, title: "Credit Score", subtitle: "Credit Management", icon: "📊", route: "/credit-score", points: 150 },
+  { id: MODULES.EMERGENCY_FUND.id, title: "Emergency Fund", subtitle: "Financial Safety", icon: "🆘", route: "/emergency-fund", points: 150 },
+  { id: MODULES.STOCK_MARKET.id, title: "Stock Market", subtitle: "Investment Basics", icon: "📈", route: "/stock-market", points: 200 },
+  { id: MODULES.INSURANCE.id, title: "Insurance", subtitle: "Risk Management", icon: "🛡️", route: "/insurance", points: 150 },
+  { id: MODULES.DEBT_MANAGEMENT.id, title: "Debt Management", subtitle: "Debt Freedom", icon: "🔓", route: "/debt-management", points: 200 },
 ];
 
 const FinLitApp: React.FC = () => {
   const navigate = useNavigate();
   const { user, signOut, isLoading: authLoading } = useAuthContext();
-  const { progress, isModulePassed } = useModuleScore();
+  const { progress, isModulePassed, getModuleScore } = useModuleScore();
 
-  // Module order for sequential access
-  const moduleOrder = LEARNING_MODULES.map(m => m.id);
-
-  // Check if a module is accessible (previous module passed or first module)
-  const isModuleAccessible = (moduleIndex: number): boolean => {
-    if (moduleIndex === 0) return true;
-    const previousModuleId = moduleOrder[moduleIndex - 1];
-    return isModulePassed(previousModuleId);
-  };
-
-  // Get module status
-  const getModuleStatus = (moduleId: string, moduleIndex: number): 'completed' | 'in_progress' | 'next' | 'locked' => {
-    if (isModulePassed(moduleId as Parameters<typeof isModulePassed>[0])) return 'completed';
-    if (!isModuleAccessible(moduleIndex)) return 'locked';
-    const moduleScore = progress?.moduleScores?.find(s => s.moduleId === moduleId);
-    if (moduleScore && moduleScore.attempts > 0) return 'in_progress';
-    return 'next';
-  };
-
-  // Handle module click
-  const handleModuleClick = (module: typeof LEARNING_MODULES[0], index: number) => {
-    const status = getModuleStatus(module.id, index);
-    if (status !== 'locked') {
-      navigate(module.route);
-    }
-  };
-
+  const [activeSection, setActiveSection] = useState<'home' | 'profile'>('home');
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
-  const [showStreakAnimation, setShowStreakAnimation] = useState<boolean>(false);
-  const [showCertTooltip, setShowCertTooltip] = useState<boolean>(false);
+  const [dailyQuestion] = useState(() => DAILY_QUESTIONS[new Date().getDate() % DAILY_QUESTIONS.length]);
+  const [answered, setAnswered] = useState(false);
+  const [isCorrect, setIsCorrect] = useState(false);
+  const [showStreakAnimation, setShowStreakAnimation] = useState(false);
+  const [showCertTooltip, setShowCertTooltip] = useState(false);
 
   // Crossword state
   const [userInputs, setUserInputs] = useState<{ [key: string]: string }>({});
   const [selectedCell, setSelectedCell] = useState<{ row: number; col: number } | null>(null);
   const [selectedDirection, setSelectedDirection] = useState<'across' | 'down'>('across');
-  const [crosswordComplete, setCrosswordComplete] = useState(false);
-  const [showCrosswordResult, setShowCrosswordResult] = useState(false);
+  const [crosswordChecked, setCrosswordChecked] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
   const inputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
 
-  // Derive values from progress
-  const xpLevel = progress ? Math.min((progress.totalXP / 100) * 100, 100) : 0;
+  // Calculations
+  const moduleOrder = LEARNING_MODULES.map(m => m.id);
+  const completedModules = LEARNING_MODULES.filter(m => isModulePassed(m.id)).length;
+  const totalModules = LEARNING_MODULES.length;
   const streak = progress?.streak ?? 0;
-  const certificationPoints = progress?.totalXP ?? 0;
+  const totalXP = progress?.totalXP ?? 0;
+  const xpLevel = Math.min((totalXP / 100) * 100, 100);
 
-  // Handle logout
-  const handleLogout = async () => {
-    await signOut();
-    navigate('/auth');
-  };
-
-  // Redirect to auth if not authenticated (after loading is complete)
-  useEffect(() => {
-    if (!authLoading && !user) {
-      navigate('/auth');
-    }
-  }, [authLoading, user, navigate]);
-
-  // If still loading auth, show loading
-  if (authLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-blue-50">
-        <Loader2 className="animate-spin text-blue-500" size={48} />
-      </div>
-    );
-  }
-
-  // If no user (will redirect via useEffect), show loading
-  if (!user) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-blue-50">
-        <Loader2 className="animate-spin text-blue-500" size={48} />
-      </div>
-    );
-  }
-
-  const handleAnswerSelect = (index: number): void => {
-    setSelectedAnswer(index);
-  };
-
-  const triggerStreakAnimation = (): void => {
-    setShowStreakAnimation(true);
-    setTimeout(() => {
-      setShowStreakAnimation(false);
-    }, 2000);
-  };
-
-  const handleSubmitAnswer = (): void => {
-    if (selectedAnswer === 0) {
-      triggerStreakAnimation();
-    }
+  const isModuleAccessible = (idx: number) => idx === 0 || isModulePassed(moduleOrder[idx - 1]);
+  const getModuleStatus = (moduleId: string, idx: number) => {
+    if (isModulePassed(moduleId as Parameters<typeof isModulePassed>[0])) return 'completed';
+    if (!isModuleAccessible(idx)) return 'locked';
+    const moduleScore = progress?.moduleScores?.find(s => s.moduleId === moduleId);
+    if (moduleScore && moduleScore.attempts > 0) return 'in_progress';
+    return 'next';
   };
 
   // Crossword handlers
   const handleCellClick = (row: number, col: number) => {
-    const cell = GRID[row][col];
-    if (cell.isBlack) return;
-
+    if (GRID[row][col].isBlack) return;
     if (selectedCell?.row === row && selectedCell?.col === col) {
-      // Toggle direction if clicking same cell
       setSelectedDirection(prev => prev === 'across' ? 'down' : 'across');
     } else {
       setSelectedCell({ row, col });
     }
-
-    const key = `${row}-${col}`;
-    inputRefs.current[key]?.focus();
+    inputRefs.current[`${row}-${col}`]?.focus();
   };
 
-  const getNextCell = useCallback((row: number, col: number, direction: 'across' | 'down', forward: boolean = true): { row: number; col: number } | null => {
+  const getNextCell = useCallback((row: number, col: number, dir: 'across' | 'down', forward = true) => {
     const delta = forward ? 1 : -1;
-    let nextRow = direction === 'down' ? row + delta : row;
-    let nextCol = direction === 'across' ? col + delta : col;
-
-    if (nextRow >= 0 && nextRow < GRID.length && nextCol >= 0 && nextCol < GRID[0].length) {
-      if (!GRID[nextRow][nextCol].isBlack) {
-        return { row: nextRow, col: nextCol };
-      }
+    const nextRow = dir === 'down' ? row + delta : row;
+    const nextCol = dir === 'across' ? col + delta : col;
+    if (nextRow >= 0 && nextRow < GRID.length && nextCol >= 0 && nextCol < GRID[0].length && !GRID[nextRow][nextCol].isBlack) {
+      return { row: nextRow, col: nextCol };
     }
     return null;
   }, []);
@@ -281,17 +142,14 @@ const FinLitApp: React.FC = () => {
   const handleCellInput = (row: number, col: number, value: string) => {
     const key = `${row}-${col}`;
     const letter = value.toUpperCase().slice(-1);
-
     if (letter === '' || /^[A-Z]$/.test(letter)) {
       setUserInputs(prev => ({ ...prev, [key]: letter }));
-
-      // Move to next cell if a letter was entered
+      setCrosswordChecked(false);
       if (letter !== '') {
-        const nextCell = getNextCell(row, col, selectedDirection);
-        if (nextCell) {
-          setSelectedCell(nextCell);
-          const nextKey = `${nextCell.row}-${nextCell.col}`;
-          setTimeout(() => inputRefs.current[nextKey]?.focus(), 0);
+        const next = getNextCell(row, col, selectedDirection);
+        if (next) {
+          setSelectedCell(next);
+          setTimeout(() => inputRefs.current[`${next.row}-${next.col}`]?.focus(), 0);
         }
       }
     }
@@ -299,118 +157,74 @@ const FinLitApp: React.FC = () => {
 
   const handleKeyDown = (e: React.KeyboardEvent, row: number, col: number) => {
     const key = `${row}-${col}`;
-
     if (e.key === 'Backspace' && !userInputs[key]) {
-      // Move to previous cell if current is empty
-      const prevCell = getNextCell(row, col, selectedDirection, false);
-      if (prevCell) {
-        setSelectedCell(prevCell);
-        const prevKey = `${prevCell.row}-${prevCell.col}`;
-        setUserInputs(prev => ({ ...prev, [prevKey]: '' }));
-        setTimeout(() => inputRefs.current[prevKey]?.focus(), 0);
-      }
-      e.preventDefault();
-    } else if (e.key === 'ArrowRight') {
-      const next = getNextCell(row, col, 'across');
-      if (next) {
-        setSelectedCell(next);
-        setSelectedDirection('across');
-        setTimeout(() => inputRefs.current[`${next.row}-${next.col}`]?.focus(), 0);
-      }
-      e.preventDefault();
-    } else if (e.key === 'ArrowLeft') {
-      const prev = getNextCell(row, col, 'across', false);
+      const prev = getNextCell(row, col, selectedDirection, false);
       if (prev) {
         setSelectedCell(prev);
-        setSelectedDirection('across');
+        setUserInputs(p => ({ ...p, [`${prev.row}-${prev.col}`]: '' }));
         setTimeout(() => inputRefs.current[`${prev.row}-${prev.col}`]?.focus(), 0);
       }
       e.preventDefault();
-    } else if (e.key === 'ArrowDown') {
-      const next = getNextCell(row, col, 'down');
+    } else if (['ArrowRight', 'ArrowLeft', 'ArrowDown', 'ArrowUp'].includes(e.key)) {
+      const dir = e.key.includes('Right') || e.key.includes('Left') ? 'across' : 'down';
+      const forward = e.key.includes('Right') || e.key.includes('Down');
+      const next = getNextCell(row, col, dir, forward);
       if (next) {
         setSelectedCell(next);
-        setSelectedDirection('down');
+        setSelectedDirection(dir);
         setTimeout(() => inputRefs.current[`${next.row}-${next.col}`]?.focus(), 0);
       }
-      e.preventDefault();
-    } else if (e.key === 'ArrowUp') {
-      const prev = getNextCell(row, col, 'down', false);
-      if (prev) {
-        setSelectedCell(prev);
-        setSelectedDirection('down');
-        setTimeout(() => inputRefs.current[`${prev.row}-${prev.col}`]?.focus(), 0);
-      }
-      e.preventDefault();
-    } else if (e.key === 'Tab') {
-      setSelectedDirection(prev => prev === 'across' ? 'down' : 'across');
       e.preventDefault();
     }
   };
 
   const checkCrossword = () => {
     let correct = 0;
-    let total = 0;
-
-    GRID.forEach((row, rowIdx) => {
-      row.forEach((cell, colIdx) => {
-        if (!cell.isBlack) {
-          total++;
-          const key = `${rowIdx}-${colIdx}`;
-          if (userInputs[key]?.toUpperCase() === cell.letter) {
-            correct++;
-          }
-        }
-      });
-    });
-
+    GRID.forEach((row, ri) => row.forEach((cell, ci) => {
+      if (!cell.isBlack && userInputs[`${ri}-${ci}`]?.toUpperCase() === cell.letter) correct++;
+    }));
     setCorrectCount(correct);
-    setCrosswordComplete(correct === total);
-    setShowCrosswordResult(true);
-
-    if (correct === total) {
-      triggerStreakAnimation();
-    }
+    setCrosswordChecked(true);
   };
 
   const resetCrossword = () => {
     setUserInputs({});
-    setShowCrosswordResult(false);
-    setCrosswordComplete(false);
+    setCrosswordChecked(false);
     setSelectedCell(null);
   };
 
-  const getCellHighlight = (row: number, col: number): string => {
-    if (!selectedCell) return '';
-
-    const cell = GRID[row][col];
-    if (cell.isBlack) return '';
-
-    // Current selected cell
-    if (selectedCell.row === row && selectedCell.col === col) {
-      return 'bg-blue-300';
-    }
-
-    // Highlight cells in the same word
-    if (selectedDirection === 'across' && selectedCell.row === row) {
-      // Check if this cell is part of the same word
-      let startCol = selectedCell.col;
-      while (startCol > 0 && !GRID[row][startCol - 1].isBlack) startCol--;
-      let endCol = selectedCell.col;
-      while (endCol < GRID[0].length - 1 && !GRID[row][endCol + 1].isBlack) endCol++;
-      if (col >= startCol && col <= endCol) return 'bg-blue-100';
-    }
-
-    if (selectedDirection === 'down' && selectedCell.col === col) {
-      let startRow = selectedCell.row;
-      while (startRow > 0 && !GRID[startRow - 1][col].isBlack) startRow--;
-      let endRow = selectedCell.row;
-      while (endRow < GRID.length - 1 && !GRID[endRow + 1][col].isBlack) endRow++;
-      if (row >= startRow && row <= endRow) return 'bg-blue-100';
-    }
-
+  const getCellHighlight = (row: number, col: number) => {
+    if (!selectedCell || GRID[row][col].isBlack) return '';
+    if (selectedCell.row === row && selectedCell.col === col) return 'bg-blue-300';
+    if (selectedDirection === 'across' && selectedCell.row === row) return 'bg-blue-100';
+    if (selectedDirection === 'down' && selectedCell.col === col) return 'bg-blue-100';
     return '';
   };
+
+  const triggerStreakAnimation = () => {
+    setShowStreakAnimation(true);
+    setTimeout(() => setShowStreakAnimation(false), 2000);
+  };
+
+  const handleSubmitAnswer = () => {
+    if (selectedAnswer === null || answered) return;
+    const correct = selectedAnswer === dailyQuestion.correct;
+    setIsCorrect(correct);
+    setAnswered(true);
+    if (correct) triggerStreakAnimation();
+  };
+
+  useEffect(() => {
+    if (!authLoading && !user) navigate('/auth');
+  }, [authLoading, user, navigate]);
+
+  if (authLoading || !user) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-blue-50">
+        <Loader2 className="animate-spin text-blue-500" size={48} />
+      </div>
+    );
+  }
 
   const acrossClues = CROSSWORD_CLUES.filter(c => c.direction === 'across').sort((a, b) => a.number - b.number);
   const downClues = CROSSWORD_CLUES.filter(c => c.direction === 'down').sort((a, b) => a.number - b.number);
@@ -421,536 +235,354 @@ const FinLitApp: React.FC = () => {
       <header className="bg-blue-100 p-4 flex justify-between items-center border-b border-blue-200">
         <div className="flex items-center gap-2">
           <div className="bg-emerald-500 text-white p-2 rounded-lg">
-            <BookOpen size={20} />
+            <BookOpen size={22} />
           </div>
           <h1 className="text-2xl font-bold text-blue-700">FinLit</h1>
         </div>
 
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
+            <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white text-lg font-bold">
               {user.displayName?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase() || 'U'}
             </div>
-            <span className="text-blue-800 font-semibold">{user.displayName || user.email}</span>
+            <span className="text-blue-800 font-semibold text-lg">{user.displayName || user.email}</span>
           </div>
 
-          <img
-            src="pwc.svg"
-            alt="PwC Logo"
-            className="w-10 h-10 object-contain"
-          />
+          <img src="pwc.svg" alt="PwC Logo" className="w-10 h-10 object-contain" />
 
           <div
-            className="relative"
+            className="relative cursor-pointer"
             onMouseEnter={() => setShowCertTooltip(true)}
             onMouseLeave={() => setShowCertTooltip(false)}
           >
-            <GraduationCap className="text-yellow-500 mr-2" size={24} />
+            <GraduationCap className="text-yellow-500" size={28} />
             {showCertTooltip && (
-              <div className="absolute -bottom-16 -left-16 bg-white p-3 rounded-md shadow-lg text-xs w-48 z-10">
+              <div className="absolute top-10 -left-20 bg-white p-3 rounded-lg shadow-lg text-sm w-52 z-10 border">
                 <p className="font-bold mb-1">Financial Literacy Certificate</p>
-                <p className="text-gray-600">1000 points needed ({Math.max(0, 1000 - certificationPoints)} to go)</p>
+                <p className="text-gray-600">1000 points needed ({Math.max(0, 1000 - totalXP)} to go)</p>
               </div>
             )}
           </div>
-          <div className="text-sm">
-            <span className="font-bold">{certificationPoints}</span>
+          <div className="text-lg">
+            <span className="font-bold">{totalXP}</span>
             <span className="text-gray-500">/1000</span>
           </div>
 
           <button
-            onClick={handleLogout}
-            className="px-4 py-2 text-gray-600 rounded-md hover:bg-gray-200 transition"
+            onClick={() => signOut().then(() => navigate('/auth'))}
+            className="px-4 py-2 text-gray-600 rounded-md hover:bg-gray-200 transition text-lg"
           >
             Log out
           </button>
         </div>
       </header>
 
-
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
-        <div className="bg-blue-400 w-64 text-white p-4 flex flex-col gap-6">
-          <div
-            className="flex items-center gap-3 p-2 bg-blue-500 rounded-md cursor-pointer"
-            onClick={() => navigate('/dashboard')}
+        <div className="bg-blue-400 w-64 text-white p-4 flex flex-col gap-4">
+          <button
+            onClick={() => setActiveSection('home')}
+            className={`flex items-center gap-3 p-3 rounded-lg text-lg ${activeSection === 'home' ? 'bg-blue-500' : 'hover:bg-blue-500'}`}
           >
             <Home size={24} />
             <span className="font-medium">Home</span>
-          </div>
+          </button>
 
-          <div
-            className="flex items-center gap-3 p-2 hover:bg-blue-500 rounded-md cursor-pointer"
+          <button
             onClick={() => navigate('/game')}
+            className="flex items-center gap-3 p-3 hover:bg-blue-500 rounded-lg text-lg"
           >
-            <Calendar size={24} />
-            <span className="font-medium">Daily Challenge</span>
-          </div>
+            <Target size={24} />
+            <span className="font-medium">Learning Path</span>
+          </button>
 
-          <div
-            className="flex items-center gap-3 p-2 hover:bg-blue-500 rounded-md cursor-pointer"
-            onClick={() => navigate('/game')}
+          <button
+            onClick={() => navigate('/truefalse')}
+            className="flex items-center gap-3 p-3 hover:bg-blue-500 rounded-lg text-lg"
           >
-            <Trophy size={24} />
-            <span className="font-medium">Leaderboard</span>
-          </div>
+            <Zap size={24} />
+            <span className="font-medium">Quick Quiz</span>
+          </button>
 
-          <div
-            className="flex items-center gap-3 p-2 hover:bg-blue-500 rounded-md cursor-pointer"
-            onClick={() => navigate('/game')}
-          >
-            <Brain size={24} />
-            <span className="font-medium">Learning Center</span>
-          </div>
-
-          <div
-            className="flex items-center gap-3 p-2 hover:bg-blue-500 rounded-md cursor-pointer"
-            onClick={() => navigate('/game')}
-          >
-            <Book size={24} />
-            <span className="font-medium">Modules</span>
-          </div>
-
-          <div
-            className="flex items-center gap-3 p-2 hover:bg-blue-500 rounded-md cursor-pointer"
-            onClick={() => navigate('/dashboard')}
+          <button
+            onClick={() => setActiveSection('profile')}
+            className={`flex items-center gap-3 p-3 rounded-lg text-lg ${activeSection === 'profile' ? 'bg-blue-500' : 'hover:bg-blue-500'}`}
           >
             <User size={24} />
             <span className="font-medium">Profile</span>
-          </div>
+          </button>
         </div>
 
         {/* Main content */}
-        <div className="flex-1 p-4 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Daily Challenge Card */}
-          <div className="bg-amber-50 rounded-lg p-6 shadow-sm border border-amber-100">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold">Daily Challenge</h2>
-              <div className="flex items-center">
-                <div className="relative">
-                  {showStreakAnimation && (
-                    <div className="absolute -top-8 -right-2 animate-bounce">
-                      <div className="flex items-center text-amber-500 font-bold">
-                        <Flame className="mr-1 text-amber-500" size={20} />
-                        <span>+1</span>
+        <div className="flex-1 p-4 overflow-y-auto">
+          {activeSection === 'home' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Daily Challenge */}
+              <div className="bg-amber-50 rounded-lg p-6 shadow-sm border border-amber-100">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-2xl font-bold">Daily Challenge</h2>
+                  <div className="relative flex items-center">
+                    {showStreakAnimation && (
+                      <div className="absolute -top-8 right-0 animate-bounce text-amber-500 font-bold flex items-center">
+                        <Flame size={20} className="mr-1" />+1
                       </div>
-                    </div>
-                  )}
-                  <div className="flex">
-                    <Flame className="text-amber-500 mr-1" size={20} />
-                    <div className="bg-amber-500 rounded-full h-6 w-6 flex items-center justify-center text-white font-bold">
+                    )}
+                    <Flame className="text-amber-500 mr-1" size={22} />
+                    <div className="bg-amber-500 rounded-full h-8 w-8 flex items-center justify-center text-white font-bold text-lg">
                       {streak}
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
 
-            <div className="mb-6">
-              <h3 className="text-xl font-bold mb-2">What is compound interest?</h3>
-              <div className="flex flex-col gap-3">
-                <button
-                  className={`p-3 rounded-md text-left transition ${selectedAnswer === 0 ? 'bg-emerald-500 text-white' : 'bg-emerald-100 hover:bg-emerald-200'}`}
-                  onClick={() => handleAnswerSelect(0)}
-                >
-                  Interest earned on interest
-                </button>
-                <button
-                  className={`p-3 rounded-md text-left transition ${selectedAnswer === 1 ? 'bg-emerald-500 text-white' : 'bg-emerald-100 hover:bg-emerald-200'}`}
-                  onClick={() => handleAnswerSelect(1)}
-                >
-                  Tax on investment gains
-                </button>
-                <button
-                  className={`p-3 rounded-md text-left transition ${selectedAnswer === 2 ? 'bg-emerald-500 text-white' : 'bg-emerald-100 hover:bg-emerald-200'}`}
-                  onClick={() => handleAnswerSelect(2)}
-                >
-                  Diversification of assets
-                </button>
-                <button
-                  className={`p-3 rounded-md text-left transition ${selectedAnswer === 3 ? 'bg-emerald-500 text-white' : 'bg-emerald-100 hover:bg-emerald-200'}`}
-                  onClick={() => handleAnswerSelect(3)}
-                >
-                  Money added to an account
-                </button>
-              </div>
-            </div>
-
-            <div className="flex justify-between items-center">
-              <div className="flex">
-                <div className="text-yellow-500 mr-2">
-                  <Star className="fill-yellow-500" size={24} />
+                <h3 className="text-xl font-bold mb-4">{dailyQuestion.question}</h3>
+                <div className="flex flex-col gap-3 mb-6">
+                  {dailyQuestion.options.map((opt, i) => (
+                    <button
+                      key={i}
+                      onClick={() => !answered && setSelectedAnswer(i)}
+                      disabled={answered}
+                      className={`p-4 rounded-lg text-left text-lg transition ${
+                        answered
+                          ? i === dailyQuestion.correct
+                            ? 'bg-emerald-500 text-white'
+                            : selectedAnswer === i
+                              ? 'bg-red-400 text-white'
+                              : 'bg-emerald-100'
+                          : selectedAnswer === i
+                            ? 'bg-emerald-500 text-white'
+                            : 'bg-emerald-100 hover:bg-emerald-200'
+                      }`}
+                    >
+                      {opt}
+                    </button>
+                  ))}
                 </div>
-                <div className="flex flex-col">
-                  <span className="text-xs text-gray-500">Earn</span>
-                  <span className="font-bold">50 XP</span>
-                </div>
-              </div>
-              <button
-                className="bg-emerald-500 text-white px-6 py-2 rounded-md hover:bg-emerald-600"
-                onClick={handleSubmitAnswer}
-              >
-                Submit
-              </button>
-            </div>
-          </div>
 
-          {/* XP and Leaderboard Card */}
-          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
-            <div className="mb-6">
-              <h3 className="text-lg font-medium mb-2">XP Level</h3>
-              <div className="w-full bg-gray-200 rounded-full h-4">
-                <div
-                  className="bg-emerald-500 h-4 rounded-full transition-all duration-500"
-                  style={{ width: `${xpLevel}%` }}
-                ></div>
-              </div>
-              <div className="text-right text-sm text-gray-500 mt-1">{Math.round(xpLevel)}/100</div>
-            </div>
-
-            <div>
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-medium">Leaderboard</h3>
-                <span
-                  className="text-sm text-blue-500 cursor-pointer hover:underline"
-                  onClick={() => navigate('/game')}
-                >
-                  See all
-                </span>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center">
-                    <div className="bg-yellow-400 rounded-full w-8 h-8 flex items-center justify-center text-white font-bold mr-3">
-                      1
-                    </div>
-                    <div className="bg-green-100 rounded-full w-8 h-8 flex items-center justify-center mr-2">
-                      <User size={16} className="text-green-700" />
-                    </div>
-                    <span>Team Alpha</span>
-                  </div>
-                  <span className="font-bold">1280</span>
-                </div>
+                {answered && (
+                  <p className={`text-lg font-semibold mb-4 ${isCorrect ? 'text-emerald-600' : 'text-red-500'}`}>
+                    {isCorrect ? '🎉 Correct! +50 XP' : '❌ Not quite. Try again tomorrow!'}
+                  </p>
+                )}
 
                 <div className="flex justify-between items-center">
                   <div className="flex items-center">
-                    <div className="bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center text-gray-700 font-bold mr-3">
-                      2
+                    <Star className="fill-yellow-500 text-yellow-500 mr-2" size={28} />
+                    <div>
+                      <span className="text-sm text-gray-500">Earn</span>
+                      <p className="font-bold text-lg">50 XP</p>
                     </div>
-                    <div className="bg-blue-100 rounded-full w-8 h-8 flex items-center justify-center mr-2">
-                      <User size={16} className="text-blue-700" />
-                    </div>
-                    <span>Team Beta</span>
                   </div>
-                  <span className="font-bold">1150</span>
-                </div>
-
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center">
-                    <div className="bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center text-gray-700 font-bold mr-3">
-                      3
-                    </div>
-                    <div className="bg-red-100 rounded-full w-8 h-8 flex items-center justify-center mr-2">
-                      <User size={16} className="text-red-700" />
-                    </div>
-                    <span>Team Up</span>
-                  </div>
-                  <span className="font-bold">950</span>
-                </div>
-
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center">
-                    <div className="bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center text-gray-700 font-bold mr-3">
-                      4
-                    </div>
-                    <div className="bg-pink-100 rounded-full w-8 h-8 flex items-center justify-center mr-2">
-                      <User size={16} className="text-pink-700" />
-                    </div>
-                    <span>Team Plus</span>
-                  </div>
-                  <span className="font-bold">820</span>
+                  {!answered && (
+                    <button
+                      onClick={handleSubmitAnswer}
+                      disabled={selectedAnswer === null}
+                      className="bg-emerald-500 text-white px-8 py-3 rounded-lg hover:bg-emerald-600 disabled:opacity-50 text-lg font-semibold"
+                    >
+                      Submit
+                    </button>
+                  )}
                 </div>
               </div>
-            </div>
-          </div>
 
-          {/* Financial Crossword - Interactive */}
-          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 col-span-1 md:col-span-2">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">Financial Crossword</h2>
-              {showCrosswordResult && (
-                <div className={`px-4 py-2 rounded-lg font-semibold ${crosswordComplete ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
-                  {crosswordComplete ? 'Perfect! All correct!' : `${correctCount} letters correct`}
+              {/* XP and Learning Path */}
+              <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+                <div className="mb-6">
+                  <h3 className="text-xl font-bold mb-2">XP Level</h3>
+                  <div className="w-full bg-gray-200 rounded-full h-5">
+                    <div
+                      className="bg-emerald-500 h-5 rounded-full transition-all duration-500"
+                      style={{ width: `${xpLevel}%` }}
+                    ></div>
+                  </div>
+                  <div className="text-right text-lg text-gray-500 mt-1">{Math.round(xpLevel)}/100</div>
                 </div>
-              )}
-            </div>
 
-            <div className="flex flex-col lg:flex-row gap-6">
-              {/* Crossword Grid */}
-              <div className="flex-shrink-0">
-                <p className="text-gray-600 mb-3 text-sm">Click a cell and type. Use arrow keys or Tab to navigate.</p>
-                <div
-                  className="inline-grid gap-0 border-2 border-gray-800"
-                  style={{ gridTemplateColumns: `repeat(${GRID[0].length}, 40px)` }}
-                >
-                  {GRID.map((row, rowIdx) => (
-                    row.map((cell, colIdx) => {
-                      const key = `${rowIdx}-${colIdx}`;
-                      const highlight = getCellHighlight(rowIdx, colIdx);
+                <div>
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-xl font-bold">Learning Path</h3>
+                    <button onClick={() => navigate('/game')} className="text-blue-500 hover:underline text-lg">
+                      View all →
+                    </button>
+                  </div>
 
-                      if (cell.isBlack) {
+                  <div className="space-y-2">
+                    {LEARNING_MODULES.slice(0, 4).map((mod, idx) => {
+                      const status = getModuleStatus(mod.id, idx);
+                      return (
+                        <button
+                          key={mod.id}
+                          onClick={() => status !== 'locked' && navigate(mod.route)}
+                          disabled={status === 'locked'}
+                          className={`w-full flex items-center gap-3 p-3 rounded-lg text-left ${
+                            status === 'completed' ? 'bg-emerald-50 border-2 border-emerald-300' :
+                            status === 'locked' ? 'bg-gray-100 opacity-60 cursor-not-allowed' :
+                            'bg-gray-50 hover:bg-blue-50 border-2 border-transparent hover:border-blue-200'
+                          }`}
+                        >
+                          <span className="text-2xl">{mod.icon}</span>
+                          <span className="flex-1 text-lg font-medium">{mod.title}</span>
+                          {status === 'completed' ? (
+                            <Check size={20} className="text-emerald-600" />
+                          ) : status === 'locked' ? (
+                            <Lock size={18} className="text-gray-400" />
+                          ) : (
+                            <Play size={18} className="text-blue-500" fill="currentColor" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Financial Crossword */}
+              <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 md:col-span-2">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-2xl font-bold">Financial Crossword</h2>
+                  {crosswordChecked && (
+                    <span className={`px-4 py-2 rounded-lg text-lg font-semibold ${correctCount === 37 ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                      {correctCount}/37 correct
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex gap-8">
+                  {/* Grid */}
+                  <div className="flex-shrink-0">
+                    <div className="inline-grid gap-0 border-2 border-gray-800" style={{ gridTemplateColumns: `repeat(${GRID[0].length}, 44px)` }}>
+                      {GRID.map((row, ri) => row.map((cell, ci) => {
+                        const key = `${ri}-${ci}`;
+                        if (cell.isBlack) return <div key={key} className="w-11 h-11 bg-gray-900" />;
+
+                        const highlight = getCellHighlight(ri, ci);
+                        const isCorrectCell = crosswordChecked && userInputs[key]?.toUpperCase() === cell.letter;
+                        const isWrongCell = crosswordChecked && userInputs[key] && userInputs[key]?.toUpperCase() !== cell.letter;
+
                         return (
                           <div
                             key={key}
-                            className="w-10 h-10 bg-gray-900"
-                          />
+                            onClick={() => handleCellClick(ri, ci)}
+                            className={`w-11 h-11 border border-gray-400 relative cursor-pointer ${highlight}`}
+                          >
+                            {cell.number && (
+                              <span className="absolute top-0 left-1 text-xs font-bold text-gray-600">{cell.number}</span>
+                            )}
+                            <input
+                              ref={el => { inputRefs.current[key] = el; }}
+                              type="text"
+                              value={userInputs[key] || ''}
+                              onChange={e => handleCellInput(ri, ci, e.target.value)}
+                              onKeyDown={e => handleKeyDown(e, ri, ci)}
+                              onFocus={() => setSelectedCell({ row: ri, col: ci })}
+                              maxLength={1}
+                              className={`w-full h-full text-center text-lg font-bold uppercase bg-transparent outline-none cursor-pointer ${
+                                isCorrectCell ? 'text-green-600' : isWrongCell ? 'text-red-500' : 'text-gray-900'
+                              }`}
+                            />
+                          </div>
                         );
-                      }
-
-                      return (
-                        <div
-                          key={key}
-                          className={`w-10 h-10 border border-gray-400 relative cursor-pointer ${highlight}`}
-                          onClick={() => handleCellClick(rowIdx, colIdx)}
-                        >
-                          {cell.number && (
-                            <span className="absolute top-0 left-0.5 text-[10px] font-bold text-gray-600">
-                              {cell.number}
-                            </span>
-                          )}
-                          <input
-                            ref={el => { inputRefs.current[key] = el; }}
-                            type="text"
-                            value={userInputs[key] || ''}
-                            onChange={(e) => handleCellInput(rowIdx, colIdx, e.target.value)}
-                            onKeyDown={(e) => handleKeyDown(e, rowIdx, colIdx)}
-                            onFocus={() => {
-                              setSelectedCell({ row: rowIdx, col: colIdx });
-                            }}
-                            className={`w-full h-full text-center font-bold text-lg uppercase bg-transparent outline-none cursor-pointer ${
-                              showCrosswordResult
-                                ? userInputs[key]?.toUpperCase() === cell.letter
-                                  ? 'text-green-600'
-                                  : userInputs[key]
-                                    ? 'text-red-600'
-                                    : 'text-gray-900'
-                                : 'text-gray-900'
-                            }`}
-                            maxLength={1}
-                          />
-                        </div>
-                      );
-                    })
-                  ))}
-                </div>
-              </div>
-
-              {/* Clues */}
-              <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <h3 className="font-bold text-blue-800 mb-3 text-lg">Across</h3>
-                  <ul className="space-y-2">
-                    {acrossClues.map(clue => (
-                      <li key={clue.number} className="text-sm">
-                        <span className="font-bold text-blue-700">{clue.number}.</span>{' '}
-                        <span className="text-gray-700">{clue.clue}</span>
-                        <span className="text-gray-400 ml-1">({clue.answer.length})</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="bg-emerald-50 p-4 rounded-lg">
-                  <h3 className="font-bold text-emerald-800 mb-3 text-lg">Down</h3>
-                  <ul className="space-y-2">
-                    {downClues.map(clue => (
-                      <li key={clue.number} className="text-sm">
-                        <span className="font-bold text-emerald-700">{clue.number}.</span>{' '}
-                        <span className="text-gray-700">{clue.clue}</span>
-                        <span className="text-gray-400 ml-1">({clue.answer.length})</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex justify-between items-center mt-6 pt-4 border-t border-gray-200">
-              <div className="flex">
-                <div className="text-yellow-500 mr-2">
-                  <Star className="fill-yellow-500" size={24} />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-xs text-gray-500">Earn up to</span>
-                  <span className="font-bold">100 XP</span>
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <button
-                  onClick={resetCrossword}
-                  className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition"
-                >
-                  Reset
-                </button>
-                <button
-                  onClick={checkCrossword}
-                  className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 transition"
-                >
-                  Check Answers
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Learning Path with Real Modules */}
-          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 col-span-1 md:col-span-2">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">Learning Path: Financial Literacy</h2>
-              <button
-                onClick={() => navigate('/game')}
-                className="text-sm text-blue-500 hover:underline"
-              >
-                View Full Roadmap
-              </button>
-            </div>
-
-            <div className="relative">
-              <div className="absolute top-0 left-8 bottom-0 w-1 bg-blue-200"></div>
-
-              {LEARNING_MODULES.map((module, index) => {
-                const status = getModuleStatus(module.id, index);
-
-                return (
-                  <div
-                    key={module.id}
-                    className={`mb-6 relative last:mb-0 ${status !== 'locked' ? 'cursor-pointer' : 'cursor-not-allowed'}`}
-                    onClick={() => handleModuleClick(module, index)}
-                  >
-                    {/* Status indicator */}
-                    <div className={`absolute left-6 -translate-x-1/2 w-6 h-6 rounded-full flex items-center justify-center z-10 ${
-                      status === 'completed' ? 'bg-green-500' :
-                      status === 'in_progress' ? 'bg-blue-500' :
-                      status === 'next' ? 'bg-purple-500' :
-                      'bg-gray-300'
-                    }`}>
-                      {status === 'completed' ? (
-                        <Check className="text-white" size={14} />
-                      ) : status === 'in_progress' ? (
-                        <div className="animate-pulse w-2.5 h-2.5 bg-white rounded-full"></div>
-                      ) : status === 'next' ? (
-                        <Play className="text-white" size={12} fill="white" />
-                      ) : (
-                        <Lock className="text-gray-500" size={12} />
-                      )}
+                      }))}
                     </div>
 
-                    {/* Module content */}
-                    <div className={`ml-12 p-3 rounded-lg transition-colors ${
-                      status !== 'locked' ? 'hover:bg-gray-50' : 'opacity-60'
-                    }`}>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xl">{module.icon}</span>
-                        <div className="flex-1">
-                          <h3 className="font-bold text-gray-800">{module.title}</h3>
-                          <p className="text-gray-500 text-sm">{module.subtitle}</p>
-                        </div>
+                    <div className="flex gap-3 mt-4">
+                      <button onClick={checkCrossword} className="px-6 py-3 bg-blue-500 text-white text-lg font-semibold rounded-lg hover:bg-blue-600">
+                        Check Answers
+                      </button>
+                      <button onClick={resetCrossword} className="px-6 py-3 bg-gray-200 text-gray-700 text-lg font-semibold rounded-lg hover:bg-gray-300">
+                        Reset
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Clues */}
+                  <div className="flex-1 grid grid-cols-2 gap-8">
+                    <div className="bg-blue-50 p-4 rounded-lg">
+                      <h3 className="font-bold text-blue-800 mb-3 text-xl">Across</h3>
+                      <div className="space-y-2">
+                        {acrossClues.map(c => (
+                          <p key={c.number} className="text-lg">
+                            <span className="font-bold text-blue-700">{c.number}.</span> {c.clue}
+                          </p>
+                        ))}
                       </div>
-                      <p className="text-gray-600 text-sm mt-1">{module.description}</p>
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        <span className={`text-xs px-2 py-1 rounded-full ${
-                          status === 'completed' ? 'bg-green-100 text-green-800' :
-                          status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
-                          status === 'next' ? 'bg-purple-100 text-purple-800' :
-                          'bg-gray-100 text-gray-600'
-                        }`}>
-                          {status === 'completed' ? 'Completed' :
-                           status === 'in_progress' ? 'In Progress' :
-                           status === 'next' ? 'Start Now' :
-                           'Locked'}
-                        </span>
-                        <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">
-                          +{module.points} points
-                        </span>
+                    </div>
+                    <div className="bg-emerald-50 p-4 rounded-lg">
+                      <h3 className="font-bold text-emerald-800 mb-3 text-xl">Down</h3>
+                      <div className="space-y-2">
+                        {downClues.map(c => (
+                          <p key={c.number} className="text-lg">
+                            <span className="font-bold text-emerald-700">{c.number}.</span> {c.clue}
+                          </p>
+                        ))}
                       </div>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Quick Financial Tools Card */}
-          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 col-span-1 md:col-span-2">
-            <h2 className="text-xl font-bold mb-4">Quick Financial Tools</h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-                <h3 className="font-bold text-blue-700 mb-2">Compound Interest Calculator</h3>
-                <p className="text-sm text-gray-600 mb-3">See how your savings can grow over time with the power of compound interest.</p>
-                <button
-                  onClick={() => navigate('/calculator')}
-                  className="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 transition"
-                >
-                  Calculate
-                </button>
-              </div>
-
-              <div className="bg-purple-50 p-4 rounded-lg border border-purple-100">
-                <h3 className="font-bold text-purple-700 mb-2">Budget Planner</h3>
-                <p className="text-sm text-gray-600 mb-3">Create a personalized budget plan based on your income and expenses.</p>
-                <button
-                  onClick={() => navigate('/50-30-20')}
-                  className="w-full bg-purple-500 text-white py-2 rounded-md hover:bg-purple-600 transition"
-                >
-                  Plan Budget
-                </button>
-              </div>
-
-              <div className="bg-amber-50 p-4 rounded-lg border border-amber-100">
-                <h3 className="font-bold text-amber-700 mb-2">Debt Repayment Strategy</h3>
-                <p className="text-sm text-gray-600 mb-3">Find the most efficient way to pay off your debts and become debt-free.</p>
-                <button
-                  onClick={() => navigate('/debt-management')}
-                  className="w-full bg-amber-500 text-white py-2 rounded-md hover:bg-amber-600 transition"
-                >
-                  Create Strategy
-                </button>
+                </div>
               </div>
             </div>
-          </div>
-
-          {/* Today's Financial Tip */}
-          <div className="bg-gradient-to-r from-blue-500 to-emerald-500 rounded-lg p-6 shadow-sm text-white col-span-1 md:col-span-2">
-            <div className="flex items-center mb-4">
-              <div className="mr-4 bg-white bg-opacity-20 p-3 rounded-full">
-                <Flame size={28} className="text-white" />
+          ) : (
+            /* Profile Section */
+            <div className="max-w-4xl mx-auto">
+              <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 mb-6">
+                <div className="flex items-center gap-6">
+                  <div className="w-20 h-20 bg-blue-500 rounded-full flex items-center justify-center text-white text-3xl font-bold">
+                    {user.displayName?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase()}
+                  </div>
+                  <div>
+                    <h1 className="text-2xl font-bold">{user.displayName || user.email?.split('@')[0]}</h1>
+                    <p className="text-gray-500 text-lg">{user.email}</p>
+                    <span className="inline-block mt-2 px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-lg font-medium">
+                      {completedModules === totalModules ? '🏆 Certified' : '📚 Student'}
+                    </span>
+                  </div>
+                </div>
               </div>
-              <h2 className="text-xl font-bold">Today's Financial Tip</h2>
-            </div>
 
-            <p className="text-lg mb-4">Understanding compound interest can help you grow your savings!</p>
-            <p className="text-white text-opacity-90 mb-6">Compound interest is when you earn interest not just on your initial investment, but also on the interest you've already earned. This creates a snowball effect that can significantly grow your money over time.</p>
+              <div className="grid grid-cols-4 gap-4 mb-6">
+                <div className="bg-white rounded-lg p-6 shadow-sm border text-center">
+                  <p className="text-3xl font-bold text-amber-600">{totalXP}</p>
+                  <p className="text-gray-500 text-lg">Total XP</p>
+                </div>
+                <div className="bg-white rounded-lg p-6 shadow-sm border text-center">
+                  <p className="text-3xl font-bold text-emerald-600">{completedModules}</p>
+                  <p className="text-gray-500 text-lg">Modules Done</p>
+                </div>
+                <div className="bg-white rounded-lg p-6 shadow-sm border text-center">
+                  <p className="text-3xl font-bold text-orange-500">{streak}</p>
+                  <p className="text-gray-500 text-lg">Day Streak</p>
+                </div>
+                <div className="bg-white rounded-lg p-6 shadow-sm border text-center">
+                  <p className="text-3xl font-bold text-blue-600">{Math.round((completedModules / totalModules) * 100)}%</p>
+                  <p className="text-gray-500 text-lg">Progress</p>
+                </div>
+              </div>
 
-            <div className="bg-white bg-opacity-10 p-4 rounded-md">
-              <h3 className="font-bold mb-2">Example:</h3>
-              <p>If you invest $1,000 with 5% annual interest compounded yearly:</p>
-              <ul className="list-disc pl-6 mt-2 space-y-1">
-                <li>After 1 year: $1,050</li>
-                <li>After 10 years: $1,629</li>
-                <li>After 30 years: $4,322</li>
-              </ul>
+              <div className="bg-white rounded-lg p-6 shadow-sm border">
+                <h2 className="text-2xl font-bold mb-4">Module Progress</h2>
+                <div className="space-y-3">
+                  {LEARNING_MODULES.map((mod, idx) => {
+                    const score = getModuleScore(mod.id as Parameters<typeof getModuleScore>[0]);
+                    const status = getModuleStatus(mod.id, idx);
+                    return (
+                      <div key={mod.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+                        <span className="text-2xl">{mod.icon}</span>
+                        <div className="flex-1">
+                          <p className="font-semibold text-lg">{mod.title}</p>
+                          <p className="text-gray-500">{mod.subtitle}</p>
+                        </div>
+                        {score ? (
+                          <span className="text-lg font-bold">{score.score}/{score.maxScore}</span>
+                        ) : (
+                          <span className="text-gray-400 text-lg">{status === 'locked' ? 'Locked' : 'Not started'}</span>
+                        )}
+                        {status === 'completed' && <Check size={24} className="text-emerald-600" />}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
-
-            <div className="mt-6 flex justify-end">
-              <button
-                onClick={() => navigate('/game')}
-                className="bg-white text-blue-600 px-4 py-2 rounded-md hover:bg-blue-50 transition"
-              >
-                Learn More
-              </button>
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

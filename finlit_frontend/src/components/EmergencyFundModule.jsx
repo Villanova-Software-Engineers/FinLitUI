@@ -6,7 +6,7 @@ import { useModuleScore, MODULES } from '../hooks/useModuleScore';
 
 const EmergencyFundModule = () => {
   const navigate = useNavigate();
-  const { isModulePassed } = useModuleScore();
+  const { isModulePassed, saveScore } = useModuleScore();
 
   // Check if module is already passed
   const modulePassed = isModulePassed(MODULES.EMERGENCY_FUND?.id);
@@ -334,6 +334,12 @@ const EmergencyFundModule = () => {
       ...monthlyExpenses,
       [category]: value
     });
+  };
+
+  // Handle module completion
+  const handleComplete = async () => {
+    await saveScore(MODULES.EMERGENCY_FUND?.id || 'emergency-fund', 100, 100);
+    navigate('/game');
   };
 
   const expenseCategories = [
@@ -1216,7 +1222,7 @@ const EmergencyFundModule = () => {
                   Previous
                 </button>
                 <button
-                  onClick={() => navigate('/game')}
+                  onClick={handleComplete}
                   className="px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition"
                 >
                   Complete Module
