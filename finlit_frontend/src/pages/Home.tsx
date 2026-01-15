@@ -248,7 +248,6 @@ const FinLitApp: React.FC = () => {
             <span className="text-blue-800 font-semibold text-lg">{user.displayName || user.email}</span>
           </div>
 
-          <img src="pwc.svg" alt="PwC Logo" className="w-10 h-10 object-contain" />
 
           <div
             className="relative cursor-pointer"
