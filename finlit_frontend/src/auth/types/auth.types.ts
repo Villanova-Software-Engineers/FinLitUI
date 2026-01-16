@@ -75,6 +75,7 @@ export interface StudentProgress {
   moduleScores: ModuleScore[];
   achievements: string[];
   lastActivityAt: Date;
+  lastStreakDate?: string; // YYYY-MM-DD format for tracking daily streak
 }
 
 export interface SignInRequest {

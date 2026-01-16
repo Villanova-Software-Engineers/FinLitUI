@@ -332,6 +332,7 @@ export async function getStudentProgress(userId: string): Promise<StudentProgres
     id: snapshot.id,
     ...data,
     lastActivityAt: (data.lastActivityAt as Timestamp)?.toDate() || new Date(),
+    lastStreakDate: data.lastStreakDate || undefined,
     moduleScores: data.moduleScores?.map((score: ModuleScore & { attemptHistory?: ModuleAttempt[] }) => ({
       ...score,
       completedAt: (score.completedAt as unknown as Timestamp)?.toDate() || new Date(),
@@ -414,12 +415,69 @@ export async function updateModuleScore(
   return { passed: isPassed, attemptNumber: newAttempt.attemptNumber };
 }
 
-export async function updateStreak(userId: string, streak: number): Promise<void> {
+export async function updateStreak(userId: string, streak: number, lastStreakDate?: string): Promise<void> {
   const progressRef = doc(db, STUDENT_PROGRESS, userId);
-  await updateDoc(progressRef, {
+  const updateData: Record<string, unknown> = {
     streak,
     lastActivityAt: serverTimestamp(),
+  };
+  if (lastStreakDate) {
+    updateData.lastStreakDate = lastStreakDate;
+  }
+  await updateDoc(progressRef, updateData);
+}
+
+/**
+ * Calculate and update streak based on daily activity
+ * Returns the new streak value and whether it was incremented today
+ */
+export async function calculateDailyStreak(userId: string): Promise<{ streak: number; incrementedToday: boolean }> {
+  const progressRef = doc(db, STUDENT_PROGRESS, userId);
+  const snapshot = await getDoc(progressRef);
+
+  if (!snapshot.exists()) {
+    return { streak: 0, incrementedToday: false };
+  }
+
+  const data = snapshot.data();
+  const currentStreak = data.streak || 0;
+  const lastStreakDate = data.lastStreakDate;
+
+  // Get today's date in YYYY-MM-DD format (local time)
+  const today = new Date();
+  const todayStr = today.toISOString().split('T')[0];
+
+  // Get yesterday's date
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+  // If already incremented today, return current streak
+  if (lastStreakDate === todayStr) {
+    return { streak: currentStreak, incrementedToday: false };
+  }
+
+  // Calculate new streak
+  let newStreak: number;
+  if (lastStreakDate === yesterdayStr) {
+    // Consecutive day - increment streak
+    newStreak = currentStreak + 1;
+  } else if (!lastStreakDate) {
+    // First time - start streak at 1
+    newStreak = 1;
+  } else {
+    // Streak broken - reset to 1
+    newStreak = 1;
+  }
+
+  // Update streak in database
+  await updateDoc(progressRef, {
+    streak: newStreak,
+    lastStreakDate: todayStr,
+    lastActivityAt: serverTimestamp(),
   });
+
+  return { streak: newStreak, incrementedToday: true };
 }
 
 export async function addAchievement(userId: string, achievement: string): Promise<void> {

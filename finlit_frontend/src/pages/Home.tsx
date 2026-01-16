@@ -21,18 +21,31 @@ interface ClueData {
 }
 
 const CROSSWORD_CLUES: ClueData[] = [
-  { number: 1, clue: "Money set aside for future", answer: "SAVINGS", startRow: 0, startCol: 0, direction: 'across' },
-  { number: 4, clue: "Earnings on deposits", answer: "INTEREST", startRow: 2, startCol: 0, direction: 'across' },
-  { number: 6, clue: "Spending plan", answer: "BUDGET", startRow: 4, startCol: 1, direction: 'across' },
-  { number: 7, clue: "Company ownership share", answer: "STOCK", startRow: 6, startCol: 0, direction: 'across' },
-  { number: 2, clue: "Money owed", answer: "DEBT", startRow: 0, startCol: 2, direction: 'down' },
-  { number: 3, clue: "Risk protection", answer: "INSURANCE", startRow: 0, startCol: 5, direction: 'down' },
-  { number: 5, clue: "Yearly rate", answer: "APR", startRow: 2, startCol: 6, direction: 'down' },
+  // Across
+  { number: 1, clue: "Money paid for borrowing money", answer: "INTEREST", startRow: 0, startCol: 0, direction: 'across' },
+  { number: 4, clue: "Strategy for financial success", answer: "PLAN", startRow: 2, startCol: 3, direction: 'across' },
+  { number: 6, clue: "Fixed period for a loan or investment", answer: "TERM", startRow: 3, startCol: 7, direction: 'across' },
+  { number: 7, clue: "Money available for a purpose", answer: "FUNDS", startRow: 4, startCol: 1, direction: 'across' },
+  { number: 9, clue: "Value of ownership in an asset", answer: "EQUITY", startRow: 5, startCol: 5, direction: 'across' },
+  { number: 10, clue: "To put money into a venture", answer: "INVEST", startRow: 6, startCol: 0, direction: 'across' },
+  { number: 12, clue: "To be in debt", answer: "OWE", startRow: 8, startCol: 4, direction: 'across' },
+  { number: 13, clue: "To give money for goods or services", answer: "PAY", startRow: 8, startCol: 8, direction: 'across' },
+  { number: 14, clue: "A payment for a service", answer: "FEE", startRow: 10, startCol: 0, direction: 'across' },
+  { number: 15, clue: "Mandatory contributions to state revenue", answer: "TAXES", startRow: 10, startCol: 6, direction: 'across' },
+  // Down
+  { number: 2, clue: "Money spent on goods or services", answer: "EXPENSE", startRow: 0, startCol: 3, direction: 'down' },
+  { number: 3, clue: "Ability to borrow money with a promise to repay", answer: "CREDIT", startRow: 0, startCol: 8, direction: 'down' },
+  { number: 5, clue: "Something of value owned", answer: "ASSET", startRow: 2, startCol: 5, direction: 'down' },
+  { number: 8, clue: "Potential for loss in an investment", answer: "RISK", startRow: 5, startCol: 0, direction: 'down' },
+  { number: 11, clue: "Worth of an asset", answer: "VALUE", startRow: 6, startCol: 2, direction: 'down' },
+  { number: 16, clue: "Type of security representing ownership", answer: "STOCK", startRow: 6, startCol: 4, direction: 'down' },
+  { number: 17, clue: "Money owed to another party", answer: "DEBT", startRow: 6, startCol: 6, direction: 'down' },
+  { number: 18, clue: "Percentage of interest", answer: "RATE", startRow: 7, startCol: 9, direction: 'down' }
 ];
 
 const generateGrid = (): CrosswordCell[][] => {
-  const rows = 9;
-  const cols = 9;
+  const rows = 11;
+  const cols = 11;
   const grid: CrosswordCell[][] = Array(rows).fill(null).map(() =>
     Array(cols).fill(null).map(() => ({ letter: '', isBlack: true }))
   );
@@ -97,7 +110,7 @@ const LEARNING_MODULES = [
 const FinLitApp: React.FC = () => {
   const navigate = useNavigate();
   const { user, signOut, isLoading: authLoading } = useAuthContext();
-  const { progress, isModulePassed, getModuleScore } = useModuleScore();
+  const { progress, isModulePassed, getModuleScore, checkAndUpdateDailyStreak, refreshProgress } = useModuleScore();
 
   const [activeSection, setActiveSection] = useState<'home' | 'profile'>('home');
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
@@ -107,6 +120,7 @@ const FinLitApp: React.FC = () => {
   const [isCorrect, setIsCorrect] = useState(false);
   const [showStreakAnimation, setShowStreakAnimation] = useState(false);
   const [showCertTooltip, setShowCertTooltip] = useState(false);
+  const [streakChecked, setStreakChecked] = useState(false);
 
   // Crossword state
   const [userInputs, setUserInputs] = useState<{ [key: string]: string }>({});
@@ -218,15 +232,31 @@ const FinLitApp: React.FC = () => {
 
   const triggerStreakAnimation = () => {
     setShowStreakAnimation(true);
-    setTimeout(() => setShowStreakAnimation(false), 2000);
+    setTimeout(() => setShowStreakAnimation(false), 3000);
   };
+
+  // Check and update daily streak on mount
+  useEffect(() => {
+    const checkStreak = async () => {
+      if (user && !streakChecked) {
+        setStreakChecked(true);
+        const result = await checkAndUpdateDailyStreak();
+        if (result.incrementedToday) {
+          triggerStreakAnimation();
+          // Refresh progress to get updated data
+          await refreshProgress();
+        }
+      }
+    };
+    checkStreak();
+  }, [user, streakChecked, checkAndUpdateDailyStreak, refreshProgress]);
 
   const handleSubmitAnswer = () => {
     if (selectedAnswer === null || answered) return;
     const correct = selectedAnswer === dailyQuestion.correct;
     setIsCorrect(correct);
     setAnswered(true);
-    if (correct) triggerStreakAnimation();
+    // Don't trigger streak animation here - streak is calculated on page load based on daily activity
   };
 
   useEffect(() => {
@@ -502,11 +532,14 @@ const FinLitApp: React.FC = () => {
               <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 md:col-span-2">
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-2xl font-bold">Financial Crossword</h2>
-                  {crosswordChecked && (
-                    <span className={`px-4 py-2 rounded-lg text-lg font-semibold ${correctCount === 37 ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
-                      {correctCount}/37 correct
-                    </span>
-                  )}
+                  {crosswordChecked && (() => {
+                    const totalCells = GRID.flat().filter(c => !c.isBlack).length;
+                    return (
+                      <span className={`px-4 py-2 rounded-lg text-lg font-semibold ${correctCount === totalCells ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                        {correctCount}/{totalCells} correct
+                      </span>
+                    );
+                  })()}
                 </div>
 
                 <div className="flex gap-8">

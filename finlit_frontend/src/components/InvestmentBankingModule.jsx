@@ -5,6 +5,88 @@ import { useNavigate } from 'react-router-dom';
 import TrueFalseCard from '../TrueFalse/TrueFalseCard';
 import { useModuleScore, MODULES } from '../hooks/useModuleScore';
 
+// Analysis Game Component - tracks user selection properly
+const AnalysisGame = ({ activity, onComplete }) => {
+  const [selectedRating, setSelectedRating] = useState(null);
+  const [showResult, setShowResult] = useState(false);
+
+  const handleSelect = (index, option) => {
+    if (showResult) return;
+    setSelectedRating(index);
+    setShowResult(true);
+    if (option.correct) {
+      onComplete();
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-slate-50 rounded-2xl p-6 border border-slate-200">
+        <h3 className="font-semibold text-slate-800 mb-4">Company Analysis: {activity.company}</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {Object.entries(activity.data).map(([key, value]) => (
+            <div key={key} className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
+              <div className="font-medium text-slate-500 capitalize text-sm">{key.replace(/([A-Z])/g, ' $1')}:</div>
+              <div className="text-lg font-semibold text-slate-800">{value}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="text-center">
+        <p className="font-semibold text-slate-800 mb-4">What is your investment recommendation?</p>
+        <div className="flex justify-center gap-4 flex-wrap">
+          {activity.options.map((option, index) => (
+            <motion.button
+              key={index}
+              onClick={() => handleSelect(index, option)}
+              disabled={showResult}
+              className={`px-6 py-3 rounded-xl border-2 font-semibold transition-all duration-300 ${
+                showResult
+                  ? selectedRating === index
+                    ? option.correct
+                      ? 'border-emerald-400 bg-emerald-50 text-emerald-700 shadow-lg shadow-emerald-500/15'
+                      : 'border-red-400 bg-red-50 text-red-700 shadow-lg shadow-red-500/15'
+                    : option.correct
+                      ? 'border-emerald-400 bg-emerald-50 text-emerald-700'
+                      : 'border-slate-200 bg-white text-slate-400'
+                  : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-300'
+              }`}
+              whileHover={!showResult ? { scale: 1.02, y: -2 } : {}}
+              whileTap={{ scale: 0.98 }}
+            >
+              {option.rating}
+            </motion.button>
+          ))}
+        </div>
+
+        {showResult && (
+          <motion.div
+            className={`mt-6 p-4 rounded-xl ${
+              activity.options[selectedRating]?.correct
+                ? 'bg-emerald-50 border border-emerald-300'
+                : 'bg-red-50 border border-red-300'
+            }`}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <p className={`font-semibold ${
+              activity.options[selectedRating]?.correct ? 'text-emerald-700' : 'text-red-700'
+            }`}>
+              {activity.options[selectedRating]?.correct ? '✅ Correct!' : '❌ Incorrect'}
+            </p>
+            <p className={`text-sm mt-1 ${
+              activity.options[selectedRating]?.correct ? 'text-emerald-600' : 'text-red-600'
+            }`}>
+              {activity.options[selectedRating]?.explanation}
+            </p>
+          </motion.div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const InvestmentBankingModule = () => {
   const navigate = useNavigate();
   const { saveScore, resetModule, isModulePassed, isLoading: progressLoading } = useModuleScore();
@@ -25,6 +107,9 @@ const InvestmentBankingModule = () => {
   const [saveResult, setSaveResult] = useState(null);
   const [isResetting, setIsResetting] = useState(false);
   
+  // Achievement notification state
+  const [visibleAchievement, setVisibleAchievement] = useState(null);
+
   // Game states
   const [selectedMatches, setSelectedMatches] = useState({});
   const [matchedPairs, setMatchedPairs] = useState([]);
@@ -270,7 +355,11 @@ const InvestmentBankingModule = () => {
       setStreak(streak + 1);
       
       if (streak === 2) {
-        setAchievements([...achievements, { id: 'streak3', name: 'Learning Streak!', desc: '3 lessons completed', emoji: '🔥' }]);
+        const newAchievement = { id: 'streak3', name: 'Learning Streak!', desc: '3 lessons completed', emoji: '🔥' };
+        setAchievements([...achievements, newAchievement]);
+        setVisibleAchievement(newAchievement);
+        // Auto-dismiss achievement notification after 3 seconds
+        setTimeout(() => setVisibleAchievement(null), 3000);
       }
     }
   };
@@ -445,24 +534,22 @@ const InvestmentBankingModule = () => {
 
       {/* Achievement Notifications */}
       <AnimatePresence>
-        {achievements.length > 0 && (
+        {visibleAchievement && (
           <motion.div
             className="fixed top-4 right-4 z-50"
             initial={{ opacity: 0, x: 100 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 100 }}
           >
-            {achievements.slice(-1).map(achievement => (
-              <div key={achievement.id} className="bg-white backdrop-blur-xl border border-emerald-200 rounded-2xl p-4 shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">{achievement.emoji}</span>
-                  <div>
-                    <div className="font-semibold text-slate-800">{achievement.name}</div>
-                    <div className="text-sm text-slate-500">{achievement.desc}</div>
-                  </div>
+            <div className="bg-white backdrop-blur-xl border border-emerald-200 rounded-2xl p-4 shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">{visibleAchievement.emoji}</span>
+                <div>
+                  <div className="font-semibold text-slate-800">{visibleAchievement.name}</div>
+                  <div className="text-sm text-slate-500">{visibleAchievement.desc}</div>
                 </div>
               </div>
-            ))}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -879,39 +966,10 @@ const InvestmentBankingModule = () => {
 
               {/* Analysis Game - Premium */}
               {practiceActivities[currentActivity].type === 'analysis' && (
-                <div className="space-y-6">
-                  <div className="bg-slate-50 rounded-2xl p-6 border border-slate-200">
-                    <h3 className="font-semibold text-slate-800 mb-4">Company Analysis: {practiceActivities[currentActivity].company}</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {Object.entries(practiceActivities[currentActivity].data).map(([key, value]) => (
-                        <div key={key} className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
-                          <div className="font-medium text-slate-500 capitalize text-sm">{key.replace(/([A-Z])/g, ' $1')}:</div>
-                          <div className="text-lg font-semibold text-slate-800">{value}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="text-center">
-                    <p className="font-semibold text-slate-800 mb-4">What is your investment recommendation?</p>
-                    <div className="flex justify-center gap-4 flex-wrap">
-                      {practiceActivities[currentActivity].options.map((option, index) => (
-                        <motion.button
-                          key={index}
-                          className={`px-6 py-3 rounded-xl border-2 font-semibold transition-all duration-300 ${
-                            option.correct
-                              ? 'border-emerald-400 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 shadow-lg shadow-emerald-500/15'
-                              : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-300'
-                          }`}
-                          whileHover={{ scale: 1.02, y: -2 }}
-                          whileTap={{ scale: 0.98 }}
-                        >
-                          {option.rating}
-                        </motion.button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+                <AnalysisGame
+                  activity={practiceActivities[currentActivity]}
+                  onComplete={() => setTotalXP(totalXP + 100)}
+                />
               )}
             </div>
           </motion.div>
