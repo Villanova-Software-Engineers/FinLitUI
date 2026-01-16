@@ -53,35 +53,6 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
     }
   }, [formData.password, getPasswordStrength]);
 
-  // Validate class code with debounce
-  useEffect(() => {
-    const validateCode = async () => {
-      if (formData.classCode && formData.classCode.length >= 3) {
-        setCodeValidation(prev => ({ ...prev, isValidating: true }));
-
-        try {
-          const result = await AuthService.validateClassCode(formData.classCode);
-          setCodeValidation({
-            isValidating: false,
-            result,
-          });
-        } catch (error) {
-          setCodeValidation({
-            isValidating: false,
-            result: { valid: false },
-          });
-        }
-      } else {
-        setCodeValidation({
-          isValidating: false,
-          result: null,
-        });
-      }
-    };
-
-    const debounceTimer = setTimeout(validateCode, 500);
-    return () => clearTimeout(debounceTimer);
-  }, [formData.classCode]);
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -196,10 +167,6 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
       errors.acceptedTerms = 'You must accept the terms and conditions';
     }
 
-    if (!codeValidation.result?.valid) {
-      errors.classCode = 'Invalid class code. Please check with your instructor.';
-    }
-
     setFieldErrors(errors);
     setTouched({
       email: true,
@@ -210,7 +177,26 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
       acceptedTerms: true,
     });
 
-    if (Object.keys(errors).length === 0) {
+    // Only proceed if no validation errors so far
+    if (Object.keys(errors).length > 0) {
+      return;
+    }
+
+    // Validate class code with the server on submit
+    setCodeValidation({ isValidating: true, result: null });
+    try {
+      const result = await AuthService.validateClassCode(formData.classCode);
+      setCodeValidation({ isValidating: false, result });
+
+      if (!result.valid) {
+        setFieldErrors(prev => ({
+          ...prev,
+          classCode: 'Invalid class code. Please check with your instructor.',
+        }));
+        return;
+      }
+
+      // All validations passed, submit the form
       await onSubmit({
         email: formData.email,
         password: formData.password,
@@ -219,6 +205,13 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
         classCode: formData.classCode,
         acceptedTerms: formData.acceptedTerms,
       });
+    } catch (error) {
+      console.error('[SignUpForm] Class code validation error:', error);
+      setCodeValidation({ isValidating: false, result: { valid: false } });
+      setFieldErrors(prev => ({
+        ...prev,
+        classCode: 'Unable to verify class code. Please try again.',
+      }));
     }
   };
 
@@ -291,36 +284,15 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
             value={formData.classCode}
             onChange={(e) => handleInputChange('classCode', e.target.value.toUpperCase())}
             onBlur={() => handleBlur('classCode')}
-            className={`w-full pl-10 pr-12 py-3 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
-              fieldErrors.classCode ? 'border-red-300 bg-red-50' :
-              codeValidation.result?.valid ? 'border-green-300 bg-green-50' :
-              'border-gray-300'
+            className={`w-full pl-10 pr-4 py-3 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
+              fieldErrors.classCode ? 'border-red-300 bg-red-50' : 'border-gray-300'
             }`}
             placeholder="Enter class code from instructor"
             disabled={isLoading}
           />
-          <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-            {codeValidation.isValidating && (
-              <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-            )}
-            {!codeValidation.isValidating && codeValidation.result?.valid && (
-              <CheckCircle className="text-green-500" size={20} />
-            )}
-            {!codeValidation.isValidating && codeValidation.result && !codeValidation.result.valid && (
-              <AlertCircle className="text-red-500" size={20} />
-            )}
-          </div>
         </div>
         {fieldErrors.classCode && (
           <p className="mt-1 text-sm text-red-600">{fieldErrors.classCode}</p>
-        )}
-        {codeValidation.result?.valid && codeValidation.result.codeName && (
-          <div className="mt-1 text-sm text-green-600">
-            <p>Class: {codeValidation.result.codeName}</p>
-            <p className="text-xs text-gray-500">
-              {codeValidation.result.organizationName}
-            </p>
-          </div>
         )}
       </div>
 
@@ -460,13 +432,13 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
 
       <button
         type="submit"
-        disabled={isLoading || Object.keys(fieldErrors).length > 0 || !formData.acceptedTerms || !codeValidation.result?.valid}
+        disabled={isLoading || codeValidation.isValidating || Object.keys(fieldErrors).length > 0 || !formData.acceptedTerms}
         className="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
       >
-        {isLoading ? (
+        {isLoading || codeValidation.isValidating ? (
           <div className="flex items-center justify-center gap-2">
             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            Creating account...
+            {codeValidation.isValidating ? 'Verifying class code...' : 'Creating account...'}
           </div>
         ) : (
           'Create Account'

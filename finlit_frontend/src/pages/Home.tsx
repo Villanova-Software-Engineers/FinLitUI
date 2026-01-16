@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Star, BookOpen, Home, Target, User, Check, Flame, GraduationCap, Loader2, Lock, Play, Zap } from 'lucide-react';
+import { Star, BookOpen, Home, Target, User, Check, Flame, GraduationCap, Loader2, Lock, Play, Zap, Lightbulb, TrendingUp, PiggyBank, Shield, CreditCard, Wallet, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../auth/context/AuthContext';
 import { useModuleScore, MODULES } from '../hooks/useModuleScore';
@@ -21,18 +21,31 @@ interface ClueData {
 }
 
 const CROSSWORD_CLUES: ClueData[] = [
-  { number: 1, clue: "Money set aside for future", answer: "SAVINGS", startRow: 0, startCol: 0, direction: 'across' },
-  { number: 4, clue: "Earnings on deposits", answer: "INTEREST", startRow: 2, startCol: 0, direction: 'across' },
-  { number: 6, clue: "Spending plan", answer: "BUDGET", startRow: 4, startCol: 1, direction: 'across' },
-  { number: 7, clue: "Company ownership share", answer: "STOCK", startRow: 6, startCol: 0, direction: 'across' },
-  { number: 2, clue: "Money owed", answer: "DEBT", startRow: 0, startCol: 2, direction: 'down' },
-  { number: 3, clue: "Risk protection", answer: "INSURANCE", startRow: 0, startCol: 5, direction: 'down' },
-  { number: 5, clue: "Yearly rate", answer: "APR", startRow: 2, startCol: 6, direction: 'down' },
+  // Across
+  { number: 1, clue: "Money paid for borrowing money", answer: "INTEREST", startRow: 0, startCol: 0, direction: 'across' },
+  { number: 4, clue: "Strategy for financial success", answer: "PLAN", startRow: 2, startCol: 3, direction: 'across' },
+  { number: 6, clue: "Fixed period for a loan or investment", answer: "TERM", startRow: 3, startCol: 7, direction: 'across' },
+  { number: 7, clue: "Money available for a purpose", answer: "FUNDS", startRow: 4, startCol: 1, direction: 'across' },
+  { number: 9, clue: "Value of ownership in an asset", answer: "EQUITY", startRow: 5, startCol: 5, direction: 'across' },
+  { number: 10, clue: "To put money into a venture", answer: "INVEST", startRow: 6, startCol: 0, direction: 'across' },
+  { number: 12, clue: "To be in debt", answer: "OWE", startRow: 8, startCol: 4, direction: 'across' },
+  { number: 13, clue: "To give money for goods or services", answer: "PAY", startRow: 8, startCol: 8, direction: 'across' },
+  { number: 14, clue: "A payment for a service", answer: "FEE", startRow: 10, startCol: 0, direction: 'across' },
+  { number: 15, clue: "Mandatory contributions to state revenue", answer: "TAXES", startRow: 10, startCol: 6, direction: 'across' },
+  // Down
+  { number: 2, clue: "Money spent on goods or services", answer: "EXPENSE", startRow: 0, startCol: 3, direction: 'down' },
+  { number: 3, clue: "Ability to borrow money with a promise to repay", answer: "CREDIT", startRow: 0, startCol: 8, direction: 'down' },
+  { number: 5, clue: "Something of value owned", answer: "ASSET", startRow: 2, startCol: 5, direction: 'down' },
+  { number: 8, clue: "Potential for loss in an investment", answer: "RISK", startRow: 5, startCol: 0, direction: 'down' },
+  { number: 11, clue: "Worth of an asset", answer: "VALUE", startRow: 6, startCol: 2, direction: 'down' },
+  { number: 16, clue: "Type of security representing ownership", answer: "STOCK", startRow: 6, startCol: 4, direction: 'down' },
+  { number: 17, clue: "Money owed to another party", answer: "DEBT", startRow: 6, startCol: 6, direction: 'down' },
+  { number: 18, clue: "Percentage of interest", answer: "RATE", startRow: 7, startCol: 9, direction: 'down' }
 ];
 
 const generateGrid = (): CrosswordCell[][] => {
-  const rows = 9;
-  const cols = 9;
+  const rows = 11;
+  const cols = 11;
   const grid: CrosswordCell[][] = Array(rows).fill(null).map(() =>
     Array(cols).fill(null).map(() => ({ letter: '', isBlack: true }))
   );
@@ -59,6 +72,20 @@ const generateGrid = (): CrosswordCell[][] => {
 
 const GRID = generateGrid();
 
+// Daily Financial Tips
+const DAILY_TIPS = [
+  { tip: "Pay yourself first! Set up automatic transfers to savings on payday before you spend on anything else.", category: "Saving", icon: PiggyBank, color: "from-emerald-400 to-teal-500" },
+  { tip: "The 24-hour rule: Wait a day before making any non-essential purchase over $50. You'll be surprised how often the urge passes!", category: "Spending", icon: Wallet, color: "from-blue-400 to-indigo-500" },
+  { tip: "Your credit utilization should stay below 30%. If your limit is $1,000, try to keep your balance under $300.", category: "Credit", icon: CreditCard, color: "from-purple-400 to-pink-500" },
+  { tip: "Compound interest is the 8th wonder of the world. Starting to invest early, even small amounts, can grow significantly over time.", category: "Investing", icon: TrendingUp, color: "from-amber-400 to-orange-500" },
+  { tip: "Review your subscriptions monthly. The average person wastes $200/month on forgotten or unused subscriptions.", category: "Budgeting", icon: RefreshCw, color: "from-rose-400 to-red-500" },
+  { tip: "Build an emergency fund covering 3-6 months of expenses. Start with just $500 as your first milestone.", category: "Safety Net", icon: Shield, color: "from-cyan-400 to-blue-500" },
+  { tip: "Use the 50/30/20 rule: 50% needs, 30% wants, 20% savings. It's simple but effective for any income level.", category: "Budgeting", icon: PiggyBank, color: "from-green-400 to-emerald-500" },
+  { tip: "High-interest debt is an emergency. Pay off credit cards before investing, as interest rates often exceed investment returns.", category: "Debt", icon: CreditCard, color: "from-red-400 to-rose-500" },
+  { tip: "Negotiate your bills! Cable, internet, insurance—many companies will lower rates if you simply ask.", category: "Saving", icon: Wallet, color: "from-violet-400 to-purple-500" },
+  { tip: "Track every expense for one month. Awareness alone can reduce unnecessary spending by 10-15%.", category: "Awareness", icon: Lightbulb, color: "from-yellow-400 to-amber-500" },
+];
+
 // Daily Questions
 const DAILY_QUESTIONS = [
   { question: "What is compound interest?", options: ["Interest earned on interest", "Tax on investment gains", "Diversification of assets", "Money added to an account"], correct: 0 },
@@ -83,15 +110,17 @@ const LEARNING_MODULES = [
 const FinLitApp: React.FC = () => {
   const navigate = useNavigate();
   const { user, signOut, isLoading: authLoading } = useAuthContext();
-  const { progress, isModulePassed, getModuleScore } = useModuleScore();
+  const { progress, isModulePassed, getModuleScore, checkAndUpdateDailyStreak, refreshProgress } = useModuleScore();
 
   const [activeSection, setActiveSection] = useState<'home' | 'profile'>('home');
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [dailyQuestion] = useState(() => DAILY_QUESTIONS[new Date().getDate() % DAILY_QUESTIONS.length]);
+  const [dailyTip, setDailyTip] = useState(() => DAILY_TIPS[new Date().getDate() % DAILY_TIPS.length]);
   const [answered, setAnswered] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [showStreakAnimation, setShowStreakAnimation] = useState(false);
   const [showCertTooltip, setShowCertTooltip] = useState(false);
+  const [streakChecked, setStreakChecked] = useState(false);
 
   // Crossword state
   const [userInputs, setUserInputs] = useState<{ [key: string]: string }>({});
@@ -203,15 +232,31 @@ const FinLitApp: React.FC = () => {
 
   const triggerStreakAnimation = () => {
     setShowStreakAnimation(true);
-    setTimeout(() => setShowStreakAnimation(false), 2000);
+    setTimeout(() => setShowStreakAnimation(false), 3000);
   };
+
+  // Check and update daily streak on mount
+  useEffect(() => {
+    const checkStreak = async () => {
+      if (user && !streakChecked) {
+        setStreakChecked(true);
+        const result = await checkAndUpdateDailyStreak();
+        if (result.incrementedToday) {
+          triggerStreakAnimation();
+          // Refresh progress to get updated data
+          await refreshProgress();
+        }
+      }
+    };
+    checkStreak();
+  }, [user, streakChecked, checkAndUpdateDailyStreak, refreshProgress]);
 
   const handleSubmitAnswer = () => {
     if (selectedAnswer === null || answered) return;
     const correct = selectedAnswer === dailyQuestion.correct;
     setIsCorrect(correct);
     setAnswered(true);
-    if (correct) triggerStreakAnimation();
+    // Don't trigger streak animation here - streak is calculated on page load based on daily activity
   };
 
   useEffect(() => {
@@ -248,7 +293,6 @@ const FinLitApp: React.FC = () => {
             <span className="text-blue-800 font-semibold text-lg">{user.displayName || user.email}</span>
           </div>
 
-          <img src="pwc.svg" alt="PwC Logo" className="w-10 h-10 object-contain" />
 
           <div
             className="relative cursor-pointer"
@@ -317,6 +361,55 @@ const FinLitApp: React.FC = () => {
         <div className="flex-1 p-4 overflow-y-auto">
           {activeSection === 'home' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Daily Financial Tip */}
+              <div className="md:col-span-2">
+                <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-r ${dailyTip.color} p-6 shadow-lg`}>
+                  <div className="absolute top-0 right-0 w-64 h-64 opacity-10">
+                    <dailyTip.icon className="w-full h-full" />
+                  </div>
+                  <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
+                  <div className="absolute top-4 right-4 w-20 h-20 bg-white/10 rounded-full blur-xl" />
+
+                  <div className="relative z-10 flex items-start gap-5">
+                    <div className="flex-shrink-0 bg-white/20 backdrop-blur-sm rounded-2xl p-4">
+                      <Lightbulb className="w-10 h-10 text-white" />
+                    </div>
+
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-3">
+                        <h2 className="text-2xl font-bold text-white">Daily Financial Tip</h2>
+                        <span className="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-sm font-semibold text-white">
+                          {dailyTip.category}
+                        </span>
+                      </div>
+
+                      <p className="text-xl text-white/95 leading-relaxed font-medium mb-4">
+                        "{dailyTip.tip}"
+                      </p>
+
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-white/80">
+                          <dailyTip.icon className="w-5 h-5" />
+                          <span className="text-sm font-medium">New tip every day</span>
+                        </div>
+
+                        <button
+                          onClick={() => {
+                            const currentIndex = DAILY_TIPS.findIndex(t => t.tip === dailyTip.tip);
+                            const nextIndex = (currentIndex + 1) % DAILY_TIPS.length;
+                            setDailyTip(DAILY_TIPS[nextIndex]);
+                          }}
+                          className="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-lg text-white font-semibold transition-all duration-200 hover:scale-105"
+                        >
+                          <RefreshCw className="w-4 h-4" />
+                          Next Tip
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Daily Challenge */}
               <div className="bg-amber-50 rounded-lg p-6 shadow-sm border border-amber-100">
                 <div className="flex justify-between items-center mb-4">
@@ -439,11 +532,14 @@ const FinLitApp: React.FC = () => {
               <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 md:col-span-2">
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-2xl font-bold">Financial Crossword</h2>
-                  {crosswordChecked && (
-                    <span className={`px-4 py-2 rounded-lg text-lg font-semibold ${correctCount === 37 ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
-                      {correctCount}/37 correct
-                    </span>
-                  )}
+                  {crosswordChecked && (() => {
+                    const totalCells = GRID.flat().filter(c => !c.isBlack).length;
+                    return (
+                      <span className={`px-4 py-2 rounded-lg text-lg font-semibold ${correctCount === totalCells ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                        {correctCount}/{totalCells} correct
+                      </span>
+                    );
+                  })()}
                 </div>
 
                 <div className="flex gap-8">

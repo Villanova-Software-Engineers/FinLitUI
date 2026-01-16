@@ -13,7 +13,7 @@ import {
   orderBy,
 } from 'firebase/firestore';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth, db } from './config';
+import { db, getSecondaryAuth, cleanupSecondaryApp } from './config';
 import type {
   Organization,
   ClassCode,
@@ -58,7 +58,20 @@ function generatePassword(): string {
   return password;
 }
 
-// ============== Organization Functions (Owner Only) ==============
+// ============== Super Admin Functions ==============
+
+export async function checkIsSuperAdmin(userId: string): Promise<boolean> {
+  try {
+    const superAdminRef = doc(db, 'superAdmins', userId);
+    const snapshot = await getDoc(superAdminRef);
+    return snapshot.exists();
+  } catch (error) {
+    console.error('Error checking super admin status:', error);
+    return false;
+  }
+}
+
+// ============== Organization Functions (Super Admin Only) ==============
 
 export async function createOrganizationWithAdmin(
   orgName: string,
@@ -68,44 +81,52 @@ export async function createOrganizationWithAdmin(
   // Generate a random password for the admin
   const password = generatePassword();
 
-  // Create Firebase Auth account for the admin
-  const userCredential = await createUserWithEmailAndPassword(auth, contactEmail, password);
-  const adminUser = userCredential.user;
+  // Use secondary auth instance to create admin user without signing out super admin
+  const { secondaryAuth } = await getSecondaryAuth();
 
-  // Create organization in Firestore
-  const orgRef = doc(collection(db, ORGANIZATIONS));
-  const orgData: WithServerTimestamp<Omit<Organization, 'id'>, 'createdAt'> = {
-    name: orgName,
-    contactEmail,
-    adminId: adminUser.uid,
-    createdBy,
-    createdAt: serverTimestamp(),
-  };
+  try {
+    // Create Firebase Auth account for the admin using secondary auth
+    const userCredential = await createUserWithEmailAndPassword(secondaryAuth, contactEmail, password);
+    const adminUser = userCredential.user;
 
-  await setDoc(orgRef, orgData);
-
-  // Create admin user profile in Firestore
-  await setDoc(doc(db, USERS, adminUser.uid), {
-    id: adminUser.uid,
-    email: contactEmail,
-    role: 'admin',
-    displayName: orgName + ' Admin',
-    organizationId: orgRef.id,
-    organizationName: orgName,
-    createdAt: serverTimestamp(),
-  });
-
-  return {
-    organization: {
-      id: orgRef.id,
+    // Create organization in Firestore
+    const orgRef = doc(collection(db, ORGANIZATIONS));
+    const orgData: WithServerTimestamp<Omit<Organization, 'id'>, 'createdAt'> = {
       name: orgName,
       contactEmail,
       adminId: adminUser.uid,
       createdBy,
-      createdAt: new Date(),
-    },
-    password,
-  };
+      createdAt: serverTimestamp(),
+    };
+
+    await setDoc(orgRef, orgData);
+
+    // Create admin user profile in Firestore
+    await setDoc(doc(db, USERS, adminUser.uid), {
+      id: adminUser.uid,
+      email: contactEmail,
+      role: 'admin',
+      displayName: orgName + ' Admin',
+      organizationId: orgRef.id,
+      organizationName: orgName,
+      createdAt: serverTimestamp(),
+    });
+
+    return {
+      organization: {
+        id: orgRef.id,
+        name: orgName,
+        contactEmail,
+        adminId: adminUser.uid,
+        createdBy,
+        createdAt: new Date(),
+      },
+      password,
+    };
+  } finally {
+    // Clean up secondary app
+    await cleanupSecondaryApp();
+  }
 }
 
 export async function getAllOrganizations(): Promise<Organization[]> {
@@ -172,24 +193,36 @@ export async function toggleClassCodeActive(codeId: string, isActive: boolean): 
 }
 
 export async function validateClassCode(code: string): Promise<CodeValidation> {
+  console.log('[validateClassCode] Validating code:', code.toUpperCase());
+
+  // Query only by code to avoid needing a composite index
   const q = query(
     collection(db, CLASS_CODES),
-    where('code', '==', code.toUpperCase()),
-    where('isActive', '==', true)
+    where('code', '==', code.toUpperCase())
   );
 
   const snapshot = await getDocs(q);
+  console.log('[validateClassCode] Found documents:', snapshot.size);
 
   if (snapshot.empty) {
+    console.log('[validateClassCode] No matching code found in database');
     return { valid: false };
   }
 
   const codeDoc = snapshot.docs[0];
   const data = codeDoc.data();
+  console.log('[validateClassCode] Code data:', data);
+
+  // Check if code is active
+  if (!data.isActive) {
+    console.log('[validateClassCode] Code exists but is not active');
+    return { valid: false };
+  }
 
   // Get organization name
   const orgDoc = await getDoc(doc(db, ORGANIZATIONS, data.organizationId));
   const orgData = orgDoc.data();
+  console.log('[validateClassCode] Organization data:', orgData);
 
   return {
     valid: true,
@@ -299,6 +332,7 @@ export async function getStudentProgress(userId: string): Promise<StudentProgres
     id: snapshot.id,
     ...data,
     lastActivityAt: (data.lastActivityAt as Timestamp)?.toDate() || new Date(),
+    lastStreakDate: data.lastStreakDate || undefined,
     moduleScores: data.moduleScores?.map((score: ModuleScore & { attemptHistory?: ModuleAttempt[] }) => ({
       ...score,
       completedAt: (score.completedAt as unknown as Timestamp)?.toDate() || new Date(),
@@ -381,12 +415,69 @@ export async function updateModuleScore(
   return { passed: isPassed, attemptNumber: newAttempt.attemptNumber };
 }
 
-export async function updateStreak(userId: string, streak: number): Promise<void> {
+export async function updateStreak(userId: string, streak: number, lastStreakDate?: string): Promise<void> {
   const progressRef = doc(db, STUDENT_PROGRESS, userId);
-  await updateDoc(progressRef, {
+  const updateData: Record<string, unknown> = {
     streak,
     lastActivityAt: serverTimestamp(),
+  };
+  if (lastStreakDate) {
+    updateData.lastStreakDate = lastStreakDate;
+  }
+  await updateDoc(progressRef, updateData);
+}
+
+/**
+ * Calculate and update streak based on daily activity
+ * Returns the new streak value and whether it was incremented today
+ */
+export async function calculateDailyStreak(userId: string): Promise<{ streak: number; incrementedToday: boolean }> {
+  const progressRef = doc(db, STUDENT_PROGRESS, userId);
+  const snapshot = await getDoc(progressRef);
+
+  if (!snapshot.exists()) {
+    return { streak: 0, incrementedToday: false };
+  }
+
+  const data = snapshot.data();
+  const currentStreak = data.streak || 0;
+  const lastStreakDate = data.lastStreakDate;
+
+  // Get today's date in YYYY-MM-DD format (local time)
+  const today = new Date();
+  const todayStr = today.toISOString().split('T')[0];
+
+  // Get yesterday's date
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+  // If already incremented today, return current streak
+  if (lastStreakDate === todayStr) {
+    return { streak: currentStreak, incrementedToday: false };
+  }
+
+  // Calculate new streak
+  let newStreak: number;
+  if (lastStreakDate === yesterdayStr) {
+    // Consecutive day - increment streak
+    newStreak = currentStreak + 1;
+  } else if (!lastStreakDate) {
+    // First time - start streak at 1
+    newStreak = 1;
+  } else {
+    // Streak broken - reset to 1
+    newStreak = 1;
+  }
+
+  // Update streak in database
+  await updateDoc(progressRef, {
+    streak: newStreak,
+    lastStreakDate: todayStr,
+    lastActivityAt: serverTimestamp(),
   });
+
+  return { streak: newStreak, incrementedToday: true };
 }
 
 export async function addAchievement(userId: string, achievement: string): Promise<void> {

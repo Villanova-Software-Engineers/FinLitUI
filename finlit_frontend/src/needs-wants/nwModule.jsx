@@ -7,7 +7,7 @@ import { useModuleScore, MODULES } from '../hooks/useModuleScore';
 
 export default function NeedsWants() {
   const navigate = useNavigate();
-  const { saveScore, isModulePassed, refreshProgress } = useModuleScore();
+  const { saveScore, isModulePassed, refreshProgress, isLoading: progressLoading } = useModuleScore();
   
   function getRandomItem(list, count) {
     return [...list].sort(() => Math.random() - 0.5).slice(0, count);
@@ -130,9 +130,9 @@ export default function NeedsWants() {
         setFinished(true);
         setTimeout(() => {
           setShowQuiz(true);
-        }, 1000);
+        }, 1500);
       }
-    }, 1500);
+    }, 2500);
   }
 
   // Navigation functions
@@ -195,22 +195,33 @@ export default function NeedsWants() {
   // Get current quiz question (shuffled or original)
   const currentQuizQuestion = shuffledQuiz.length > 0 ? shuffledQuiz[quizIndex] : quiz[quizIndex];
 
+  // Track if quiz is complete (all questions answered)
+  const [quizComplete, setQuizComplete] = useState(false);
+
   function handleQuizAnswer(correct) {
     if (correct) {
       setQuizCorrect(prev => prev + 1);
     }
-    setQuizFeedback(correct ? "✅ Correct!" : "❌ Try again!");
-    setTimeout(() => {
-      setQuizFeedback("");
-      if (quizIndex < quiz.length - 1) {
+    setQuizFeedback(correct ? "✅ Correct!" : "❌ Incorrect");
+
+    if (quizIndex < quiz.length - 1) {
+      // Not the last question - move to next after feedback
+      setTimeout(() => {
+        setQuizFeedback("");
         setQuizIndex(quizIndex + 1);
-      } else {
-        // Quiz finished - save score
-        handleSaveScore(correct);
-        setShowGray(true);
-        setShowQuiz(false);
-      }
-    }, 1000);
+      }, 2000);
+    } else {
+      // Last question - save score and show "Next" button
+      handleSaveScore(correct);
+      setQuizComplete(true);
+    }
+  }
+
+  // Handle clicking "Next" after quiz is complete
+  function handleQuizNext() {
+    setQuizFeedback("");
+    setShowGray(true);
+    setShowQuiz(false);
   }
 
   // Save score to Firestore
@@ -234,6 +245,18 @@ export default function NeedsWants() {
     }
   }
 
+  // Show loading while checking progress
+  if (progressLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-blue-100 p-6 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   // If module is already passed, show completion screen
   if (modulePassed) {
     return (
@@ -251,7 +274,7 @@ export default function NeedsWants() {
           >
             🎉
           </motion.div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Module Completed!</h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Module Already Completed!</h2>
           <p className="text-gray-600 mb-6">
             You've already passed the Needs vs Wants module. Great job understanding the difference between needs and wants!
           </p>
@@ -267,7 +290,7 @@ export default function NeedsWants() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
-            Back to Learning Path
+            Continue to Learning Path
           </motion.button>
         </motion.div>
       </div>
@@ -626,6 +649,25 @@ export default function NeedsWants() {
                   </motion.div>
                 )}
               </AnimatePresence>
+
+              {/* Show Next button after quiz is complete */}
+              {quizComplete && (
+                <motion.div
+                  className="mt-8 text-center"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                >
+                  <motion.button
+                    className="px-8 py-4 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl shadow-lg transition-colors text-lg"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={handleQuizNext}
+                  >
+                    See Results →
+                  </motion.button>
+                </motion.div>
+              )}
             </div>
           )}
 
@@ -690,39 +732,52 @@ export default function NeedsWants() {
                 </div>
 
                 <div className="flex gap-4 justify-center flex-wrap">
-                  {Math.round(((swipeCorrect + quizCorrect) / (items2.length + quiz.length)) * 100) < 100 && (
+                  {Math.round(((swipeCorrect + quizCorrect) / (items2.length + quiz.length)) * 100) < 100 ? (
+                    <>
+                      <motion.button
+                        className="flex items-center gap-2 px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl shadow-lg transition-colors"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => {
+                          setStep(1);
+                          setSelected([]);
+                          setCurrent(0);
+                          setShowQuiz(false);
+                          setShowGray(false);
+                          setFinished(false);
+                          setQuizIndex(0);
+                          setQuizComplete(false);
+                          setQuizFeedback("");
+                          setFeedback("");
+                          setSwipeDirection(null);
+                          setDragOffset({ x: 0, y: 0 });
+                          setSwipeCorrect(0);
+                          setQuizCorrect(0);
+                          setScoreSaved(false);
+                        }}
+                      >
+                        <RotateCcw className="w-5 h-5" />
+                        Retake Module
+                      </motion.button>
+                      <motion.button
+                        className="flex items-center gap-2 px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white font-semibold rounded-xl shadow-lg transition-colors"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => navigate('/game')}
+                      >
+                        Back to Roadmap
+                      </motion.button>
+                    </>
+                  ) : (
                     <motion.button
-                      className="flex items-center gap-2 px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl shadow-lg transition-colors"
+                      className="flex items-center gap-2 px-8 py-4 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl shadow-lg transition-colors text-lg"
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      onClick={() => {
-                        setStep(1);
-                        setSelected([]);
-                        setCurrent(0);
-                        setShowQuiz(false);
-                        setShowGray(false);
-                        setFinished(false);
-                        setQuizIndex(0);
-                        setFeedback("");
-                        setSwipeDirection(null);
-                        setDragOffset({ x: 0, y: 0 });
-                        setSwipeCorrect(0);
-                        setQuizCorrect(0);
-                        setScoreSaved(false);
-                      }}
+                      onClick={() => navigate('/game')}
                     >
-                      <RotateCcw className="w-5 h-5" />
-                      Retake Module
+                      Continue to Next Module
                     </motion.button>
                   )}
-                  <motion.button
-                    className="flex items-center gap-2 px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl shadow-lg transition-colors"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => navigate('/game')}
-                  >
-                    Back to Roadmap
-                  </motion.button>
                 </div>
               </motion.div>
             </div>

@@ -1,12 +1,15 @@
 /**
- * Owner Admin Setup Page
- * Allows owner to create organizations with admin accounts
+ * Super Admin Setup Page
+ * Allows super admins to create organizations with admin accounts
  * Navigate to /admin-setup
+ * Only accessible by super admins (sp@villanova.edu, ap@villanova.edu)
  */
 
 import React, { useState, useEffect } from 'react';
-import { Building2, Mail, Eye, EyeOff, Copy, Check, Plus } from 'lucide-react';
-import { createOrganizationWithAdmin, getAllOrganizations } from '../firebase/firestore.service';
+import { Building2, Mail, Eye, EyeOff, Copy, Check, Plus, Lock } from 'lucide-react';
+import { createOrganizationWithAdmin, getAllOrganizations, checkIsSuperAdmin } from '../firebase/firestore.service';
+import { useAuthContext } from '../auth/context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import type { Organization } from '../auth/types/auth.types';
 
 interface CreatedOrg {
@@ -15,6 +18,9 @@ interface CreatedOrg {
 }
 
 const AdminSetup: React.FC = () => {
+  const { user, isAuthenticated, isLoading: authLoading } = useAuthContext();
+  const navigate = useNavigate();
+
   const [orgName, setOrgName] = useState('');
   const [contactEmail, setContactEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -24,10 +30,39 @@ const AdminSetup: React.FC = () => {
   const [copied, setCopied] = useState<string | null>(null);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [loadingOrgs, setLoadingOrgs] = useState(true);
+  const [isSuperAdmin, setIsSuperAdmin] = useState<boolean | null>(null);
+  const [checkingAccess, setCheckingAccess] = useState(true);
+
+  // Check if user is a super admin
+  useEffect(() => {
+    const checkAccess = async () => {
+      if (authLoading) return;
+
+      if (!isAuthenticated || !user) {
+        setCheckingAccess(false);
+        setIsSuperAdmin(false);
+        return;
+      }
+
+      try {
+        const isSA = await checkIsSuperAdmin(user.id);
+        setIsSuperAdmin(isSA);
+      } catch (err) {
+        console.error('Error checking super admin status:', err);
+        setIsSuperAdmin(false);
+      } finally {
+        setCheckingAccess(false);
+      }
+    };
+
+    checkAccess();
+  }, [user, isAuthenticated, authLoading]);
 
   useEffect(() => {
-    loadOrganizations();
-  }, []);
+    if (isSuperAdmin) {
+      loadOrganizations();
+    }
+  }, [isSuperAdmin]);
 
   const loadOrganizations = async () => {
     try {
@@ -69,10 +104,47 @@ const AdminSetup: React.FC = () => {
     setTimeout(() => setCopied(null), 2000);
   };
 
+  // Show loading state
+  if (authLoading || checkingAccess) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Checking access...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show access denied if not authenticated or not super admin
+  if (!isAuthenticated || !isSuperAdmin) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-6">
+        <div className="bg-white rounded-xl shadow-lg p-8 max-w-md text-center">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Lock className="text-red-600" size={32} />
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h1>
+          <p className="text-gray-600 mb-6">
+            {!isAuthenticated
+              ? 'You must be signed in to access this page.'
+              : 'You do not have permission to access this page. Only super admins can create organizations.'}
+          </p>
+          <button
+            onClick={() => navigate('/auth')}
+            className="bg-blue-600 text-white py-2 px-6 rounded-lg hover:bg-blue-700 font-medium"
+          >
+            {!isAuthenticated ? 'Sign In' : 'Go to Login'}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Owner Admin Panel</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Super Admin Panel</h1>
         <p className="text-gray-600 mb-8">Create organizations and admin accounts for colleges/institutions</p>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

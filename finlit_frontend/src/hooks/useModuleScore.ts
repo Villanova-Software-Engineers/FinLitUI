@@ -6,6 +6,7 @@ import {
   updateStreak,
   addAchievement,
   resetModuleProgress,
+  calculateDailyStreak,
 } from '../firebase/firestore.service';
 import type { StudentProgress, ModuleScore } from '../auth/types/auth.types';
 
@@ -40,6 +41,7 @@ interface UseModuleScoreReturn {
   saveScore: (moduleId: ModuleId, score: number, maxScore?: number) => Promise<SaveScoreResult>;
   incrementStreak: () => Promise<void>;
   resetStreak: () => Promise<void>;
+  checkAndUpdateDailyStreak: () => Promise<{ streak: number; incrementedToday: boolean }>;
   unlockAchievement: (achievement: string) => Promise<void>;
   getModuleScore: (moduleId: ModuleId) => ModuleScore | undefined;
   isModulePassed: (moduleId: ModuleId) => boolean;
@@ -146,6 +148,22 @@ export const useModuleScore = (): UseModuleScoreReturn => {
     }
   }, [user]);
 
+  // Check and update daily streak (proper calculation based on consecutive days)
+  const checkAndUpdateDailyStreak = useCallback(async (): Promise<{ streak: number; incrementedToday: boolean }> => {
+    if (!user) return { streak: 0, incrementedToday: false };
+
+    try {
+      const result = await calculateDailyStreak(user.id);
+      if (result.incrementedToday) {
+        setProgress(prev => prev ? { ...prev, streak: result.streak } : null);
+      }
+      return result;
+    } catch (err) {
+      console.error('Error checking daily streak:', err);
+      return { streak: progress?.streak || 0, incrementedToday: false };
+    }
+  }, [user, progress?.streak]);
+
   // Unlock achievement
   const unlockAchievement = useCallback(async (achievement: string) => {
     if (!user) return;
@@ -192,6 +210,7 @@ export const useModuleScore = (): UseModuleScoreReturn => {
     saveScore,
     incrementStreak,
     resetStreak,
+    checkAndUpdateDailyStreak,
     unlockAchievement,
     getModuleScore,
     isModulePassed,

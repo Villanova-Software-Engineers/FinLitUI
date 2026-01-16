@@ -1,46 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Clock } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
 
-// Countdown Timer Component
-function CountdownTimer({ 
-  duration = 30, 
-  onComplete, 
-  resetKey 
-}) {
-  const [timeLeft, setTimeLeft] = useState(duration);
-
-  useEffect(() => {
-    setTimeLeft(duration);
-  }, [resetKey, duration]);
-
-  useEffect(() => {
-    if (timeLeft <= 0) return;
-
-    const interval = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          if (onComplete) onComplete();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [timeLeft, onComplete]);
-
-  const lowTime = timeLeft <= 3;
-
-  return (
-    <div className={`flex items-center justify-center space-x-2 ${lowTime ? "text-red-500" : "text-blue-700"}`}>
-      <Clock className="w-5 h-5" />
-      <span className="text-xl font-semibold">{timeLeft}s</span>
-    </div>
-  );
-}
-
-export default function TrueFalseCard() {
+export default function TrueFalseCard({ onQuizComplete = null }) {
   // List of hardcoded questions
   const questions = [
     { 
@@ -99,9 +59,7 @@ export default function TrueFalseCard() {
   const [score, setScore] = useState(0);
   const [result, setResult] = useState('');
   const [answered, setAnswered] = useState(false);
-  const [timerDisabled, setTimerDisabled] = useState(false);
   const [buttonsDisabled, setButtonsDisabled] = useState(false);
-  const [duration, setDuration] = useState(30);
   
   const totalQuestions = questions.length;
   const currentQuestion = questions[currentIndex];
@@ -118,20 +76,32 @@ export default function TrueFalseCard() {
 
     setResult(isCorrect ? '✅ Correct!' : '❌ Incorrect!');
     setAnswered(true);
-    setTimerDisabled(true);
     setButtonsDisabled(true);
 
     if (currentIndex === questions.length - 1) {
+      const finalScore = isCorrect ? score + 1 : score;
+      const passingScore = Math.ceil(totalQuestions * 0.7); // 70% to pass
+      const passed = finalScore >= passingScore;
+
       setTimeout(() => {
-        setResult('🏁 Quiz Completed! Restarting...');
-        setTimeout(() => {
-          setScore(0);
-          setCurrentIndex(0);
-          setResult('');
-          setAnswered(false);
-          setTimerDisabled(false);
-          setButtonsDisabled(false);
-        }, 2000);
+        if (passed) {
+          setResult(`🏁 Quiz Completed! You passed with ${finalScore}/${totalQuestions}!`);
+          if (onQuizComplete) {
+            onQuizComplete({ score: finalScore, total: totalQuestions, passed: true });
+          }
+        } else {
+          setResult(`🏁 Quiz Completed! Score: ${finalScore}/${totalQuestions}. Need ${passingScore} to pass. Try again!`);
+          if (onQuizComplete) {
+            onQuizComplete({ score: finalScore, total: totalQuestions, passed: false });
+          }
+          setTimeout(() => {
+            setScore(0);
+            setCurrentIndex(0);
+            setResult('');
+            setAnswered(false);
+            setButtonsDisabled(false);
+          }, 3000);
+        }
       }, 1500);
     }
   };
@@ -153,95 +123,28 @@ export default function TrueFalseCard() {
     if (!answered || currentIndex === questions.length - 1) return;
     setResult('');
     setAnswered(false);
-    setTimerDisabled(false);
     setButtonsDisabled(false);
     setCurrentIndex(prevIndex => prevIndex + 1);
   };
 
-  // Handle timer completion
-  const handleTimerComplete = () => {
-    const isLastQuestion = currentIndex === questions.length - 1;
-
-    setResult('⏰ Out of Time!');
-    setAnswered(true);
-    setTimerDisabled(true);
-    setButtonsDisabled(true);
-
-    if (isLastQuestion) {
-      setTimeout(() => {
-        setResult('⏰ Time is up! Restarting quiz...');
-        setTimeout(() => {
-          setScore(0);
-          setCurrentIndex(0);
-          setResult('');
-          setAnswered(false);
-          setTimerDisabled(false);
-          setButtonsDisabled(false);
-        }, 2000);
-      }, 1500);
-    }
-  };
-
   // Determine result color
-  const resultColor = result.includes('Correct') 
-    ? 'text-green-600' 
-    : result.includes('Incorrect') || result.includes('Time')
-      ? 'text-red-600' 
+  const resultColor = result.includes('Correct')
+    ? 'text-green-600'
+    : result.includes('Incorrect')
+      ? 'text-red-600'
       : 'text-black';
 
   return (
-    <div className="bg-gradient-to-br from-blue-50 to-cyan-50 min-h-screen flex flex-col items-center justify-center p-6 relative">
+    <div className="bg-gradient-to-br from-blue-50 to-cyan-50 min-h-screen flex flex-col p-6">
       {/* Header */}
-      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-white text-black rounded-xl shadow-lg px-6 py-3">
+      <div className="bg-white text-black rounded-xl shadow-lg px-6 py-3 mx-auto mb-6">
         <h1 className="text-3xl text-center font-bold">Learn About Investment Banking!</h1>
       </div>
 
-      {/* Score Tab */}
-      <div className="absolute right-5 top-1/2 transform -translate-y-1/2 bg-blue-100 p-6 rounded-lg shadow-lg">
-        <h3 className="text-2xl text-blue-700 text-center font-bold">Score</h3>
-        <p className="text-xl text-black font-semibold mt-2 text-center">{score} / {totalQuestions}</p>
-      </div>
-
-      {/* Quiz Topic Tab with Difficulty */}
-      <div className="absolute left-5 top-1/2 transform -translate-y-1/2 bg-yellow-50 p-6 rounded-lg shadow-lg">
-        <h3 className="text-2xl text-black text-center font-bold">Topic</h3>
-        <p className="text-lg text-black font-semibold mt-2 text-center">IPOs</p>
-
-        <div className="mt-4 flex flex-col gap-2">
-          <button 
-            className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
-            onClick={() => setDuration(30)}
-          >
-            Easy (30s)
-          </button>
-          <button 
-            className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
-            onClick={() => setDuration(20)}
-          >
-            Medium (20s)
-          </button>
-          <button 
-            className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
-            onClick={() => setDuration(10)}
-          >
-            Hard (10s)
-          </button>
-        </div>
-      </div>
-
-      {/* Main Quiz Area */}
-      <div className="flex flex-col items-center mt-16">
-        {/* Countdown Timer */}
-        {!timerDisabled && (
-          <div className="mb-6">
-            <CountdownTimer 
-              duration={duration} 
-              onComplete={handleTimerComplete}
-              resetKey={currentIndex}
-            />
-          </div>
-        )}
-
+      {/* Main Content Area with Score Sidebar */}
+      <div className="flex flex-1 gap-6 items-start justify-center">
+        {/* Main Quiz Area */}
+        <div className="flex flex-col items-center flex-1 max-w-2xl">
         {/* Result Message */}
         {result && <p className={`text-2xl font-bold mb-4 ${resultColor}`}>{result}</p>}
 
@@ -288,6 +191,13 @@ export default function TrueFalseCard() {
         </button>
 
         <div className="text-gray-600 text-sm font-semibold mt-4">Keyboard: T / F or Y / N</div>
+        </div>
+
+        {/* Score Tab - Right Sidebar */}
+        <div className="bg-blue-100 p-6 rounded-lg shadow-lg flex-shrink-0 w-48">
+          <h3 className="text-2xl text-blue-700 text-center font-bold">Score</h3>
+          <p className="text-xl text-black font-semibold mt-2 text-center">{score} / {totalQuestions}</p>
+        </div>
       </div>
     </div>
   );
