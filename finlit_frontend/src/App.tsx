@@ -31,8 +31,6 @@ function App() {
           <Route path="/" element={<Navigate to="/auth" replace />} />
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/dash" element={<Dashboard />} />
-
           <Route path="/game" element={<FinancialRoadmap />} />
           <Route path="/fin" element={<FinancialRoadmap />} />
 

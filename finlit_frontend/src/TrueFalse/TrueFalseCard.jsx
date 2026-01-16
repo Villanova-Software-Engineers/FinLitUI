@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-export default function TrueFalseCard({ onQuizComplete }) {
+export default function TrueFalseCard({ onQuizComplete = null }) {
   // List of hardcoded questions
   const questions = [
     { 
