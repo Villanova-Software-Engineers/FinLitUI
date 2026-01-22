@@ -76,6 +76,7 @@ export interface StudentProgress {
   achievements: string[];
   lastActivityAt: Date;
   lastStreakDate?: string; // YYYY-MM-DD format for tracking daily streak
+  lastDailyChallengeDate?: string; // YYYY-MM-DD format for tracking daily challenge completion
 }
 
 export interface SignInRequest {

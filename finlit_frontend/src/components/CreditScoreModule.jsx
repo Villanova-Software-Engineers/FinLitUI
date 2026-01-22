@@ -38,6 +38,7 @@ const CreditScoreModule = () => {
   const [sliderValue, setSliderValue] = useState(0);
   const [timelineOrder, setTimelineOrder] = useState([]);
   const [shuffledDefinitions, setShuffledDefinitions] = useState([]);
+  const [showWrongAnswer, setShowWrongAnswer] = useState(false);
 
   // Check if module is already passed
   const modulePassed = isModulePassed(MODULES.CREDIT_SCORE?.id);
@@ -237,11 +238,6 @@ const CreditScoreModule = () => {
     if (selectedOption.correct) {
       setStreak(streak + 1);
       setTotalXP(totalXP + question.xp + (streak * 5)); // Bonus XP for streaks
-      
-      // Check for achievements
-      if (streak === 2) {
-        setAchievements([...achievements, { id: 'streak3', name: 'Credit Streak!', desc: '3 correct in a row', emoji: '🔥' }]);
-      }
     } else {
       setLives(lives - 1);
       setStreak(0);
@@ -358,68 +354,73 @@ const CreditScoreModule = () => {
     setSelectedDefinition(null);
     setSliderValue(miniGames[gameStep + 1]?.scenarios?.[0]?.currentBalance || 0);
     setTimelineOrder(miniGames[gameStep + 1]?.steps?.map((_, index) => index) || []);
+    setShowWrongAnswer(false);
   };
 
   const handleTermClick = (termIndex) => {
-    if (matchedPairs.includes(termIndex)) return;
-    
+    if (gameCompleted) return;
+
     if (selectedTerm === termIndex) {
       setSelectedTerm(null);
     } else {
       setSelectedTerm(termIndex);
-      setSelectedDefinition(null); // Clear definition selection
-      
-      // If both term and definition are selected, check for match
-      if (selectedDefinition !== null) {
-        if (termIndex === selectedDefinition) {
-          setMatchedPairs([...matchedPairs, termIndex]);
-          setSelectedTerm(null);
-          setSelectedDefinition(null);
-          
-          // Check if game completed
-          if (matchedPairs.length + 1 >= miniGames[gameStep].pairs.length) {
-            setGameCompleted(true);
-            setTotalXP(totalXP + 50);
-          }
-        }
-      }
     }
   };
 
   const handleDefinitionClick = (defIndex) => {
-    if (matchedPairs.includes(defIndex)) return;
-    
+    if (gameCompleted) return;
+
     if (selectedDefinition === defIndex) {
       setSelectedDefinition(null);
     } else {
       setSelectedDefinition(defIndex);
-      setSelectedTerm(null); // Clear term selection
-      
-      // If both term and definition are selected, check for match
-      if (selectedTerm !== null) {
-        if (selectedTerm === defIndex) {
-          setMatchedPairs([...matchedPairs, defIndex]);
-          setSelectedTerm(null);
-          setSelectedDefinition(null);
-          
-          // Check if game completed
-          if (matchedPairs.length + 1 >= miniGames[gameStep].pairs.length) {
-            setGameCompleted(true);
-            setTotalXP(totalXP + 50);
-          }
+    }
+  };
+
+  // Submit handler for matching game
+  const handleMatchingSubmit = () => {
+    // Check if term and definition are both selected and match
+    if (selectedTerm !== null && selectedDefinition !== null) {
+      if (selectedTerm === selectedDefinition) {
+        // Correct match!
+        setMatchedPairs([...matchedPairs, selectedTerm]);
+        setSelectedTerm(null);
+        setSelectedDefinition(null);
+        setShowWrongAnswer(false);
+
+        // Check if all pairs matched
+        if (matchedPairs.length + 1 >= miniGames[gameStep].pairs.length) {
+          setGameCompleted(true);
+          setTotalXP(totalXP + 50);
         }
+      } else {
+        // Wrong match
+        setShowWrongAnswer(true);
+        setTimeout(() => setShowWrongAnswer(false), 3000);
       }
+    } else {
+      // Need to select both
+      setShowWrongAnswer(true);
+      setTimeout(() => setShowWrongAnswer(false), 3000);
     }
   };
 
   const handleSliderChange = (value) => {
     setSliderValue(value);
+  };
+
+  // Submit handler for slider/utilization game
+  const handleSliderSubmit = () => {
     const scenario = miniGames[gameStep].scenarios[0];
-    const utilizationRate = (value / scenario.creditLimit) * 100;
-    
+    const utilizationRate = (sliderValue / scenario.creditLimit) * 100;
+
     if (utilizationRate <= 30) {
+      setShowWrongAnswer(false);
       setGameCompleted(true);
       setTotalXP(totalXP + 50);
+    } else {
+      setShowWrongAnswer(true);
+      setTimeout(() => setShowWrongAnswer(false), 3000);
     }
   };
 
@@ -439,12 +440,18 @@ const CreditScoreModule = () => {
 
     setTimelineOrder(newOrder);
     setDraggedItem(null);
+  };
 
-    // Check if order is correct
-    const isCorrect = newOrder.every((item, index) => item === index);
+  // Submit handler for timeline game
+  const handleTimelineSubmit = () => {
+    const isCorrect = timelineOrder.every((item, index) => item === index);
     if (isCorrect) {
+      setShowWrongAnswer(false);
       setGameCompleted(true);
       setTotalXP(totalXP + 50);
+    } else {
+      setShowWrongAnswer(true);
+      setTimeout(() => setShowWrongAnswer(false), 3000);
     }
   };
 
@@ -569,30 +576,8 @@ const CreditScoreModule = () => {
           <p className="text-sm text-gray-600">Multiple Choice Quiz</p>
         </div>
 
-        <div className="flex items-center gap-4">
-          {/* Lives */}
-          <div className="flex items-center gap-1">
-            {[...Array(3)].map((_, i) => (
-              <Heart 
-                key={i} 
-                className={`w-5 h-5 ${i < lives ? 'text-red-500 fill-red-500' : 'text-gray-300'}`} 
-              />
-            ))}
-          </div>
-          
-          {/* XP */}
-          <div className="flex items-center gap-2 text-purple-600">
-            <Star className="w-5 h-5" />
-            <span className="font-semibold">{totalXP} XP</span>
-          </div>
-          
-          {/* Streak */}
-          {streak > 0 && (
-            <div className="flex items-center gap-2 text-orange-600">
-              <Zap className="w-5 h-5" />
-              <span className="font-semibold">{streak}🔥</span>
-            </div>
-          )}
+        <div className="w-32">
+          {/* Placeholder for layout balance */}
         </div>
       </motion.div>
 
@@ -897,7 +882,7 @@ const CreditScoreModule = () => {
                 {/* Progress */}
                 <div className="text-center">
                   <div className="bg-gray-200 rounded-full h-3 mb-2">
-                    <div 
+                    <div
                       className="bg-purple-500 h-3 rounded-full transition-all duration-300"
                       style={{ width: `${(matchedPairs.length / miniGames[gameStep].pairs.length) * 100}%` }}
                     />
@@ -906,9 +891,63 @@ const CreditScoreModule = () => {
                     {matchedPairs.length} / {miniGames[gameStep].pairs.length} pairs matched
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
-                    Click a term, then click its matching definition!
+                    Select a term and its matching definition, then click Check Match!
                   </p>
                 </div>
+
+                {/* Wrong Answer Feedback */}
+                <AnimatePresence>
+                  {showWrongAnswer && miniGames[gameStep].type === 'matching' && (
+                    <motion.div
+                      className="mt-4 p-4 bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-200 rounded-xl"
+                      initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <motion.span
+                          className="text-3xl"
+                          animate={{ rotate: [0, -10, 10, -10, 0] }}
+                          transition={{ duration: 0.5 }}
+                        >
+                          🤔
+                        </motion.span>
+                        <div>
+                          <p className="font-bold text-red-700">
+                            {selectedTerm === null || selectedDefinition === null
+                              ? "Please select both a term and a definition!"
+                              : "That's not a match!"}
+                          </p>
+                          <p className="text-sm text-red-600">
+                            {selectedTerm === null || selectedDefinition === null
+                              ? "Click on a term from the left, then click on its matching definition from the right."
+                              : "Try a different combination."}
+                          </p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Submit Button */}
+                {!gameCompleted && (
+                  <div className="text-center mt-4">
+                    <motion.button
+                      onClick={handleMatchingSubmit}
+                      disabled={selectedTerm === null && selectedDefinition === null}
+                      className={`px-8 py-3 rounded-xl font-bold transition shadow-lg ${
+                        selectedTerm !== null || selectedDefinition !== null
+                          ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white'
+                          : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      }`}
+                      whileHover={selectedTerm !== null || selectedDefinition !== null ? { scale: 1.05 } : {}}
+                      whileTap={selectedTerm !== null || selectedDefinition !== null ? { scale: 0.95 } : {}}
+                    >
+                      Check Match ✓
+                    </motion.button>
+                  </div>
+                )}
               </div>
             )}
 
@@ -940,6 +979,7 @@ const CreditScoreModule = () => {
                       value={sliderValue}
                       onChange={(e) => handleSliderChange(parseInt(e.target.value))}
                       className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                      disabled={gameCompleted}
                     />
                     <div className="text-center">
                       <span className="text-2xl font-bold text-purple-600">
@@ -948,17 +988,51 @@ const CreditScoreModule = () => {
                       <p className="text-sm text-gray-600 mt-2">
                         Utilization Rate: {((sliderValue / miniGames[gameStep].scenarios[0].creditLimit) * 100).toFixed(0)}%
                       </p>
-                      {((sliderValue / miniGames[gameStep].scenarios[0].creditLimit) * 100) <= 30 && (
-                        <p className="text-green-600 font-medium mt-2">
-                          ✅ Excellent! This is a healthy utilization rate!
-                        </p>
-                      )}
-                      {((sliderValue / miniGames[gameStep].scenarios[0].creditLimit) * 100) > 30 && (
-                        <p className="text-orange-600 font-medium mt-2">
-                          ⚠️ Try to get below 30% for optimal credit health
-                        </p>
-                      )}
                     </div>
+
+                    {/* Wrong Answer Feedback */}
+                    <AnimatePresence>
+                      {showWrongAnswer && miniGames[gameStep].type === 'slider' && (
+                        <motion.div
+                          className="mt-4 p-4 bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-200 rounded-xl"
+                          initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          <div className="flex items-center gap-3">
+                            <motion.span
+                              className="text-3xl"
+                              animate={{ rotate: [0, -10, 10, -10, 0] }}
+                              transition={{ duration: 0.5 }}
+                            >
+                              🤔
+                            </motion.span>
+                            <div>
+                              <p className="font-bold text-red-700">Not quite right!</p>
+                              <p className="text-sm text-red-600">Try setting a lower balance to get the utilization rate below 30%.</p>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    {/* Submit Button */}
+                    {!gameCompleted && (
+                      <div className="text-center mt-4">
+                        <motion.button
+                          onClick={handleSliderSubmit}
+                          className="px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-xl font-bold transition shadow-lg"
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          Check Answer ✓
+                        </motion.button>
+                        <p className="text-sm text-gray-500 mt-2">
+                          Set the target balance, then click to check!
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -973,51 +1047,72 @@ const CreditScoreModule = () => {
                   <div className="space-y-3">
                     {timelineOrder.map((stepIndex, displayIndex) => {
                       const step = miniGames[gameStep].steps[stepIndex];
-                      const isCorrectPosition = stepIndex === displayIndex;
                       return (
                         <motion.div
                           key={step.id}
-                          className={`p-4 rounded-lg border-2 cursor-grab active:cursor-grabbing hover:shadow-md transition ${
-                            isCorrectPosition 
-                              ? 'bg-gradient-to-r from-green-100 to-emerald-100 border-green-300' 
-                              : 'bg-gradient-to-r from-blue-100 to-purple-100 border-gray-200'
-                          }`}
-                          draggable
+                          className="p-4 rounded-lg border-2 cursor-grab active:cursor-grabbing hover:shadow-md transition bg-gradient-to-r from-blue-100 to-purple-100 border-gray-200 hover:border-purple-300"
+                          draggable={!gameCompleted}
                           onDragStart={(e) => handleTimelineDragStart(e, displayIndex)}
                           onDragOver={(e) => e.preventDefault()}
                           onDrop={(e) => handleTimelineDrop(e, displayIndex)}
-                          whileHover={{ scale: 1.02 }}
+                          whileHover={{ scale: gameCompleted ? 1 : 1.02 }}
                           whileDrag={{ scale: 1.05 }}
                         >
                           <div className="flex items-center gap-3">
                             <span className="text-2xl">{step.emoji}</span>
                             <span className="font-medium flex-1">{step.text}</span>
-                            <span className={`px-3 py-1 rounded-full text-sm font-bold ${
-                              isCorrectPosition ? 'bg-green-500 text-white' : 'bg-white text-purple-600'
-                            }`}>
+                            <span className="px-3 py-1 rounded-full text-sm font-bold bg-white text-purple-600">
                               Step {displayIndex + 1}
                             </span>
-                            {isCorrectPosition && <span className="text-green-500">✓</span>}
                           </div>
                         </motion.div>
                       );
                     })}
                   </div>
-                  
-                  {/* Progress */}
-                  <div className="text-center mt-4">
-                    <div className="bg-gray-200 rounded-full h-3 mb-2">
-                      <div 
-                        className="bg-purple-500 h-3 rounded-full transition-all duration-300"
-                        style={{ 
-                          width: `${(timelineOrder.filter((stepIndex, displayIndex) => stepIndex === displayIndex).length / miniGames[gameStep].steps.length) * 100}%` 
-                        }}
-                      />
+
+                  {/* Wrong Answer Feedback */}
+                  <AnimatePresence>
+                    {showWrongAnswer && miniGames[gameStep].type === 'timeline' && (
+                      <motion.div
+                        className="mt-4 p-4 bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-200 rounded-xl"
+                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <motion.span
+                            className="text-3xl"
+                            animate={{ rotate: [0, -10, 10, -10, 0] }}
+                            transition={{ duration: 0.5 }}
+                          >
+                            🤔
+                          </motion.span>
+                          <div>
+                            <p className="font-bold text-red-700">Not quite right!</p>
+                            <p className="text-sm text-red-600">Try reordering the steps and check again.</p>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Submit Button */}
+                  {!gameCompleted && (
+                    <div className="text-center mt-6">
+                      <motion.button
+                        onClick={handleTimelineSubmit}
+                        className="px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-xl font-bold transition shadow-lg"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        Check Answer ✓
+                      </motion.button>
+                      <p className="text-sm text-gray-500 mt-2">
+                        Arrange the steps in the correct order, then click to check!
+                      </p>
                     </div>
-                    <p className="text-sm text-gray-600">
-                      {timelineOrder.filter((stepIndex, displayIndex) => stepIndex === displayIndex).length} / {miniGames[gameStep].steps.length} steps in correct order
-                    </p>
-                  </div>
+                  )}
                 </div>
               </div>
             )}

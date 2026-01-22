@@ -7,6 +7,7 @@ import {
   addAchievement,
   resetModuleProgress,
   calculateDailyStreak,
+  completeDailyChallenge,
 } from '../firebase/firestore.service';
 import type { StudentProgress, ModuleScore } from '../auth/types/auth.types';
 
@@ -47,6 +48,7 @@ interface UseModuleScoreReturn {
   isModulePassed: (moduleId: ModuleId) => boolean;
   resetModule: (moduleId: ModuleId) => Promise<void>;
   refreshProgress: () => Promise<void>;
+  submitDailyChallenge: () => Promise<{ awarded: boolean; alreadyCompleted: boolean }>;
 }
 
 export const useModuleScore = (): UseModuleScoreReturn => {
@@ -203,6 +205,24 @@ export const useModuleScore = (): UseModuleScoreReturn => {
     }
   }, [user, refreshProgress]);
 
+  // Submit daily challenge and award XP (5 XP, once per day)
+  const submitDailyChallenge = useCallback(async (): Promise<{ awarded: boolean; alreadyCompleted: boolean }> => {
+    if (!user) {
+      return { awarded: false, alreadyCompleted: false };
+    }
+
+    try {
+      const result = await completeDailyChallenge(user.id, 5);
+      if (result.awarded) {
+        await refreshProgress();
+      }
+      return result;
+    } catch (err) {
+      console.error('Error completing daily challenge:', err);
+      return { awarded: false, alreadyCompleted: false };
+    }
+  }, [user, refreshProgress]);
+
   return {
     progress,
     isLoading,
@@ -216,5 +236,6 @@ export const useModuleScore = (): UseModuleScoreReturn => {
     isModulePassed,
     resetModule,
     refreshProgress,
+    submitDailyChallenge,
   };
 };
