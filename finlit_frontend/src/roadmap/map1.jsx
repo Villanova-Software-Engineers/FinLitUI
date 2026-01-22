@@ -281,7 +281,7 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 2], [0.4, 2]);
 
 </svg>
 
-        {/* Modules */}
+        {/* Modules1 */}  
         <div className="relative z-10">
           {allModules.slice(0, visibleModules).map((module, index) => (
             <motion.div 
