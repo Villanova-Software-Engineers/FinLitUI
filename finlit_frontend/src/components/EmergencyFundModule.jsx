@@ -482,7 +482,7 @@ const EmergencyFundModule = () => {
               </div>
 
               {/* Character Introduction */}
-              <div className="bg-white rounded-xl p-6 mb-6 shadow-md border-l-4 border-emerald-500">
+              <div className="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 mb-6 shadow-md border-l-4 border-emerald-500">
                 <div className="flex items-center mb-3">
                   <span className="text-3xl mr-3">{storyContent[storyStep].emotion}</span>
                   <div className="font-bold text-lg text-gray-800">
@@ -495,7 +495,7 @@ const EmergencyFundModule = () => {
               </div>
 
               {/* Character Dialogue */}
-              <div className="bg-white rounded-xl p-6 mb-6 shadow-md">
+              <div className="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 mb-6 shadow-md">
                 <div className="bg-gradient-to-r from-blue-100 to-emerald-100 rounded-lg p-4 mb-4">
                   <p className="text-gray-700 italic text-lg leading-relaxed">
                     💬 "{storyContent[storyStep].dialogue}"
@@ -504,7 +504,7 @@ const EmergencyFundModule = () => {
               </div>
 
               {/* Key Lesson */}
-              <div className="bg-gradient-to-r from-yellow-100 to-orange-100 rounded-xl p-6 border border-yellow-300">
+              <div className="bg-gradient-to-r from-yellow-100 to-orange-100 rounded-lg sm:rounded-xl p-4 sm:p-6 border border-yellow-300">
                 <h4 className="text-lg font-bold text-orange-800 mb-2">🎓 Key Lesson:</h4>
                 <p className="text-orange-700 leading-relaxed">
                   {storyContent[storyStep].lesson}
@@ -589,7 +589,7 @@ const EmergencyFundModule = () => {
                 >
                   🎮
                 </motion.div>
-                <h2 className="text-3xl font-bold text-gray-800 mb-2">
+                <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">
                   {miniGames[gameStep].title}
                 </h2>
                 <div className="text-lg font-semibold text-emerald-600 mb-4">
@@ -634,7 +634,7 @@ const EmergencyFundModule = () => {
 
                   {/* Unsorted Items - Click to sort */}
                   {!sortingComplete && (
-                    <div className="bg-gray-50 rounded-xl p-6 border-2 border-gray-200 mb-6">
+                    <div className="bg-gray-50 rounded-lg sm:rounded-xl p-4 sm:p-6 border-2 border-gray-200 mb-6">
                       <h3 className="text-lg font-bold text-gray-800 mb-4 text-center">
                         Click items to sort them into categories
                       </h3>
@@ -680,9 +680,9 @@ const EmergencyFundModule = () => {
                     </div>
                   )}
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                     {/* Emergency Category */}
-                    <div className="bg-red-50 rounded-xl p-6 border-2 border-red-200">
+                    <div className="bg-red-50 rounded-lg sm:rounded-xl p-4 sm:p-6 border-2 border-red-200">
                       <h3 className="text-lg font-bold text-red-800 mb-4 text-center">
                         🚨 Emergency Expenses
                       </h3>
@@ -717,7 +717,7 @@ const EmergencyFundModule = () => {
                     </div>
 
                     {/* Non-Emergency Category */}
-                    <div className="bg-blue-50 rounded-xl p-6 border-2 border-blue-200">
+                    <div className="bg-blue-50 rounded-lg sm:rounded-xl p-4 sm:p-6 border-2 border-blue-200">
                       <h3 className="text-lg font-bold text-blue-800 mb-4 text-center">
                         🛍️ Non-Emergency Expenses
                       </h3>
@@ -776,7 +776,7 @@ const EmergencyFundModule = () => {
               {/* Calculator Challenge Game */}
               {miniGames[gameStep].type === 'calculator' && (
                 <div className="space-y-6">
-                  <div className="bg-white rounded-xl p-6 shadow-md">
+                  <div className="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-md">
                     <div className="text-center mb-6">
                       <span className="text-4xl mb-2 block">
                         {miniGames[gameStep].people[0].emoji}
@@ -791,7 +791,7 @@ const EmergencyFundModule = () => {
                     </div>
 
                     <div className="space-y-4 mb-6">
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                         {Object.entries(miniGames[gameStep].people[0].expenses).map(([category, amount]) => (
                           <div key={category} className="bg-gray-50 rounded-lg p-3">
                             <div className="text-sm text-gray-600 capitalize">{category}</div>
@@ -832,7 +832,7 @@ const EmergencyFundModule = () => {
                       <div className="text-center bg-emerald-50 rounded-lg p-6">
                         <div className="text-3xl mb-2">🎉</div>
                         <div className="text-sm text-gray-600 mb-2">Correct! Emergency Fund Needed:</div>
-                        <div className="text-3xl font-bold text-emerald-600">
+                        <div className="text-2xl sm:text-3xl font-bold text-emerald-600">
                           ${(Object.values(miniGames[gameStep].people[0].expenses).reduce((sum, val) => sum + val, 0) * miniGames[gameStep].people[0].months).toLocaleString()}
                         </div>
                         <div className="text-sm text-gray-500 mt-2">
@@ -848,7 +848,7 @@ const EmergencyFundModule = () => {
               {/* Scenario Game */}
               {miniGames[gameStep].type === 'scenario' && (
                 <div className="space-y-6">
-                  <div className="bg-white rounded-xl p-6 shadow-md">
+                  <div className="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-md">
                     <div className="text-center mb-6">
                       <span className="text-4xl mb-4 block">
                         {miniGames[gameStep].scenarios[0].emoji}
@@ -986,7 +986,7 @@ const EmergencyFundModule = () => {
                 <p className="text-gray-600">Enter your essential monthly expenses to determine your emergency fund target.</p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                 {expenseCategories.map((category) => (
                   <div key={category.key} className="space-y-2">
                     <label className="flex items-center gap-2 text-sm font-medium text-gray-700">

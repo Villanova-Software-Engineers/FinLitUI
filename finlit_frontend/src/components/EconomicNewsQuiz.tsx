@@ -120,35 +120,36 @@ const EconomicNewsQuiz: React.FC = () => {
   return (
     <div className="min-h-screen bg-blue-50 flex flex-col">
       {/* Header */}
-      <header className="bg-blue-100 p-4 flex justify-between items-center border-b border-blue-200">
+      <header className="bg-blue-100 p-3 sm:p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-blue-200">
         <button
           onClick={() => navigate('/dashboard')}
-          className="flex items-center gap-2 text-blue-700 hover:text-blue-900 font-semibold text-lg transition"
+          className="flex items-center gap-2 text-blue-700 hover:text-blue-900 font-semibold text-sm sm:text-lg transition"
         >
-          <ArrowLeft size={20} />
-          Back to Dashboard
+          <ArrowLeft size={18} className="sm:w-5 sm:h-5" />
+          <span className="hidden sm:inline">Back to Dashboard</span>
+          <span className="sm:hidden">Back</span>
         </button>
-        <h1 className="text-2xl font-bold text-blue-700">Global Economic News Quiz</h1>
+        <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-blue-700">Global Economic News Quiz</h1>
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg shadow-sm">
-            <Star className="text-yellow-500 fill-yellow-500" size={20} />
-            <span className="text-lg font-bold text-gray-700">{score}/{questions.length}</span>
+          <div className="flex items-center gap-2 bg-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg shadow-sm">
+            <Star className="text-yellow-500 fill-yellow-500" size={16} />
+            <span className="text-sm sm:text-lg font-bold text-gray-700">{score}/{questions.length}</span>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-y-auto p-6">
+      <div className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6">
         <div className="max-w-4xl mx-auto">
           {/* Progress Bar */}
-          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 mb-6">
-            <div className="flex justify-between items-center mb-3">
-              <span className="text-lg font-semibold text-gray-700">Question {currentQuestion + 1} of {questions.length}</span>
-              <span className="text-lg font-semibold text-blue-600">{Math.round(progress)}% Complete</span>
+          <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm border border-gray-100 mb-4 sm:mb-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 gap-2">
+              <span className="text-sm sm:text-lg font-semibold text-gray-700">Question {currentQuestion + 1} of {questions.length}</span>
+              <span className="text-sm sm:text-lg font-semibold text-blue-600">{Math.round(progress)}% Complete</span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-4">
+            <div className="w-full bg-gray-200 rounded-full h-3 sm:h-4">
               <div
-                className="bg-emerald-500 h-4 rounded-full transition-all duration-500"
+                className="bg-emerald-500 h-3 sm:h-4 rounded-full transition-all duration-500"
                 style={{ width: `${progress}%` }}
               />
             </div>
@@ -157,14 +158,14 @@ const EconomicNewsQuiz: React.FC = () => {
           {/* Question Card */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
             {/* Question Header */}
-            <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6">
-              <div className="flex items-start gap-4">
-                <div className="text-5xl">{currentQ.emoji}</div>
-                <div className="flex-1">
-                  <div className="inline-block px-3 py-1 bg-white/20 rounded-full text-sm font-semibold text-white mb-3">
+            <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-4 sm:p-6">
+              <div className="flex items-start gap-3 sm:gap-4">
+                <div className="text-3xl sm:text-4xl md:text-5xl flex-shrink-0">{currentQ.emoji}</div>
+                <div className="flex-1 min-w-0">
+                  <div className="inline-block px-2 sm:px-3 py-1 bg-white/20 rounded-full text-xs sm:text-sm font-semibold text-white mb-2 sm:mb-3">
                     Question {currentQuestion + 1}
                   </div>
-                  <h2 className="text-2xl font-bold text-white leading-relaxed">
+                  <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-white leading-relaxed">
                     {currentQ.question}
                   </h2>
                 </div>
@@ -172,8 +173,8 @@ const EconomicNewsQuiz: React.FC = () => {
             </div>
 
             {/* Options */}
-            <div className="p-6">
-              <div className="space-y-3 mb-6">
+            <div className="p-4 sm:p-6">
+              <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
                 {currentQ.options.map((option, index) => {
                   const isSelected = selectedAnswer === index;
                   const isCorrect = index === currentQ.correct;
@@ -186,7 +187,7 @@ const EconomicNewsQuiz: React.FC = () => {
                       onClick={() => handleAnswerSelect(index)}
                       disabled={showResult}
                       className={`
-                        w-full p-4 rounded-lg text-left text-lg transition-all duration-200 border-2
+                        w-full p-3 sm:p-4 rounded-lg text-left text-sm sm:text-base md:text-lg transition-all duration-200 border-2
                         ${showCorrect
                           ? 'bg-emerald-100 border-emerald-500 text-emerald-900'
                           : showIncorrect
@@ -198,10 +199,10 @@ const EconomicNewsQuiz: React.FC = () => {
                         ${showResult ? 'cursor-not-allowed' : 'cursor-pointer'}
                       `}
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
                           <div className={`
-                            flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm
+                            flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-bold text-xs sm:text-sm
                             ${showCorrect
                               ? 'bg-emerald-500 text-white'
                               : showIncorrect
@@ -213,10 +214,10 @@ const EconomicNewsQuiz: React.FC = () => {
                           `}>
                             {String.fromCharCode(65 + index)}
                           </div>
-                          <span>{option}</span>
+                          <span className="break-words">{option}</span>
                         </div>
-                        {showCorrect && <CheckCircle className="text-emerald-600" size={24} />}
-                        {showIncorrect && <XCircle className="text-red-600" size={24} />}
+                        {showCorrect && <CheckCircle className="text-emerald-600 flex-shrink-0" size={20} />}
+                        {showIncorrect && <XCircle className="text-red-600 flex-shrink-0" size={20} />}
                       </div>
                     </button>
                   );
@@ -226,43 +227,47 @@ const EconomicNewsQuiz: React.FC = () => {
               {/* Explanation */}
               {showResult && (
                 <div className={`
-                  p-5 rounded-lg mb-6 border-2
+                  p-4 sm:p-5 rounded-lg mb-4 sm:mb-6 border-2
                   ${selectedAnswer === currentQ.correct
                     ? 'bg-emerald-50 border-emerald-300'
                     : 'bg-blue-50 border-blue-300'
                   }
                 `}>
-                  <h3 className={`font-bold text-lg mb-2 ${selectedAnswer === currentQ.correct ? 'text-emerald-900' : 'text-blue-900'}`}>
+                  <h3 className={`font-bold text-base sm:text-lg mb-2 ${selectedAnswer === currentQ.correct ? 'text-emerald-900' : 'text-blue-900'}`}>
                     {selectedAnswer === currentQ.correct ? '✅ Correct!' : '💡 Learn More'}
                   </h3>
-                  <p className={`text-lg ${selectedAnswer === currentQ.correct ? 'text-emerald-800' : 'text-blue-800'}`}>
+                  <p className={`text-sm sm:text-base md:text-lg ${selectedAnswer === currentQ.correct ? 'text-emerald-800' : 'text-blue-800'}`}>
                     {currentQ.explanation}
                   </p>
                 </div>
               )}
 
               {/* Action Buttons */}
-              <div className="flex gap-4">
+              <div className="flex gap-3 sm:gap-4">
                 {!showResult ? (
                   <button
                     onClick={handleSubmit}
                     disabled={selectedAnswer === null}
-                    className="flex-1 py-3 bg-emerald-500 text-white text-lg font-semibold rounded-lg hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                    className="flex-1 py-2.5 sm:py-3 bg-emerald-500 text-white text-base sm:text-lg font-semibold rounded-lg hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                   >
                     Submit Answer
                   </button>
                 ) : (
                   <button
                     onClick={handleNext}
-                    className="flex-1 py-3 bg-blue-500 text-white text-lg font-semibold rounded-lg hover:bg-blue-600 transition-all duration-200 flex items-center justify-center gap-2"
+                    className="flex-1 py-2.5 sm:py-3 bg-blue-500 text-white text-base sm:text-lg font-semibold rounded-lg hover:bg-blue-600 transition-all duration-200 flex items-center justify-center gap-2"
                   >
                     {currentQuestion < questions.length - 1 ? (
                       <>
-                        Next Question
-                        <ArrowRight size={20} />
+                        <span className="hidden sm:inline">Next Question</span>
+                        <span className="sm:hidden">Next</span>
+                        <ArrowRight size={18} />
                       </>
                     ) : (
-                      'Finish & Return to Dashboard'
+                      <>
+                        <span className="hidden sm:inline">Finish & Return to Dashboard</span>
+                        <span className="sm:hidden">Finish</span>
+                      </>
                     )}
                   </button>
                 )}
@@ -272,28 +277,28 @@ const EconomicNewsQuiz: React.FC = () => {
 
           {/* Score Summary at Bottom */}
           {currentQuestion === questions.length - 1 && showResult && (
-            <div className="mt-6 bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+            <div className="mt-4 sm:mt-6 bg-white rounded-lg shadow-sm border border-gray-100 p-4 sm:p-6">
               <div className="text-center">
-                <h3 className="text-2xl font-bold text-gray-800 mb-4">Quiz Summary</h3>
-                <div className="flex justify-center items-center gap-8 mb-4">
+                <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4">Quiz Summary</h3>
+                <div className="flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-8 mb-4">
                   <div>
-                    <p className="text-4xl font-bold text-blue-600">{score}/{questions.length}</p>
-                    <p className="text-gray-600">Final Score</p>
+                    <p className="text-3xl sm:text-4xl font-bold text-blue-600">{score}/{questions.length}</p>
+                    <p className="text-sm sm:text-base text-gray-600">Final Score</p>
                   </div>
                   <div>
-                    <p className="text-4xl font-bold text-emerald-600">{percentage}%</p>
-                    <p className="text-gray-600">Accuracy</p>
+                    <p className="text-3xl sm:text-4xl font-bold text-emerald-600">{percentage}%</p>
+                    <p className="text-sm sm:text-base text-gray-600">Accuracy</p>
                   </div>
                 </div>
                 {percentage >= 70 ? (
-                  <div className="bg-emerald-100 border border-emerald-300 rounded-lg p-4">
-                    <p className="text-lg text-emerald-800 font-semibold">
+                  <div className="bg-emerald-100 border border-emerald-300 rounded-lg p-3 sm:p-4">
+                    <p className="text-sm sm:text-base md:text-lg text-emerald-800 font-semibold">
                       🎉 Excellent! You have a strong grasp of current economic events!
                     </p>
                   </div>
                 ) : (
-                  <div className="bg-amber-100 border border-amber-300 rounded-lg p-4">
-                    <p className="text-lg text-amber-800 font-semibold">
+                  <div className="bg-amber-100 border border-amber-300 rounded-lg p-3 sm:p-4">
+                    <p className="text-sm sm:text-base md:text-lg text-amber-800 font-semibold">
                       Keep learning! Understanding economic news is key to making informed financial decisions.
                     </p>
                   </div>

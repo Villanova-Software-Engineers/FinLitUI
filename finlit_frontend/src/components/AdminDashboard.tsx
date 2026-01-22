@@ -24,6 +24,8 @@ import {
   Building2,
   Download,
   BookOpen,
+  Menu,
+  X,
 } from 'lucide-react';
 import { useAuthContext } from '../auth/context/AuthContext';
 import {
@@ -70,6 +72,7 @@ const AdminDashboard: React.FC = () => {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [selectedOrg, setSelectedOrg] = useState<Organization | null>(null);
   const [loadingOrgs, setLoadingOrgs] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (user?.role !== 'admin' && user?.role !== 'owner') {
@@ -214,9 +217,33 @@ const AdminDashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30">
+      {/* Mobile Header */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm shadow-lg border-b border-slate-200/60 px-4 py-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+            >
+              {mobileMenuOpen ? <X size={24} className="text-slate-700" /> : <Menu size={24} className="text-slate-700" />}
+            </button>
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
+                <BookOpen className="text-white" size={16} />
+              </div>
+              <span className="font-bold text-slate-800">FinLit Admin</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Sidebar */}
-      <aside className="fixed left-0 top-0 bottom-0 w-64 bg-white/95 backdrop-blur-sm shadow-xl border-r border-slate-200/60 p-6 flex flex-col">
-        <div className="flex items-center gap-3 px-3 mb-8">
+      <aside className={`
+        fixed left-0 top-0 bottom-0 w-64 bg-white/95 backdrop-blur-sm shadow-xl border-r border-slate-200/60 p-4 sm:p-6 flex flex-col z-40
+        transform transition-transform duration-300 ease-in-out
+        ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+      `}>
+        <div className="flex items-center gap-3 px-3 mb-6 sm:mb-8 mt-12 lg:mt-0">
           <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
             <BookOpen className="text-white" size={18} />
           </div>
@@ -229,7 +256,10 @@ const AdminDashboard: React.FC = () => {
         <nav className="flex-1 space-y-2">
           {user.role === 'owner' && (
             <button
-              onClick={() => navigate('/admin-setup')}
+              onClick={() => {
+                navigate('/admin-setup');
+                setMobileMenuOpen(false);
+              }}
               className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-gradient-to-r hover:from-slate-50 hover:to-blue-50 rounded-xl transition-all duration-200"
             >
               <Building2 size={20} />
@@ -241,7 +271,10 @@ const AdminDashboard: React.FC = () => {
             Students
           </button>
           <button
-            onClick={() => navigate('/dashboard')}
+            onClick={() => {
+              navigate('/dashboard');
+              setMobileMenuOpen(false);
+            }}
             className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-gradient-to-r hover:from-slate-50 hover:to-blue-50 rounded-xl transition-all duration-200"
           >
             <LayoutDashboard size={20} />
@@ -249,7 +282,7 @@ const AdminDashboard: React.FC = () => {
           </button>
         </nav>
 
-        <div className="border-t border-slate-200/60 pt-6 mt-6">
+        <div className="border-t border-slate-200/60 pt-4 sm:pt-6 mt-4 sm:mt-6">
           <div className="px-4 py-3 bg-gradient-to-r from-slate-50 to-blue-50 rounded-xl mb-3">
             <p className="text-xs text-slate-500 truncate font-medium">{user?.email}</p>
             <p className="text-xs text-slate-400 font-medium">{user.role === 'owner' ? 'Super Admin' : user.organizationName}</p>
@@ -264,14 +297,22 @@ const AdminDashboard: React.FC = () => {
         </div>
       </aside>
 
+      {/* Mobile Overlay */}
+      {mobileMenuOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-30 lg:hidden"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
       {/* Main Content */}
-      <main className="ml-64 p-8">
-        <div className="max-w-6xl">
+      <main className="lg:ml-64 p-4 sm:p-6 md:p-8 pt-20 lg:pt-8">
+        <div className="max-w-7xl">
           {/* Header */}
-          <div className="mb-8 flex items-center justify-between">
+          <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-slate-800 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Students Dashboard</h1>
-              <p className="text-slate-600 mt-2 font-medium">
+              <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Students Dashboard</h1>
+              <p className="text-slate-600 mt-1 sm:mt-2 text-sm sm:text-base font-medium">
                 {user.role === 'owner'
                   ? (selectedOrg ? `Viewing ${selectedOrg.name}` : 'Select an organization')
                   : user.organizationName}
@@ -280,7 +321,7 @@ const AdminDashboard: React.FC = () => {
             {selectedCode && students.length > 0 && (
               <button
                 onClick={exportToExcel}
-                className="flex items-center gap-2 px-6 py-3 text-sm font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 text-sm font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
               >
                 <Download size={18} />
                 Export Excel
@@ -298,8 +339,8 @@ const AdminDashboard: React.FC = () => {
 
           {/* Organization Selector for Super Admins */}
           {user.role === 'owner' && (
-            <div className="mb-8 bg-white/70 backdrop-blur-sm border border-slate-200/60 rounded-2xl p-6 shadow-lg">
-              <p className="text-sm font-bold text-slate-700 uppercase tracking-wide mb-4 flex items-center gap-2">
+            <div className="mb-6 sm:mb-8 bg-white/70 backdrop-blur-sm border border-slate-200/60 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg">
+              <p className="text-xs sm:text-sm font-bold text-slate-700 uppercase tracking-wide mb-3 sm:mb-4 flex items-center gap-2">
                 <Building2 size={16} className="text-blue-600" />
                 Organization
               </p>
@@ -316,12 +357,12 @@ const AdminDashboard: React.FC = () => {
                   </button>
                 </p>
               ) : (
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap gap-2 sm:gap-3">
                   {organizations.map((org) => (
                     <button
                       key={org.id}
                       onClick={() => handleOrgSelect(org)}
-                      className={`px-4 py-2 text-sm font-semibold rounded-xl transition-all duration-200 shadow-md hover:shadow-lg ${
+                      className={`px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold rounded-lg sm:rounded-xl transition-all duration-200 shadow-md hover:shadow-lg ${
                         selectedOrg?.id === org.id
                           ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white transform scale-105'
                           : 'bg-white text-slate-700 hover:bg-gradient-to-r hover:from-slate-50 hover:to-blue-50 hover:text-slate-800'
@@ -337,12 +378,12 @@ const AdminDashboard: React.FC = () => {
 
           {/* Main Grid */}
           {(user.role === 'admin' || selectedOrg) ? (
-            <div className="grid grid-cols-12 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
               {/* Class Codes Sidebar */}
-              <div className="col-span-3">
-                <div className="bg-white/70 backdrop-blur-sm border border-slate-200/60 rounded-2xl shadow-xl">
-                  <div className="px-5 py-4 border-b border-slate-200/60 flex items-center justify-between">
-                    <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+              <div className="lg:col-span-3">
+                <div className="bg-white/70 backdrop-blur-sm border border-slate-200/60 rounded-xl sm:rounded-2xl shadow-xl">
+                  <div className="px-4 sm:px-5 py-3 sm:py-4 border-b border-slate-200/60 flex items-center justify-between">
+                    <h2 className="text-base sm:text-lg font-bold text-slate-800 flex items-center gap-2">
                       <Users size={18} className="text-blue-600" />
                       Classes
                     </h2>
@@ -356,26 +397,26 @@ const AdminDashboard: React.FC = () => {
                   </div>
 
                   {loadingCodes ? (
-                    <div className="p-6 text-center">
+                    <div className="p-4 sm:p-6 text-center">
                       <Loader2 className="animate-spin mx-auto text-blue-600" size={24} />
-                      <p className="text-sm text-slate-600 mt-2 font-medium">Loading classes...</p>
+                      <p className="text-xs sm:text-sm text-slate-600 mt-2 font-medium">Loading classes...</p>
                     </div>
                   ) : classCodes.length === 0 ? (
-                    <div className="p-6 text-center text-sm text-slate-600 font-medium">
+                    <div className="p-4 sm:p-6 text-center text-xs sm:text-sm text-slate-600 font-medium">
                       No classes yet
                     </div>
                   ) : (
-                    <div className="divide-y divide-slate-200/60">
+                    <div className="divide-y divide-slate-200/60 max-h-[400px] lg:max-h-[600px] overflow-y-auto">
                       {classCodes.map((code) => (
                         <button
                           key={code.id}
                           onClick={() => loadStudents(code)}
-                          className={`w-full px-5 py-4 text-left hover:bg-gradient-to-r hover:from-slate-50 hover:to-blue-50 transition-all duration-200 ${
+                          className={`w-full px-4 sm:px-5 py-3 sm:py-4 text-left hover:bg-gradient-to-r hover:from-slate-50 hover:to-blue-50 transition-all duration-200 ${
                             selectedCode?.id === code.id ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-600' : ''
                           }`}
                         >
-                          <p className="text-sm font-semibold text-slate-800">{code.name}</p>
-                          <p className="text-xs text-slate-500 font-mono mt-1 bg-slate-100 px-2 py-1 rounded-md inline-block">{code.code}</p>
+                          <p className="text-xs sm:text-sm font-semibold text-slate-800">{code.name}</p>
+                          <p className="text-[10px] sm:text-xs text-slate-500 font-mono mt-1 bg-slate-100 px-2 py-1 rounded-md inline-block">{code.code}</p>
                         </button>
                       ))}
                     </div>
@@ -384,7 +425,7 @@ const AdminDashboard: React.FC = () => {
               </div>
 
               {/* Students Area */}
-              <div className="col-span-9">
+              <div className="lg:col-span-9">
                 {selectedCode ? (
                   <div className="bg-white/70 backdrop-blur-sm border border-slate-200/60 rounded-2xl shadow-xl">
                     {/* Class Header */}

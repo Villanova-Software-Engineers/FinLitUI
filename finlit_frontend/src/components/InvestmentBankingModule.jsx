@@ -681,21 +681,21 @@ const InvestmentBankingModule = () => {
 
             {/* Content */}
             <div className="space-y-6">
-              <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
+              <div className="bg-slate-50 rounded-lg sm:rounded-xl p-4 sm:p-6 border border-slate-200">
                 <h3 className="text-lg font-semibold text-emerald-600 mb-3">Key Concept</h3>
                 <p className="text-slate-700 leading-relaxed">
                   {lessons[currentLesson].concept}
                 </p>
               </div>
 
-              <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
+              <div className="bg-slate-50 rounded-lg sm:rounded-xl p-4 sm:p-6 border border-slate-200">
                 <h3 className="text-lg font-semibold text-teal-600 mb-3">Explanation</h3>
                 <p className="text-slate-700 leading-relaxed">
                   {lessons[currentLesson].explanation}
                 </p>
               </div>
 
-              <div className="bg-emerald-50 rounded-xl p-6 border border-emerald-200">
+              <div className="bg-emerald-50 rounded-lg sm:rounded-xl p-4 sm:p-6 border border-emerald-200">
                 <h3 className="text-lg font-semibold text-emerald-700 mb-3">Key Takeaway</h3>
                 <p className="text-emerald-800 font-medium">
                   {lessons[currentLesson].keyPoint}
@@ -793,7 +793,7 @@ const InvestmentBankingModule = () => {
               {/* Matching Game - Premium */}
               {practiceActivities[currentActivity].type === 'matching' && (
                 <div className="space-y-6">
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
                     {/* Terms Column */}
                     <div className="space-y-3">
                       <h3 className="font-semibold text-slate-700 text-center pb-3 border-b border-slate-200">Services</h3>
@@ -1039,13 +1039,13 @@ const InvestmentBankingModule = () => {
             </p>
 
             {/* Final Stats */}
-            <div className="grid grid-cols-2 gap-6 mb-8">
-              <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
-                <div className="text-3xl font-bold text-emerald-600">{totalXP}</div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-8">
+              <div className="bg-slate-50 rounded-lg sm:rounded-xl p-4 sm:p-6 border border-slate-200">
+                <div className="text-2xl sm:text-3xl font-bold text-emerald-600">{totalXP}</div>
                 <div className="text-sm text-slate-500 font-medium">Total XP Earned</div>
               </div>
-              <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
-                <div className="text-3xl font-bold text-teal-600">{completedLessons.length}</div>
+              <div className="bg-slate-50 rounded-lg sm:rounded-xl p-4 sm:p-6 border border-slate-200">
+                <div className="text-2xl sm:text-3xl font-bold text-teal-600">{completedLessons.length}</div>
                 <div className="text-sm text-slate-500 font-medium">Lessons Completed</div>
               </div>
             </div>

@@ -364,9 +364,9 @@ const InsuranceModule = () => {
   // If module is already passed, show completion screen
   if (modulePassed) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-green-50 to-purple-50 p-6 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-green-50 to-purple-50 p-4 sm:p-6 flex items-center justify-center">
         <motion.div
-          className="bg-white rounded-2xl shadow-xl p-8 max-w-md text-center"
+          className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 max-w-md text-center"
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
@@ -402,7 +402,7 @@ const InsuranceModule = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-green-50 to-purple-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-green-50 to-purple-50 p-4 sm:p-6">
       {/* Header */}
       <motion.div
         className="flex items-center justify-between mb-8 bg-white rounded-xl p-4 shadow-lg"
@@ -458,7 +458,7 @@ const InsuranceModule = () => {
           {/* Lesson Card */}
           <motion.div
             key={lessonStep}
-            className={`${lessons[lessonStep].background} rounded-2xl p-8 shadow-lg mb-6`}
+            className={`${lessons[lessonStep].background} rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 shadow-lg mb-6`}
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
           >
@@ -478,13 +478,13 @@ const InsuranceModule = () => {
               </p>
             </div>
 
-            <div className="bg-white rounded-xl p-6 mb-6 shadow-md">
+            <div className="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 mb-6 shadow-md">
               <p className="text-gray-700 text-lg leading-relaxed">
                 {lessons[lessonStep].content}
               </p>
             </div>
 
-            <div className="bg-white rounded-xl p-6 shadow-md">
+            <div className="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-md">
               <h4 className="font-bold text-gray-800 mb-3">Key Points:</h4>
               <ul className="space-y-2">
                 {lessons[lessonStep].keyPoints.map((point, idx) => (
@@ -548,7 +548,7 @@ const InsuranceModule = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
-            <div className="grid grid-cols-3 gap-4 text-center">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 text-center">
               <div>
                 <div className="text-2xl font-bold text-green-600">{score}</div>
                 <div className="text-sm text-gray-600">Correct Matches</div>
@@ -579,7 +579,7 @@ const InsuranceModule = () => {
             </div>
           </motion.div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
             {/* Insurance Types */}
             <motion.div
               initial={{ opacity: 0, x: -50 }}
@@ -693,7 +693,7 @@ const InsuranceModule = () => {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
         >
-          <div className="bg-white rounded-2xl p-8 shadow-lg">
+          <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 shadow-lg">
             <div className="text-6xl mb-4">🎉</div>
             <h2 className="text-2xl font-bold text-gray-800 mb-4">Matching Game Complete!</h2>
             <p className="text-gray-600 mb-6">
@@ -734,7 +734,7 @@ const InsuranceModule = () => {
           {/* Quiz Card */}
           <motion.div
             key={quizIndex}
-            className="bg-white rounded-2xl p-8 shadow-lg"
+            className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 shadow-lg"
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
           >
@@ -828,7 +828,7 @@ const InsuranceModule = () => {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
         >
-          <div className="bg-white rounded-2xl p-8 shadow-lg">
+          <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 shadow-lg">
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
@@ -837,13 +837,13 @@ const InsuranceModule = () => {
               <Trophy className="w-20 h-20 mx-auto text-yellow-500 mb-6" />
             </motion.div>
 
-            <h2 className="text-3xl font-bold text-gray-800 mb-4">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-4">
               {finalPercentage === 100 ? 'Perfect Score! 🎉' :
                finalPercentage >= 80 ? 'Great Job! 🌟' :
                finalPercentage >= 60 ? 'Good Effort! 👍' : 'Keep Learning! 📚'}
             </h2>
 
-            <div className="grid grid-cols-3 gap-4 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-8">
               <div className="bg-green-50 rounded-lg p-4">
                 <div className="text-2xl font-bold text-green-600">{score}/{scenarios.length}</div>
                 <div className="text-sm text-gray-600">Matching Game</div>
