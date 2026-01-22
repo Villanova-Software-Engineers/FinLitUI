@@ -6,7 +6,7 @@ import { useModuleScore, MODULES } from '../hooks/useModuleScore';
 
 const DebtManagementModule = () => {
   const navigate = useNavigate();
-  const { isModulePassed } = useModuleScore();
+  const { isModulePassed, saveScore } = useModuleScore();
 
   // Check if module is already passed
   const modulePassed = isModulePassed(MODULES.DEBT_MANAGEMENT?.id);
@@ -14,6 +14,10 @@ const DebtManagementModule = () => {
   const [selectedStrategies, setSelectedStrategies] = useState({});
   const [showResults, setShowResults] = useState(false);
   const [score, setScore] = useState(0);
+
+  // Module score saving state
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveResult, setSaveResult] = useState(null);
 
   const scenarios = [
     {
@@ -169,12 +173,32 @@ const DebtManagementModule = () => {
         correctCount++;
       }
     });
-    setScore(correctCount);
+    return correctCount;
   };
 
-  const handleFinish = () => {
-    calculateScore();
+
+  // Save the module score when quiz is completed
+  const saveModuleScore = async (finalScore) => {
+    setIsSaving(true);
+    try {
+      // Convert score to percentage (0-100)
+      const percentageScore = Math.round((finalScore / scenarios.length) * 100);
+      const result = await saveScore(MODULES.DEBT_MANAGEMENT.id, percentageScore, 100);
+      setSaveResult(result);
+    } catch (err) {
+      console.error('Error saving score:', err);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleFinish = async () => {
+    const finalScore = calculateScore();
+    setScore(finalScore);
     setShowResults(true);
+
+    // Save the score to Firestore
+    await saveModuleScore(finalScore);
   };
 
   const resetModule = () => {
@@ -240,7 +264,7 @@ const DebtManagementModule = () => {
           <ArrowLeft className="w-5 h-5" />
           Back to Roadmap
         </button>
-        
+
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-800">Debt Management</h1>
           <p className="text-sm text-gray-600">Strategic Scenario Analysis</p>
@@ -258,9 +282,8 @@ const DebtManagementModule = () => {
           <div className="flex items-center justify-center mb-8">
             {scenarios.map((_, index) => (
               <div key={index} className="flex items-center">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${
-                  currentScenario >= index ? 'bg-orange-500 text-white' : 'bg-gray-200 text-gray-500'
-                }`}>
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${currentScenario >= index ? 'bg-orange-500 text-white' : 'bg-gray-200 text-gray-500'
+                  }`}>
                   {index + 1}
                 </div>
                 {index < scenarios.length - 1 && <div className={`w-16 h-1 ${currentScenario > index ? 'bg-orange-500' : 'bg-gray-200'}`} />}
@@ -292,7 +315,7 @@ const DebtManagementModule = () => {
                   <Calculator className="w-5 h-5" />
                   Financial Situation
                 </h3>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {scenarios[currentScenario].situation.totalDebt && (
                     <div>
@@ -302,7 +325,7 @@ const DebtManagementModule = () => {
                       </div>
                     </div>
                   )}
-                  
+
                   {scenarios[currentScenario].situation.monthlyIncome && (
                     <div>
                       <span className="text-sm text-gray-600">Monthly Income</span>
@@ -311,7 +334,7 @@ const DebtManagementModule = () => {
                       </div>
                     </div>
                   )}
-                  
+
                   {scenarios[currentScenario].situation.expenses && (
                     <div>
                       <span className="text-sm text-gray-600">Monthly Expenses</span>
@@ -320,7 +343,7 @@ const DebtManagementModule = () => {
                       </div>
                     </div>
                   )}
-                  
+
                   {scenarios[currentScenario].situation.emergencyFund && (
                     <div>
                       <span className="text-sm text-gray-600">Emergency Fund</span>
@@ -368,21 +391,19 @@ const DebtManagementModule = () => {
                   {scenarios[currentScenario].strategies.map((strategy) => (
                     <motion.button
                       key={strategy.id}
-                      className={`w-full p-4 rounded-lg border-2 text-left transition-all ${
-                        selectedStrategies[currentScenario] === strategy.id
-                          ? 'border-orange-500 bg-orange-50'
-                          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                      }`}
+                      className={`w-full p-4 rounded-lg border-2 text-left transition-all ${selectedStrategies[currentScenario] === strategy.id
+                        ? 'border-orange-500 bg-orange-50'
+                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                        }`}
                       onClick={() => handleStrategySelect(currentScenario, strategy.id)}
                       whileHover={{ scale: 1.01 }}
                       whileTap={{ scale: 0.99 }}
                     >
                       <div className="flex items-start gap-3">
-                        <div className={`w-5 h-5 rounded-full border-2 mt-1 ${
-                          selectedStrategies[currentScenario] === strategy.id
-                            ? 'border-orange-500 bg-orange-500'
-                            : 'border-gray-300'
-                        }`}>
+                        <div className={`w-5 h-5 rounded-full border-2 mt-1 ${selectedStrategies[currentScenario] === strategy.id
+                          ? 'border-orange-500 bg-orange-500'
+                          : 'border-gray-300'
+                          }`}>
                           {selectedStrategies[currentScenario] === strategy.id && (
                             <div className="w-full h-full rounded-full bg-white scale-50"></div>
                           )}
@@ -402,11 +423,10 @@ const DebtManagementModule = () => {
                 <button
                   onClick={() => setCurrentScenario(Math.max(0, currentScenario - 1))}
                   disabled={currentScenario === 0}
-                  className={`px-6 py-3 rounded-lg font-medium transition ${
-                    currentScenario === 0
-                      ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                      : 'bg-gray-300 hover:bg-gray-400 text-gray-700'
-                  }`}
+                  className={`px-6 py-3 rounded-lg font-medium transition ${currentScenario === 0
+                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                    : 'bg-gray-300 hover:bg-gray-400 text-gray-700'
+                    }`}
                 >
                   Previous
                 </button>
@@ -415,11 +435,10 @@ const DebtManagementModule = () => {
                   <button
                     onClick={() => setCurrentScenario(currentScenario + 1)}
                     disabled={!selectedStrategies[currentScenario]}
-                    className={`px-6 py-3 rounded-lg font-medium transition ${
-                      !selectedStrategies[currentScenario]
-                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                        : 'bg-orange-500 hover:bg-orange-600 text-white'
-                    }`}
+                    className={`px-6 py-3 rounded-lg font-medium transition ${!selectedStrategies[currentScenario]
+                      ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                      : 'bg-orange-500 hover:bg-orange-600 text-white'
+                      }`}
                   >
                     Next Scenario
                   </button>
@@ -427,11 +446,10 @@ const DebtManagementModule = () => {
                   <button
                     onClick={handleFinish}
                     disabled={!selectedStrategies[currentScenario]}
-                    className={`px-6 py-3 rounded-lg font-medium transition ${
-                      !selectedStrategies[currentScenario]
-                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                        : 'bg-green-500 hover:bg-green-600 text-white'
-                    }`}
+                    className={`px-6 py-3 rounded-lg font-medium transition ${!selectedStrategies[currentScenario]
+                      ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                      : 'bg-green-500 hover:bg-green-600 text-white'
+                      }`}
                   >
                     Get Results
                   </button>
@@ -455,6 +473,34 @@ const DebtManagementModule = () => {
               <p className="text-xl text-gray-600">
                 You scored {score} out of {scenarios.length} scenarios correctly
               </p>
+
+              {/* Save Status Indicator */}
+              {isSaving && (
+                <div className="mt-4 text-blue-600 flex items-center justify-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                  <span>Saving your progress...</span>
+                </div>
+              )}
+
+              {!isSaving && saveResult && (
+                <div className={`mt-4 p-3 rounded-lg ${saveResult.passed ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                  }`}>
+                  {saveResult.passed ? (
+                    <>
+                      <div className="font-semibold flex items-center justify-center gap-2">
+                        <CheckCircle className="w-5 h-5" />
+                        Module Completed! 🎉
+                      </div>
+                      <div className="text-sm mt-1">Your progress has been saved</div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="font-semibold">Progress Saved</div>
+                      <div className="text-sm mt-1">You need 100% to pass. Try again!</div>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Detailed Results */}
@@ -465,9 +511,8 @@ const DebtManagementModule = () => {
                 const isCorrect = strategy && strategy.correct;
 
                 return (
-                  <div key={scenario.id} className={`p-6 rounded-lg border-2 ${
-                    isCorrect ? 'border-green-300 bg-green-50' : 'border-red-300 bg-red-50'
-                  }`}>
+                  <div key={scenario.id} className={`p-6 rounded-lg border-2 ${isCorrect ? 'border-green-300 bg-green-50' : 'border-red-300 bg-red-50'
+                    }`}>
                     <div className="flex items-start gap-3 mb-3">
                       {isCorrect ? (
                         <CheckCircle className="w-6 h-6 text-green-500 mt-1" />

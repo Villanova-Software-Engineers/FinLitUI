@@ -1,62 +1,154 @@
-import React, { useRef } from 'react';
-import { Download, Award, Star, CheckCircle, Calendar, ArrowLeft, Lock } from 'lucide-react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
+import { Download, ArrowLeft, Lock } from 'lucide-react';
 import { useAuthContext } from '../auth/context/AuthContext';
 import { useModuleScore, MODULES } from '../hooks/useModuleScore';
 import { useNavigate } from 'react-router-dom';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
 
 const Certificate: React.FC = () => {
   const { user } = useAuthContext();
-  const { progress, isModulePassed } = useModuleScore();
+  const { isModulePassed } = useModuleScore();
   const navigate = useNavigate();
-  const certificateRef = useRef<HTMLDivElement>(null);
-
-  const downloadPDF = async () => {
-    if (!certificateRef.current) return;
-    
-    try {
-      const canvas = await html2canvas(certificateRef.current, {
-        scale: 2,
-        backgroundColor: '#ffffff',
-        useCORS: true,
-        allowTaint: true,
-      });
-      
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({
-        orientation: 'landscape',
-        unit: 'mm',
-        format: 'a4'
-      });
-      
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = canvas.width;
-      const imgHeight = canvas.height;
-      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-      const imgX = (pdfWidth - imgWidth * ratio) / 2;
-      const imgY = (pdfHeight - imgHeight * ratio) / 2;
-      
-      pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
-      pdf.save(`FinLit_Certificate_${user?.displayName?.replace(/\s+/g, '_') || 'Certificate'}.pdf`);
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-    }
-  };
-
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [certificateImage, setCertificateImage] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
   const currentDate = new Date().toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
     day: 'numeric'
   });
 
-  const totalXP = progress?.totalXP ?? 0;
+  const generateCertificate = useCallback(async () => {
+    const canvas = canvasRef.current;
+    if (!canvas || isGenerating) return;
+    
+    setIsGenerating(true);
+    setError(null);
+    setCertificateImage(null);
+    
+    try {
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        throw new Error('Canvas context not available');
+      }
+      
+      // Set canvas dimensions
+      canvas.width = 800;
+      canvas.height = 600;
+      
+      // Load the certificate background image with cache busting and retry logic
+      const img = new Image();
+      
+      const loadImageWithRetry = (attempts = 3): Promise<void> => {
+        return new Promise((resolve, reject) => {
+          const attemptLoad = (attemptsLeft: number) => {
+            if (attemptsLeft <= 0) {
+              reject(new Error('Failed to load certificate image after multiple attempts'));
+              return;
+            }
+            
+            img.onload = () => {
+              console.log('Certificate image loaded successfully');
+              resolve();
+            };
+            
+            img.onerror = () => {
+              console.warn(`Image load attempt failed, ${attemptsLeft - 1} attempts remaining`);
+              // Retry with cache busting
+              setTimeout(() => attemptLoad(attemptsLeft - 1), 1000);
+            };
+            
+            // Add cache busting parameter
+            const cacheBuster = new Date().getTime();
+            img.src = `/cert.png?v=${cacheBuster}`;
+          };
+          
+          attemptLoad(attempts);
+        });
+      };
+      
+      // Wait for image to load
+      await loadImageWithRetry();
+      
+      // Clear canvas and draw background
+      ctx.clearRect(0, 0, 800, 600);
+      ctx.drawImage(img, 0, 0, 800, 600);
+      
+      // Set text properties
+      ctx.fillStyle = '#2c3e50';
+      ctx.textAlign = 'center';
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.1)';
+      ctx.shadowBlur = 2;
+      ctx.shadowOffsetX = 1;
+      ctx.shadowOffsetY = 1;
+      
+      // Student Name (at 54% from top)
+      ctx.font = 'bold 48px serif';
+      const studentName = user?.displayName || user?.email?.split('@')[0] || 'Student';
+      ctx.fillText(studentName, 400, 350);
+      
+      // Date (at 16% from bottom, 45% from left)
+      ctx.font = 'bold 24px serif';
+      const dateY = 600 - (18 * 6);
+      const dateX = 45 * 8;
+      ctx.fillText(currentDate, dateX, dateY);
+      
+      // Certificate ID (at 16% from bottom, 75% from right)
+      const certId = `FL-${new Date().getFullYear()}-${user?.id?.slice(0, 6).toUpperCase() || 'CERT01'}`;
+      const certX = 800 - (25 * 8);
+      ctx.fillText(certId, certX, dateY);
+      
+      // Convert to image and set state
+      const imageData = canvas.toDataURL('image/jpeg', 0.95);
+      setCertificateImage(imageData);
+      console.log('Certificate generated successfully');
+      
+    } catch (err) {
+      console.error('Certificate generation failed:', err);
+      setError(err instanceof Error ? err.message : 'Failed to generate certificate');
+    } finally {
+      setIsGenerating(false);
+    }
+  }, [user, currentDate, isGenerating]);
+
+  const downloadJPG = () => {
+    if (!certificateImage) return;
+    
+    const link = document.createElement('a');
+    link.download = `FinLit_Certificate_${user?.displayName?.replace(/\s+/g, '_') || 'Certificate'}.jpg`;
+    link.href = certificateImage;
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  useEffect(() => {
+    console.log('Certificate useEffect triggered, user:', user?.displayName || 'No user');
+    // Reset states
+    setCertificateImage(null);
+    setError(null);
+    setIsGenerating(false);
+    
+    const timer = setTimeout(() => {
+      console.log('Attempting to generate certificate...');
+      if (user) {
+        generateCertificate();
+      }
+    }, 500);
+    
+    return () => {
+      console.log('Cleaning up certificate generation timer');
+      clearTimeout(timer);
+    };
+  }, [user?.id, user?.displayName, user?.email]); // Only depend on specific user properties
+
   
   // Check if user has completed all modules
   const allModules = Object.values(MODULES);
   const completedModules = allModules.filter(module => isModulePassed(module.id)).length;
-  const totalModules = allModules.length;
+  const totalModules = allModules.length-1;
   const hasCompletedAllModules = completedModules === totalModules;
   
   // If not completed, show access denied page
@@ -108,7 +200,6 @@ const Certificate: React.FC = () => {
                 className="inline-flex items-center gap-3 px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
               >
                 Continue Learning
-                <Star size={20} />
               </button>
             </div>
           </div>
@@ -118,7 +209,7 @@ const Certificate: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 p-4 sm:p-6 lg:p-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
@@ -129,160 +220,98 @@ const Certificate: React.FC = () => {
             <ArrowLeft size={20} />
             Back to Dashboard
           </button>
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="w-16 h-16 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full flex items-center justify-center shadow-lg">
-              <Award className="text-white" size={32} />
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-4">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full flex items-center justify-center shadow-lg">
+              <span className="text-white text-xl sm:text-2xl">🏆</span>
             </div>
-            <h1 className="text-4xl font-bold text-slate-800 bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-800 bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent text-center">
               Congratulations!
             </h1>
           </div>
-          <p className="text-xl text-slate-600 font-medium">
+          <p className="text-lg sm:text-xl text-slate-600 font-medium px-4">
             You have successfully completed the FinLit Financial Literacy Program
           </p>
         </div>
 
         {/* Certificate */}
-        <div className="flex justify-center mb-8">
-          <div
-            ref={certificateRef}
-            className="bg-white border-8 border-gradient-to-r from-emerald-200 to-teal-200 rounded-3xl shadow-2xl p-12 max-w-4xl w-full"
-            style={{
-              background: 'linear-gradient(145deg, #ffffff 0%, #f8fafc 100%)',
-              borderImage: 'linear-gradient(145deg, #10b981, #14b8a6) 1'
-            }}
-          >
-            {/* Certificate Header */}
-            <div className="text-center mb-8">
-              <div className="flex justify-center mb-6">
-                <div className="relative">
-                  <div className="w-24 h-24 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full flex items-center justify-center shadow-xl">
-                    <Award className="text-white" size={48} />
-                  </div>
-                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-r from-yellow-400 to-amber-500 rounded-full flex items-center justify-center">
-                    <Star className="text-white fill-current" size={16} />
-                  </div>
-                </div>
-              </div>
-              
-              <h2 className="text-5xl font-bold text-slate-800 mb-2">Certificate of Achievement</h2>
-              <div className="w-32 h-1 bg-gradient-to-r from-emerald-500 to-teal-600 mx-auto rounded-full"></div>
-            </div>
-
-            {/* Certificate Body */}
-            <div className="text-center space-y-6">
-              <p className="text-2xl text-slate-700 font-medium">This is to certify that</p>
-              
-              <div className="py-4">
-                <h3 className="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
-                  {user?.displayName || user?.email?.split('@')[0] || 'Student'}
-                </h3>
-                <div className="w-64 h-0.5 bg-gradient-to-r from-emerald-500 to-teal-600 mx-auto mt-2"></div>
-              </div>
-
-              <p className="text-2xl text-slate-700 font-medium leading-relaxed">
-                has successfully completed the comprehensive
-              </p>
-
-              <div className="py-4">
-                <h4 className="text-3xl font-bold text-slate-800">FinLit Financial Literacy Program</h4>
-                <p className="text-lg text-slate-600 mt-2">
-                  Mastering Essential Financial Skills for Life Success
+        <div className="flex justify-center mb-8 px-4">
+          <div className="relative w-full max-w-4xl">
+            {/* Hidden Canvas for generation */}
+            <canvas
+              ref={canvasRef}
+              className="hidden"
+            />
+            
+            {/* Display the generated certificate image */}
+            {certificateImage ? (
+              <img 
+                src={certificateImage} 
+                alt="Generated Certificate" 
+                className="w-full h-auto object-contain rounded-lg shadow-xl"
+                style={{ maxWidth: '800px', width: '100%' }}
+              />
+            ) : error ? (
+              <div className="w-full h-96 bg-red-50 border-2 border-red-200 rounded-lg shadow-xl flex flex-col items-center justify-center p-8">
+                <p className="text-red-600 text-center mb-4">
+                  Failed to generate certificate: {error}
                 </p>
+                <button
+                  onClick={generateCertificate}
+                  className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  Retry
+                </button>
               </div>
-
-              <div className="grid grid-cols-3 gap-8 my-8">
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <CheckCircle className="text-blue-600" size={32} />
-                  </div>
-                  <p className="text-sm font-semibold text-slate-600">All Modules</p>
-                  <p className="text-sm text-slate-500">Completed</p>
-                </div>
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-gradient-to-r from-yellow-100 to-amber-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <Star className="text-yellow-600 fill-current" size={32} />
-                  </div>
-                  <p className="text-sm font-semibold text-slate-600">{totalXP} XP</p>
-                  <p className="text-sm text-slate-500">Total Earned</p>
-                </div>
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-gradient-to-r from-emerald-100 to-teal-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <Calendar className="text-emerald-600" size={32} />
-                  </div>
-                  <p className="text-sm font-semibold text-slate-600">{currentDate}</p>
-                  <p className="text-sm text-slate-500">Date Earned</p>
-                </div>
+            ) : (
+              <div className="w-full h-96 bg-gray-100 rounded-lg shadow-xl flex flex-col items-center justify-center">
+                {isGenerating ? (
+                  <>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+                    <p className="text-gray-500">Generating certificate...</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-gray-500 mb-4">Certificate will load shortly...</p>
+                    <button
+                      onClick={generateCertificate}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    >
+                      Generate Certificate
+                    </button>
+                  </>
+                )}
               </div>
-
-              <p className="text-lg text-slate-600 leading-relaxed max-w-3xl mx-auto">
-                This achievement represents a comprehensive understanding of budgeting, investing, 
-                credit management, debt strategies, insurance, and financial planning principles 
-                essential for building long-term financial wellness.
-              </p>
-            </div>
-
-            {/* Certificate Footer */}
-            <div className="flex justify-between items-end mt-12">
-              <div className="text-left">
-                <div className="w-32 h-0.5 bg-slate-300 mb-2"></div>
-                <p className="text-sm font-semibold text-slate-600">FinLit Program</p>
-                <p className="text-xs text-slate-500">Authorized Institution</p>
-              </div>
-              
-              <div className="text-center">
-                <div className="w-20 h-20 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full flex items-center justify-center shadow-lg mb-2">
-                  <span className="text-white font-bold text-xl">FL</span>
-                </div>
-                <p className="text-xs text-slate-500">Official Seal</p>
-              </div>
-              
-              <div className="text-right">
-                <div className="w-32 h-0.5 bg-slate-300 mb-2"></div>
-                <p className="text-sm font-semibold text-slate-600">Certificate ID</p>
-                <p className="text-xs text-slate-500 font-mono">
-                  FL-{new Date().getFullYear()}-{user?.id?.slice(0, 8).toUpperCase() || 'CERT001'}
-                </p>
-              </div>
-            </div>
+            )}
           </div>
         </div>
 
         {/* Download Button */}
         <div className="text-center">
           <button
-            onClick={downloadPDF}
-            className="inline-flex items-center gap-3 px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+            onClick={downloadJPG}
+            disabled={!certificateImage}
+            className={`inline-flex items-center gap-3 px-8 py-4 text-lg font-semibold text-white rounded-lg shadow-lg transition-all duration-200 ${
+              certificateImage 
+                ? 'bg-blue-600 hover:bg-blue-700 hover:shadow-xl' 
+                : 'bg-gray-400 cursor-not-allowed'
+            }`}
           >
             <Download size={24} />
-            Download Certificate as PDF
+            {certificateImage 
+              ? 'Download Certificate as Image' 
+              : error 
+                ? 'Certificate Generation Failed'
+                : isGenerating 
+                  ? 'Generating Certificate...'
+                  : 'Preparing Certificate...'
+            }
           </button>
-          <p className="text-sm text-slate-500 mt-3">
-            Save your achievement to share with employers, schools, or for your personal records
+          <p className="text-sm text-gray-500 mt-3">
+            {error 
+              ? 'Please retry certificate generation above' 
+              : 'Save your achievement for your records'
+            }
           </p>
-        </div>
-
-        {/* Achievement Summary */}
-        <div className="mt-12 bg-white/70 backdrop-blur-sm border border-slate-200/60 rounded-2xl p-8 shadow-lg">
-          <h3 className="text-2xl font-bold text-slate-800 mb-6 text-center">Your Learning Journey</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <div className="text-center p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl">
-              <p className="text-3xl font-bold text-blue-600">8</p>
-              <p className="text-sm text-slate-600">Modules Mastered</p>
-            </div>
-            <div className="text-center p-4 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl">
-              <p className="text-3xl font-bold text-emerald-600">{totalXP}</p>
-              <p className="text-sm text-slate-600">Experience Points</p>
-            </div>
-            <div className="text-center p-4 bg-gradient-to-r from-yellow-50 to-amber-50 rounded-xl">
-              <p className="text-3xl font-bold text-yellow-600">{progress?.streak ?? 0}</p>
-              <p className="text-sm text-slate-600">Day Streak</p>
-            </div>
-            <div className="text-center p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl">
-              <p className="text-3xl font-bold text-purple-600">100%</p>
-              <p className="text-sm text-slate-600">Completion Rate</p>
-            </div>
-          </div>
         </div>
       </div>
     </div>
