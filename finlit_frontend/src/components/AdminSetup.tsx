@@ -17,7 +17,6 @@ import {
   Users,
   LayoutDashboard,
   Shield,
-  ChevronRight,
   MoreHorizontal,
   CheckCircle,
   XCircle,
