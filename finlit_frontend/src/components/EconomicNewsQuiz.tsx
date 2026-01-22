@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Globe, BarChart3, CheckCircle, XCircle, ArrowRight, ArrowLeft, Star, Flame } from 'lucide-react';
+import { CheckCircle, XCircle, ArrowRight, ArrowLeft, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface Question {
