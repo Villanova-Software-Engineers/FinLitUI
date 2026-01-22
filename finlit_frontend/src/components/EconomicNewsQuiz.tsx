@@ -69,6 +69,7 @@ const EconomicNewsQuiz: React.FC = () => {
   const [showResult, setShowResult] = useState(false);
   const [score, setScore] = useState(0);
   const [answeredQuestions, setAnsweredQuestions] = useState<boolean[]>(new Array(questions.length).fill(false));
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isComplete, setIsComplete] = useState(false);
 
   const handleAnswerSelect = (index: number) => {
@@ -102,6 +103,7 @@ const EconomicNewsQuiz: React.FC = () => {
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleRestart = () => {
     setCurrentQuestion(0);
     setSelectedAnswer(null);
