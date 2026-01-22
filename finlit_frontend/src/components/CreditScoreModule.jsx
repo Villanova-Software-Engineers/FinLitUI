@@ -654,7 +654,7 @@ const CreditScoreModule = () => {
             </div>
 
             {/* Character Introduction */}
-            <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 mb-6 shadow-lg border-l-4 border-blue-500">
+            <div className="bg-white/90 backdrop-blur-sm rounded-lg sm:rounded-xl p-4 sm:p-6 mb-6 shadow-lg border-l-4 border-blue-500">
               <div className="flex items-start gap-4">
                 <motion.div 
                   className="text-5xl cursor-pointer"
@@ -713,7 +713,7 @@ const CreditScoreModule = () => {
             </div>
 
             {/* Main Content */}
-            <div className="bg-white rounded-xl p-6 mb-6 shadow-md">
+            <div className="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 mb-6 shadow-md">
               <h3 className="text-lg font-bold text-gray-800 mb-3">Key Concepts:</h3>
               <div className="text-gray-700 leading-relaxed whitespace-pre-line">
                 {learningContent[learningStep].content}
@@ -721,7 +721,7 @@ const CreditScoreModule = () => {
             </div>
 
             {/* Analogy Box */}
-            <div className="bg-gradient-to-r from-yellow-100 to-orange-100 rounded-xl p-6 border border-yellow-300">
+            <div className="bg-gradient-to-r from-yellow-100 to-orange-100 rounded-lg sm:rounded-xl p-4 sm:p-6 border border-yellow-300">
               <h4 className="text-lg font-bold text-orange-800 mb-2">💡 Think of it this way:</h4>
               <p className="text-orange-700 leading-relaxed">
                 {learningContent[learningStep].analogy}
@@ -807,7 +807,7 @@ const CreditScoreModule = () => {
               >
                 🎮
               </motion.div>
-              <h2 className="text-3xl font-bold text-gray-800 mb-2">
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">
                 {miniGames[gameStep].title}
               </h2>
               <div className="text-lg font-semibold text-purple-600 mb-4">
@@ -953,7 +953,7 @@ const CreditScoreModule = () => {
 
             {miniGames[gameStep].type === 'slider' && (
               <div className="space-y-6">
-                <div className="bg-white rounded-xl p-6 shadow-md">
+                <div className="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-md">
                   <div className="text-center mb-6">
                     <span className="text-4xl mb-2 block">
                       {miniGames[gameStep].scenarios[0].emoji}
@@ -1040,7 +1040,7 @@ const CreditScoreModule = () => {
 
             {miniGames[gameStep].type === 'timeline' && (
               <div className="space-y-4">
-                <div className="bg-white rounded-xl p-6 shadow-md">
+                <div className="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-md">
                   <h3 className="text-lg font-bold text-gray-800 mb-4 text-center">
                     Drag to Arrange the Steps in Order! 🎯
                   </h3>
@@ -1390,7 +1390,7 @@ const CreditScoreModule = () => {
               <Trophy className="w-20 h-20 mx-auto text-yellow-500 mb-6" />
             </motion.div>
             
-            <h2 className="text-3xl font-bold text-gray-800 mb-4">Credit Score Mastery Complete! 🎉</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-4">Credit Score Mastery Complete! 🎉</h2>
             <p className="text-xl text-gray-600 mb-6">
               {getScoreMessage()}
             </p>
@@ -1398,19 +1398,19 @@ const CreditScoreModule = () => {
             {/* Final Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
               <div className="bg-purple-50 rounded-lg p-4 text-center">
-                <div className="text-3xl font-bold text-purple-600">{totalXP}</div>
+                <div className="text-2xl sm:text-3xl font-bold text-purple-600">{totalXP}</div>
                 <div className="text-sm text-gray-600">Total XP</div>
               </div>
               <div className="bg-green-50 rounded-lg p-4 text-center">
-                <div className="text-3xl font-bold text-green-600">{score}</div>
+                <div className="text-2xl sm:text-3xl font-bold text-green-600">{score}</div>
                 <div className="text-sm text-gray-600">Correct</div>
               </div>
               <div className="bg-blue-50 rounded-lg p-4 text-center">
-                <div className="text-3xl font-bold text-blue-600">{lives}</div>
+                <div className="text-2xl sm:text-3xl font-bold text-blue-600">{lives}</div>
                 <div className="text-sm text-gray-600">Lives Left</div>
               </div>
               <div className="bg-orange-50 rounded-lg p-4 text-center">
-                <div className="text-3xl font-bold text-orange-600">{achievements.length}</div>
+                <div className="text-2xl sm:text-3xl font-bold text-orange-600">{achievements.length}</div>
                 <div className="text-sm text-gray-600">Achievements</div>
               </div>
             </div>

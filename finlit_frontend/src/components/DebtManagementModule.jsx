@@ -469,7 +469,7 @@ const DebtManagementModule = () => {
           <div className="bg-white rounded-2xl p-8 shadow-lg">
             <div className="text-center mb-8">
               <TrendingDown className="w-16 h-16 mx-auto text-green-500 mb-4" />
-              <h2 className="text-3xl font-bold text-gray-800 mb-2">Debt Analysis Complete!</h2>
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">Debt Analysis Complete!</h2>
               <p className="text-xl text-gray-600">
                 You scored {score} out of {scenarios.length} scenarios correctly
               </p>

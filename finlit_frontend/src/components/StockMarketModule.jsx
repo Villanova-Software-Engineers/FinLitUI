@@ -1131,7 +1131,7 @@ const StockMarketModule = () => {
             )}
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
             {/* Stock Market */}
             <div className="lg:col-span-2 space-y-6">
               <div className="flex items-center justify-between">
@@ -1312,7 +1312,7 @@ const StockMarketModule = () => {
             {/* Sidebar */}
             <div className="space-y-6">
               {/* Portfolio */}
-              <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+              <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg border border-gray-100">
                 <h4 className="text-xl font-black mb-4 flex items-center gap-2 text-gray-900 tracking-tight">
                   💼 Your Portfolio
                 </h4>
@@ -1354,7 +1354,7 @@ const StockMarketModule = () => {
               </div>
 
               {/* Trade History */}
-              <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+              <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg border border-gray-100">
                 <h4 className="text-xl font-black mb-4 flex items-center gap-2 text-gray-900 tracking-tight">
                   📜 Trade History
                 </h4>
@@ -1386,7 +1386,7 @@ const StockMarketModule = () => {
 
               {/* Achievements */}
               {achievements.length > 0 && (
-                <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-2xl p-6 shadow-lg border-2 border-amber-200">
+                <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg border-2 border-amber-200">
                   <h4 className="text-xl font-black mb-4 flex items-center gap-2 text-amber-800 tracking-tight">
                     🏆 Achievements
                   </h4>
