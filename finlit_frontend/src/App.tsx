@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthPage, AuthProvider } from "./auth";
+import { AuthPage, AuthProvider, ProtectedRoute } from "./auth";
 import FinLitApp from "./pages/Home";
 import FinancialRoadmap from "./pages/Roadmap";
 import NeedsPage from "./50-30-20/needs";
@@ -18,6 +18,13 @@ import DebtManagementModule from "./components/DebtManagementModule";
 import InvestmentBankingModule from "./components/InvestmentBankingModule";
 import AdminSetup from "./components/AdminSetup";
 import AdminDashboard from "./components/AdminDashboard";
+import EconomicNewsQuiz from "./components/EconomicNewsQuiz";
+import Certificate from "./components/Certificate";
+
+// Smart Auth component that redirects authenticated users appropriately
+const SmartAuthPage: React.FC = () => {
+  return <AuthPage />;
+};
 
 function Dashboard() {
   return <FinLitApp />;
@@ -28,34 +35,198 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <Routes>
-          <Route path="/" element={<Navigate to="/auth" replace />} />
-          <Route path="/auth" element={<AuthPage />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/game" element={<FinancialRoadmap />} />
-          <Route path="/fin" element={<FinancialRoadmap />} />
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/auth" element={<SmartAuthPage />} />
+          
+          {/* Protected Dashboard Routes */}
+          <Route 
+            path="/dashboard" 
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/game" 
+            element={
+              <ProtectedRoute>
+                <FinancialRoadmap />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/fin" 
+            element={
+              <ProtectedRoute>
+                <FinancialRoadmap />
+              </ProtectedRoute>
+            } 
+          />
 
-          {/* 50-30-20 Budget Rule Routes */}
-          <Route path="/50-30-20" element={<BudgetRuleChartStep activeCategoryKey="50" />} />
-          <Route path="/mainpage" element={<MainPage />} />
-          <Route path="/needs" element={<NeedsPage />} />
-          <Route path="/wants" element={<WantsPage />} />
-          <Route path="/savings" element={<SavingsPage />} />
-          <Route path="/calculator" element={<CalculatorPage />} />
+          {/* Protected 50-30-20 Budget Rule Routes */}
+          <Route 
+            path="/50-30-20" 
+            element={
+              <ProtectedRoute>
+                <BudgetRuleChartStep activeCategoryKey="50" />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/mainpage" 
+            element={
+              <ProtectedRoute>
+                <MainPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/needs" 
+            element={
+              <ProtectedRoute>
+                <NeedsPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/wants" 
+            element={
+              <ProtectedRoute>
+                <WantsPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/savings" 
+            element={
+              <ProtectedRoute>
+                <SavingsPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/calculator" 
+            element={
+              <ProtectedRoute>
+                <CalculatorPage />
+              </ProtectedRoute>
+            } 
+          />
 
-          {/* Learning Modules */}
-          <Route path="/needs-wants" element={<NeedsWants />} />
-          <Route path="/need" element={<NeedsWants />} />
-          <Route path="/investment-quiz" element={<InvestmentBankingModule />} />
-          <Route path="/truefalse" element={<TrueFalseCard />} />
-          <Route path="/credit-score" element={<CreditScoreModule />} />
-          <Route path="/emergency-fund" element={<EmergencyFundModule />} />
-          <Route path="/stock-market" element={<StockMarketModule />} />
-          <Route path="/insurance" element={<InsuranceModule />} />
-          <Route path="/debt-management" element={<DebtManagementModule />} />
+          {/* Protected Learning Modules */}
+          <Route 
+            path="/needs-wants" 
+            element={
+              <ProtectedRoute>
+                <NeedsWants />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/need" 
+            element={
+              <ProtectedRoute>
+                <NeedsWants />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/investment-quiz" 
+            element={
+              <ProtectedRoute>
+                <InvestmentBankingModule />
+              </ProtectedRoute>
+            } 
+          />
+          <Route
+            path="/truefalse"
+            element={
+              <ProtectedRoute>
+                <TrueFalseCard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/economic-quiz"
+            element={
+              <ProtectedRoute>
+                <EconomicNewsQuiz />
+              </ProtectedRoute>
+            }
+          />
+          <Route 
+            path="/credit-score" 
+            element={
+              <ProtectedRoute>
+                <CreditScoreModule />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/emergency-fund" 
+            element={
+              <ProtectedRoute>
+                <EmergencyFundModule />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/stock-market" 
+            element={
+              <ProtectedRoute>
+                <StockMarketModule />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/insurance" 
+            element={
+              <ProtectedRoute>
+                <InsuranceModule />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/debt-management" 
+            element={
+              <ProtectedRoute>
+                <DebtManagementModule />
+              </ProtectedRoute>
+            } 
+          />
 
-          {/* Admin Setup */}
-          <Route path="/admin-setup" element={<AdminSetup />} />
-          <Route path="/admin" element={<AdminDashboard />} />
+          {/* Protected Admin Routes */}
+          <Route 
+            path="/admin-setup" 
+            element={
+              <ProtectedRoute requiredRole="owner">
+                <AdminSetup />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin" 
+            element={
+              <ProtectedRoute>
+                <AdminDashboard />
+              </ProtectedRoute>
+            } 
+          />
+
+          {/* Certificate Route */}
+          <Route 
+            path="/certificate" 
+            element={
+              <ProtectedRoute>
+                <Certificate />
+              </ProtectedRoute>
+            } 
+          />
+
+          
+          {/* Catch all route - redirect to dashboard if authenticated, otherwise to auth */}
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

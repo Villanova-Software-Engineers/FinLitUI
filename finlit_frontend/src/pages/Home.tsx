@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Star, BookOpen, Home, Target, User, Check, Flame, GraduationCap, Loader2, Lock, Play, Zap, Lightbulb, TrendingUp, PiggyBank, Shield, CreditCard, Wallet, RefreshCw } from 'lucide-react';
+import { Star, BookOpen, Home, Target, User, Check, Flame, GraduationCap, Loader2, Lock, Play, Zap, Lightbulb, TrendingUp, PiggyBank, Shield, CreditCard, Wallet, RefreshCw, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../auth/context/AuthContext';
 import { useModuleScore, MODULES } from '../hooks/useModuleScore';
@@ -21,26 +21,26 @@ interface ClueData {
 }
 
 const CROSSWORD_CLUES: ClueData[] = [
-  // Across
+  // Across - from CSV data
   { number: 1, clue: "Money paid for borrowing money", answer: "INTEREST", startRow: 0, startCol: 0, direction: 'across' },
   { number: 4, clue: "Strategy for financial success", answer: "PLAN", startRow: 2, startCol: 3, direction: 'across' },
   { number: 6, clue: "Fixed period for a loan or investment", answer: "TERM", startRow: 3, startCol: 7, direction: 'across' },
   { number: 7, clue: "Money available for a purpose", answer: "FUNDS", startRow: 4, startCol: 1, direction: 'across' },
   { number: 9, clue: "Value of ownership in an asset", answer: "EQUITY", startRow: 5, startCol: 5, direction: 'across' },
   { number: 10, clue: "To put money into a venture", answer: "INVEST", startRow: 6, startCol: 0, direction: 'across' },
-  { number: 12, clue: "To be in debt", answer: "OWE", startRow: 8, startCol: 4, direction: 'across' },
-  { number: 13, clue: "To give money for goods or services", answer: "PAY", startRow: 8, startCol: 8, direction: 'across' },
-  { number: 14, clue: "A payment for a service", answer: "FEE", startRow: 10, startCol: 0, direction: 'across' },
-  { number: 15, clue: "Mandatory contributions to state revenue", answer: "TAXES", startRow: 10, startCol: 6, direction: 'across' },
-  // Down
+  { number: 15, clue: "To be in debt", answer: "OWE", startRow: 8, startCol: 4, direction: 'across' },
+  { number: 16, clue: "To give money for goods or services", answer: "PAY", startRow: 8, startCol: 8, direction: 'across' },
+  { number: 17, clue: "A payment for a service", answer: "FEE", startRow: 10, startCol: 0, direction: 'across' },
+  { number: 18, clue: "Mandatory contributions to state revenue", answer: "TAXES", startRow: 10, startCol: 6, direction: 'across' },
+  // Down - from CSV data
   { number: 2, clue: "Money spent on goods or services", answer: "EXPENSE", startRow: 0, startCol: 3, direction: 'down' },
-  { number: 3, clue: "Ability to borrow money with a promise to repay", answer: "CREDIT", startRow: 0, startCol: 8, direction: 'down' },
+  { number: 3, clue: "Ability to borrow money with a promise to repay", answer: "CREDIT", startRow: 1, startCol: 8, direction: 'down' },
   { number: 5, clue: "Something of value owned", answer: "ASSET", startRow: 2, startCol: 5, direction: 'down' },
   { number: 8, clue: "Potential for loss in an investment", answer: "RISK", startRow: 5, startCol: 0, direction: 'down' },
   { number: 11, clue: "Worth of an asset", answer: "VALUE", startRow: 6, startCol: 2, direction: 'down' },
-  { number: 16, clue: "Type of security representing ownership", answer: "STOCK", startRow: 6, startCol: 4, direction: 'down' },
-  { number: 17, clue: "Money owed to another party", answer: "DEBT", startRow: 6, startCol: 6, direction: 'down' },
-  { number: 18, clue: "Percentage of interest", answer: "RATE", startRow: 7, startCol: 9, direction: 'down' }
+  { number: 12, clue: "Type of security representing ownership", answer: "STOCK", startRow: 6, startCol: 4, direction: 'down' },
+  { number: 13, clue: "Money owed to another party", answer: "DEBT", startRow: 7, startCol: 6, direction: 'down' },
+  { number: 14, clue: "Percentage of interest", answer: "RATE", startRow: 7, startCol: 9, direction: 'down' }
 ];
 
 const generateGrid = (): CrosswordCell[][] => {
@@ -110,7 +110,7 @@ const LEARNING_MODULES = [
 const FinLitApp: React.FC = () => {
   const navigate = useNavigate();
   const { user, signOut, isLoading: authLoading } = useAuthContext();
-  const { progress, isModulePassed, getModuleScore, checkAndUpdateDailyStreak, refreshProgress } = useModuleScore();
+  const { progress, isModulePassed, getModuleScore, checkAndUpdateDailyStreak, refreshProgress, submitDailyChallenge } = useModuleScore();
 
   const [activeSection, setActiveSection] = useState<'home' | 'profile'>('home');
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
@@ -121,11 +121,26 @@ const FinLitApp: React.FC = () => {
   const [showStreakAnimation, setShowStreakAnimation] = useState(false);
   const [showCertTooltip, setShowCertTooltip] = useState(false);
   const [streakChecked, setStreakChecked] = useState(false);
+  const [dailyChallengeCompleted, setDailyChallengeCompleted] = useState(false);
+  const [xpAwarded, setXpAwarded] = useState(false);
+
+  // Check if daily challenge was already completed today
+  useEffect(() => {
+    if (progress?.lastDailyChallengeDate) {
+      const today = new Date().toISOString().split('T')[0];
+      if (progress.lastDailyChallengeDate === today) {
+        setAnswered(true);
+        setIsCorrect(true);
+        setDailyChallengeCompleted(true);
+      }
+    }
+  }, [progress?.lastDailyChallengeDate]);
 
   // Crossword state
   const [userInputs, setUserInputs] = useState<{ [key: string]: string }>({});
   const [selectedCell, setSelectedCell] = useState<{ row: number; col: number } | null>(null);
   const [selectedDirection, setSelectedDirection] = useState<'across' | 'down'>('across');
+  const [selectedClue, setSelectedClue] = useState<ClueData | null>(null);
   const [crosswordChecked, setCrosswordChecked] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
   const inputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
@@ -148,25 +163,110 @@ const FinLitApp: React.FC = () => {
   };
 
   // Crossword handlers
+  // Helper function to find which words a cell belongs to
+  const getWordsForCell = useCallback((row: number, col: number) => {
+    const words: { across: ClueData | null, down: ClueData | null } = { across: null, down: null };
+    
+    CROSSWORD_CLUES.forEach(clue => {
+      const { startRow, startCol, direction, answer } = clue;
+      
+      if (direction === 'across') {
+        if (row === startRow && col >= startCol && col < startCol + answer.length) {
+          words.across = clue;
+        }
+      } else {
+        if (col === startCol && row >= startRow && row < startRow + answer.length) {
+          words.down = clue;
+        }
+      }
+    });
+    
+    return words;
+  }, []);
+
   const handleCellClick = (row: number, col: number) => {
     if (GRID[row][col].isBlack) return;
+    
+    const words = getWordsForCell(row, col);
+    
     if (selectedCell?.row === row && selectedCell?.col === col) {
-      setSelectedDirection(prev => prev === 'across' ? 'down' : 'across');
+      // Toggle direction if clicking the same cell, but only if both directions are valid
+      if (words.across && words.down) {
+        setSelectedDirection(prev => prev === 'across' ? 'down' : 'across');
+      }
     } else {
       setSelectedCell({ row, col });
+      
+      // Smart direction selection based on available words
+      if (words.across && words.down) {
+        // If both directions are available, prefer the one that starts at this cell
+        const cellNumber = GRID[row][col].number;
+        if (cellNumber) {
+          const startsAcross = words.across.number === cellNumber;
+          const startsDown = words.down.number === cellNumber;
+          
+          if (startsAcross && !startsDown) {
+            setSelectedDirection('across');
+            setSelectedClue(words.across);
+          } else if (startsDown && !startsAcross) {
+            setSelectedDirection('down');
+            setSelectedClue(words.down);
+          } else {
+            // Both start here or neither, keep current direction or default to across
+            const newDirection = selectedDirection || 'across';
+            setSelectedDirection(newDirection);
+            setSelectedClue(newDirection === 'across' ? words.across : words.down);
+          }
+        } else {
+          // Not a starting cell, keep current direction or default to across
+          const newDirection = selectedDirection || 'across';
+          setSelectedDirection(newDirection);
+          setSelectedClue(newDirection === 'across' ? words.across : words.down);
+        }
+      } else if (words.across) {
+        setSelectedDirection('across');
+        setSelectedClue(words.across);
+      } else if (words.down) {
+        setSelectedDirection('down');
+        setSelectedClue(words.down);
+      }
     }
     inputRefs.current[`${row}-${col}`]?.focus();
   };
 
-  const getNextCell = useCallback((row: number, col: number, dir: 'across' | 'down', forward = true) => {
+  const handleClueClick = (clue: ClueData) => {
+    setSelectedClue(clue);
+    setSelectedDirection(clue.direction);
+    setSelectedCell({ row: clue.startRow, col: clue.startCol });
+    setTimeout(() => inputRefs.current[`${clue.startRow}-${clue.startCol}`]?.focus(), 0);
+  };
+
+  const getNextCell = useCallback((row: number, col: number, dir: 'across' | 'down', forward = true, skipFilled = false) => {
     const delta = forward ? 1 : -1;
-    const nextRow = dir === 'down' ? row + delta : row;
-    const nextCol = dir === 'across' ? col + delta : col;
-    if (nextRow >= 0 && nextRow < GRID.length && nextCol >= 0 && nextCol < GRID[0].length && !GRID[nextRow][nextCol].isBlack) {
-      return { row: nextRow, col: nextCol };
+    let nextRow = dir === 'down' ? row + delta : row;
+    let nextCol = dir === 'across' ? col + delta : col;
+    
+    // Keep looking for next valid cell
+    while (nextRow >= 0 && nextRow < GRID.length && nextCol >= 0 && nextCol < GRID[0].length) {
+      // If it's a black cell, stop
+      if (GRID[nextRow][nextCol].isBlack) {
+        break;
+      }
+      
+      // If we found a valid cell
+      const nextKey = `${nextRow}-${nextCol}`;
+      
+      // If we're not skipping filled cells, or this cell is empty, return it
+      if (!skipFilled || !userInputs[nextKey]) {
+        return { row: nextRow, col: nextCol };
+      }
+      
+      // Move to next cell
+      nextRow = dir === 'down' ? nextRow + delta : nextRow;
+      nextCol = dir === 'across' ? nextCol + delta : nextCol;
     }
     return null;
-  }, []);
+  }, [userInputs]);
 
   const handleCellInput = (row: number, col: number, value: string) => {
     const key = `${row}-${col}`;
@@ -175,7 +275,14 @@ const FinLitApp: React.FC = () => {
       setUserInputs(prev => ({ ...prev, [key]: letter }));
       setCrosswordChecked(false);
       if (letter !== '') {
-        const next = getNextCell(row, col, selectedDirection);
+        // First try to find the next empty cell
+        let next = getNextCell(row, col, selectedDirection, true, true);
+        
+        // If no empty cell found, go to the next available cell (even if filled)
+        if (!next) {
+          next = getNextCell(row, col, selectedDirection, true, false);
+        }
+        
         if (next) {
           setSelectedCell(next);
           setTimeout(() => inputRefs.current[`${next.row}-${next.col}`]?.focus(), 0);
@@ -187,7 +294,7 @@ const FinLitApp: React.FC = () => {
   const handleKeyDown = (e: React.KeyboardEvent, row: number, col: number) => {
     const key = `${row}-${col}`;
     if (e.key === 'Backspace' && !userInputs[key]) {
-      const prev = getNextCell(row, col, selectedDirection, false);
+      const prev = getNextCell(row, col, selectedDirection, false, false);
       if (prev) {
         setSelectedCell(prev);
         setUserInputs(p => ({ ...p, [`${prev.row}-${prev.col}`]: '' }));
@@ -197,7 +304,7 @@ const FinLitApp: React.FC = () => {
     } else if (['ArrowRight', 'ArrowLeft', 'ArrowDown', 'ArrowUp'].includes(e.key)) {
       const dir = e.key.includes('Right') || e.key.includes('Left') ? 'across' : 'down';
       const forward = e.key.includes('Right') || e.key.includes('Down');
-      const next = getNextCell(row, col, dir, forward);
+      const next = getNextCell(row, col, dir, forward, false);
       if (next) {
         setSelectedCell(next);
         setSelectedDirection(dir);
@@ -223,10 +330,26 @@ const FinLitApp: React.FC = () => {
   };
 
   const getCellHighlight = (row: number, col: number) => {
-    if (!selectedCell || GRID[row][col].isBlack) return '';
-    if (selectedCell.row === row && selectedCell.col === col) return 'bg-blue-300';
-    if (selectedDirection === 'across' && selectedCell.row === row) return 'bg-blue-100';
-    if (selectedDirection === 'down' && selectedCell.col === col) return 'bg-blue-100';
+    if (GRID[row][col].isBlack) return '';
+    
+    // Highlight the active cell
+    if (selectedCell?.row === row && selectedCell?.col === col) return 'bg-blue-400';
+    
+    // Highlight the word being worked on
+    if (selectedClue) {
+      const { startRow, startCol, direction, answer } = selectedClue;
+      
+      if (direction === 'across') {
+        if (row === startRow && col >= startCol && col < startCol + answer.length) {
+          return 'bg-blue-100';
+        }
+      } else {
+        if (col === startCol && row >= startRow && row < startRow + answer.length) {
+          return 'bg-emerald-100';
+        }
+      }
+    }
+    
     return '';
   };
 
@@ -251,24 +374,33 @@ const FinLitApp: React.FC = () => {
     checkStreak();
   }, [user, streakChecked, checkAndUpdateDailyStreak, refreshProgress]);
 
-  const handleSubmitAnswer = () => {
+  const handleSubmitAnswer = async () => {
     if (selectedAnswer === null || answered) return;
     const correct = selectedAnswer === dailyQuestion.correct;
     setIsCorrect(correct);
     setAnswered(true);
-    // Don't trigger streak animation here - streak is calculated on page load based on daily activity
+
+    if (correct) {
+      // Award XP for correct answer (only once per day)
+      const result = await submitDailyChallenge();
+      if (result.awarded) {
+        setXpAwarded(true);
+      } else if (result.alreadyCompleted) {
+        setDailyChallengeCompleted(true);
+      }
+    }
   };
 
-  useEffect(() => {
-    if (!authLoading && !user) navigate('/auth');
-  }, [authLoading, user, navigate]);
-
-  if (authLoading || !user) {
+  if (authLoading) {
     return (
       <div className="flex items-center justify-center h-screen bg-blue-50">
         <Loader2 className="animate-spin text-blue-500" size={48} />
       </div>
     );
+  }
+
+  if (!user) {
+    return null; // ProtectedRoute will handle the redirect
   }
 
   const acrossClues = CROSSWORD_CLUES.filter(c => c.direction === 'across').sort((a, b) => a.number - b.number);
@@ -298,18 +430,30 @@ const FinLitApp: React.FC = () => {
             className="relative cursor-pointer"
             onMouseEnter={() => setShowCertTooltip(true)}
             onMouseLeave={() => setShowCertTooltip(false)}
+            onClick={() => {
+              if (completedModules === totalModules) {
+                navigate('/certificate');
+              }
+            }}
           >
-            <GraduationCap className="text-yellow-500" size={28} />
+            <GraduationCap 
+              className={`${completedModules === totalModules ? 'text-emerald-500' : 'text-yellow-500'}`} 
+              size={28} 
+            />
             {showCertTooltip && (
               <div className="absolute top-10 -left-20 bg-white p-3 rounded-lg shadow-lg text-sm w-52 z-10 border">
                 <p className="font-bold mb-1">Financial Literacy Certificate</p>
-                <p className="text-gray-600">1000 points needed ({Math.max(0, 1000 - totalXP)} to go)</p>
+                <p className="text-gray-600">
+                  {completedModules === totalModules 
+                    ? 'Congratulations! Click to view your certificate!' 
+                    : `Complete ${totalModules - completedModules} more modules to unlock your certificate!`
+                  }
+                </p>
               </div>
             )}
           </div>
           <div className="text-lg">
             <span className="font-bold">{totalXP}</span>
-            <span className="text-gray-500">/1000</span>
           </div>
 
           <button
@@ -341,7 +485,7 @@ const FinLitApp: React.FC = () => {
           </button>
 
           <button
-            onClick={() => navigate('/truefalse')}
+            onClick={() => navigate('/economic-quiz')}
             className="flex items-center gap-3 p-3 hover:bg-blue-500 rounded-lg text-lg"
           >
             <Zap size={24} />
@@ -355,6 +499,33 @@ const FinLitApp: React.FC = () => {
             <User size={24} />
             <span className="font-medium">Profile</span>
           </button>
+
+          {/* Certificate Button - Always visible */}
+          <button
+            onClick={() => navigate('/certificate')}
+            className={`flex items-center gap-3 p-3 hover:bg-blue-500 rounded-lg text-lg ${
+              completedModules === totalModules 
+                ? 'bg-emerald-600/80 border-2 border-emerald-300' 
+                : 'bg-yellow-600/60 border-2 border-yellow-300/50'
+            }`}
+          >
+            <GraduationCap 
+              size={24} 
+              className={completedModules === totalModules ? 'text-white' : 'text-yellow-200'} 
+            />
+            <span className="font-medium">Certificate</span>
+          </button>
+
+          {/* Admin Panel Link - Only for admin and owner roles */}
+          {(user?.role === 'admin' || user?.role === 'owner') && (
+            <button
+              onClick={() => navigate(user?.role === 'owner' ? '/admin-setup' : '/admin')}
+              className="flex items-center gap-3 p-3 hover:bg-blue-500 rounded-lg text-lg mt-auto bg-blue-600/50 border border-white/20"
+            >
+              <Settings size={24} />
+              <span className="font-medium">Admin Panel</span>
+            </button>
+          )}
         </div>
 
         {/* Main content */}
@@ -453,7 +624,9 @@ const FinLitApp: React.FC = () => {
 
                 {answered && (
                   <p className={`text-lg font-semibold mb-4 ${isCorrect ? 'text-emerald-600' : 'text-red-500'}`}>
-                    {isCorrect ? '🎉 Correct! +50 XP' : '❌ Not quite. Try again tomorrow!'}
+                    {isCorrect
+                      ? (xpAwarded ? '🎉 Correct! +5 XP' : (dailyChallengeCompleted ? '🎉 Correct! (Already earned XP today)' : '🎉 Correct!'))
+                      : '❌ Not quite. Try again tomorrow!'}
                   </p>
                 )}
 
@@ -462,7 +635,7 @@ const FinLitApp: React.FC = () => {
                     <Star className="fill-yellow-500 text-yellow-500 mr-2" size={28} />
                     <div>
                       <span className="text-sm text-gray-500">Earn</span>
-                      <p className="font-bold text-lg">50 XP</p>
+                      <p className="font-bold text-lg">5 XP</p>
                     </div>
                   </div>
                   {!answered && (
@@ -487,7 +660,7 @@ const FinLitApp: React.FC = () => {
                       style={{ width: `${xpLevel}%` }}
                     ></div>
                   </div>
-                  <div className="text-right text-lg text-gray-500 mt-1">{Math.round(xpLevel)}/100</div>
+                  <div className="text-right text-lg text-gray-500 mt-1">{Math.round(xpLevel)}%</div>
                 </div>
 
                 <div>
@@ -596,9 +769,17 @@ const FinLitApp: React.FC = () => {
                       <h3 className="font-bold text-blue-800 mb-3 text-xl">Across</h3>
                       <div className="space-y-2">
                         {acrossClues.map(c => (
-                          <p key={c.number} className="text-lg">
+                          <button
+                            key={c.number}
+                            onClick={() => handleClueClick(c)}
+                            className={`w-full text-left p-2 rounded-lg transition-colors ${
+                              selectedClue?.number === c.number && selectedClue?.direction === 'across'
+                                ? 'bg-blue-200 border-2 border-blue-500 shadow-md'
+                                : 'hover:bg-blue-100'
+                            }`}
+                          >
                             <span className="font-bold text-blue-700">{c.number}.</span> {c.clue}
-                          </p>
+                          </button>
                         ))}
                       </div>
                     </div>
@@ -606,9 +787,17 @@ const FinLitApp: React.FC = () => {
                       <h3 className="font-bold text-emerald-800 mb-3 text-xl">Down</h3>
                       <div className="space-y-2">
                         {downClues.map(c => (
-                          <p key={c.number} className="text-lg">
+                          <button
+                            key={c.number}
+                            onClick={() => handleClueClick(c)}
+                            className={`w-full text-left p-2 rounded-lg transition-colors ${
+                              selectedClue?.number === c.number && selectedClue?.direction === 'down'
+                                ? 'bg-emerald-200 border-2 border-emerald-500 shadow-md'
+                                : 'hover:bg-emerald-100'
+                            }`}
+                          >
                             <span className="font-bold text-emerald-700">{c.number}.</span> {c.clue}
-                          </p>
+                          </button>
                         ))}
                       </div>
                     </div>
@@ -633,6 +822,28 @@ const FinLitApp: React.FC = () => {
                   </div>
                 </div>
               </div>
+
+              {/* Certificate Congratulations Banner */}
+              {completedModules === totalModules && (
+                <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-200 rounded-2xl p-6 mb-6 text-center">
+                  <div className="flex justify-center mb-3">
+                    <div className="w-16 h-16 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full flex items-center justify-center shadow-lg">
+                      <GraduationCap className="text-white" size={32} />
+                    </div>
+                  </div>
+                  <h3 className="text-2xl font-bold text-emerald-800 mb-2">🎉 Congratulations! 🎉</h3>
+                  <p className="text-emerald-700 mb-4">
+                    You've completed all modules and earned your Financial Literacy Certificate!
+                  </p>
+                  <button
+                    onClick={() => navigate('/certificate')}
+                    className="inline-flex items-center gap-2 px-6 py-3 text-lg font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+                  >
+                    <GraduationCap size={20} />
+                    View Certificate
+                  </button>
+                </div>
+              )}
 
               <div className="grid grid-cols-4 gap-4 mb-6">
                 <div className="bg-white rounded-lg p-6 shadow-sm border text-center">

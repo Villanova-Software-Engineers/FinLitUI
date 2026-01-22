@@ -333,6 +333,7 @@ export async function getStudentProgress(userId: string): Promise<StudentProgres
     ...data,
     lastActivityAt: (data.lastActivityAt as Timestamp)?.toDate() || new Date(),
     lastStreakDate: data.lastStreakDate || undefined,
+    lastDailyChallengeDate: data.lastDailyChallengeDate || undefined,
     moduleScores: data.moduleScores?.map((score: ModuleScore & { attemptHistory?: ModuleAttempt[] }) => ({
       ...score,
       completedAt: (score.completedAt as unknown as Timestamp)?.toDate() || new Date(),
@@ -497,6 +498,44 @@ export async function addAchievement(userId: string, achievement: string): Promi
       lastActivityAt: serverTimestamp(),
     });
   }
+}
+
+/**
+ * Complete daily challenge and award XP
+ * Only awards XP once per day
+ */
+export async function completeDailyChallenge(userId: string, xpReward: number = 5): Promise<{ awarded: boolean; alreadyCompleted: boolean }> {
+  const progressRef = doc(db, STUDENT_PROGRESS, userId);
+  const snapshot = await getDoc(progressRef);
+
+  if (!snapshot.exists()) {
+    return { awarded: false, alreadyCompleted: false };
+  }
+
+  const data = snapshot.data();
+  const lastDailyChallengeDate = data.lastDailyChallengeDate;
+
+  // Get today's date in YYYY-MM-DD format
+  const today = new Date().toISOString().split('T')[0];
+
+  // Check if already completed today
+  if (lastDailyChallengeDate === today) {
+    return { awarded: false, alreadyCompleted: true };
+  }
+
+  // Award XP and mark as completed
+  const currentXP = data.totalXP || 0;
+  const newTotalXP = currentXP + xpReward;
+  const xpLevel = Math.floor(newTotalXP / 100) + 1;
+
+  await updateDoc(progressRef, {
+    totalXP: newTotalXP,
+    xpLevel,
+    lastDailyChallengeDate: today,
+    lastActivityAt: serverTimestamp(),
+  });
+
+  return { awarded: true, alreadyCompleted: false };
 }
 
 // ============== Optimized Data Fetching ==============

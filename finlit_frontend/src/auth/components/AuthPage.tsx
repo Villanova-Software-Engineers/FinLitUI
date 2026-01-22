@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { BookOpen, UserPlus, LogIn, Sparkles } from 'lucide-react';
 import { SignInForm } from './SignInForm';
 import { SignUpForm } from './SignUpForm';
@@ -48,8 +49,22 @@ const MovingFinanceKeywords: React.FC = () => {
 export const AuthPage: React.FC = () => {
   const [authMode, setAuthMode] = useState<AuthMode>('signin');
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  
+  const { signIn, signUp, isLoading, error, clearError, isAuthenticated, user } = useAuth();
+  const navigate = useNavigate();
 
-  const { signIn, signUp, isLoading, error, clearError } = useAuth();
+  // Redirect authenticated users to appropriate dashboard
+  React.useEffect(() => {
+    if (isAuthenticated && user && !isLoading) {
+      if (user.role === 'owner') {
+        navigate('/admin-setup', { replace: true });
+      } else if (user.role === 'admin') {
+        navigate('/admin', { replace: true });
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
+    }
+  }, [isAuthenticated, user, isLoading, navigate]);
 
   const handleSignIn = async (credentials: SignInRequest) => {
     clearError();

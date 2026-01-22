@@ -19,7 +19,9 @@ export const useAuth = () => {
         authContext.setUser(response.user);
 
         // Redirect based on role
-        if (response.user.role === 'admin') {
+        if (response.user.role === 'owner') {
+          navigate('/admin-setup');
+        } else if (response.user.role === 'admin') {
           navigate('/admin');
         } else {
           navigate('/dashboard');

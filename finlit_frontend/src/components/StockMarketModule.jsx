@@ -220,13 +220,13 @@ const StockMarketModule = () => {
     setMarketData(initialStocks);
   }, []);
 
-  // Market simulation timer
+  // Market simulation timer (slower updates for better experience)
   useEffect(() => {
     if (tradingActive) {
       const interval = setInterval(() => {
         updateMarketData();
         setGameTime(prev => prev + 1);
-      }, 5000);
+      }, 8000);
 
       return () => clearInterval(interval);
     }
@@ -318,28 +318,63 @@ const StockMarketModule = () => {
     });
   };
 
-  // Market events
+  // Market events - news-style announcements
   const marketEvents = [
     {
-      id: 'tech-boom',
-      title: 'AI Revolution Announcement!',
-      description: 'Major breakthrough in artificial intelligence sends tech stocks soaring!',
-      effect: { sector: 'Technology', multiplier: 1.15 },
+      id: 'tesla-earnings',
+      title: '📰 TSLA Earnings Beat!',
+      description: 'Tesla reports record quarterly earnings, beating analyst expectations by 15%!',
+      effect: { stock: 'TSLA', multiplier: 1.12 },
       duration: 10
     },
     {
-      id: 'market-crash',
-      title: 'Flash Crash Alert!',
-      description: 'Unexpected economic news causes market-wide selloff!',
-      effect: { sector: 'all', multiplier: 0.9 },
+      id: 'apple-product',
+      title: '📰 Apple Unveils New Product!',
+      description: 'Apple announces revolutionary new device, stock surges on investor optimism!',
+      effect: { stock: 'AAPL', multiplier: 1.10 },
+      duration: 10
+    },
+    {
+      id: 'google-ai',
+      title: '📰 Google AI Breakthrough!',
+      description: 'Alphabet announces major AI advancement, shares climb on the news!',
+      effect: { stock: 'GOOGL', multiplier: 1.08 },
+      duration: 10
+    },
+    {
+      id: 'amazon-growth',
+      title: '📰 Amazon Cloud Revenue Soars!',
+      description: 'AWS reports 30% growth, Amazon stock rises on strong cloud performance!',
+      effect: { stock: 'AMZN', multiplier: 1.11 },
+      duration: 10
+    },
+    {
+      id: 'microsoft-deal',
+      title: '📰 Microsoft Lands Major Contract!',
+      description: 'Microsoft wins $10B government contract, investors react positively!',
+      effect: { stock: 'MSFT', multiplier: 1.09 },
+      duration: 10
+    },
+    {
+      id: 'tech-sector-dip',
+      title: '📰 Tech Sector Pullback',
+      description: 'Interest rate concerns cause temporary tech sector weakness.',
+      effect: { sector: 'Technology', multiplier: 0.95 },
       duration: 8
     },
     {
-      id: 'earnings-season',
-      title: 'Earnings Surprise!',
-      description: 'Companies beating expectations left and right!',
-      effect: { sector: 'random', multiplier: 1.1 },
+      id: 'market-rally',
+      title: '📰 Market Rally!',
+      description: 'Positive economic data sparks broad market rally across all sectors!',
+      effect: { sector: 'all', multiplier: 1.06 },
       duration: 12
+    },
+    {
+      id: 'tesla-delivery',
+      title: '📰 Tesla Delivery Record!',
+      description: 'Tesla smashes quarterly delivery expectations, shares jump!',
+      effect: { stock: 'TSLA', multiplier: 1.08 },
+      duration: 10
     }
   ];
 
@@ -406,18 +441,26 @@ const StockMarketModule = () => {
     }, 0);
   };
 
-  // Trigger random market events
+  // Trigger random market events (news-style)
   useEffect(() => {
-    if (tradingActive && gameTime > 0 && gameTime % 15 === 0) {
+    if (tradingActive && gameTime > 0 && gameTime % 12 === 0) {
       const randomEvent = marketEvents[Math.floor(Math.random() * marketEvents.length)];
       setCurrentEvent(randomEvent);
 
       setMarketData(prevData =>
         prevData.map(stock => {
-          if (randomEvent.effect.sector === 'all' || stock.sector === randomEvent.effect.sector || randomEvent.effect.sector === 'random') {
+          // Handle stock-specific events
+          if (randomEvent.effect.stock && stock.id === randomEvent.effect.stock) {
             return {
               ...stock,
-              price: stock.price * randomEvent.effect.multiplier
+              price: parseFloat((stock.price * randomEvent.effect.multiplier).toFixed(2))
+            };
+          }
+          // Handle sector-wide events
+          if (randomEvent.effect.sector === 'all' || stock.sector === randomEvent.effect.sector) {
+            return {
+              ...stock,
+              price: parseFloat((stock.price * randomEvent.effect.multiplier).toFixed(2))
             };
           }
           return stock;
@@ -462,7 +505,7 @@ const StockMarketModule = () => {
     setGameTime(0);
   };
 
-  // Stock Card Component
+  // Stock Card Component - Compact version
   const StockCard = ({ stock, canTrade = true }) => {
     const isOwned = portfolio.some(p => p.id === stock.id);
     const ownedStock = portfolio.find(p => p.id === stock.id);
@@ -470,34 +513,34 @@ const StockMarketModule = () => {
 
     return (
       <motion.div
-        className={`p-5 rounded-2xl border-2 cursor-pointer transition-all ${
+        className={`p-3 rounded-xl border-2 cursor-pointer transition-all ${
           stock.changePercent >= 0
-            ? 'border-emerald-400 bg-gradient-to-br from-emerald-50 to-green-50'
-            : 'border-rose-400 bg-gradient-to-br from-rose-50 to-red-50'
-        } ${isSelected ? 'ring-4 ring-blue-400 shadow-xl' : 'shadow-md hover:shadow-lg'}`}
-        whileHover={{ scale: 1.02, y: -4 }}
-        whileTap={{ scale: 0.98 }}
+            ? 'border-emerald-300 bg-gradient-to-br from-emerald-50 to-green-50'
+            : 'border-rose-300 bg-gradient-to-br from-rose-50 to-red-50'
+        } ${isSelected ? 'ring-2 ring-blue-400 shadow-lg' : 'shadow-sm hover:shadow-md'}`}
+        whileHover={{ scale: 1.01, y: -2 }}
+        whileTap={{ scale: 0.99 }}
         onClick={() => setSelectedStock(isSelected ? null : stock)}
       >
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-3">
-            <span className="text-4xl">{stock.emoji}</span>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <span className="text-sm bg-gray-100 p-1.5 rounded">{stock.emoji}</span>
             <div>
-              <div className="font-bold text-xl tracking-tight text-gray-900" style={{ fontFamily: "'Inter', 'SF Pro Display', -apple-system, sans-serif" }}>{stock.symbol}</div>
-              <div className="text-sm text-gray-500 font-medium">{stock.name}</div>
+              <div className="font-bold text-sm tracking-tight text-gray-900">{stock.symbol}</div>
+              <div className="text-[10px] text-gray-500 font-medium truncate max-w-[80px]">{stock.name}</div>
             </div>
           </div>
           {isOwned && (
-            <div className="bg-blue-100 px-3 py-1.5 rounded-full">
-              <span className="text-sm font-bold text-blue-700">{ownedStock.shares} owned</span>
+            <div className="bg-blue-100 px-2 py-0.5 rounded-full">
+              <span className="text-xs font-bold text-blue-700">{ownedStock.shares}</span>
             </div>
           )}
         </div>
 
         <div className="flex justify-between items-end">
           <div>
-            <div className="text-3xl font-black text-gray-900" style={{ fontFamily: "'Inter', 'SF Pro Display', -apple-system, sans-serif" }}>${stock.price.toFixed(2)}</div>
-            <div className={`text-base font-bold flex items-center gap-1 ${
+            <div className="text-lg font-bold text-gray-900">${stock.price.toFixed(2)}</div>
+            <div className={`text-xs font-bold flex items-center gap-0.5 ${
               stock.changePercent >= 0 ? 'text-emerald-600' : 'text-rose-600'
             }`}>
               {stock.changePercent >= 0 ? '▲' : '▼'} {Math.abs(stock.changePercent)}%
@@ -962,7 +1005,7 @@ const StockMarketModule = () => {
       {/* TRADING SIMULATION PHASE */}
       {currentPhase === 'trading-sim' && (
         <motion.div
-          className="max-w-7xl mx-auto"
+          className="w-full"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           style={{ fontFamily: "'Inter', 'SF Pro Display', -apple-system, sans-serif" }}
@@ -1012,29 +1055,29 @@ const StockMarketModule = () => {
               <div className="text-3xl font-black">
                 ${((playerStats.coins + getPortfolioValue())).toLocaleString()}
               </div>
-              <div className="text-sm opacity-80 font-medium">Target: $15,000</div>
+              <div className="text-sm opacity-80 font-medium">Target: $11,000</div>
             </div>
           </div>
 
           {/* Goal Progress Bar */}
           <div className="mb-8 p-5 bg-white rounded-2xl shadow-lg border border-gray-100">
             <div className="flex justify-between items-center mb-3">
-              <span className="font-bold text-gray-800 text-lg">Challenge: Turn $10,000 into $15,000</span>
+              <span className="font-bold text-gray-800 text-lg">Challenge: Turn $10,000 into $11,000</span>
               <span className="font-black text-2xl text-gray-900">
-                {Math.round(((playerStats.coins + getPortfolioValue()) / 15000) * 100)}%
+                {Math.round(((playerStats.coins + getPortfolioValue()) / 11000) * 100)}%
               </span>
             </div>
             <div className="bg-gray-200 rounded-full h-5">
               <motion.div
                 className={`h-5 rounded-full transition-all duration-500 ${
-                  (playerStats.coins + getPortfolioValue()) >= 15000
+                  (playerStats.coins + getPortfolioValue()) >= 11000
                     ? 'bg-gradient-to-r from-emerald-500 to-green-500'
                     : 'bg-gradient-to-r from-blue-500 to-indigo-500'
                 }`}
-                style={{ width: `${Math.min(((playerStats.coins + getPortfolioValue()) / 15000) * 100, 100)}%` }}
+                style={{ width: `${Math.min(((playerStats.coins + getPortfolioValue()) / 11000) * 100, 100)}%` }}
               />
             </div>
-            {(playerStats.coins + getPortfolioValue()) >= 15000 && (
+            {(playerStats.coins + getPortfolioValue()) >= 11000 && (
               <motion.div
                 className="mt-4"
                 initial={{ opacity: 0 }}

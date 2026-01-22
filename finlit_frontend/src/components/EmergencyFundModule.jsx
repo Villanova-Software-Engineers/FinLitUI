@@ -132,9 +132,9 @@ const EmergencyFundModule = () => {
       character: "📊 Calculator Kate",
       instruction: "Help different people calculate their emergency fund needs!",
       people: [
-        { 
-          name: "Alex", emoji: "👨‍💻", 
-          expenses: { rent: 1200, food: 400, utilities: 150, transport: 200 },
+        {
+          name: "Alex", emoji: "👨‍💻",
+          expenses: { rent: 1250, food: 400, utilities: 150, transport: 200 },
           jobType: "stable", months: 3
         },
         { 
@@ -251,21 +251,32 @@ const EmergencyFundModule = () => {
     return false;
   };
 
+  // State for wrong answer feedback in sorting game
+  const [sortingWrongAnswer, setSortingWrongAnswer] = useState(null); // { itemId, selectedCategory }
+
   // Handle sorting item click
   const handleSortItem = (itemId, category) => {
-    const newSorted = { ...sortedItems, [itemId]: category };
-    setSortedItems(newSorted);
+    const expense = miniGames[0].expenses.find(e => e.id === itemId);
 
-    // Check if all items are sorted correctly
-    const allExpenses = miniGames[0].expenses;
-    const allSorted = allExpenses.every(expense => newSorted[expense.id]);
-    const allCorrect = allExpenses.every(expense =>
-      newSorted[expense.id] === expense.category
-    );
+    // Check if the answer is correct
+    if (expense.category === category) {
+      // Correct answer - add to sorted items
+      const newSorted = { ...sortedItems, [itemId]: category };
+      setSortedItems(newSorted);
+      setSortingWrongAnswer(null);
 
-    if (allSorted && allCorrect) {
-      setSortingComplete(true);
-      setTotalXP(prev => prev + 25);
+      // Check if all items are sorted correctly
+      const allExpenses = miniGames[0].expenses;
+      const allSorted = allExpenses.every(exp => newSorted[exp.id]);
+
+      if (allSorted) {
+        setSortingComplete(true);
+        setTotalXP(prev => prev + 25);
+      }
+    } else {
+      // Wrong answer - show feedback but don't lock it
+      setSortingWrongAnswer({ itemId, selectedCategory: category, correctCategory: expense.category });
+      setTimeout(() => setSortingWrongAnswer(null), 3000);
     }
   };
 
@@ -299,6 +310,7 @@ const EmergencyFundModule = () => {
       setGameStep(gameStep + 1);
       setSortedItems({});
       setSortingComplete(false);
+      setSortingWrongAnswer(null);
       setCalculatorAnswer('');
       setCalculatorComplete(false);
       setScenarioAnswer(null);
@@ -315,6 +327,7 @@ const EmergencyFundModule = () => {
       // Reset game state for previous game
       setSortedItems({});
       setSortingComplete(false);
+      setSortingWrongAnswer(null);
       setCalculatorAnswer('');
       setCalculatorComplete(false);
       setScenarioAnswer(null);
@@ -590,6 +603,35 @@ const EmergencyFundModule = () => {
               {/* Sorting Game */}
               {miniGames[gameStep].type === 'sorting' && (
                 <div className="space-y-6">
+                  {/* Wrong Answer Feedback */}
+                  <AnimatePresence>
+                    {sortingWrongAnswer && (
+                      <motion.div
+                        className="p-4 bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-200 rounded-xl"
+                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <motion.span
+                            className="text-3xl"
+                            animate={{ rotate: [0, -10, 10, -10, 0] }}
+                            transition={{ duration: 0.5 }}
+                          >
+                            🤔
+                          </motion.span>
+                          <div>
+                            <p className="font-bold text-red-700">Not quite right!</p>
+                            <p className="text-sm text-red-600">
+                              That's a {sortingWrongAnswer.correctCategory === 'emergency' ? 'true emergency' : 'non-emergency'} expense. Try again!
+                            </p>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
                   {/* Unsorted Items - Click to sort */}
                   {!sortingComplete && (
                     <div className="bg-gray-50 rounded-xl p-6 border-2 border-gray-200 mb-6">
@@ -602,8 +644,14 @@ const EmergencyFundModule = () => {
                           .map((expense) => (
                             <motion.div
                               key={expense.id}
-                              className="bg-white p-4 rounded-lg shadow-md border border-gray-200"
+                              className={`bg-white p-4 rounded-lg shadow-md border ${
+                                sortingWrongAnswer?.itemId === expense.id
+                                  ? 'border-red-400 bg-red-50'
+                                  : 'border-gray-200'
+                              }`}
                               whileHover={{ scale: 1.02 }}
+                              animate={sortingWrongAnswer?.itemId === expense.id ? { x: [0, -5, 5, -5, 0] } : {}}
+                              transition={{ duration: 0.4 }}
                             >
                               <div className="flex items-center gap-3 mb-3">
                                 <span className="text-2xl">{expense.emoji}</span>
@@ -644,9 +692,7 @@ const EmergencyFundModule = () => {
                           .map((expense) => (
                             <motion.div
                               key={expense.id}
-                              className={`bg-white p-4 rounded-lg shadow-md border ${
-                                expense.category === 'emergency' ? 'border-green-400' : 'border-red-400'
-                              }`}
+                              className="bg-white p-4 rounded-lg shadow-md border border-green-400"
                               initial={{ opacity: 0, scale: 0.8 }}
                               animate={{ opacity: 1, scale: 1 }}
                             >
@@ -658,17 +704,13 @@ const EmergencyFundModule = () => {
                                     <div className="text-sm text-gray-600">${expense.amount}</div>
                                   </div>
                                 </div>
-                                {expense.category === 'emergency' ? (
-                                  <div className="text-green-600 font-bold">✓</div>
-                                ) : (
-                                  <div className="text-red-600 font-bold">✗</div>
-                                )}
+                                <div className="text-green-600 font-bold">✓</div>
                               </div>
                             </motion.div>
                           ))}
                         {Object.values(sortedItems).filter(v => v === 'emergency').length === 0 && (
                           <div className="text-center text-gray-400 py-8">
-                            Drop emergency items here
+                            Correct emergency items will appear here
                           </div>
                         )}
                       </div>
@@ -685,9 +727,7 @@ const EmergencyFundModule = () => {
                           .map((expense) => (
                             <motion.div
                               key={expense.id}
-                              className={`bg-white p-4 rounded-lg shadow-md border ${
-                                expense.category === 'non-emergency' ? 'border-green-400' : 'border-red-400'
-                              }`}
+                              className="bg-white p-4 rounded-lg shadow-md border border-green-400"
                               initial={{ opacity: 0, scale: 0.8 }}
                               animate={{ opacity: 1, scale: 1 }}
                             >
@@ -699,17 +739,13 @@ const EmergencyFundModule = () => {
                                     <div className="text-sm text-gray-600">${expense.amount}</div>
                                   </div>
                                 </div>
-                                {expense.category === 'non-emergency' ? (
-                                  <div className="text-green-600 font-bold">✓</div>
-                                ) : (
-                                  <div className="text-red-600 font-bold">✗</div>
-                                )}
+                                <div className="text-green-600 font-bold">✓</div>
                               </div>
                             </motion.div>
                           ))}
                         {Object.values(sortedItems).filter(v => v === 'non-emergency').length === 0 && (
                           <div className="text-center text-gray-400 py-8">
-                            Drop non-emergency items here
+                            Correct non-emergency items will appear here
                           </div>
                         )}
                       </div>
