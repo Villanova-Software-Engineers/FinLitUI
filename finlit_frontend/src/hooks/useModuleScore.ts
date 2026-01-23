@@ -22,6 +22,7 @@ export const MODULES = {
   BUDGETING_50_30_20: { id: '50-30-20', name: 'Budgeting 50/30/20', maxScore: 100 },
   NEEDS_WANTS: { id: 'needs-wants', name: 'Needs vs Wants', maxScore: 100 },
   TRUE_FALSE: { id: 'true-false', name: 'True or False Quiz', maxScore: 100 },
+  RETIREMENT_ACCOUNTS: { id: 'retirement-accounts', name: 'Retirement Accounts', maxScore: 100 },
   CRYPTO: { id: 'crypto', name: 'Cryptocurrency Basics', maxScore: 100 },
 } as const;
 

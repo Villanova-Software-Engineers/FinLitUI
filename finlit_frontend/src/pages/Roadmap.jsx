@@ -28,14 +28,14 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 0.7], [0, 1]);
   const moduleOrder = [
     MODULES.BUDGETING_50_30_20.id,    // 1. Budgeting Basics
     MODULES.NEEDS_WANTS.id,            // 2. Needs vs Wants
-    MODULES.CREDIT_SCORE.id,           // 4. Credit Score
-    MODULES.EMERGENCY_FUND.id,         // 5. Emergency Fund
-    MODULES.STOCK_MARKET.id,           // 6. Stock Market
-    MODULES.INSURANCE.id,              // 7. Insurance
-    MODULES.DEBT_MANAGEMENT.id,        // 8. Debt Management
-    MODULES.CRYPTO.id,        // 9. Cryptocurrency
-    MODULES.INVESTMENT_BANKING.id,     // 3. Investment Banking
-
+    MODULES.CREDIT_SCORE.id,           // 3. Credit Score
+    MODULES.EMERGENCY_FUND.id,         // 4. Emergency Fund
+    MODULES.STOCK_MARKET.id,           // 5. Stock Market
+    MODULES.INSURANCE.id,              // 6. Insurance
+    MODULES.DEBT_MANAGEMENT.id,        // 7. Debt Management
+    MODULES.RETIREMENT_ACCOUNTS.id,    // 8. Retirement Accounts
+    MODULES.CRYPTO.id,                 // 9. Cryptocurrency
+    MODULES.INVESTMENT_BANKING.id,     // 10. Investment Banking
   ];
 
   // Check if a module is accessible (previous module passed or is first module)
@@ -150,26 +150,39 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 0.7], [0, 1]);
       quizType: "scenario"
     },
     {
-      id:8,
+      id: 8,
+      moduleId: MODULES.RETIREMENT_ACCOUNTS.id,
+      title: "Retirement Accounts",
+      subtitle: "401(k) & Roth IRA",
+      icon: "🏛️",
+      color: "#e8f5e9",
+      position: "right",
+      route: "/retirement-accounts",
+      component: "retirement-module",
+      description: "Master retirement savings with 401(k)s, Roth IRAs, and tax-advantaged investing.",
+      quizType: "mcq"
+    },
+    {
+      id: 9,
       moduleId: MODULES.CRYPTO.id,
       title: "Cryptocurrency Fundamentals",
       subtitle: "Digital Assets",
       icon: "🪙",
       color: "#f5f5f5",
-      position: "right",
+      position: "left",
       route: "/crypto",
       component: "crypto-module",
       description: "Learn the fundamentals of cryptocurrency and blockchain technology.",
       quizType: "mcq"
     },
     {
-       id:9,
+      id: 10,
       moduleId: MODULES.INVESTMENT_BANKING.id,
       title: "Investment Banking",
       subtitle: "IPO Knowledge",
       icon: "🏦",
       color: "#e3f2fd",
-      position: "left",
+      position: "right",
       route: "/investment-quiz",
       component: "truefalse",
       description: "Test your knowledge about Initial Public Offerings and investment banking.",

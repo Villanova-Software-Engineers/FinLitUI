@@ -79,7 +79,7 @@ const GUIDE_STEPS = [
   {
     icon: Target,
     title: "Complete Learning Path",
-    description: "Master all 9 financial modules to build your knowledge",
+    description: "Master all 10 financial modules to build your knowledge",
     color: "from-blue-500 to-indigo-600",
     bgColor: "bg-blue-50",
     route: "/game"
@@ -143,6 +143,7 @@ const LEARNING_MODULES = [
   { id: MODULES.STOCK_MARKET.id, title: "Stock Market", subtitle: "Investment Basics", icon: "📈", route: "/stock-market", points: 200 },
   { id: MODULES.INSURANCE.id, title: "Insurance", subtitle: "Risk Management", icon: "🛡️", route: "/insurance", points: 150 },
   { id: MODULES.DEBT_MANAGEMENT.id, title: "Debt Management", subtitle: "Debt Freedom", icon: "🔓", route: "/debt-management", points: 200 },
+  { id: MODULES.RETIREMENT_ACCOUNTS.id, title: "Retirement Accounts", subtitle: "401(k) & Roth IRA", icon: "🏦", route: "/retirement-accounts", points: 200 },
   { id: MODULES.CRYPTO.id, title: "Cryptocurrency", subtitle: "Digital Assets", icon: "🪙", route: "/crypto", points: 200 },
 ];
 

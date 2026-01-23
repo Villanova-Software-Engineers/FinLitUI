@@ -17,6 +17,7 @@ import InsuranceModule from "./components/InsuranceModule";
 import DebtManagementModule from "./components/DebtManagementModule";
 import InvestmentBankingModule from "./components/InvestmentBankingModule";
 import CryptoModule from "./components/CryptoModule";
+import RetirementAccountsModule from "./components/RetirementAccountsModule";
 import AdminSetup from "./components/AdminSetup";
 import AdminDashboard from "./components/AdminDashboard";
 import EconomicNewsQuiz from "./components/EconomicNewsQuiz";
@@ -196,6 +197,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <DebtManagementModule />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/retirement-accounts"
+            element={
+              <ProtectedRoute>
+                <RetirementAccountsModule />
               </ProtectedRoute>
             }
           />
