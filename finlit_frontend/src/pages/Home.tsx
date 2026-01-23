@@ -105,6 +105,7 @@ const LEARNING_MODULES = [
   { id: MODULES.STOCK_MARKET.id, title: "Stock Market", subtitle: "Investment Basics", icon: "📈", route: "/stock-market", points: 200 },
   { id: MODULES.INSURANCE.id, title: "Insurance", subtitle: "Risk Management", icon: "🛡️", route: "/insurance", points: 150 },
   { id: MODULES.DEBT_MANAGEMENT.id, title: "Debt Management", subtitle: "Debt Freedom", icon: "🔓", route: "/debt-management", points: 200 },
+  { id: MODULES.CRYPTO.id, title: "Cryptocurrency", subtitle: "Digital Assets", icon: "🪙", route: "/crypto", points: 200 },
 ];
 
 const FinLitApp: React.FC = () => {
