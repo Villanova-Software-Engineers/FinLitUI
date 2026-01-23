@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Star, BookOpen, Home, Target, User, Check, Flame, GraduationCap, Loader2, Lock, Play, Zap, Lightbulb, TrendingUp, PiggyBank, Shield, CreditCard, Wallet, RefreshCw, Settings, Menu, X } from 'lucide-react';
+import { Star, BookOpen, Home, Target, User, Check, Flame, GraduationCap, Loader2, Lock, Play, Zap, Lightbulb, TrendingUp, PiggyBank, Shield, CreditCard, Wallet, RefreshCw, Settings, Menu, X, Calculator } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../auth/context/AuthContext';
 import { useModuleScore, MODULES } from '../hooks/useModuleScore';
@@ -522,6 +522,17 @@ const FinLitApp: React.FC = () => {
           >
             <Zap size={24} />
             <span className="font-medium">Quick Quiz</span>
+          </button>
+
+          <button
+            onClick={() => {
+              navigate('/financial-tools');
+              setMobileMenuOpen(false);
+            }}
+            className="flex items-center gap-3 p-3 hover:bg-blue-500 rounded-lg text-base sm:text-lg"
+          >
+            <Calculator size={24} />
+            <span className="font-medium">Financial Tools</span>
           </button>
 
           <button

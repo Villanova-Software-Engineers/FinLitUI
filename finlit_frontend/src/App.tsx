@@ -21,6 +21,7 @@ import AdminSetup from "./components/AdminSetup";
 import AdminDashboard from "./components/AdminDashboard";
 import EconomicNewsQuiz from "./components/EconomicNewsQuiz";
 import Certificate from "./components/Certificate";
+import FinancialTools from "./components/FinancialTools";
 
 // Smart Auth component that redirects authenticated users appropriately
 const SmartAuthPage: React.FC = () => {
@@ -224,16 +225,25 @@ function App() {
           />
 
           {/* Certificate Route */}
-          <Route 
-            path="/certificate" 
+          <Route
+            path="/certificate"
             element={
               <ProtectedRoute>
                 <Certificate />
               </ProtectedRoute>
-            } 
+            }
           />
 
-          
+          {/* Financial Tools Route */}
+          <Route
+            path="/financial-tools"
+            element={
+              <ProtectedRoute>
+                <FinancialTools />
+              </ProtectedRoute>
+            }
+          />
+
           {/* Catch all route - redirect to dashboard if authenticated, otherwise to auth */}
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
