@@ -6,14 +6,14 @@ import { useModuleScore, MODULES } from '../hooks/useModuleScore';
 
 const FinancialRoadmap = () => {
   const { scrollYProgress } = useScroll();
-  const pathDrawProgress = useTransform(scrollYProgress, [0, 2], [0.4, 2]);
-
+const pathDrawProgress = useTransform(scrollYProgress, [0, 2.3], [0, 1]);
   const [visibleModules, setVisibleModules] = useState(3);
   const [lockedMessage, setLockedMessage] = useState(null);
   const scrollRef = useRef(null);
   const navigate = useNavigate();
   const { user } = useAuthContext();
   const { isModulePassed, progress } = useModuleScore();
+
 
   // Show locked message temporarily
   const showLockedMessage = (moduleIndex) => {
@@ -27,14 +27,14 @@ const FinancialRoadmap = () => {
   const moduleOrder = [
     MODULES.BUDGETING_50_30_20.id,    // 1. Budgeting Basics
     MODULES.NEEDS_WANTS.id,            // 2. Needs vs Wants
-    MODULES.INVESTMENT_BANKING.id,     // 3. Investment Banking
     MODULES.CREDIT_SCORE.id,           // 4. Credit Score
     MODULES.EMERGENCY_FUND.id,         // 5. Emergency Fund
     MODULES.STOCK_MARKET.id,           // 6. Stock Market
     MODULES.INSURANCE.id,              // 7. Insurance
     MODULES.DEBT_MANAGEMENT.id,        // 8. Debt Management
-    'retirement',                       // 9. Retirement (not in MODULES yet)
-    'advanced-wealth'                   // 10. Advanced Wealth (not in MODULES yet)
+    MODULES.CRYPTO.id,        // 9. Cryptocurrency
+    MODULES.INVESTMENT_BANKING.id,     // 3. Investment Banking
+
   ];
 
   // Check if a module is accessible (previous module passed or is first module)
@@ -82,8 +82,87 @@ const FinancialRoadmap = () => {
       description: "Learn to distinguish between essential needs and desired wants.",
       quizType: "swipe-categorize"
     },
+    
     {
       id: 3,
+      moduleId: MODULES.CREDIT_SCORE.id,
+      title: "Credit Score Mastery",
+      subtitle: "Credit Management",
+      icon: "📊",
+      color: "#e8f5e9",
+      position: "left",
+      route: "/credit-score",
+      component: "credit-module",
+      description: "Understand credit scores, factors that affect them, and improvement strategies.",
+      quizType: "mcq"
+    },
+    {
+      id: 4,
+      moduleId: MODULES.EMERGENCY_FUND.id,
+      title: "Emergency Fund",
+      subtitle: "Financial Safety",
+      icon: "🆘",
+      color: "#e3f2fd",
+      position: "right",
+      route: "/emergency-fund",
+      component: "emergency-module",
+      description: "Build a robust emergency fund to protect against unexpected expenses.",
+      quizType: "calculation"
+    },
+    {
+      id: 5,
+      moduleId: MODULES.STOCK_MARKET.id,
+      title: "Stock Market Basics",
+      subtitle: "Investment Fundamentals",
+      icon: "📈",
+      color: "#f5f5f5",
+      position: "left",
+      route: "/stock-market",
+      component: "stock-module",
+      description: "Learn the fundamentals of stock market investing and portfolio building.",
+      quizType: "matching"
+    },
+    {
+      id: 6,
+      moduleId: MODULES.INSURANCE.id,
+      title: "Insurance Protection",
+      subtitle: "Risk Management",
+      icon: "🛡️",
+      color: "#f5f5f5",
+      position: "right",
+      route: "/insurance",
+      component: "insurance-module",
+      description: "Understand different types of insurance and how to protect your assets.",
+      quizType: "drag-drop"
+    },
+    {
+      id: 7,
+      moduleId: MODULES.DEBT_MANAGEMENT.id,
+      title: "Debt Management",
+      subtitle: "Debt Freedom",
+      icon: "🔓",
+      color: "#f5f5f5",
+      position: "left",
+      route: "/debt-management",
+      component: "debt-module",
+      description: "Strategies for managing and eliminating debt effectively.",
+      quizType: "scenario"
+    },
+    {
+      id:8,
+      moduleId: MODULES.CRYPTO.id,
+      title: "Cryptocurrency Fundamentals",
+      subtitle: "Digital Assets",
+      icon: "🪙",
+      color: "#f5f5f5",
+      position: "right",
+      route: "/crypto",
+      component: "crypto-module",
+      description: "Learn the fundamentals of cryptocurrency and blockchain technology.",
+      quizType: "mcq"
+    },
+    {
+       id:9,
       moduleId: MODULES.INVESTMENT_BANKING.id,
       title: "Investment Banking",
       subtitle: "IPO Knowledge",
@@ -95,97 +174,6 @@ const FinancialRoadmap = () => {
       description: "Test your knowledge about Initial Public Offerings and investment banking.",
       quizType: "true-false"
     },
-    {
-      id: 4,
-      moduleId: MODULES.CREDIT_SCORE.id,
-      title: "Credit Score Mastery",
-      subtitle: "Credit Management",
-      icon: "📊",
-      color: "#e8f5e9",
-      position: "right",
-      route: "/credit-score",
-      component: "credit-module",
-      description: "Understand credit scores, factors that affect them, and improvement strategies.",
-      quizType: "mcq"
-    },
-    {
-      id: 5,
-      moduleId: MODULES.EMERGENCY_FUND.id,
-      title: "Emergency Fund",
-      subtitle: "Financial Safety",
-      icon: "🆘",
-      color: "#e3f2fd",
-      position: "left",
-      route: "/emergency-fund",
-      component: "emergency-module",
-      description: "Build a robust emergency fund to protect against unexpected expenses.",
-      quizType: "calculation"
-    },
-    {
-      id: 6,
-      moduleId: MODULES.STOCK_MARKET.id,
-      title: "Stock Market Basics",
-      subtitle: "Investment Fundamentals",
-      icon: "📈",
-      color: "#f5f5f5",
-      position: "right",
-      route: "/stock-market",
-      component: "stock-module",
-      description: "Learn the fundamentals of stock market investing and portfolio building.",
-      quizType: "matching"
-    },
-    {
-      id: 7,
-      moduleId: MODULES.INSURANCE.id,
-      title: "Insurance Protection",
-      subtitle: "Risk Management",
-      icon: "🛡️",
-      color: "#f5f5f5",
-      position: "left",
-      route: "/insurance",
-      component: "insurance-module",
-      description: "Understand different types of insurance and how to protect your assets.",
-      quizType: "drag-drop"
-    },
-    {
-      id: 8,
-      moduleId: MODULES.DEBT_MANAGEMENT.id,
-      title: "Debt Management",
-      subtitle: "Debt Freedom",
-      icon: "🔓",
-      color: "#f5f5f5",
-      position: "right",
-      route: "/debt-management",
-      component: "debt-module",
-      description: "Strategies for managing and eliminating debt effectively.",
-      quizType: "scenario"
-    },
-    {
-      id: 9,
-      moduleId: 'retirement',
-      title: "Retirement Planning",
-      subtitle: "Future Security",
-      icon: "🏖️",
-      color: "#f5f5f5",
-      position: "left",
-      route: "/retirement",
-      component: "retirement-module",
-      description: "Plan for retirement with 401(k), IRA, and investment strategies.",
-      quizType: "calculator"
-    },
-    {
-      id: 10,
-      moduleId: 'advanced-wealth',
-      title: "Advanced Wealth",
-      subtitle: "Wealth Building",
-      icon: "👑",
-      color: "#f5f5f5",
-      position: "right",
-      route: "/advanced-wealth",
-      component: "wealth-module",
-      description: "Master advanced strategies for building and preserving wealth.",
-      quizType: "comprehensive"
-    }
   ];
 
   // Compute modules with dynamic status
@@ -209,7 +197,7 @@ const FinancialRoadmap = () => {
       // Determine how many modules to show based on scroll percentage
       // We have 10 modules total, so we'll show more as the user scrolls down
       const newVisibleModules = Math.min(
-        Math.max(3, Math.floor(3 + (scrollPercentage / 15))),
+        Math.max(3, Math.floor(3 + (scrollPercentage / 13))),
         allModules.length
       );
       
@@ -257,6 +245,8 @@ const FinancialRoadmap = () => {
     { emoji: "🏠", size: "text-2xl", delay: 12 },
     { emoji: "📝", size: "text-lg", delay: 14 },
   ];
+    const svgHeight = allModules.length * 380; // rough estimate px per module + spacing
+
 
   return (
     <div 
@@ -358,21 +348,23 @@ const FinancialRoadmap = () => {
       
       {/* Road Map with Curved Path */}
       <div className="max-w-4xl mx-auto relative mb-16 pb-40">
+
         {/* Path visual - Creating a curved, winding path */}
-        <svg
-  className="absolute top-0 left-0 w-full"
-  height="1000"
-  viewBox="0 0 100 200"
+<svg
+  className="absolute top-0 left-0 w-full pointer-events-none"
+height={svgHeight}
+  viewBox={`0 0 100 ${svgHeight / 5}`}   // maintain ~5:1 ratio
   preserveAspectRatio="none"
 >
-<motion.path
-  d="M50,0 Q60,20 40,40 Q20,60 60,80 Q100,100 50,120 Q0,140 50,160 Q100,180 50,200"
-  stroke="#3182ce"
-  strokeWidth="3"
-  fill="none"
-  style={{ pathLength: pathDrawProgress }}
-/>
-
+  <motion.path
+    d="M50,0 Q60,30 40,60 Q20,90 60,120 Q100,150 50,180 Q0,210 50,240 Q100,270 50,300 Q0,330 50,360 Q100,390 50,420 Q0,450 50,480 Q100,510 50,540 Q0,570 50,600 Q100,630 50,640"
+    stroke="#3182ce"
+    strokeWidth="4"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    fill="none"
+    style={{ pathLength: pathDrawProgress }}
+  />
 </svg>
 
         {/* Modules */}
@@ -395,13 +387,6 @@ const FinancialRoadmap = () => {
                   fill="none" 
                   className="opacity-70"
                 />
-            <motion.path
-  d="M50,0 Q60,20 40,40 Q20,60 60,80 Q100,100 50,120 Q0,140 50,160 Q100,180 50,200"
-  stroke="#3182ce"
-  strokeWidth="3"
-  fill="none"
-  style={{ pathLength: pathDrawProgress }}
-/>
 
               </svg>
               

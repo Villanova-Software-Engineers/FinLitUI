@@ -16,6 +16,7 @@ import StockMarketModule from "./components/StockMarketModule";
 import InsuranceModule from "./components/InsuranceModule";
 import DebtManagementModule from "./components/DebtManagementModule";
 import InvestmentBankingModule from "./components/InvestmentBankingModule";
+import CryptoModule from "./components/CryptoModule";
 import AdminSetup from "./components/AdminSetup";
 import AdminDashboard from "./components/AdminDashboard";
 import EconomicNewsQuiz from "./components/EconomicNewsQuiz";
@@ -187,13 +188,21 @@ function App() {
               </ProtectedRoute>
             } 
           />
-          <Route 
-            path="/debt-management" 
+          <Route
+            path="/debt-management"
             element={
               <ProtectedRoute>
                 <DebtManagementModule />
               </ProtectedRoute>
-            } 
+            }
+          />
+          <Route
+            path="/crypto"
+            element={
+              <ProtectedRoute>
+                <CryptoModule />
+              </ProtectedRoute>
+            }
           />
 
           {/* Protected Admin Routes */}
