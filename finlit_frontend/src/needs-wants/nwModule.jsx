@@ -10,7 +10,20 @@ export default function NeedsWants() {
   const { saveScore, isModulePassed, refreshProgress, isLoading: progressLoading } = useModuleScore();
   
   function getRandomItem(list, count) {
-    return [...list].sort(() => Math.random() - 0.5).slice(0, count);
+    // Ensure no duplicates by picking unique items
+    const shuffled = [...list].sort(() => Math.random() - 0.5);
+    const selected = [];
+    const seenIds = new Set();
+    
+    for (const item of shuffled) {
+      if (selected.length >= count) break;
+      if (!seenIds.has(item.id)) {
+        selected.push(item);
+        seenIds.add(item.id);
+      }
+    }
+    
+    return selected.length === count ? selected : [...list].slice(0, count);
   }
 
   const [step, setStep] = useState(1);
@@ -33,9 +46,17 @@ export default function NeedsWants() {
   const [scoreSaved, setScoreSaved] = useState(false);
   const [shuffledQuiz, setShuffledQuiz] = useState([]);
   const [isProcessingSwipe, setIsProcessingSwipe] = useState(false);
+  const [showCompletionScreen, setShowCompletionScreen] = useState(false);
 
   // Check if module is already passed
   const modulePassed = isModulePassed(MODULES.NEEDS_WANTS.id);
+
+  // Watch for module completion and show completion screen
+  useEffect(() => {
+    if (scoreSaved && modulePassed) {
+      setShowCompletionScreen(true);
+    }
+  }, [scoreSaved, modulePassed]);
 
   // Shuffle array helper
   const shuffleArray = (array) => {
@@ -242,10 +263,18 @@ export default function NeedsWants() {
       // Total questions = swipe items + quiz questions
       const totalQuestions = items2.length + quiz.length;
       // Use the passed finalQuizCorrect to ensure we have the latest value
-      const totalCorrect = swipeCorrect + finalQuizCorrect;
+      let totalCorrect = swipeCorrect + finalQuizCorrect;
+      
+      // Cap total correct at total questions (prevents over-counting due to bugs)
+      totalCorrect = Math.min(totalCorrect, totalQuestions);
+      
+      // Calculate percentage (will be 100 if they got all correct)
       const percentageScore = Math.round((totalCorrect / totalQuestions) * 100);
+      
+      // Cap the score at 100 for storage
+      const finalScore = Math.min(percentageScore, 100);
 
-      await saveScore(MODULES.NEEDS_WANTS.id, percentageScore, 100);
+      await saveScore(MODULES.NEEDS_WANTS.id, finalScore, 100);
       await refreshProgress();
       setScoreSaved(true);
     } catch (error) {
@@ -268,7 +297,7 @@ export default function NeedsWants() {
   }
 
   // If module is already passed, show completion screen
-  if (modulePassed) {
+  if (modulePassed || showCompletionScreen) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-blue-100 p-6 flex items-center justify-center">
         <motion.div
@@ -284,7 +313,7 @@ export default function NeedsWants() {
           >
             🎉
           </motion.div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Module Already Completed!</h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">{showCompletionScreen ? 'Module Passed! 🎉' : 'Module Already Completed!'}</h2>
           <p className="text-gray-600 mb-6">
             You've already passed the Needs vs Wants module. Great job understanding the difference between needs and wants!
           </p>
@@ -788,6 +817,10 @@ export default function NeedsWants() {
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => {
+                          // Reinitialize items to get fresh set of questions
+                          setItems(getRandomItem(hardcodedItems, 8));
+                          setItems2(getRandomItem(hardcodedItems, 8));
+                          setShuffledQuiz([]);
                           setStep(1);
                           setSelected([]);
                           setCurrent(0);
@@ -804,6 +837,7 @@ export default function NeedsWants() {
                           setQuizCorrect(0);
                           setScoreSaved(false);
                           setIsProcessingSwipe(false);
+                          setShowCompletionScreen(false);
                         }}
                       >
                         <RotateCcw className="w-5 h-5" />

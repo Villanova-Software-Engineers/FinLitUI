@@ -380,9 +380,13 @@ export async function updateModuleScore(
   };
 
   let updatedScores: ModuleScore[];
+  let xpToAward = 0;
+  
   if (existingIndex >= 0) {
     const existingScore = existingScores[existingIndex];
     const newAttemptHistory = [...(existingScore.attemptHistory || []), newAttempt];
+    const wasAlreadyPassed = existingScore.passed;
+    const isNowPassed = existingScore.passed || isPassed;
 
     updatedScores = [...existingScores];
     updatedScores[existingIndex] = {
@@ -392,9 +396,14 @@ export async function updateModuleScore(
       completedAt: now,
       attempts: existingScore.attempts + 1,
       // Once passed, always passed
-      passed: existingScore.passed || isPassed,
+      passed: isNowPassed,
       attemptHistory: newAttemptHistory,
     };
+    
+    // Only award XP if this is the first time passing (was not passed before)
+    if (!wasAlreadyPassed && isNowPassed) {
+      xpToAward = moduleScore.score;
+    }
   } else {
     // First attempt for this module
     updatedScores = [...existingScores, {
@@ -404,14 +413,21 @@ export async function updateModuleScore(
       passed: isPassed,
       attemptHistory: [newAttempt],
     }];
+    
+    // Award XP if this first attempt passes
+    if (isPassed) {
+      xpToAward = moduleScore.score;
+    }
   }
 
-  const totalXP = updatedScores.reduce((sum, s) => sum + s.score, 0);
-  const xpLevel = Math.floor(totalXP / 100) + 1;
+  // Calculate totalXP: sum of scores only for passed modules, capped at 100
+  const currentTotalXP = data.totalXP || 0;
+  const newTotalXP = Math.min(currentTotalXP + xpToAward, 100);
+  const xpLevel = Math.floor(newTotalXP / 100) + 1;
 
   await updateDoc(progressRef, {
     moduleScores: updatedScores,
-    totalXP,
+    totalXP: newTotalXP,
     xpLevel,
     lastActivityAt: serverTimestamp(),
   });
@@ -650,8 +666,11 @@ export async function resetModuleProgress(
     score: 0,
   };
 
-  // Recalculate total XP
-  const totalXP = updatedScores.reduce((sum, s) => sum + s.score, 0);
+  // Recalculate total XP - only count XP for passed modules, capped at 100
+  const totalXP = Math.min(
+    updatedScores.reduce((sum, s) => sum + (s.passed ? s.score : 0), 0),
+    100
+  );
   const xpLevel = Math.floor(totalXP / 100) + 1;
 
   await updateDoc(progressRef, {
