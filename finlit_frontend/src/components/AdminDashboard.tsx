@@ -183,16 +183,16 @@ const AdminDashboard: React.FC = () => {
 
   const exportToExcel = () => {
     if (!selectedCode || students.length === 0) return;
+    const allSystemModules = Object.values(MODULES).length;
     const exportData = students.map(student => {
       const passedCount = student.progress?.moduleScores?.filter(m => m.passed).length ?? 0;
-      const totalModules = student.progress?.moduleScores?.length ?? 0;
       const baseData: Record<string, string | number> = {
         'Name': student.displayName,
         'Email': student.email,
         'Total XP': student.progress?.totalXP ?? 0,
         'Streak': student.progress?.streak ?? 0,
         'Modules Passed': passedCount,
-        'Total Attempted': totalModules,
+        'Total Modules': allSystemModules,
         'Registered': student.registeredAt.toLocaleDateString(),
       };
       student.progress?.moduleScores?.forEach(module => {
@@ -582,8 +582,8 @@ const AdminDashboard: React.FC = () => {
                           <tbody className="divide-y divide-slate-200/60">
                             {students.map((student) => {
                               const passedCount = student.progress?.moduleScores?.filter(m => m.passed).length ?? 0;
-                              const totalModules = student.progress?.moduleScores?.length ?? 0;
-                              const progressPercentage = totalModules > 0 ? Math.round((passedCount / totalModules) * 100) : 0;
+                              const allSystemModules = Object.values(MODULES).length;
+                              const progressPercentage = Math.round((passedCount / allSystemModules) * 100);
                               return (
                                 <tr key={student.userId} className="hover:bg-gradient-to-r hover:from-slate-50 hover:to-blue-50/50 transition-all duration-200">
                                   <td className="px-6 py-5">
@@ -609,7 +609,7 @@ const AdminDashboard: React.FC = () => {
                                     <div className="flex items-center gap-3">
                                       <div className="flex-1">
                                         <div className="flex justify-between text-xs font-medium text-slate-600 mb-1">
-                                          <span>{passedCount}/{totalModules} modules</span>
+                                          <span>{passedCount}/{allSystemModules} modules</span>
                                           <span>{progressPercentage}%</span>
                                         </div>
                                         <div className="w-full bg-slate-200 rounded-full h-2">
