@@ -1,9 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
-
-
-// In component
 
 const FinancialRoadmap = () => {
     const { scrollYProgress } = useScroll();
@@ -111,7 +107,6 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 2], [0.4, 2]);
       subtitle: "Summit",
       status: "Locked",
       icon: "👑",
-      color: "#f5f5f5",
       position: "right",
       description: "Master advanced strategies for building and preserving wealth."
     }
@@ -320,7 +315,6 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 2], [0.4, 2]);
                 }}
                 onClick={() => handleModuleClick(module.id)}
               >
-                {/* Card header */}
                 <div className="p-4">
                   <div className="flex items-center">
                     <div className={`p-3 rounded-full mr-4 ${getStatusBgColor(module.status)}`}>
@@ -369,7 +363,6 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 2], [0.4, 2]);
                 )}
               </div>
               
-              {/* Node on the path */}
               <div 
                 className={`absolute top-1/2 -mt-3 ${module.position === 'left' ? 'right-4' : 'left-4'} w-6 h-6 rounded-full z-10 flex items-center justify-center ${module.status === 'Locked' ? 'bg-gray-300' : 'bg-blue-500'}`} 
               >
@@ -432,7 +425,6 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 2], [0.4, 2]);
         </motion.div>
       )}
       
-      {/* Extra space to allow scrolling */}
       <div className="h-screen"></div>
     </div>
   );
