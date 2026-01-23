@@ -11,6 +11,7 @@ import {
   EyeOff,
   Copy,
   Check,
+  CheckCircle,
   Plus,
   Lock,
   LogOut,
@@ -18,15 +19,15 @@ import {
   LayoutDashboard,
   Shield,
   MoreHorizontal,
-  CheckCircle,
   XCircle,
   Calendar,
-  Loader2
+  Loader2,
+  HelpCircle
 } from 'lucide-react';
-import { createOrganizationWithAdmin, getAllOrganizations, checkIsSuperAdmin } from '../firebase/firestore.service';
+import { createOrganizationWithAdmin, getAllOrganizations, checkIsSuperAdmin, getQuizQuestions } from '../firebase/firestore.service';
 import { useAuthContext } from '../auth/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import type { Organization } from '../auth/types/auth.types';
+import type { Organization, QuizQuestion } from '../auth/types/auth.types';
 
 interface CreatedOrg {
   organization: Organization;
@@ -49,6 +50,10 @@ const AdminSetup: React.FC = () => {
   const [isSuperAdmin, setIsSuperAdmin] = useState<boolean | null>(null);
   const [checkingAccess, setCheckingAccess] = useState(true);
 
+  // Quiz Questions State (just for display count)
+  const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
+  const [loadingQuestions, setLoadingQuestions] = useState(true);
+
   useEffect(() => {
     const checkAccess = async () => {
       if (authLoading) return;
@@ -70,8 +75,23 @@ const AdminSetup: React.FC = () => {
   }, [user, isAuthenticated, authLoading]);
 
   useEffect(() => {
-    if (isSuperAdmin) loadOrganizations();
+    if (isSuperAdmin) {
+      loadOrganizations();
+      loadQuizQuestions();
+    }
   }, [isSuperAdmin]);
+
+  const loadQuizQuestions = async () => {
+    setLoadingQuestions(true);
+    try {
+      const questions = await getQuizQuestions();
+      setQuizQuestions(questions);
+    } catch {
+      // ignore - just for count display
+    } finally {
+      setLoadingQuestions(false);
+    }
+  };
 
   const loadOrganizations = async () => {
     try {
@@ -162,6 +182,13 @@ const AdminSetup: React.FC = () => {
           <button className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 shadow-lg rounded-xl">
             <Building2 size={20} />
             Organizations
+          </button>
+          <button
+            onClick={() => navigate('/admin/quiz-questions')}
+            className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-gradient-to-r hover:from-slate-50 hover:to-purple-50 rounded-xl transition-all duration-200"
+          >
+            <HelpCircle size={20} />
+            Quiz Questions
           </button>
           <button
             onClick={() => navigate('/admin')}
@@ -445,6 +472,32 @@ const AdminSetup: React.FC = () => {
                 </table>
               </div>
             )}
+          </div>
+
+          {/* Quiz Questions Quick Link */}
+          <div
+            onClick={() => navigate('/admin/quiz-questions')}
+            className="bg-white/80 backdrop-blur-sm border border-slate-200/60 rounded-2xl shadow-xl mt-8 p-6 cursor-pointer hover:shadow-2xl transition-all group"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                  <HelpCircle className="text-white" size={28} />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-slate-800">Quiz Questions</h2>
+                  <p className="text-slate-600 text-sm">Manage Global Economic News Quiz • 3 XP per correct answer</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="text-sm font-medium text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg">
+                  {loadingQuestions ? '...' : quizQuestions.length} questions
+                </div>
+                <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center group-hover:bg-emerald-100 transition-colors">
+                  <Plus className="text-slate-500 group-hover:text-emerald-600" size={20} />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </main>

@@ -150,7 +150,7 @@ const LEARNING_MODULES = [
 const FinLitApp: React.FC = () => {
   const navigate = useNavigate();
   const { user, signOut, isLoading: authLoading } = useAuthContext();
-  const { progress, isModulePassed, getModuleScore, checkAndUpdateDailyStreak, refreshProgress, submitDailyChallenge } = useModuleScore();
+  const { progress, isModulePassed, getModuleScore, checkAndUpdateDailyStreak, refreshProgress, submitDailyChallenge, saveCrossword, loadCrosswordProgress } = useModuleScore();
 
   const [activeSection, setActiveSection] = useState<'home' | 'profile'>('home');
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
@@ -184,8 +184,12 @@ const FinLitApp: React.FC = () => {
   const [selectedDirection, setSelectedDirection] = useState<'across' | 'down'>('across');
   const [selectedClue, setSelectedClue] = useState<ClueData | null>(null);
   const [crosswordChecked, setCrosswordChecked] = useState(false);
-  const [correctCount, setCorrectCount] = useState(0);
+  const [correctWordsCount, setCorrectWordsCount] = useState(0);
+  const [previouslyCorrectWords, setPreviouslyCorrectWords] = useState<string[]>([]);
+  const [crosswordXpAwarded, setCrosswordXpAwarded] = useState(0);
+  const [crosswordLoaded, setCrosswordLoaded] = useState(false);
   const inputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
+  const clueRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
 
   // Calculations
   const moduleOrder = LEARNING_MODULES.map(m => m.id);
@@ -356,19 +360,58 @@ const FinLitApp: React.FC = () => {
     }
   };
 
-  const checkCrossword = () => {
-    let correct = 0;
-    GRID.forEach((row, ri) => row.forEach((cell, ci) => {
-      if (!cell.isBlack && userInputs[`${ri}-${ci}`]?.toUpperCase() === cell.letter) correct++;
-    }));
-    setCorrectCount(correct);
+  // Check which words are correctly completed
+  const getCorrectWords = useCallback(() => {
+    const correctWords: string[] = [];
+
+    CROSSWORD_CLUES.forEach(clue => {
+      const { answer, startRow, startCol, direction, number } = clue;
+      let isWordCorrect = true;
+
+      for (let i = 0; i < answer.length; i++) {
+        const row = direction === 'across' ? startRow : startRow + i;
+        const col = direction === 'across' ? startCol + i : startCol;
+        const key = `${row}-${col}`;
+
+        if (userInputs[key]?.toUpperCase() !== answer[i]) {
+          isWordCorrect = false;
+          break;
+        }
+      }
+
+      if (isWordCorrect) {
+        correctWords.push(`${number}-${direction}`);
+      }
+    });
+
+    return correctWords;
+  }, [userInputs]);
+
+  const checkCrossword = async () => {
+    const correctWords = getCorrectWords();
+
+    // Find newly correct words (not previously saved)
+    const newlyCorrectWords = correctWords.filter(w => !previouslyCorrectWords.includes(w));
+
+    setCorrectWordsCount(correctWords.length);
     setCrosswordChecked(true);
+
+    // Save progress and award XP for new correct words
+    if (user) {
+      const result = await saveCrossword(userInputs, newlyCorrectWords, correctWords);
+      if (result.xpAwarded > 0) {
+        setCrosswordXpAwarded(result.xpAwarded);
+        setPreviouslyCorrectWords(correctWords);
+      }
+    }
   };
 
   const resetCrossword = () => {
     setUserInputs({});
     setCrosswordChecked(false);
     setSelectedCell(null);
+    setCorrectWordsCount(0);
+    setCrosswordXpAwarded(0);
   };
 
   const getCellHighlight = (row: number, col: number) => {
@@ -415,6 +458,33 @@ const FinLitApp: React.FC = () => {
     };
     checkStreak();
   }, [user, streakChecked, checkAndUpdateDailyStreak, refreshProgress]);
+
+  // Load saved crossword progress on mount
+  useEffect(() => {
+    const loadSavedCrossword = async () => {
+      if (user && !crosswordLoaded) {
+        setCrosswordLoaded(true);
+        const savedProgress = await loadCrosswordProgress();
+        if (savedProgress) {
+          setUserInputs(savedProgress.answers);
+          setPreviouslyCorrectWords(savedProgress.correctWords);
+          setCorrectWordsCount(savedProgress.correctWords.length);
+        }
+      }
+    };
+    loadSavedCrossword();
+  }, [user, crosswordLoaded, loadCrosswordProgress]);
+
+  // Scroll selected clue into view when it changes
+  useEffect(() => {
+    if (selectedClue) {
+      const clueKey = `${selectedClue.number}-${selectedClue.direction}`;
+      const clueElement = clueRefs.current[clueKey];
+      if (clueElement) {
+        clueElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+  }, [selectedClue]);
 
   const handleSubmitAnswer = async () => {
     if (selectedAnswer === null || answered) return;
@@ -837,16 +907,20 @@ const FinLitApp: React.FC = () => {
 
               {/* Financial Crossword */}
               <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm border border-gray-100 lg:col-span-2">
-                <div className="flex justify-between items-center mb-4">
+                <div className="flex flex-wrap justify-between items-center gap-2 mb-4">
                   <h2 className="text-xl sm:text-2xl font-bold">Financial Crossword</h2>
-                  {crosswordChecked && (() => {
-                    const totalCells = GRID.flat().filter(c => !c.isBlack).length;
-                    return (
-                      <span className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-sm sm:text-lg font-semibold ${correctCount === totalCells ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
-                        {correctCount}/{totalCells} correct
+                  <div className="flex items-center gap-2">
+                    {crosswordXpAwarded > 0 && (
+                      <span className="px-3 py-1.5 rounded-lg text-sm font-semibold bg-emerald-100 text-emerald-700 animate-pulse">
+                        +{crosswordXpAwarded} XP
                       </span>
-                    );
-                  })()}
+                    )}
+                    {(crosswordChecked || correctWordsCount > 0) && (
+                      <span className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-sm sm:text-lg font-semibold ${correctWordsCount === CROSSWORD_CLUES.length ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                        {correctWordsCount}/{CROSSWORD_CLUES.length} correct
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
@@ -877,7 +951,47 @@ const FinLitApp: React.FC = () => {
                                 value={userInputs[key] || ''}
                                 onChange={e => handleCellInput(ri, ci, e.target.value)}
                                 onKeyDown={e => handleKeyDown(e, ri, ci)}
-                                onFocus={() => setSelectedCell({ row: ri, col: ci })}
+                                onFocus={() => {
+                                  // Only update if this is a different cell (avoid overriding handleCellClick)
+                                  if (selectedCell?.row !== ri || selectedCell?.col !== ci) {
+                                    setSelectedCell({ row: ri, col: ci });
+                                    // Smart direction selection - prioritize word starting at this cell
+                                    const words = getWordsForCell(ri, ci);
+                                    const cellNumber = GRID[ri][ci].number;
+
+                                    if (words.across && words.down) {
+                                      if (cellNumber) {
+                                        // If this cell has a number, prefer the word that starts here
+                                        const startsAcross = words.across.number === cellNumber;
+                                        const startsDown = words.down.number === cellNumber;
+
+                                        if (startsAcross && !startsDown) {
+                                          setSelectedDirection('across');
+                                          setSelectedClue(words.across);
+                                        } else if (startsDown && !startsAcross) {
+                                          setSelectedDirection('down');
+                                          setSelectedClue(words.down);
+                                        } else {
+                                          // Use current direction preference
+                                          const dir = selectedDirection || 'across';
+                                          setSelectedDirection(dir);
+                                          setSelectedClue(dir === 'across' ? words.across : words.down);
+                                        }
+                                      } else {
+                                        // Not a starting cell - use current direction
+                                        const dir = selectedDirection || 'across';
+                                        setSelectedDirection(dir);
+                                        setSelectedClue(dir === 'across' ? words.across : words.down);
+                                      }
+                                    } else if (words.across) {
+                                      setSelectedDirection('across');
+                                      setSelectedClue(words.across);
+                                    } else if (words.down) {
+                                      setSelectedDirection('down');
+                                      setSelectedClue(words.down);
+                                    }
+                                  }
+                                }}
                                 maxLength={1}
                                 className={`w-full h-full text-center text-lg font-bold uppercase bg-transparent outline-none cursor-pointer ${
                                   isCorrectCell ? 'text-green-600' : isWrongCell ? 'text-red-500' : 'text-gray-900'
@@ -889,29 +1003,36 @@ const FinLitApp: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="flex gap-3 mt-4">
-                      <button onClick={checkCrossword} className="px-4 sm:px-6 py-2 sm:py-3 bg-blue-500 text-white text-sm sm:text-lg font-semibold rounded-lg hover:bg-blue-600">
-                        Check Answers
-                      </button>
-                      <button onClick={resetCrossword} className="px-4 sm:px-6 py-2 sm:py-3 bg-gray-200 text-gray-700 text-sm sm:text-lg font-semibold rounded-lg hover:bg-gray-300">
-                        Reset
-                      </button>
+                    <div className="flex flex-col gap-2 mt-4">
+                      <div className="flex gap-3">
+                        <button onClick={checkCrossword} className="px-4 sm:px-6 py-2 sm:py-3 bg-blue-500 text-white text-sm sm:text-lg font-semibold rounded-lg hover:bg-blue-600">
+                          Check Answers
+                        </button>
+                        <button onClick={resetCrossword} className="px-4 sm:px-6 py-2 sm:py-3 bg-gray-200 text-gray-700 text-sm sm:text-lg font-semibold rounded-lg hover:bg-gray-300">
+                          Reset
+                        </button>
+                      </div>
+                      <p className="text-xs sm:text-sm text-gray-500">
+                        <Star className="inline w-3 h-3 sm:w-4 sm:h-4 text-yellow-500 mr-1" />
+                        Earn 2 XP for each correct word! Progress saves automatically.
+                      </p>
                     </div>
                   </div>
 
                   {/* Clues */}
                   <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-8">
-                    <div className="bg-blue-50 p-3 sm:p-4 rounded-lg">
-                      <h3 className="font-bold text-blue-800 mb-2 sm:mb-3 text-lg sm:text-xl">Across</h3>
+                    <div className="bg-blue-50 p-3 sm:p-4 rounded-lg max-h-64 overflow-y-auto">
+                      <h3 className="font-bold text-blue-800 mb-2 sm:mb-3 text-lg sm:text-xl sticky top-0 bg-blue-50 pb-1">Across</h3>
                       <div className="space-y-1.5 sm:space-y-2">
                         {acrossClues.map(c => (
                           <button
                             key={c.number}
+                            ref={el => { clueRefs.current[`${c.number}-across`] = el; }}
                             onClick={() => handleClueClick(c)}
-                            className={`w-full text-left p-2 rounded-lg transition-colors text-xs sm:text-sm ${
+                            className={`w-full text-left p-2 rounded-lg transition-all text-xs sm:text-sm ${
                               selectedClue?.number === c.number && selectedClue?.direction === 'across'
-                                ? 'bg-blue-200 border-2 border-blue-500 shadow-md'
-                                : 'hover:bg-blue-100'
+                                ? 'bg-blue-300 border-2 border-blue-600 shadow-md scale-[1.02]'
+                                : 'hover:bg-blue-100 border-2 border-transparent'
                             }`}
                           >
                             <span className="font-bold text-blue-700">{c.number}.</span> {c.clue}
@@ -919,17 +1040,18 @@ const FinLitApp: React.FC = () => {
                         ))}
                       </div>
                     </div>
-                    <div className="bg-emerald-50 p-3 sm:p-4 rounded-lg">
-                      <h3 className="font-bold text-emerald-800 mb-2 sm:mb-3 text-lg sm:text-xl">Down</h3>
+                    <div className="bg-emerald-50 p-3 sm:p-4 rounded-lg max-h-64 overflow-y-auto">
+                      <h3 className="font-bold text-emerald-800 mb-2 sm:mb-3 text-lg sm:text-xl sticky top-0 bg-emerald-50 pb-1">Down</h3>
                       <div className="space-y-1.5 sm:space-y-2">
                         {downClues.map(c => (
                           <button
                             key={c.number}
+                            ref={el => { clueRefs.current[`${c.number}-down`] = el; }}
                             onClick={() => handleClueClick(c)}
-                            className={`w-full text-left p-2 rounded-lg transition-colors text-xs sm:text-sm ${
+                            className={`w-full text-left p-2 rounded-lg transition-all text-xs sm:text-sm ${
                               selectedClue?.number === c.number && selectedClue?.direction === 'down'
-                                ? 'bg-emerald-200 border-2 border-emerald-500 shadow-md'
-                                : 'hover:bg-emerald-100'
+                                ? 'bg-emerald-300 border-2 border-emerald-600 shadow-md scale-[1.02]'
+                                : 'hover:bg-emerald-100 border-2 border-transparent'
                             }`}
                           >
                             <span className="font-bold text-emerald-700">{c.number}.</span> {c.clue}
