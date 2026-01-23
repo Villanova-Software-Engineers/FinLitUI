@@ -6,8 +6,9 @@ import { useModuleScore, MODULES } from '../hooks/useModuleScore';
 
 const FinancialRoadmap = () => {
   const { scrollYProgress } = useScroll();
-const pathDrawProgress = useTransform(scrollYProgress, [0, 2.3], [0, 1]);
+const pathDrawProgress = useTransform(scrollYProgress, [0, 0.7], [0, 1]);
   const [visibleModules, setVisibleModules] = useState(3);
+  const [pathProgress, setPathProgress] = useState(0);
   const [lockedMessage, setLockedMessage] = useState(null);
   const scrollRef = useRef(null);
   const navigate = useNavigate();
@@ -184,29 +185,19 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 2.3], [0, 1]);
     }));
   }, [progress]);
 
-  // Handle scroll to reveal more modules
+  // Reveal modules based on path draw progress
+  // Modules should appear slightly ahead of path reaching them
   useEffect(() => {
-    const handleScroll = () => {
-      const scrollPosition = window.scrollY;
-      const windowHeight = window.innerHeight;
-      const docHeight = document.documentElement.scrollHeight;
-      
-      // Calculate how far down the page the user has scrolled (as a percentage)
-      const scrollPercentage = (scrollPosition / (docHeight - windowHeight)) * 100;
-      
-      // Determine how many modules to show based on scroll percentage
-      // We have 10 modules total, so we'll show more as the user scrolls down
-      const newVisibleModules = Math.min(
-        Math.max(3, Math.floor(3 + (scrollPercentage / 13))),
-        allModules.length
-      );
-      
-      setVisibleModules(newVisibleModules);
-    };
+    const unsubscribe = pathDrawProgress.on('change', (progress) => {
+      setPathProgress(progress);
+      // Multiply progress to reveal modules faster than path draws
+      // This makes modules appear just as path approaches their position
+      const modulesToShow = Math.max(3, Math.floor(progress * allModules.length * 1.5) + 3);
+      setVisibleModules(Math.min(modulesToShow, allModules.length));
+    });
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+    return () => unsubscribe();
+  }, [pathDrawProgress, allModules.length]);
 
   const [activeModule, setActiveModule] = useState(null);
 
@@ -347,7 +338,7 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 2.3], [0, 1]);
       </motion.h2>
       
       {/* Road Map with Curved Path */}
-      <div className="max-w-4xl mx-auto relative mb-16 pb-40">
+      <div className="max-w-4xl mx-auto relative mb-16 pb-20" style={{ minHeight: pathProgress >= 0.55 ? 'auto' : `${allModules.length * 500}px` }}>
 
         {/* Path visual - Creating a curved, winding path */}
 <svg
@@ -499,7 +490,7 @@ height={svgHeight}
 
       {/* Scroll indicator if more modules can be revealed */}
       {visibleModules < allModules.length && (
-        <motion.div 
+        <motion.div
           className="fixed bottom-10 left-1/2 transform -translate-x-1/2 z-20 flex flex-col items-center"
           animate={{ y: [0, 10, 0] }}
           transition={{ repeat: Infinity, duration: 2 }}
@@ -513,8 +504,8 @@ height={svgHeight}
 
       {/* Completion indicator when all modules visible */}
       {visibleModules >= allModules.length && (
-        <motion.div 
-          className="text-center mt-10 mb-20"
+        <motion.div
+          className="text-center mt-10 mb-10"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -524,9 +515,7 @@ height={svgHeight}
           </div>
         </motion.div>
       )}
-      
-      {/* Extra space to allow scrolling */}
-      <div className="h-screen"></div>
+
     </div>
   );
 };
