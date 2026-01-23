@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Star, BookOpen, Home, Target, User, Check, Flame, GraduationCap, Loader2, Lock, Play, Zap, Lightbulb, TrendingUp, PiggyBank, Shield, CreditCard, Wallet, RefreshCw, Settings, Menu, X, Calculator, ChevronRight, Trophy, Gamepad2, Brain, Award, HelpCircle } from 'lucide-react';
+import { Star, BookOpen, Home, Target, User, Check, Flame, GraduationCap, Loader2, Lock, Play, Zap, Lightbulb, TrendingUp, PiggyBank, Shield, CreditCard, Wallet, RefreshCw, Settings, Menu, X, Calculator, ChevronRight, Trophy, Gamepad2, Brain, Award, HelpCircle, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuthContext } from '../auth/context/AuthContext';
@@ -478,8 +478,8 @@ const FinLitApp: React.FC = () => {
                 {user.displayName || user.email}
               </span>
             </div>
-            
-            {/* How to Play Button */}
+
+            {/* How to Play Button - Desktop */}
             <button
               onClick={() => setShowHowToPlay(true)}
               className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-200 transition-colors text-blue-800 hover:text-blue-900 font-medium"
@@ -489,6 +489,15 @@ const FinLitApp: React.FC = () => {
               <span className="hidden md:inline text-sm">How to Play</span>
             </button>
           </div>
+
+          {/* How to Play Button - Mobile only */}
+          <button
+            onClick={() => setShowHowToPlay(true)}
+            className="sm:hidden p-2 rounded-lg hover:bg-blue-200 transition-colors text-blue-700"
+            title="How to Play"
+          >
+            <HelpCircle size={20} />
+          </button>
 
           {/* Certificate Icon - Hidden on mobile in header, shown in sidebar */}
           <div
@@ -518,10 +527,10 @@ const FinLitApp: React.FC = () => {
             )}
           </div>
 
-          {/* XP - Compact on mobile */}
+          {/* XP Display */}
           <div className="text-base sm:text-lg">
             <span className="font-bold">{totalXP}</span>
-            <span className="hidden sm:inline text-gray-600 ml-1">XP</span>
+            <span className="text-gray-600 ml-1">XP</span>
           </div>
 
           {/* Logout Button - Icon only on mobile */}
@@ -625,12 +634,24 @@ const FinLitApp: React.FC = () => {
                 navigate(user?.role === 'owner' ? '/admin-setup' : '/admin');
                 setMobileMenuOpen(false);
               }}
-              className="flex items-center gap-3 p-3 hover:bg-blue-500 rounded-lg text-base sm:text-lg mt-auto bg-blue-600/50 border border-white/20"
+              className="flex items-center gap-3 p-3 hover:bg-blue-500 rounded-lg text-base sm:text-lg bg-blue-600/50 border border-white/20"
             >
               <Settings size={24} />
               <span className="font-medium">Admin Panel</span>
             </button>
           )}
+
+          {/* Logout Button - Mobile sidebar */}
+          <button
+            onClick={() => {
+              setMobileMenuOpen(false);
+              signOut().then(() => navigate('/auth'));
+            }}
+            className="lg:hidden flex items-center gap-3 p-3 hover:bg-red-500/80 rounded-lg text-base mt-auto bg-red-500/60 border border-red-300/50"
+          >
+            <LogOut size={24} />
+            <span className="font-medium">Log out</span>
+          </button>
         </div>
 
         {/* Mobile Overlay */}
@@ -645,36 +666,36 @@ const FinLitApp: React.FC = () => {
         <div className="flex-1 p-2 sm:p-3 md:p-4 overflow-y-auto">
           {activeSection === 'home' ? (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
-              {/* Daily Financial Tip */}
+              {/* Daily Financial Tip - Compact on mobile */}
               <div className="lg:col-span-2">
-                <div className={`relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-r ${dailyTip.color} p-4 sm:p-6 shadow-lg`}>
-                  <div className="absolute top-0 right-0 w-32 h-32 sm:w-64 sm:h-64 opacity-10">
+                <div className={`relative overflow-hidden rounded-lg sm:rounded-2xl bg-gradient-to-r ${dailyTip.color} p-3 sm:p-6 shadow-lg`}>
+                  <div className="absolute top-0 right-0 w-20 h-20 sm:w-64 sm:h-64 opacity-10">
                     <dailyTip.icon className="w-full h-full" />
                   </div>
-                  <div className="absolute -bottom-8 -left-8 w-20 h-20 sm:w-32 sm:h-32 bg-white/10 rounded-full blur-2xl" />
-                  <div className="absolute top-4 right-4 w-12 h-12 sm:w-20 sm:h-20 bg-white/10 rounded-full blur-xl" />
+                  <div className="hidden sm:block absolute -bottom-8 -left-8 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
+                  <div className="hidden sm:block absolute top-4 right-4 w-20 h-20 bg-white/10 rounded-full blur-xl" />
 
-                  <div className="relative z-10 flex flex-col sm:flex-row items-start gap-3 sm:gap-5">
-                    <div className="flex-shrink-0 bg-white/20 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4">
-                      <Lightbulb className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
+                  <div className="relative z-10 flex flex-row items-start gap-2 sm:gap-5">
+                    <div className="flex-shrink-0 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-2xl p-2 sm:p-4">
+                      <Lightbulb className="w-5 h-5 sm:w-10 sm:h-10 text-white" />
                     </div>
 
-                    <div className="flex-1 w-full">
-                      <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-                        <h2 className="text-xl sm:text-2xl font-bold text-white">Daily Financial Tip</h2>
-                        <span className="px-2 sm:px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs sm:text-sm font-semibold text-white">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-1.5 sm:gap-3 mb-1 sm:mb-3">
+                        <h2 className="text-sm sm:text-2xl font-bold text-white">Daily Tip</h2>
+                        <span className="px-1.5 sm:px-3 py-0.5 sm:py-1 bg-white/20 backdrop-blur-sm rounded-full text-[10px] sm:text-sm font-semibold text-white">
                           {dailyTip.category}
                         </span>
                       </div>
 
-                      <p className="text-base sm:text-xl text-white/95 leading-relaxed font-medium mb-3 sm:mb-4">
+                      <p className="text-xs sm:text-xl text-white/95 leading-snug sm:leading-relaxed font-medium mb-2 sm:mb-4">
                         "{dailyTip.tip}"
                       </p>
 
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                        <div className="flex items-center gap-2 text-white/80">
-                          <dailyTip.icon className="w-4 h-4 sm:w-5 sm:h-5" />
-                          <span className="text-xs sm:text-sm font-medium">New tip every day</span>
+                      <div className="flex flex-row items-center justify-between gap-2">
+                        <div className="hidden sm:flex items-center gap-2 text-white/80">
+                          <dailyTip.icon className="w-5 h-5" />
+                          <span className="text-sm font-medium">New tip every day</span>
                         </div>
 
                         <button
@@ -683,10 +704,10 @@ const FinLitApp: React.FC = () => {
                             const nextIndex = (currentIndex + 1) % DAILY_TIPS.length;
                             setDailyTip(DAILY_TIPS[nextIndex]);
                           }}
-                          className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-lg text-white text-sm sm:text-base font-semibold transition-all duration-200 hover:scale-105"
+                          className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1 sm:py-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-md sm:rounded-lg text-white text-xs sm:text-base font-semibold transition-all duration-200 hover:scale-105"
                         >
                           <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4" />
-                          Next Tip
+                          Next
                         </button>
                       </div>
                     </div>
