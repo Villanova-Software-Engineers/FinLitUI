@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence, Reorder } from 'framer-motion';
-import { ArrowLeft, Star, Trophy, CheckCircle, XCircle, Heart, Zap, Award, Target, Play, BookOpen, ChevronRight, RefreshCw, Loader2 } from 'lucide-react';
+import { motion, Reorder } from 'framer-motion';
+import { ArrowLeft, Trophy, CheckCircle, XCircle, ChevronRight, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import TrueFalseCard from '../TrueFalse/TrueFalseCard';
 import { useModuleScore, MODULES } from '../hooks/useModuleScore';
@@ -98,17 +98,12 @@ const InvestmentBankingModule = () => {
   const [currentLesson, setCurrentLesson] = useState(0);
   const [currentActivity, setCurrentActivity] = useState(0);
   const [completedLessons, setCompletedLessons] = useState([]);
-  const [totalXP, setTotalXP] = useState(0);
-  const [streak, setStreak] = useState(0);
-  const [achievements, setAchievements] = useState([]);
 
   // Module score saving state
   const [isSaving, setIsSaving] = useState(false);
   const [saveResult, setSaveResult] = useState(null);
   const [isResetting, setIsResetting] = useState(false);
   
-  // Achievement notification state
-  const [visibleAchievement, setVisibleAchievement] = useState(null);
 
   // Game states
   const [selectedMatches, setSelectedMatches] = useState({});
@@ -124,10 +119,43 @@ const InvestmentBankingModule = () => {
   // Sequence game states
   const [draggedItems, setDraggedItems] = useState([]);
   const [sequenceCorrect, setSequenceCorrect] = useState(false);
+  const [sequenceWrong, setSequenceWrong] = useState(false);
   const [selectedSequenceIndex, setSelectedSequenceIndex] = useState(null);
 
   // Quiz completion state
   const [quizPassed, setQuizPassed] = useState(false);
+  const [quizFinished, setQuizFinished] = useState(false);
+
+  // Track completed activities
+  const [completedActivities, setCompletedActivities] = useState([]);
+
+  // Check if current activity is completed
+  const isCurrentActivityCompleted = () => {
+    const activity = practiceActivities[currentActivity];
+    if (!activity) return false;
+
+    switch (activity.type) {
+      case 'matching':
+        return gameCompleted;
+      case 'mcq':
+        // Check if all questions are answered
+        return activity.questions.every(q => showExplanations[q.id]);
+      case 'sequence':
+        return sequenceCorrect;
+      case 'analysis':
+        // Analysis is completed when user has made a selection and seen result
+        return completedActivities.includes(currentActivity);
+      default:
+        return false;
+    }
+  };
+
+  // Mark activity as completed (used for analysis game)
+  const markActivityCompleted = () => {
+    if (!completedActivities.includes(currentActivity)) {
+      setCompletedActivities([...completedActivities, currentActivity]);
+    }
+  };
 
   // Professional lessons with working activities
   const lessons = [
@@ -269,38 +297,45 @@ const InvestmentBankingModule = () => {
 
   const handleDefinitionClick = (definitionId) => {
     if (matchedPairs.includes(definitionId)) return;
-    
+
     if (selectedDefinition === definitionId) {
       setSelectedDefinition(null);
     } else {
       setSelectedDefinition(definitionId);
-      if (selectedTerm) {
-        checkMatch(selectedTerm, definitionId);
-      }
     }
   };
 
-  const checkMatch = (termId, definitionId) => {
+  // State for match validation feedback
+  const [matchFeedback, setMatchFeedback] = useState({ show: false, correct: false });
+
+  const checkMatch = () => {
+    if (!selectedTerm || !selectedDefinition) return;
+
     const activity = practiceActivities[currentActivity];
-    const pair = activity.pairs.find(p => p.id === termId);
-    
-    if (pair && pair.id === definitionId) {
+    const pair = activity.pairs.find(p => p.id === selectedTerm);
+
+    if (pair && pair.id === selectedDefinition) {
       // Correct match
-      setMatchedPairs([...matchedPairs, termId, definitionId]);
+      setMatchedPairs([...matchedPairs, selectedTerm]);
       setSelectedTerm(null);
       setSelectedDefinition(null);
-      
+      setMatchFeedback({ show: true, correct: true });
+
       // Check if all pairs are matched
-      if (matchedPairs.length + 2 >= activity.pairs.length * 2) {
+      if (matchedPairs.length + 1 >= activity.pairs.length) {
         setGameCompleted(true);
-        setTotalXP(totalXP + 100);
       }
+
+      // Hide feedback after delay
+      setTimeout(() => setMatchFeedback({ show: false, correct: false }), 1500);
     } else {
-      // Incorrect match - briefly show error then reset
+      // Incorrect match - show error feedback
+      setMatchFeedback({ show: true, correct: false });
       setTimeout(() => {
         setSelectedTerm(null);
         setSelectedDefinition(null);
-      }, 1000);
+        setMatchFeedback({ show: false, correct: false });
+      }, 1500);
     }
   };
 
@@ -343,7 +378,11 @@ const InvestmentBankingModule = () => {
 
     if (isCorrect) {
       setSequenceCorrect(true);
-      setTotalXP(totalXP + 100);
+      setSequenceWrong(false);
+    } else {
+      setSequenceWrong(true);
+      // Hide wrong feedback after delay
+      setTimeout(() => setSequenceWrong(false), 2000);
     }
   };
 
@@ -351,16 +390,6 @@ const InvestmentBankingModule = () => {
   const completeLesson = (lessonId) => {
     if (!completedLessons.includes(lessonId)) {
       setCompletedLessons([...completedLessons, lessonId]);
-      setTotalXP(totalXP + 50);
-      setStreak(streak + 1);
-      
-      if (streak === 2) {
-        const newAchievement = { id: 'streak3', name: 'Learning Streak!', desc: '3 lessons completed', emoji: '🔥' };
-        setAchievements([...achievements, newAchievement]);
-        setVisibleAchievement(newAchievement);
-        // Auto-dismiss achievement notification after 3 seconds
-        setTimeout(() => setVisibleAchievement(null), 3000);
-      }
     }
   };
 
@@ -385,10 +414,12 @@ const InvestmentBankingModule = () => {
     setSelectedTerm(null);
     setSelectedDefinition(null);
     setGameCompleted(false);
+    setMatchFeedback({ show: false, correct: false });
     setSelectedAnswers({});
     setShowExplanations({});
     setDraggedItems([]);
     setSequenceCorrect(false);
+    setSequenceWrong(false);
     setSelectedSequenceIndex(null);
 
     if (currentActivity < practiceActivities.length - 1) {
@@ -405,10 +436,12 @@ const InvestmentBankingModule = () => {
     setSelectedTerm(null);
     setSelectedDefinition(null);
     setGameCompleted(false);
+    setMatchFeedback({ show: false, correct: false });
     setSelectedAnswers({});
     setShowExplanations({});
     setDraggedItems([]);
     setSequenceCorrect(false);
+    setSequenceWrong(false);
     setSelectedSequenceIndex(null);
 
     if (currentActivity > 0) {
@@ -515,129 +548,100 @@ const InvestmentBankingModule = () => {
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2 text-slate-700 bg-slate-50 px-4 py-2 rounded-xl border border-slate-200">
             <Trophy className="w-5 h-5 text-emerald-500" />
-            <span className="font-semibold">{completedLessons.length}/{lessons.length}</span>
+            <span className="font-semibold">{completedLessons.length}/{lessons.length} Lessons</span>
           </div>
-
-          <div className="flex items-center gap-2 text-slate-700 bg-slate-50 px-4 py-2 rounded-xl border border-slate-200">
-            <Star className="w-5 h-5 text-teal-500" />
-            <span className="font-semibold">{totalXP} XP</span>
-          </div>
-
-          {streak > 0 && (
-            <div className="flex items-center gap-2 text-orange-600 bg-orange-50 px-4 py-2 rounded-xl border border-orange-200">
-              <Zap className="w-5 h-5" />
-              <span className="font-semibold">{streak}🔥</span>
-            </div>
-          )}
         </div>
       </motion.div>
-
-      {/* Achievement Notifications */}
-      <AnimatePresence>
-        {visibleAchievement && (
-          <motion.div
-            className="fixed top-4 right-4 z-50"
-            initial={{ opacity: 0, x: 100 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 100 }}
-          >
-            <div className="bg-white backdrop-blur-xl border border-emerald-200 rounded-2xl p-4 shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">{visibleAchievement.emoji}</span>
-                <div>
-                  <div className="font-semibold text-slate-800">{visibleAchievement.name}</div>
-                  <div className="text-sm text-slate-500">{visibleAchievement.desc}</div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Content Sections */}
       {currentPhase === 'truefalse' ? (
         <div className="max-w-4xl mx-auto">
-          <TrueFalseCard onQuizComplete={(result) => setQuizPassed(result.passed)} />
-          {/* Complete Module Section */}
-          <div className="mt-8 p-6 bg-white rounded-2xl shadow-lg border border-slate-200 text-center">
-            <h3 className="text-lg font-semibold text-slate-700 mb-4">
-              {quizPassed ? 'Congratulations! You passed the quiz!' : 'Complete the quiz above to unlock module completion'}
-            </h3>
+          <TrueFalseCard
+            onQuizComplete={(result) => setQuizPassed(result.passed)}
+            onQuizFinished={(finished) => setQuizFinished(finished)}
+          />
+          {/* Complete Module Section - Only show after quiz is finished */}
+          {quizFinished && (
+            <div className="mt-8 p-6 bg-white rounded-2xl shadow-lg border border-slate-200 text-center">
+              <h3 className="text-lg font-semibold text-slate-700 mb-4">
+                {quizPassed ? 'Congratulations! You passed the quiz!' : 'You need to pass the quiz to complete this module'}
+              </h3>
 
-            {!quizPassed && (
-              <div className="mb-4 p-3 rounded-xl bg-amber-50 border border-amber-200">
-                <div className="flex items-center justify-center gap-2">
-                  <span className="text-amber-600 text-lg">📝</span>
-                  <span className="font-semibold text-amber-700">Score at least 70% on the quiz to pass</span>
+              {!quizPassed && (
+                <div className="mb-4 p-3 rounded-xl bg-amber-50 border border-amber-200">
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="text-amber-600 text-lg">📝</span>
+                    <span className="font-semibold text-amber-700">Score at least 70% on the quiz to pass. The quiz will restart automatically.</span>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {saveResult && (
-              <div className={`mb-4 p-3 rounded-xl ${saveResult.passed ? 'bg-green-50 border border-green-200' : 'bg-orange-50 border border-orange-200'}`}>
-                <div className="flex items-center justify-center gap-2">
-                  {saveResult.passed ? (
+              {saveResult && (
+                <div className={`mb-4 p-3 rounded-xl ${saveResult.passed ? 'bg-green-50 border border-green-200' : 'bg-orange-50 border border-orange-200'}`}>
+                  <div className="flex items-center justify-center gap-2">
+                    {saveResult.passed ? (
+                      <>
+                        <CheckCircle className="text-green-600" size={20} />
+                        <span className="font-semibold text-green-700">Module Passed! Attempt #{saveResult.attemptNumber}</span>
+                      </>
+                    ) : (
+                      <>
+                        <XCircle className="text-orange-600" size={20} />
+                        <span className="font-semibold text-orange-700">Complete the assessment for 100% to pass. Attempt #{saveResult.attemptNumber}</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-4 justify-center">
+                <button
+                  onClick={async () => {
+                    setIsSaving(true);
+                    try {
+                      // For this module, completing the assessment = 100%
+                      const result = await saveScore('investment-banking', 100, 100);
+                      setSaveResult(result);
+                    } catch (err) {
+                      console.error('Error saving score:', err);
+                    } finally {
+                      setIsSaving(false);
+                    }
+                  }}
+                  disabled={isSaving || saveResult?.passed || !quizPassed}
+                  className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {isSaving ? (
                     <>
-                      <CheckCircle className="text-green-600" size={20} />
-                      <span className="font-semibold text-green-700">Module Passed! Attempt #{saveResult.attemptNumber}</span>
+                      <Loader2 className="animate-spin" size={18} />
+                      Saving...
+                    </>
+                  ) : saveResult?.passed ? (
+                    <>
+                      <CheckCircle size={18} />
+                      Completed!
+                    </>
+                  ) : !quizPassed ? (
+                    <>
+                      <Trophy size={18} />
+                      Pass Quiz First
                     </>
                   ) : (
                     <>
-                      <XCircle className="text-orange-600" size={20} />
-                      <span className="font-semibold text-orange-700">Complete the assessment for 100% to pass. Attempt #{saveResult.attemptNumber}</span>
+                      <Trophy size={18} />
+                      Complete Module
                     </>
                   )}
-                </div>
+                </button>
+                <button
+                  onClick={() => navigate('/game')}
+                  className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold transition"
+                >
+                  Back to Roadmap
+                </button>
               </div>
-            )}
-
-            <div className="flex gap-4 justify-center">
-              <button
-                onClick={async () => {
-                  setIsSaving(true);
-                  try {
-                    // For this module, completing the assessment = 100%
-                    const result = await saveScore('investment-banking', 100, 100);
-                    setSaveResult(result);
-                  } catch (err) {
-                    console.error('Error saving score:', err);
-                  } finally {
-                    setIsSaving(false);
-                  }
-                }}
-                disabled={isSaving || saveResult?.passed || !quizPassed}
-                className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              >
-                {isSaving ? (
-                  <>
-                    <Loader2 className="animate-spin" size={18} />
-                    Saving...
-                  </>
-                ) : saveResult?.passed ? (
-                  <>
-                    <CheckCircle size={18} />
-                    Completed!
-                  </>
-                ) : !quizPassed ? (
-                  <>
-                    <Trophy size={18} />
-                    Pass Quiz First
-                  </>
-                ) : (
-                  <>
-                    <Trophy size={18} />
-                    Complete Module
-                  </>
-                )}
-              </button>
-              <button
-                onClick={() => navigate('/game')}
-                className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold transition"
-              >
-                Back to Roadmap
-              </button>
             </div>
-          </div>
+          )}
         </div>
       ) : currentPhase === 'lessons' ? (
         /* Premium Lessons */
@@ -797,7 +801,7 @@ const InvestmentBankingModule = () => {
                     {/* Terms Column */}
                     <div className="space-y-3">
                       <h3 className="font-semibold text-slate-700 text-center pb-3 border-b border-slate-200">Services</h3>
-                      {practiceActivities[currentActivity].pairs.map((pair, index) => (
+                      {practiceActivities[currentActivity].pairs.map((pair) => (
                         <motion.button
                           key={`term-${pair.id}`}
                           onClick={() => handleTermClick(pair.id)}
@@ -822,7 +826,7 @@ const InvestmentBankingModule = () => {
                     {/* Definitions Column - Using shuffled definitions */}
                     <div className="space-y-3">
                       <h3 className="font-semibold text-slate-700 text-center pb-3 border-b border-slate-200">Descriptions</h3>
-                      {shuffledDefinitions.map((pair, index) => (
+                      {shuffledDefinitions.map((pair) => (
                         <motion.button
                           key={`def-${pair.id}`}
                           onClick={() => handleDefinitionClick(pair.id)}
@@ -842,6 +846,43 @@ const InvestmentBankingModule = () => {
                     </div>
                   </div>
 
+                  {/* Check Match Button */}
+                  {!gameCompleted && (
+                    <div className="text-center">
+                      <motion.button
+                        onClick={checkMatch}
+                        disabled={!selectedTerm || !selectedDefinition}
+                        className={`px-8 py-3 rounded-xl font-semibold transition-all duration-300 ${
+                          selectedTerm && selectedDefinition
+                            ? 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white shadow-lg shadow-emerald-500/25'
+                            : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                        }`}
+                        whileHover={selectedTerm && selectedDefinition ? { scale: 1.02, y: -2 } : {}}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        Check Match
+                      </motion.button>
+                    </div>
+                  )}
+
+                  {/* Match Feedback */}
+                  {matchFeedback.show && (
+                    <motion.div
+                      className={`p-4 rounded-xl text-center ${
+                        matchFeedback.correct
+                          ? 'bg-emerald-50 border border-emerald-300'
+                          : 'bg-red-50 border border-red-300'
+                      }`}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                    >
+                      <div className="text-2xl mb-1">{matchFeedback.correct ? '✅' : '❌'}</div>
+                      <div className={`font-semibold ${matchFeedback.correct ? 'text-emerald-700' : 'text-red-700'}`}>
+                        {matchFeedback.correct ? 'Correct Match!' : 'Wrong Match! Try again.'}
+                      </div>
+                    </motion.div>
+                  )}
+
                   {gameCompleted && (
                     <motion.div
                       className="bg-emerald-50 border border-emerald-300 rounded-2xl p-6 text-center"
@@ -850,7 +891,7 @@ const InvestmentBankingModule = () => {
                     >
                       <div className="text-3xl mb-2">✅</div>
                       <div className="font-semibold text-emerald-700">Excellent Work!</div>
-                      <div className="text-sm text-emerald-600">All pairs matched correctly! +100 XP</div>
+                      <div className="text-sm text-emerald-600">All pairs matched correctly!</div>
                     </motion.div>
                   )}
                 </div>
@@ -950,6 +991,19 @@ const InvestmentBankingModule = () => {
                     </div>
                   )}
 
+                  {/* Wrong Answer Alert */}
+                  {sequenceWrong && (
+                    <motion.div
+                      className="bg-red-50 border border-red-300 rounded-2xl p-6 text-center"
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                    >
+                      <div className="text-3xl mb-2">❌</div>
+                      <div className="font-semibold text-red-700">Wrong Order!</div>
+                      <div className="text-sm text-red-600">The sequence is not correct. Try rearranging the steps.</div>
+                    </motion.div>
+                  )}
+
                   {sequenceCorrect && (
                     <motion.div
                       className="bg-emerald-50 border border-emerald-300 rounded-2xl p-6 text-center"
@@ -958,7 +1012,7 @@ const InvestmentBankingModule = () => {
                     >
                       <div className="text-3xl mb-2">✅</div>
                       <div className="font-semibold text-emerald-700">Perfect Sequence!</div>
-                      <div className="text-sm text-emerald-600">Correct IPO process order! +100 XP</div>
+                      <div className="text-sm text-emerald-600">Correct IPO process order!</div>
                     </motion.div>
                   )}
                 </div>
@@ -968,7 +1022,7 @@ const InvestmentBankingModule = () => {
               {practiceActivities[currentActivity].type === 'analysis' && (
                 <AnalysisGame
                   activity={practiceActivities[currentActivity]}
-                  onComplete={() => setTotalXP(totalXP + 100)}
+                  onComplete={markActivityCompleted}
                 />
               )}
             </div>
@@ -1003,13 +1057,15 @@ const InvestmentBankingModule = () => {
             </div>
 
             <motion.button
-              onClick={() => {
-                setTotalXP(totalXP + 75);
-                nextActivity();
-              }}
-              className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl font-semibold transition-all duration-300 flex items-center gap-2 shadow-lg shadow-emerald-500/25"
-              whileHover={{ scale: 1.02, y: -2 }}
-              whileTap={{ scale: 0.98 }}
+              onClick={nextActivity}
+              disabled={!isCurrentActivityCompleted()}
+              className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 flex items-center gap-2 ${
+                isCurrentActivityCompleted()
+                  ? 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white shadow-lg shadow-emerald-500/25'
+                  : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+              }`}
+              whileHover={isCurrentActivityCompleted() ? { scale: 1.02, y: -2 } : {}}
+              whileTap={isCurrentActivityCompleted() ? { scale: 0.98 } : {}}
             >
               {currentActivity === practiceActivities.length - 1 ? 'Take Assessment' : 'Next Activity'}
               <ChevronRight className="w-4 h-4" />
@@ -1039,31 +1095,12 @@ const InvestmentBankingModule = () => {
             </p>
 
             {/* Final Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-8">
+            <div className="mb-8">
               <div className="bg-slate-50 rounded-lg sm:rounded-xl p-4 sm:p-6 border border-slate-200">
-                <div className="text-2xl sm:text-3xl font-bold text-emerald-600">{totalXP}</div>
-                <div className="text-sm text-slate-500 font-medium">Total XP Earned</div>
-              </div>
-              <div className="bg-slate-50 rounded-lg sm:rounded-xl p-4 sm:p-6 border border-slate-200">
-                <div className="text-2xl sm:text-3xl font-bold text-teal-600">{completedLessons.length}</div>
+                <div className="text-2xl sm:text-3xl font-bold text-teal-600">{completedLessons.length}/{lessons.length}</div>
                 <div className="text-sm text-slate-500 font-medium">Lessons Completed</div>
               </div>
             </div>
-
-            {/* Achievements */}
-            {achievements.length > 0 && (
-              <div className="mb-8">
-                <h3 className="text-lg font-semibold text-slate-800 mb-4">Achievements Unlocked</h3>
-                <div className="flex flex-wrap justify-center gap-3">
-                  {achievements.map(achievement => (
-                    <div key={achievement.id} className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-2">
-                      <span className="text-lg mr-2">{achievement.emoji}</span>
-                      <span className="text-sm font-semibold text-emerald-700">{achievement.name}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -1081,9 +1118,6 @@ const InvestmentBankingModule = () => {
                   setCurrentLesson(0);
                   setCurrentActivity(0);
                   setCompletedLessons([]);
-                  setStreak(0);
-                  setTotalXP(0);
-                  setAchievements([]);
                 }}
                 className="px-8 py-3 bg-white hover:bg-slate-50 text-slate-700 rounded-xl font-semibold transition-all duration-300 border border-slate-200 shadow-sm"
                 whileHover={{ scale: 1.02, y: -2 }}

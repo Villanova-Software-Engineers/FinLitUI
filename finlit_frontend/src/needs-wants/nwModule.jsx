@@ -32,6 +32,7 @@ export default function NeedsWants() {
   const [isSaving, setIsSaving] = useState(false);
   const [scoreSaved, setScoreSaved] = useState(false);
   const [shuffledQuiz, setShuffledQuiz] = useState([]);
+  const [isProcessingSwipe, setIsProcessingSwipe] = useState(false);
 
   // Check if module is already passed
   const modulePassed = isModulePassed(MODULES.NEEDS_WANTS.id);
@@ -71,7 +72,7 @@ export default function NeedsWants() {
     setItems2(getRandomItem(hardcodedItems, 8)); // Reduced from 15 to 8 questions
   }, []);
 
-  // Enhanced swipe handlers
+  // Enhanced swipe handlers with smoother detection
   const handlers = useSwipeable({
     onSwipedLeft: () => handleSwipe("left"),
     onSwipedRight: () => handleSwipe("right"),
@@ -87,7 +88,9 @@ export default function NeedsWants() {
     },
     preventDefaultTouchmoveEvent: true,
     trackMouse: true,
-    delta: 50
+    delta: 10, // Very low threshold for ultra-responsive swiping
+    swipeDuration: 1000, // Longer duration for easier swipes
+    touchEventOptions: { passive: false }
   });
 
   // toggle item
@@ -100,11 +103,12 @@ export default function NeedsWants() {
 
   // Enhanced swipe logic with better animations
   function handleSwipe(direction) {
-    if (finished) return;
+    if (finished || isProcessingSwipe) return;
 
     const item = items2[current];
     if (!item) return;
 
+    setIsProcessingSwipe(true);
     setSwipeDirection(direction);
     const isCorrectAnswer = (direction === "right" && item.type === "want") ||
                      (direction === "left" && item.type === "need");
@@ -132,6 +136,7 @@ export default function NeedsWants() {
           setShowQuiz(true);
         }, 1500);
       }
+      setIsProcessingSwipe(false);
     }, 2500);
   }
 
@@ -199,8 +204,10 @@ export default function NeedsWants() {
   const [quizComplete, setQuizComplete] = useState(false);
 
   function handleQuizAnswer(correct) {
+    let newQuizCorrect = quizCorrect;
     if (correct) {
-      setQuizCorrect(prev => prev + 1);
+      newQuizCorrect = quizCorrect + 1;
+      setQuizCorrect(newQuizCorrect);
     }
     setQuizFeedback(correct ? "✅ Correct!" : "❌ Incorrect");
 
@@ -212,8 +219,10 @@ export default function NeedsWants() {
       }, 2000);
     } else {
       // Last question - save score and show "Next" button
-      handleSaveScore(correct);
-      setQuizComplete(true);
+      setTimeout(() => {
+        handleSaveScore(newQuizCorrect);
+        setQuizComplete(true);
+      }, 100);
     }
   }
 
@@ -225,14 +234,15 @@ export default function NeedsWants() {
   }
 
   // Save score to Firestore
-  async function handleSaveScore(lastAnswerCorrect) {
+  async function handleSaveScore(finalQuizCorrect) {
     if (scoreSaved) return; // Prevent duplicate saves
 
     setIsSaving(true);
     try {
       // Total questions = swipe items + quiz questions
       const totalQuestions = items2.length + quiz.length;
-      const totalCorrect = swipeCorrect + quizCorrect + (lastAnswerCorrect ? 1 : 0);
+      // Use the passed finalQuizCorrect to ensure we have the latest value
+      const totalCorrect = swipeCorrect + finalQuizCorrect;
       const percentageScore = Math.round((totalCorrect / totalQuestions) * 100);
 
       await saveScore(MODULES.NEEDS_WANTS.id, percentageScore, 100);
@@ -359,7 +369,7 @@ export default function NeedsWants() {
                     className={`p-4 rounded-xl font-semibold transition-all border-2 ${
                       selected.includes(item.id)
                         ? item.type === "need"
-                          ? "bg-red-500 text-white border-red-500 shadow-lg"
+                          ? "bg-green-500 text-white border-green-500 shadow-lg"
                           : "bg-purple-500 text-white border-purple-500 shadow-lg"
                         : "bg-gray-100 text-gray-700 border-gray-200 hover:border-gray-300"
                     }`}
@@ -402,13 +412,13 @@ export default function NeedsWants() {
               <div className="mb-6">
                 <div className="flex justify-between text-sm text-gray-600 mb-2">
                   <span>Question {current + 1} of {items2.length}</span>
-                  <span>{Math.round(((current + 1) / items2.length) * 100)}% Complete</span>
+                  <span>{Math.min(100, Math.round(((current + 1) / items2.length) * 100))}% Complete</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-3">
                   <motion.div
                     className="bg-gradient-to-r from-purple-500 to-blue-500 h-3 rounded-full"
                     initial={{ width: 0 }}
-                    animate={{ width: `${((current + 1) / items2.length) * 100}%` }}
+                    animate={{ width: `${Math.min(100, ((current + 1) / items2.length) * 100)}%` }}
                     transition={{ duration: 0.5 }}
                   />
                 </div>
@@ -427,11 +437,11 @@ export default function NeedsWants() {
                 </p>
                 <div className="flex items-center justify-center gap-4 text-sm text-gray-500">
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                     <span>Swipe LEFT = NEED</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                    <div className="w-3 h-3 bg-red-500 rounded-full"></div>
                     <span>Swipe RIGHT = WANT</span>
                   </div>
                 </div>
@@ -439,73 +449,110 @@ export default function NeedsWants() {
 
               {/* Card Container */}
               <div className="relative h-96 flex items-center justify-center mb-8" {...handlers}>
+                {/* External Swipe Indicators - Outside the card */}
+                <motion.div
+                  className="absolute left-0 top-1/2 transform -translate-y-1/2 text-green-500 font-bold"
+                  animate={{
+                    opacity: isDragging && dragOffset.x < -20 ? 1 : 0.3,
+                    scale: isDragging && dragOffset.x < -20 ? 1.2 : 0.9,
+                    x: isDragging && dragOffset.x < -20 ? 10 : 0
+                  }}
+                >
+                  <div className="flex flex-col items-center">
+                    <ChevronLeft className="w-12 h-12" />
+                    <div className="text-xl font-bold">NEED</div>
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  className="absolute right-0 top-1/2 transform -translate-y-1/2 text-red-500 font-bold"
+                  animate={{
+                    opacity: isDragging && dragOffset.x > 20 ? 1 : 0.3,
+                    scale: isDragging && dragOffset.x > 20 ? 1.2 : 0.9,
+                    x: isDragging && dragOffset.x > 20 ? -10 : 0
+                  }}
+                >
+                  <div className="flex flex-col items-center">
+                    <ChevronRight className="w-12 h-12" />
+                    <div className="text-xl font-bold">WANT</div>
+                  </div>
+                </motion.div>
+
                 <AnimatePresence mode="wait">
                   {items2[current] && !finished ? (
                     <motion.div
                       key={items2[current].id}
-                      className="relative w-80 h-64 bg-gradient-to-br from-blue-400 to-purple-500 rounded-2xl shadow-2xl flex items-center justify-center text-white cursor-grab active:cursor-grabbing"
+                      className="relative w-80 h-64 bg-gradient-to-br from-blue-400 to-purple-500 rounded-2xl shadow-2xl flex items-center justify-center text-white cursor-grab active:cursor-grabbing overflow-hidden"
                       initial={{ scale: 0.8, opacity: 0, rotateY: -90 }}
-                      animate={{ 
-                        scale: 1, 
-                        opacity: 1, 
+                      animate={{
+                        scale: 1,
+                        opacity: 1,
                         rotateY: 0,
-                        x: isDragging ? dragOffset.x * 0.1 : 0,
-                        rotate: isDragging ? dragOffset.x * 0.1 : 0
+                        x: isDragging ? dragOffset.x : 0,
+                        rotate: isDragging ? dragOffset.x * 0.1 : 0,
+                        rotateY: isDragging ? dragOffset.x * 0.05 : 0
                       }}
-                      exit={{ 
-                        scale: 0.8, 
-                        opacity: 0, 
-                        x: swipeDirection === 'left' ? -300 : swipeDirection === 'right' ? 300 : 0,
-                        rotate: swipeDirection === 'left' ? -30 : swipeDirection === 'right' ? 30 : 0
+                      exit={{
+                        scale: 0.8,
+                        opacity: 0,
+                        x: swipeDirection === 'left' ? -500 : swipeDirection === 'right' ? 500 : 0,
+                        rotate: swipeDirection === 'left' ? -45 : swipeDirection === 'right' ? 45 : 0
                       }}
-                      transition={{ 
-                        duration: 0.6, 
-                        type: "spring", 
-                        stiffness: 200,
-                        damping: 25
+                      transition={{
+                        type: "spring",
+                        stiffness: 400,
+                        damping: 25,
+                        mass: 0.3
+                      }}
+                      drag={!isProcessingSwipe ? "x" : false}
+                      dragConstraints={{ left: 0, right: 0 }}
+                      dragElastic={1}
+                      onDrag={(_, info) => {
+                        if (!isProcessingSwipe) {
+                          setIsDragging(true);
+                          setDragOffset({ x: info.offset.x, y: 0 });
+                        }
+                      }}
+                      onDragEnd={(_, info) => {
+                        if (!isProcessingSwipe && Math.abs(info.offset.x) > 100) {
+                          handleSwipe(info.offset.x > 0 ? 'right' : 'left');
+                        }
+                        setIsDragging(false);
+                        setDragOffset({ x: 0, y: 0 });
                       }}
                       whileHover={{ scale: 1.05 }}
+                      style={{
+                        transformStyle: 'preserve-3d',
+                        perspective: 1000
+                      }}
                     >
-                      <div className="absolute inset-0 bg-black bg-opacity-20 rounded-2xl"></div>
-                      <div className="relative z-10 text-center">
-                        <motion.h2 
+                      {/* Gradient overlay that changes based on swipe direction */}
+                      <motion.div
+                        className="absolute inset-0 rounded-2xl"
+                        animate={{
+                          background: isDragging
+                            ? dragOffset.x > 50
+                              ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.3) 0%, transparent 100%)'
+                              : dragOffset.x < -50
+                              ? 'linear-gradient(225deg, rgba(16, 185, 129, 0.3) 0%, transparent 100%)'
+                              : 'linear-gradient(135deg, rgba(0, 0, 0, 0.2) 0%, transparent 100%)'
+                            : 'linear-gradient(135deg, rgba(0, 0, 0, 0.2) 0%, transparent 100%)'
+                        }}
+                      />
+
+                      <div className="relative z-10 text-center px-6">
+                        <motion.h2
                           className="text-3xl font-bold mb-4"
-                          animate={{ 
-                            scale: isDragging ? 1.1 : 1,
-                            color: isDragging 
-                              ? (dragOffset.x > 0 ? '#10B981' : dragOffset.x < 0 ? '#EF4444' : '#FFFFFF')
-                              : '#FFFFFF'
+                          animate={{
+                            scale: isDragging ? 1.05 : 1
                           }}
                         >
                           {items2[current].name}
                         </motion.h2>
                         <div className="text-sm opacity-80">
-                          Swipe to categorize
+                          Drag left or right
                         </div>
                       </div>
-
-                      {/* Swipe Indicators */}
-                      <motion.div 
-                        className="absolute left-4 top-1/2 transform -translate-y-1/2 text-red-400"
-                        animate={{ 
-                          opacity: isDragging && dragOffset.x < -50 ? 1 : 0,
-                          scale: isDragging && dragOffset.x < -50 ? 1.2 : 0.8
-                        }}
-                      >
-                        <div className="text-2xl font-bold">NEED</div>
-                        <ChevronLeft className="w-8 h-8" />
-                      </motion.div>
-
-                      <motion.div 
-                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-green-400"
-                        animate={{ 
-                          opacity: isDragging && dragOffset.x > 50 ? 1 : 0,
-                          scale: isDragging && dragOffset.x > 50 ? 1.2 : 0.8
-                        }}
-                      >
-                        <div className="text-2xl font-bold">WANT</div>
-                        <ChevronRight className="w-8 h-8" />
-                      </motion.div>
                     </motion.div>
                   ) : (
                     <motion.div
@@ -527,20 +574,22 @@ export default function NeedsWants() {
               {!finished && items2[current] && (
                 <div className="flex justify-center gap-4 mb-6">
                   <motion.button
-                    className="flex items-center gap-2 px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-semibold shadow-lg disabled:opacity-50"
+                    className="flex items-center gap-2 px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl font-semibold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={() => handleSwipe('left')}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    disabled={isProcessingSwipe}
+                    whileHover={{ scale: isProcessingSwipe ? 1 : 1.05 }}
+                    whileTap={{ scale: isProcessingSwipe ? 1 : 0.95 }}
                   >
                     <ArrowLeft className="w-5 h-5" />
                     NEED
                   </motion.button>
 
                   <motion.button
-                    className="flex items-center gap-2 px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl font-semibold shadow-lg"
+                    className="flex items-center gap-2 px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-semibold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={() => handleSwipe('right')}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    disabled={isProcessingSwipe}
+                    whileHover={{ scale: isProcessingSwipe ? 1 : 1.05 }}
+                    whileTap={{ scale: isProcessingSwipe ? 1 : 0.95 }}
                   >
                     WANT
                     <ArrowRight className="w-5 h-5" />
@@ -562,15 +611,15 @@ export default function NeedsWants() {
                 ))}
               </div>
 
-              {/* Feedback */}
+              {/* Feedback - Positioned below card like Tinder */}
               <AnimatePresence>
                 {feedback && (
                   <motion.div
-                    className="fixed inset-x-0 top-1/2 transform -translate-y-1/2 flex justify-center z-50"
-                    initial={{ opacity: 0, scale: 0.5 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.5 }}
-                    transition={{ type: "spring", duration: 0.5 }}
+                    className="flex justify-center mt-4"
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ type: "spring", duration: 0.3 }}
                   >
                     <div className={`px-8 py-4 rounded-xl font-bold text-white text-lg shadow-2xl ${
                       feedback.includes('Correct') ? 'bg-green-500' : 'bg-red-500'
@@ -601,7 +650,7 @@ export default function NeedsWants() {
                   <motion.div
                     className="bg-purple-500 h-2 rounded-full"
                     initial={{ width: 0 }}
-                    animate={{ width: `${((quizIndex + 1) / quiz.length) * 100}%` }}
+                    animate={{ width: `${Math.min(100, ((quizIndex + 1) / quiz.length) * 100)}%` }}
                     transition={{ duration: 0.5 }}
                   />
                 </div>
@@ -690,17 +739,17 @@ export default function NeedsWants() {
                     })()}
                   </div>
                   <div className="text-4xl font-bold text-blue-600 mb-1">
-                    {Math.round(((swipeCorrect + quizCorrect) / (items2.length + quiz.length)) * 100)}%
+                    {Math.min(100, Math.round(((swipeCorrect + quizCorrect) / (items2.length + quiz.length)) * 100))}%
                   </div>
                   <div className="text-sm text-gray-600 mb-2">
                     {swipeCorrect + quizCorrect} of {items2.length + quiz.length} correct
                   </div>
                   <div className={`text-sm font-semibold ${
-                    Math.round(((swipeCorrect + quizCorrect) / (items2.length + quiz.length)) * 100) === 100
+                    Math.min(100, Math.round(((swipeCorrect + quizCorrect) / (items2.length + quiz.length)) * 100)) === 100
                       ? 'text-green-600'
                       : 'text-orange-600'
                   }`}>
-                    {Math.round(((swipeCorrect + quizCorrect) / (items2.length + quiz.length)) * 100) === 100
+                    {Math.min(100, Math.round(((swipeCorrect + quizCorrect) / (items2.length + quiz.length)) * 100)) === 100
                       ? '✅ Module Passed!'
                       : 'Need 100% to pass'}
                   </div>
@@ -732,7 +781,7 @@ export default function NeedsWants() {
                 </div>
 
                 <div className="flex gap-4 justify-center flex-wrap">
-                  {Math.round(((swipeCorrect + quizCorrect) / (items2.length + quiz.length)) * 100) < 100 ? (
+                  {Math.min(100, Math.round(((swipeCorrect + quizCorrect) / (items2.length + quiz.length)) * 100)) < 100 ? (
                     <>
                       <motion.button
                         className="flex items-center gap-2 px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl shadow-lg transition-colors"
@@ -754,6 +803,7 @@ export default function NeedsWants() {
                           setSwipeCorrect(0);
                           setQuizCorrect(0);
                           setScoreSaved(false);
+                          setIsProcessingSwipe(false);
                         }}
                       >
                         <RotateCcw className="w-5 h-5" />
