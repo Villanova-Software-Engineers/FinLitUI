@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Star, BookOpen, Home, Target, User, Check, Flame, GraduationCap, Loader2, Lock, Play, Zap, Lightbulb, TrendingUp, PiggyBank, Shield, CreditCard, Wallet, RefreshCw, Settings, Menu, X, Calculator } from 'lucide-react';
+import { Star, BookOpen, Home, Target, User, Check, Flame, GraduationCap, Loader2, Lock, Play, Zap, Lightbulb, TrendingUp, PiggyBank, Shield, CreditCard, Wallet, RefreshCw, Settings, Menu, X, Calculator, ChevronRight, Trophy, Gamepad2, Brain, Award } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useAuthContext } from '../auth/context/AuthContext';
 import { useModuleScore, MODULES } from '../hooks/useModuleScore';
 
@@ -72,6 +73,42 @@ const generateGrid = (): CrosswordCell[][] => {
 
 const GRID = generateGrid();
 
+// Animated Guide Steps
+const GUIDE_STEPS = [
+  {
+    icon: Target,
+    title: "Complete Learning Path",
+    description: "Master all 9 financial modules to build your knowledge",
+    color: "from-blue-500 to-indigo-600",
+    bgColor: "bg-blue-50",
+    route: "/game"
+  },
+  {
+    icon: Zap,
+    title: "Play Daily Quiz",
+    description: "Answer daily challenges to earn XP and maintain your streak",
+    color: "from-amber-500 to-orange-600",
+    bgColor: "bg-amber-50",
+    route: null // scroll to daily challenge
+  },
+  {
+    icon: Brain,
+    title: "Solve Crossword",
+    description: "Test your financial vocabulary with interactive puzzles",
+    color: "from-emerald-500 to-teal-600",
+    bgColor: "bg-emerald-50",
+    route: null // scroll to crossword
+  },
+  {
+    icon: Trophy,
+    title: "Earn Certificate",
+    description: "Complete all modules to unlock your achievement certificate",
+    color: "from-purple-500 to-pink-600",
+    bgColor: "bg-purple-50",
+    route: "/certificate"
+  }
+];
+
 // Daily Financial Tips
 const DAILY_TIPS = [
   { tip: "Pay yourself first! Set up automatic transfers to savings on payday before you spend on anything else.", category: "Saving", icon: PiggyBank, color: "from-emerald-400 to-teal-500" },
@@ -105,6 +142,7 @@ const LEARNING_MODULES = [
   { id: MODULES.STOCK_MARKET.id, title: "Stock Market", subtitle: "Investment Basics", icon: "📈", route: "/stock-market", points: 200 },
   { id: MODULES.INSURANCE.id, title: "Insurance", subtitle: "Risk Management", icon: "🛡️", route: "/insurance", points: 150 },
   { id: MODULES.DEBT_MANAGEMENT.id, title: "Debt Management", subtitle: "Debt Freedom", icon: "🔓", route: "/debt-management", points: 200 },
+  { id: MODULES.CRYPTO.id, title: "Cryptocurrency", subtitle: "Digital Assets", icon: "🪙", route: "/crypto", points: 200 },
 ];
 
 const FinLitApp: React.FC = () => {
@@ -639,6 +677,111 @@ const FinLitApp: React.FC = () => {
                     </div>
                   </div>
                 </div>
+              </div>
+
+              {/* Animated Guide Section */}
+              <div className="lg:col-span-2">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                  className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg border border-gray-100"
+                >
+                  <div className="flex items-center gap-3 mb-4 sm:mb-6">
+                    <motion.div
+                      animate={{ rotate: [0, 10, -10, 0] }}
+                      transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+                      className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg"
+                    >
+                      <Gamepad2 className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                    </motion.div>
+                    <div>
+                      <h2 className="text-xl sm:text-2xl font-bold text-gray-900">How to Play</h2>
+                      <p className="text-sm sm:text-base text-gray-500">Follow these steps to master financial literacy</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                    {GUIDE_STEPS.map((step, index) => (
+                      <motion.div
+                        key={index}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.4, delay: index * 0.1 }}
+                        whileHover={{ scale: 1.03, y: -4 }}
+                        onClick={() => {
+                          if (step.route) {
+                            navigate(step.route);
+                          }
+                        }}
+                        className={`${step.bgColor} rounded-xl p-4 cursor-pointer transition-shadow hover:shadow-lg relative overflow-hidden group`}
+                      >
+                        {/* Step Number Badge */}
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ duration: 0.3, delay: index * 0.1 + 0.2 }}
+                          className="absolute top-2 right-2 w-6 h-6 sm:w-7 sm:h-7 bg-white/80 rounded-full flex items-center justify-center shadow-sm"
+                        >
+                          <span className="text-xs sm:text-sm font-bold text-gray-700">{index + 1}</span>
+                        </motion.div>
+
+                        {/* Icon */}
+                        <motion.div
+                          whileHover={{ rotate: 5 }}
+                          className={`w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br ${step.color} rounded-lg flex items-center justify-center mb-3 shadow-md`}
+                        >
+                          <step.icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                        </motion.div>
+
+                        {/* Content */}
+                        <h3 className="font-bold text-gray-900 text-sm sm:text-base mb-1">{step.title}</h3>
+                        <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">{step.description}</p>
+
+                        {/* Arrow indicator */}
+                        <motion.div
+                          initial={{ x: 0, opacity: 0 }}
+                          whileHover={{ x: 4, opacity: 1 }}
+                          className="absolute bottom-3 right-3"
+                        >
+                          <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+                        </motion.div>
+
+                        {/* Animated background pulse */}
+                        <motion.div
+                          animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.2, 0.1] }}
+                          transition={{ duration: 3, repeat: Infinity, delay: index * 0.5 }}
+                          className={`absolute -bottom-4 -right-4 w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br ${step.color} rounded-full blur-xl`}
+                        />
+                      </motion.div>
+                    ))}
+                  </div>
+
+                  {/* Progress indicator */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.6 }}
+                    className="mt-4 sm:mt-6 pt-4 border-t border-gray-100"
+                  >
+                    <div className="flex items-center justify-between text-sm sm:text-base">
+                      <div className="flex items-center gap-2">
+                        <Award className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500" />
+                        <span className="text-gray-600">Your Progress:</span>
+                        <span className="font-bold text-emerald-600">{completedModules}/{totalModules} modules completed</span>
+                      </div>
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => navigate('/game')}
+                        className="flex items-center gap-1 px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-sm sm:text-base font-semibold rounded-lg shadow-md hover:shadow-lg transition-shadow"
+                      >
+                        Start Learning
+                        <ChevronRight className="w-4 h-4" />
+                      </motion.button>
+                    </div>
+                  </motion.div>
+                </motion.div>
               </div>
 
               {/* Daily Challenge */}

@@ -22,6 +22,8 @@ import AdminDashboard from "./components/AdminDashboard";
 import EconomicNewsQuiz from "./components/EconomicNewsQuiz";
 import Certificate from "./components/Certificate";
 import FinancialTools from "./components/FinancialTools";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
 
 // Smart Auth component that redirects authenticated users appropriately
 const SmartAuthPage: React.FC = () => {
@@ -243,6 +245,10 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          {/* Public Legal Pages */}
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
 
           {/* Catch all route - redirect to dashboard if authenticated, otherwise to auth */}
           <Route path="*" element={<Navigate to="/dashboard" replace />} />

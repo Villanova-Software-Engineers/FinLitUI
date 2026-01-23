@@ -330,7 +330,7 @@ export const AuthPage: React.FC = () => {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.8 }}
           >
-            <p>© 2024 FinLit. All rights reserved.</p>
+            <p>© 2026 FinLit. All rights reserved.</p>
             <div className="mt-2 space-x-4">
               <a href="/privacy" className="hover:text-gray-700 transition-colors">Privacy Policy</a>
               <a href="/terms" className="hover:text-gray-700 transition-colors">Terms of Service</a>
