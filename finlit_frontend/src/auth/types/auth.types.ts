@@ -63,6 +63,14 @@ export interface ModuleScore {
   attemptHistory: ModuleAttempt[];  // All attempts with timestamps
 }
 
+// Crossword answer tracking
+export interface CrosswordProgress {
+  answers: { [key: string]: string }; // Cell key "row-col" -> letter
+  correctWords: string[]; // List of word IDs that were answered correctly
+  lastUpdated: Date;
+  weekId: string; // Format: "YYYY-WW" to track which week's crossword
+}
+
 // Student progress document in Firestore
 export interface StudentProgress {
   id: string;
@@ -77,6 +85,7 @@ export interface StudentProgress {
   lastActivityAt: Date;
   lastStreakDate?: string; // YYYY-MM-DD format for tracking daily streak
   lastDailyChallengeDate?: string; // YYYY-MM-DD format for tracking daily challenge completion
+  crosswordProgress?: CrosswordProgress; // Crossword answers and progress
 }
 
 export interface SignInRequest {

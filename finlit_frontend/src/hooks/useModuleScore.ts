@@ -8,8 +8,11 @@ import {
   resetModuleProgress,
   calculateDailyStreak,
   completeDailyChallenge,
+  saveCrosswordProgress,
+  getCrosswordProgress,
+  getCurrentCrosswordWeekId,
 } from '../firebase/firestore.service';
-import type { StudentProgress, ModuleScore } from '../auth/types/auth.types';
+import type { StudentProgress, ModuleScore, CrosswordProgress } from '../auth/types/auth.types';
 
 // Module definitions
 export const MODULES = {
@@ -37,6 +40,11 @@ interface SaveScoreResult {
   needsRetake: boolean;
 }
 
+interface SaveCrosswordResult {
+  xpAwarded: number;
+  totalCorrectWords: number;
+}
+
 interface UseModuleScoreReturn {
   progress: StudentProgress | null;
   isLoading: boolean;
@@ -51,6 +59,10 @@ interface UseModuleScoreReturn {
   resetModule: (moduleId: ModuleId) => Promise<void>;
   refreshProgress: () => Promise<void>;
   submitDailyChallenge: () => Promise<{ awarded: boolean; alreadyCompleted: boolean }>;
+  // Crossword functions
+  saveCrossword: (answers: { [key: string]: string }, newlyCorrectWords: string[], allCorrectWords: string[]) => Promise<SaveCrosswordResult>;
+  loadCrosswordProgress: () => Promise<CrosswordProgress | null>;
+  getCrosswordWeekId: () => string;
 }
 
 export const useModuleScore = (): UseModuleScoreReturn => {
@@ -225,6 +237,47 @@ export const useModuleScore = (): UseModuleScoreReturn => {
     }
   }, [user, refreshProgress]);
 
+  // Save crossword progress and award XP (2 XP per newly correct word)
+  const saveCrossword = useCallback(async (
+    answers: { [key: string]: string },
+    newlyCorrectWords: string[],
+    allCorrectWords: string[]
+  ): Promise<SaveCrosswordResult> => {
+    if (!user) {
+      return { xpAwarded: 0, totalCorrectWords: 0 };
+    }
+
+    try {
+      const result = await saveCrosswordProgress(user.id, answers, newlyCorrectWords, allCorrectWords);
+      if (result.xpAwarded > 0) {
+        await refreshProgress();
+      }
+      return result;
+    } catch (err) {
+      console.error('Error saving crossword progress:', err);
+      return { xpAwarded: 0, totalCorrectWords: allCorrectWords.length };
+    }
+  }, [user, refreshProgress]);
+
+  // Load crossword progress for current week
+  const loadCrosswordProgress = useCallback(async (): Promise<CrosswordProgress | null> => {
+    if (!user) {
+      return null;
+    }
+
+    try {
+      return await getCrosswordProgress(user.id);
+    } catch (err) {
+      console.error('Error loading crossword progress:', err);
+      return null;
+    }
+  }, [user]);
+
+  // Get current crossword week ID
+  const getCrosswordWeekId = useCallback((): string => {
+    return getCurrentCrosswordWeekId();
+  }, []);
+
   return {
     progress,
     isLoading,
@@ -239,5 +292,8 @@ export const useModuleScore = (): UseModuleScoreReturn => {
     resetModule,
     refreshProgress,
     submitDailyChallenge,
+    saveCrossword,
+    loadCrosswordProgress,
+    getCrosswordWeekId,
   };
 };

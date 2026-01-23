@@ -25,6 +25,7 @@ import type {
   RegisteredStudent,
   StudentWithProgress,
   UserDashboardData,
+  CrosswordProgress,
 } from '../auth/types/auth.types';
 
 // Type helper for Firestore documents with serverTimestamp
@@ -657,4 +658,95 @@ export async function resetModuleProgress(
     xpLevel,
     lastActivityAt: serverTimestamp(),
   });
+}
+
+// ============== Crossword Functions ==============
+
+/**
+ * Get current week ID in format "YYYY-WW"
+ * Crossword refreshes every 2 weeks
+ */
+export function getCurrentCrosswordWeekId(): string {
+  const now = new Date();
+  const startOfYear = new Date(now.getFullYear(), 0, 1);
+  const days = Math.floor((now.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000));
+  const weekNumber = Math.floor(days / 14); // 2-week periods
+  return `${now.getFullYear()}-${weekNumber.toString().padStart(2, '0')}`;
+}
+
+/**
+ * Save crossword progress and award XP for newly correct words
+ * Returns the number of XP awarded (2 per new correct word)
+ */
+export async function saveCrosswordProgress(
+  userId: string,
+  answers: { [key: string]: string },
+  newlyCorrectWords: string[],
+  allCorrectWords: string[]
+): Promise<{ xpAwarded: number; totalCorrectWords: number }> {
+  const progressRef = doc(db, STUDENT_PROGRESS, userId);
+  const snapshot = await getDoc(progressRef);
+
+  if (!snapshot.exists()) {
+    return { xpAwarded: 0, totalCorrectWords: 0 };
+  }
+
+  const data = snapshot.data();
+  const currentWeekId = getCurrentCrosswordWeekId();
+
+  // Calculate XP to award (2 XP per newly correct word)
+  const xpToAward = newlyCorrectWords.length * 2;
+
+  const currentXP = data.totalXP || 0;
+  const newTotalXP = currentXP + xpToAward;
+  const xpLevel = Math.floor(newTotalXP / 100) + 1;
+
+  const crosswordProgress: CrosswordProgress = {
+    answers,
+    correctWords: allCorrectWords,
+    lastUpdated: new Date(),
+    weekId: currentWeekId,
+  };
+
+  await updateDoc(progressRef, {
+    crosswordProgress,
+    totalXP: newTotalXP,
+    xpLevel,
+    lastActivityAt: serverTimestamp(),
+  });
+
+  return { xpAwarded: xpToAward, totalCorrectWords: allCorrectWords.length };
+}
+
+/**
+ * Get crossword progress for current week
+ * Returns null if no progress or if it's from a different week (needs refresh)
+ */
+export async function getCrosswordProgress(
+  userId: string
+): Promise<CrosswordProgress | null> {
+  const progressRef = doc(db, STUDENT_PROGRESS, userId);
+  const snapshot = await getDoc(progressRef);
+
+  if (!snapshot.exists()) {
+    return null;
+  }
+
+  const data = snapshot.data();
+  const crosswordProgress = data.crosswordProgress as CrosswordProgress | undefined;
+
+  if (!crosswordProgress) {
+    return null;
+  }
+
+  // Check if it's current week
+  const currentWeekId = getCurrentCrosswordWeekId();
+  if (crosswordProgress.weekId !== currentWeekId) {
+    return null; // Needs refresh for new week
+  }
+
+  return {
+    ...crosswordProgress,
+    lastUpdated: (crosswordProgress.lastUpdated as unknown as Timestamp)?.toDate() || new Date(),
+  };
 }
