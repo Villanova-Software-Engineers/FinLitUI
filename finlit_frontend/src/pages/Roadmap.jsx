@@ -505,7 +505,7 @@ height={svgHeight}
       {/* Completion indicator when all modules visible */}
       {visibleModules >= allModules.length && (
         <motion.div
-          className="text-center mt-10 mb-10"
+          className="text-center mt-10 mb-10 relative z-20"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
