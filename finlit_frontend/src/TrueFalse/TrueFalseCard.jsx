@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-export default function TrueFalseCard({ onQuizComplete = null }) {
+export default function TrueFalseCard({ onQuizComplete = null, onQuizFinished = null }) {
   // List of hardcoded questions
   const questions = [
     { 
@@ -83,6 +83,11 @@ export default function TrueFalseCard({ onQuizComplete = null }) {
       const passingScore = Math.ceil(totalQuestions * 0.7); // 70% to pass
       const passed = finalScore >= passingScore;
 
+      // Notify that quiz is finished (all questions answered)
+      if (onQuizFinished) {
+        onQuizFinished(true);
+      }
+
       setTimeout(() => {
         if (passed) {
           setResult(`🏁 Quiz Completed! You passed with ${finalScore}/${totalQuestions}!`);
@@ -100,6 +105,10 @@ export default function TrueFalseCard({ onQuizComplete = null }) {
             setResult('');
             setAnswered(false);
             setButtonsDisabled(false);
+            // Reset quiz finished state when retrying
+            if (onQuizFinished) {
+              onQuizFinished(false);
+            }
           }, 3000);
         }
       }, 1500);
@@ -127,78 +136,101 @@ export default function TrueFalseCard({ onQuizComplete = null }) {
     setCurrentIndex(prevIndex => prevIndex + 1);
   };
 
-  // Determine result color
-  const resultColor = result.includes('Correct')
-    ? 'text-green-600'
-    : result.includes('Incorrect')
-      ? 'text-red-600'
-      : 'text-black';
-
   return (
-    <div className="bg-gradient-to-br from-blue-50 to-cyan-50 min-h-screen flex flex-col p-6">
+    <div className="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-slate-200/60 p-6 sm:p-8">
       {/* Header */}
-      <div className="bg-white text-black rounded-xl shadow-lg px-6 py-3 mx-auto mb-6">
-        <h1 className="text-3xl text-center font-bold">Learn About Investment Banking!</h1>
+      <div className="text-center mb-6">
+        <h2 className="text-2xl font-semibold text-slate-800 tracking-tight">Investment Banking Quiz</h2>
+        <p className="text-slate-500 font-medium mt-1">True or False</p>
       </div>
 
-      {/* Main Content Area with Score Sidebar */}
-      <div className="flex flex-1 gap-6 items-start justify-center">
-        {/* Main Quiz Area */}
-        <div className="flex flex-col items-center flex-1 max-w-2xl">
-        {/* Result Message */}
-        {result && <p className={`text-2xl font-bold mb-4 ${resultColor}`}>{result}</p>}
+      {/* Progress Bar */}
+      <div className="mb-6">
+        <div className="flex justify-between text-sm text-slate-500 mb-2 font-medium">
+          <span>Question {currentIndex + 1} of {totalQuestions}</span>
+          <span>Score: {score}/{totalQuestions}</span>
+        </div>
+        <div className="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
+          <div
+            className="bg-gradient-to-r from-emerald-500 to-teal-500 h-2.5 rounded-full transition-all duration-500"
+            style={{ width: `${((currentIndex + 1) / totalQuestions) * 100}%` }}
+          />
+        </div>
+      </div>
 
-        {/* Question */}
-        <div className="text-black text-2xl font-bold mb-6 max-w-2xl text-center bg-white p-6 rounded-lg shadow-md">
+      {/* Result Message */}
+      {result && (
+        <div className={`mb-4 p-4 rounded-xl text-center font-semibold ${
+          result.includes('Correct')
+            ? 'bg-emerald-50 border border-emerald-300 text-emerald-700'
+            : result.includes('Incorrect')
+              ? 'bg-red-50 border border-red-300 text-red-700'
+              : 'bg-blue-50 border border-blue-300 text-blue-700'
+        }`}>
+          {result}
+        </div>
+      )}
+
+      {/* Question */}
+      <div className="bg-slate-50 rounded-xl p-6 border border-slate-200 mb-6">
+        <p className="text-lg text-slate-800 font-medium text-center leading-relaxed">
           {currentQuestion.question}
+        </p>
+      </div>
+
+      {/* True/False Buttons */}
+      <div className="flex gap-4 justify-center mb-6">
+        <button
+          onClick={() => handleAnswer(true)}
+          disabled={buttonsDisabled}
+          className={`px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 ${
+            buttonsDisabled
+              ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+              : 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/25 hover:scale-105'
+          }`}
+        >
+          TRUE
+        </button>
+
+        <button
+          onClick={() => handleAnswer(false)}
+          disabled={buttonsDisabled}
+          className={`px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 ${
+            buttonsDisabled
+              ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+              : 'bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/25 hover:scale-105'
+          }`}
+        >
+          FALSE
+        </button>
+      </div>
+
+      {/* Explanation */}
+      {answered && (
+        <div className="bg-teal-50 border border-teal-300 rounded-xl p-4 mb-6">
+          <p className="text-teal-700 font-semibold mb-1">Explanation:</p>
+          <p className="text-teal-600">
+            The correct answer is <span className="font-bold">{currentQuestion.correctAnswer ? 'TRUE' : 'FALSE'}</span>. {currentQuestion.explanation}
+          </p>
         </div>
+      )}
 
-        {/* True/False Buttons */}
-        <div className="flex gap-6 mb-6">
-          <button
-            onClick={() => handleAnswer(true)}
-            disabled={buttonsDisabled}
-            className="px-8 py-4 rounded-lg font-bold text-lg text-white bg-gray-700 hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            TRUE
-          </button>
-
-          <button
-            onClick={() => handleAnswer(false)}
-            disabled={buttonsDisabled}
-            className="px-8 py-4 rounded-lg font-bold text-lg text-white bg-gray-700 hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            FALSE
-          </button>
-        </div>
-
-        {/* Explanation */}
-        {answered && (
-          <div className="bg-white text-center rounded-lg shadow-md px-6 py-4 max-w-2xl mb-4">
-            <p className="text-black font-semibold">
-              The correct answer is <span className="font-bold">{currentQuestion.correctAnswer ? 'TRUE' : 'FALSE'}</span>. {currentQuestion.explanation}
-            </p>
-          </div>
-        )}
-
-        {/* Next Question Button */}
+      {/* Next Question Button */}
+      <div className="flex justify-center">
         <button
           onClick={nextQuestion}
           disabled={!answered || currentIndex === questions.length - 1}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
+            !answered || currentIndex === questions.length - 1
+              ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+              : 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white shadow-lg shadow-emerald-500/25'
+          }`}
         >
           Next Question
         </button>
-
-        <div className="text-gray-600 text-sm font-semibold mt-4">Keyboard: T / F or Y / N</div>
-        </div>
-
-        {/* Score Tab - Right Sidebar */}
-        <div className="bg-blue-100 p-6 rounded-lg shadow-lg flex-shrink-0 w-48">
-          <h3 className="text-2xl text-blue-700 text-center font-bold">Score</h3>
-          <p className="text-xl text-black font-semibold mt-2 text-center">{score} / {totalQuestions}</p>
-        </div>
       </div>
+
+      <div className="text-slate-400 text-sm font-medium mt-4 text-center">Keyboard: T / F or Y / N</div>
     </div>
   );
 }

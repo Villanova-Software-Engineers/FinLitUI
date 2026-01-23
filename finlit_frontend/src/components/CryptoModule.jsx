@@ -43,10 +43,11 @@ const CryptoModule = () => {
       bgColor: "bg-amber-50",
       borderColor: "border-amber-200",
       visual: "https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=500&q=80",
+      intro: "Cryptocurrency is a type of digital or virtual money that uses special computer codes (cryptography) to secure transactions. Unlike dollars or euros, crypto isn't controlled by any government or bank — it's managed by a global network of computers.",
       points: [
-        { emoji: "💻", title: "Digital Money", desc: "Exists only online - no physical coins!", example: "Like V-Bucks, but for real purchases" },
-        { emoji: "🔐", title: "Cryptography", desc: "Protected by unbreakable math codes", example: "A lock that would take 1000 years to crack" },
-        { emoji: "🌍", title: "Decentralized", desc: "No bank controls it", example: "Thousands of computers verify every transaction" }
+        { emoji: "💻", title: "Digital Money", desc: "Cryptocurrency exists only in digital form — there are no physical coins or bills you can hold. It lives on the internet and is stored in digital wallets on your computer or phone.", example: "Think of it like V-Bucks or Robux, but you can use it to buy real things like coffee, cars, or even houses!" },
+        { emoji: "🔐", title: "Cryptography", desc: "The 'crypto' in cryptocurrency comes from cryptography — advanced mathematical codes that protect your money. Every transaction is secured with encryption so strong that even supercomputers can't crack it.", example: "Imagine a lock so complex it would take a hacker 1,000 years to break. That's how secure crypto is!" },
+        { emoji: "🌍", title: "Decentralized", desc: "No single bank, government, or company controls cryptocurrency. Instead, it's managed by thousands of computers around the world working together. This means no one can freeze your account or block your transactions.", example: "It's like having a bank that's run by millions of people worldwide, all checking each other's work to make sure everything is fair." }
       ],
       funFact: "The first Bitcoin purchase? 10,000 BTC for two pizzas — now worth $600M+ 🍕"
     },
@@ -58,10 +59,12 @@ const CryptoModule = () => {
       bgColor: "bg-blue-50",
       borderColor: "border-blue-200",
       visual: "https://images.unsplash.com/photo-1639322537228-f710d846310a?w=500&q=80",
+      intro: "Blockchain is the revolutionary technology behind cryptocurrency. Think of it as a digital ledger or record book that stores every transaction ever made — and once something is written in it, it can NEVER be erased or changed.",
+      isBlockchain: true,
       points: [
-        { emoji: "🧱", title: "Blocks", desc: "Transactions grouped together", example: "Like pages in a permanent diary" },
-        { emoji: "🔗", title: "Chain", desc: "Each block links to the previous one", example: "LEGO blocks that can't be separated" },
-        { emoji: "📡", title: "Network", desc: "Copies on thousands of computers", example: "A Google Doc everyone can see" }
+        { emoji: "🧱", title: "Blocks", desc: "Transactions are grouped together into 'blocks.' Each block contains hundreds of transactions, like 'Alice sent 1 Bitcoin to Bob' or 'Charlie bought an NFT.' Once a block is full, it gets permanently sealed and timestamped.", example: "Imagine a page in a diary that gets locked forever once you fill it up. You can read it, but you can never erase or change what's written." },
+        { emoji: "🔗", title: "Chain", desc: "Each new block contains a special code (called a 'hash') that links it to the previous block. This creates an unbreakable chain of blocks going all the way back to the very first one (called the 'Genesis Block').", example: "Picture LEGO blocks that are super-glued together. You can't remove or rearrange any block without breaking the entire chain — and everyone would notice immediately!" },
+        { emoji: "📡", title: "Distributed Network", desc: "The blockchain isn't stored in one place — it's copied across thousands of computers worldwide. Every computer has the exact same copy, and they all verify new transactions together. If someone tries to cheat, the other computers reject the fake transaction.", example: "It's like a Google Doc that millions of people can see and verify, but no single person can edit without everyone else approving the change." }
       ],
       funFact: "A new Bitcoin block is mined every ~10 minutes! ⏱️"
     },
@@ -73,10 +76,11 @@ const CryptoModule = () => {
       bgColor: "bg-purple-50",
       borderColor: "border-purple-200",
       visual: "https://images.unsplash.com/photo-1622630998477-20aa696ecb05?w=500&q=80",
+      intro: "A crypto wallet doesn't actually 'hold' your coins — it stores the special passwords (called 'keys') that prove you own them. Your crypto lives on the blockchain; your wallet just gives you access to it.",
       points: [
-        { emoji: "🔥", title: "Hot Wallet", desc: "Online & convenient", example: "Your everyday spending wallet" },
-        { emoji: "🧊", title: "Cold Wallet", desc: "Offline & ultra-secure", example: "A bank vault for big savings" },
-        { emoji: "🔑", title: "Private Key", desc: "NEVER share this!", example: "Lose it = lose everything forever" }
+        { emoji: "🔥", title: "Hot Wallet", desc: "A hot wallet is connected to the internet, making it super convenient for everyday transactions. Apps like Coinbase, MetaMask, or Trust Wallet are hot wallets. They're great for small amounts you want quick access to.", example: "Think of it like the cash in your physical wallet — easy to spend, but you wouldn't keep your life savings in your back pocket!" },
+        { emoji: "🧊", title: "Cold Wallet", desc: "A cold wallet is completely offline — usually a special USB device like Ledger or Trezor. Since it's never connected to the internet, hackers can't touch it. This is where smart investors keep their long-term holdings.", example: "It's like a bank vault or a safe deposit box — incredibly secure, but you need to physically access it to use your funds." },
+        { emoji: "🔑", title: "Private Key", desc: "Your private key is a secret code (usually 12-24 random words) that gives you — and ONLY you — access to your crypto. If someone else gets your private key, they can steal everything. If you lose it, your crypto is gone forever.", example: "Treat it like the master password to your entire financial life. Write it down on paper (not digitally!), store it somewhere safe, and NEVER share it with anyone — not even 'customer support'!" }
       ],
       funFact: "~20% of all Bitcoin ($140B+) is lost forever from forgotten passwords! 😱"
     },
@@ -88,10 +92,11 @@ const CryptoModule = () => {
       bgColor: "bg-emerald-50",
       borderColor: "border-emerald-200",
       visual: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=500&q=80",
+      intro: "Not all cryptocurrencies are the same! There are thousands of different coins, each with unique features and purposes. Here are the three most important categories you should know.",
       points: [
-        { emoji: "₿", title: "Bitcoin", desc: "The OG 'digital gold'", example: "Limited to 21 million coins ever" },
-        { emoji: "◊", title: "Ethereum", desc: "Powers apps & NFTs", example: "Bitcoin + programmable features" },
-        { emoji: "💵", title: "Stablecoins", desc: "Always worth ~$1", example: "USDC, USDT - no wild price swings" }
+        { emoji: "₿", title: "Bitcoin (BTC)", desc: "Bitcoin is the original cryptocurrency, created in 2009 by the mysterious Satoshi Nakamoto. It's often called 'digital gold' because it's designed to be scarce and hold value over time. There will only ever be 21 million Bitcoin in existence — no more can ever be created.", example: "Just like gold, Bitcoin is valuable because it's rare and people trust it. Many investors buy Bitcoin as a long-term store of value, like digital real estate." },
+        { emoji: "◊", title: "Ethereum (ETH)", desc: "Ethereum is like Bitcoin 2.0 — it's not just money, it's a programmable platform. Developers can build apps, games, and even entire financial systems on top of Ethereum. It also powers NFTs (digital art) and DeFi (decentralized finance).", example: "If Bitcoin is digital gold, Ethereum is like a digital app store where developers can create almost anything — from games to loans to virtual worlds." },
+        { emoji: "💵", title: "Stablecoins", desc: "Stablecoins are cryptocurrencies designed to always be worth exactly $1 USD. They combine the benefits of crypto (fast, global, 24/7) with the stability of regular money. Popular examples include USDC, USDT, and DAI.", example: "Think of stablecoins as the 'safe zone' of crypto. When Bitcoin and Ethereum prices are swinging wildly, traders often move their money into stablecoins to protect their value." }
       ],
       funFact: "There are 20,000+ cryptocurrencies, but most are worthless! 🗑️"
     }
@@ -370,6 +375,116 @@ const CryptoModule = () => {
   );
 
   // ==========================================
+  // BLOCKCHAIN VISUALIZATION COMPONENT
+  // ==========================================
+  const BlockchainDemo = () => {
+    const [activeBlock, setActiveBlock] = useState(null);
+
+    const demoBlocks = [
+      { id: 1, hash: "0x7a3b...", prevHash: "Genesis", transactions: ["Alice → Bob: 0.5 BTC", "Charlie → Dan: 1.2 BTC"], time: "10:00 AM" },
+      { id: 2, hash: "0x9f2c...", prevHash: "0x7a3b...", transactions: ["Eve → Frank: 0.3 BTC", "Grace → Henry: 2.0 BTC"], time: "10:10 AM" },
+      { id: 3, hash: "0x4d1e...", prevHash: "0x9f2c...", transactions: ["Ivan → Julia: 0.8 BTC", "Kate → Leo: 0.1 BTC"], time: "10:20 AM" },
+    ];
+
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-gradient-to-br from-indigo-900 to-purple-900 rounded-3xl p-5 shadow-xl mb-4"
+      >
+        <div className="flex items-center gap-2 mb-4">
+          <Database className="text-cyan-400" size={20} />
+          <h3 className="text-white font-bold">Live Blockchain Simulation</h3>
+        </div>
+
+        <div className="flex items-center justify-between overflow-x-auto pb-2">
+          {demoBlocks.map((block, idx) => (
+            <React.Fragment key={block.id}>
+              {/* Block */}
+              <motion.div
+                whileHover={{ scale: 1.05, y: -5 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setActiveBlock(activeBlock === block.id ? null : block.id)}
+                className={`relative bg-gradient-to-b from-blue-500 to-blue-700 rounded-xl p-3 min-w-[100px] cursor-pointer transition-all ${activeBlock === block.id ? 'ring-2 ring-cyan-400 shadow-lg shadow-cyan-400/30' : ''}`}
+              >
+                <div className="text-center">
+                  <div className="text-xs text-blue-200 mb-1">Block #{block.id}</div>
+                  <div className="text-white font-mono text-xs bg-blue-800/50 rounded px-2 py-1 mb-1">
+                    {block.hash}
+                  </div>
+                  <div className="text-cyan-300 text-xs">
+                    {block.transactions.length} txns
+                  </div>
+                </div>
+
+                {/* Lock icon */}
+                <div className="absolute -top-2 -right-2 bg-green-500 rounded-full p-1">
+                  <Lock size={12} className="text-white" />
+                </div>
+              </motion.div>
+
+              {/* Chain link */}
+              {idx < demoBlocks.length - 1 && (
+                <motion.div
+                  initial={{ scaleX: 0 }}
+                  animate={{ scaleX: 1 }}
+                  transition={{ delay: 0.3 + idx * 0.2 }}
+                  className="flex items-center mx-2"
+                >
+                  <div className="w-8 h-1 bg-gradient-to-r from-cyan-400 to-blue-400 rounded" />
+                  <div className="text-cyan-400">→</div>
+                  <div className="w-8 h-1 bg-gradient-to-r from-blue-400 to-cyan-400 rounded" />
+                </motion.div>
+              )}
+            </React.Fragment>
+          ))}
+        </div>
+
+        {/* Block Details Panel */}
+        <AnimatePresence>
+          {activeBlock && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mt-4 bg-blue-800/40 rounded-xl p-4 border border-blue-600/30"
+            >
+              {demoBlocks.filter(b => b.id === activeBlock).map(block => (
+                <div key={block.id} className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-blue-300">Block Hash:</span>
+                    <span className="text-white font-mono">{block.hash}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-blue-300">Previous Hash:</span>
+                    <span className="text-cyan-400 font-mono">{block.prevHash}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-blue-300">Mined at:</span>
+                    <span className="text-white">{block.time}</span>
+                  </div>
+                  <div className="mt-3 pt-3 border-t border-blue-600/30">
+                    <div className="text-blue-300 text-sm mb-2">Transactions:</div>
+                    {block.transactions.map((tx, i) => (
+                      <div key={i} className="text-green-400 text-xs font-mono bg-blue-900/50 rounded p-2 mb-1">
+                        ✓ {tx}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <div className="mt-3 text-center text-blue-300 text-xs">
+          👆 Tap a block to see its details
+        </div>
+      </motion.div>
+    );
+  };
+
+  // ==========================================
   // RENDER: LEARN
   // ==========================================
   const renderLearn = () => {
@@ -398,8 +513,14 @@ const CryptoModule = () => {
               >
                 {section.emoji}
               </motion.div>
-              <h2 className="text-2xl font-black mb-1">{section.title}</h2>
+              <h2 className="text-2xl font-black mb-2">{section.title}</h2>
+              {section.intro && (
+                <p className="text-white/90 text-sm leading-relaxed">{section.intro}</p>
+              )}
             </div>
+
+            {/* Blockchain Demo - only show for blockchain section */}
+            {section.isBlockchain && <BlockchainDemo />}
 
             {/* Learning Points */}
             <div className="space-y-3">
@@ -412,13 +533,13 @@ const CryptoModule = () => {
                   className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100"
                 >
                   <div className="flex gap-4">
-                    <div className="text-3xl">{point.emoji}</div>
+                    <div className="text-3xl flex-shrink-0">{point.emoji}</div>
                     <div className="flex-1">
-                      <h3 className="font-bold text-gray-900 mb-1">{point.title}</h3>
-                      <p className="text-gray-600 text-sm mb-2">{point.desc}</p>
+                      <h3 className="font-bold text-gray-900 mb-2">{point.title}</h3>
+                      <p className="text-gray-600 text-sm mb-3 leading-relaxed">{point.desc}</p>
                       <div className={`${section.bgColor} ${section.borderColor} border rounded-xl p-3`}>
-                        <p className="text-sm text-gray-700">
-                          <span className="font-semibold">💡 Example: </span>
+                        <p className="text-sm text-gray-700 leading-relaxed">
+                          <span className="font-semibold">💡 Think of it this way: </span>
                           {point.example}
                         </p>
                       </div>
@@ -437,7 +558,10 @@ const CryptoModule = () => {
             >
               <div className="flex items-start gap-3">
                 <span className="text-2xl">🤯</span>
-                <p className="text-gray-800 font-medium">{section.funFact}</p>
+                <div>
+                  <span className="font-bold text-gray-800">Fun Fact: </span>
+                  <span className="text-gray-700">{section.funFact}</span>
+                </div>
               </div>
             </motion.div>
 
