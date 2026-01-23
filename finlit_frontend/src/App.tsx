@@ -20,6 +20,7 @@ import CryptoModule from "./components/CryptoModule";
 import RetirementAccountsModule from "./components/RetirementAccountsModule";
 import AdminSetup from "./components/AdminSetup";
 import AdminDashboard from "./components/AdminDashboard";
+import QuizQuestionsAdmin from "./components/QuizQuestionsAdmin";
 import EconomicNewsQuiz from "./components/EconomicNewsQuiz";
 import Certificate from "./components/Certificate";
 import FinancialTools from "./components/FinancialTools";
@@ -218,21 +219,29 @@ function App() {
           />
 
           {/* Protected Admin Routes */}
-          <Route 
-            path="/admin-setup" 
+          <Route
+            path="/admin-setup"
             element={
               <ProtectedRoute requiredRole="owner">
                 <AdminSetup />
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/admin" 
+          <Route
+            path="/admin/quiz-questions"
+            element={
+              <ProtectedRoute requiredRole="owner">
+                <QuizQuestionsAdmin />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin"
             element={
               <ProtectedRoute>
                 <AdminDashboard />
               </ProtectedRoute>
-            } 
+            }
           />
 
           {/* Certificate Route */}

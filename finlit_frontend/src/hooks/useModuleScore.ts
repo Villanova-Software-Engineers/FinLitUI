@@ -11,8 +11,12 @@ import {
   saveCrosswordProgress,
   getCrosswordProgress,
   getCurrentCrosswordWeekId,
+  getQuizQuestions,
+  saveQuickQuizProgress,
+  getQuickQuizProgress,
+  getCurrentQuizVersion,
 } from '../firebase/firestore.service';
-import type { StudentProgress, ModuleScore, CrosswordProgress } from '../auth/types/auth.types';
+import type { StudentProgress, ModuleScore, CrosswordProgress, QuizQuestion, QuickQuizProgress } from '../auth/types/auth.types';
 
 // Module definitions
 export const MODULES = {
@@ -45,6 +49,11 @@ interface SaveCrosswordResult {
   totalCorrectWords: number;
 }
 
+interface SaveQuizAnswerResult {
+  xpAwarded: number;
+  alreadyAnswered: boolean;
+}
+
 interface UseModuleScoreReturn {
   progress: StudentProgress | null;
   isLoading: boolean;
@@ -63,6 +72,11 @@ interface UseModuleScoreReturn {
   saveCrossword: (answers: { [key: string]: string }, newlyCorrectWords: string[], allCorrectWords: string[]) => Promise<SaveCrosswordResult>;
   loadCrosswordProgress: () => Promise<CrosswordProgress | null>;
   getCrosswordWeekId: () => string;
+  // Quick Quiz functions
+  loadQuizQuestions: () => Promise<QuizQuestion[]>;
+  saveQuizAnswer: (questionId: string, selectedAnswer: number, isCorrect: boolean, quizVersion: string) => Promise<SaveQuizAnswerResult>;
+  loadQuizProgress: (quizVersion: string) => Promise<QuickQuizProgress | null>;
+  getQuizVersion: () => Promise<string>;
 }
 
 export const useModuleScore = (): UseModuleScoreReturn => {
@@ -278,6 +292,63 @@ export const useModuleScore = (): UseModuleScoreReturn => {
     return getCurrentCrosswordWeekId();
   }, []);
 
+  // Load quiz questions from Firestore
+  const loadQuizQuestions = useCallback(async (): Promise<QuizQuestion[]> => {
+    try {
+      return await getQuizQuestions();
+    } catch (err) {
+      console.error('Error loading quiz questions:', err);
+      return [];
+    }
+  }, []);
+
+  // Save quiz answer and award XP (3 XP per correct answer)
+  const saveQuizAnswer = useCallback(async (
+    questionId: string,
+    selectedAnswer: number,
+    isCorrect: boolean,
+    quizVersion: string
+  ): Promise<SaveQuizAnswerResult> => {
+    if (!user) {
+      return { xpAwarded: 0, alreadyAnswered: false };
+    }
+
+    try {
+      const result = await saveQuickQuizProgress(user.id, questionId, selectedAnswer, isCorrect, quizVersion);
+      if (result.xpAwarded > 0) {
+        await refreshProgress();
+      }
+      return result;
+    } catch (err) {
+      console.error('Error saving quiz answer:', err);
+      return { xpAwarded: 0, alreadyAnswered: false };
+    }
+  }, [user, refreshProgress]);
+
+  // Load quiz progress for current version
+  const loadQuizProgress = useCallback(async (quizVersion: string): Promise<QuickQuizProgress | null> => {
+    if (!user) {
+      return null;
+    }
+
+    try {
+      return await getQuickQuizProgress(user.id, quizVersion);
+    } catch (err) {
+      console.error('Error loading quiz progress:', err);
+      return null;
+    }
+  }, [user]);
+
+  // Get current quiz version
+  const getQuizVersion = useCallback(async (): Promise<string> => {
+    try {
+      return await getCurrentQuizVersion();
+    } catch (err) {
+      console.error('Error getting quiz version:', err);
+      return 'v0';
+    }
+  }, []);
+
   return {
     progress,
     isLoading,
@@ -295,5 +366,9 @@ export const useModuleScore = (): UseModuleScoreReturn => {
     saveCrossword,
     loadCrosswordProgress,
     getCrosswordWeekId,
+    loadQuizQuestions,
+    saveQuizAnswer,
+    loadQuizProgress,
+    getQuizVersion,
   };
 };

@@ -71,6 +71,26 @@ export interface CrosswordProgress {
   weekId: string; // Format: "YYYY-WW" to track which week's crossword
 }
 
+// Quick Quiz question structure (stored in Firestore)
+export interface QuizQuestion {
+  id: string;
+  question: string;
+  options: string[];
+  correct: number; // Index of correct answer (0-3)
+  explanation: string;
+  emoji: string;
+  createdAt: Date;
+  createdBy: string;
+}
+
+// Quick Quiz progress tracking
+export interface QuickQuizProgress {
+  answeredQuestions: { [questionId: string]: number }; // questionId -> selected answer index
+  correctAnswers: string[]; // List of question IDs answered correctly
+  quizVersion: string; // Hash/ID to detect when questions change
+  lastUpdated: Date;
+}
+
 // Student progress document in Firestore
 export interface StudentProgress {
   id: string;
@@ -86,6 +106,7 @@ export interface StudentProgress {
   lastStreakDate?: string; // YYYY-MM-DD format for tracking daily streak
   lastDailyChallengeDate?: string; // YYYY-MM-DD format for tracking daily challenge completion
   crosswordProgress?: CrosswordProgress; // Crossword answers and progress
+  quickQuizProgress?: QuickQuizProgress; // Quick Quiz answers and progress
 }
 
 export interface SignInRequest {

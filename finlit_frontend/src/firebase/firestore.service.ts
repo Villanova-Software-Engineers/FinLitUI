@@ -26,6 +26,8 @@ import type {
   StudentWithProgress,
   UserDashboardData,
   CrosswordProgress,
+  QuizQuestion,
+  QuickQuizProgress,
 } from '../auth/types/auth.types';
 
 // Type helper for Firestore documents with serverTimestamp
@@ -749,4 +751,192 @@ export async function getCrosswordProgress(
     ...crosswordProgress,
     lastUpdated: (crosswordProgress.lastUpdated as unknown as Timestamp)?.toDate() || new Date(),
   };
+}
+
+// ============== Quick Quiz Functions ==============
+
+const QUIZ_QUESTIONS = 'quizQuestions';
+
+/**
+ * Generate a version hash from quiz questions to detect changes
+ */
+function generateQuizVersion(questions: QuizQuestion[]): string {
+  const ids = questions.map(q => q.id).sort().join(',');
+  // Simple hash based on question IDs and count
+  return `v${questions.length}-${ids.slice(0, 20)}`;
+}
+
+/**
+ * Get all quiz questions from Firestore
+ */
+export async function getQuizQuestions(): Promise<QuizQuestion[]> {
+  const q = query(
+    collection(db, QUIZ_QUESTIONS),
+    orderBy('createdAt', 'asc')
+  );
+
+  const snapshot = await getDocs(q);
+
+  return snapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data(),
+    createdAt: (doc.data().createdAt as Timestamp)?.toDate() || new Date(),
+  })) as QuizQuestion[];
+}
+
+/**
+ * Add a new quiz question (super admin only)
+ */
+export async function addQuizQuestion(
+  question: Omit<QuizQuestion, 'id' | 'createdAt'>,
+  createdBy: string
+): Promise<QuizQuestion> {
+  const questionRef = doc(collection(db, QUIZ_QUESTIONS));
+
+  const questionData = {
+    ...question,
+    createdBy,
+    createdAt: serverTimestamp(),
+  };
+
+  await setDoc(questionRef, questionData);
+
+  return {
+    id: questionRef.id,
+    ...question,
+    createdBy,
+    createdAt: new Date(),
+  };
+}
+
+/**
+ * Delete a quiz question (super admin only)
+ */
+export async function deleteQuizQuestion(questionId: string): Promise<void> {
+  const { deleteDoc } = await import('firebase/firestore');
+  await deleteDoc(doc(db, QUIZ_QUESTIONS, questionId));
+}
+
+/**
+ * Update a quiz question (super admin only)
+ */
+export async function updateQuizQuestion(
+  questionId: string,
+  updates: Partial<Omit<QuizQuestion, 'id' | 'createdAt' | 'createdBy'>>
+): Promise<void> {
+  const questionRef = doc(db, QUIZ_QUESTIONS, questionId);
+  await updateDoc(questionRef, updates);
+}
+
+/**
+ * Save quick quiz progress and award XP for newly correct answers
+ * Returns XP awarded (3 per new correct answer)
+ */
+export async function saveQuickQuizProgress(
+  userId: string,
+  questionId: string,
+  selectedAnswer: number,
+  isCorrect: boolean,
+  currentQuizVersion: string
+): Promise<{ xpAwarded: number; alreadyAnswered: boolean }> {
+  const progressRef = doc(db, STUDENT_PROGRESS, userId);
+  const snapshot = await getDoc(progressRef);
+
+  if (!snapshot.exists()) {
+    return { xpAwarded: 0, alreadyAnswered: false };
+  }
+
+  const data = snapshot.data();
+  const existingProgress: QuickQuizProgress | undefined = data.quickQuizProgress;
+
+  // Check if quiz version changed (questions were updated)
+  const versionChanged = existingProgress && existingProgress.quizVersion !== currentQuizVersion;
+
+  // Reset progress if version changed
+  const baseProgress: QuickQuizProgress = versionChanged || !existingProgress
+    ? {
+        answeredQuestions: {},
+        correctAnswers: [],
+        quizVersion: currentQuizVersion,
+        lastUpdated: new Date(),
+      }
+    : existingProgress;
+
+  // Check if already answered this question
+  if (baseProgress.answeredQuestions[questionId] !== undefined) {
+    return { xpAwarded: 0, alreadyAnswered: true };
+  }
+
+  // Update progress
+  const newAnsweredQuestions = {
+    ...baseProgress.answeredQuestions,
+    [questionId]: selectedAnswer,
+  };
+
+  const newCorrectAnswers = isCorrect
+    ? [...baseProgress.correctAnswers, questionId]
+    : baseProgress.correctAnswers;
+
+  // Award XP only for correct answers (3 XP per correct)
+  const xpToAward = isCorrect ? 3 : 0;
+  const currentXP = data.totalXP || 0;
+  const newTotalXP = currentXP + xpToAward;
+  const xpLevel = Math.floor(newTotalXP / 100) + 1;
+
+  const quickQuizProgress: QuickQuizProgress = {
+    answeredQuestions: newAnsweredQuestions,
+    correctAnswers: newCorrectAnswers,
+    quizVersion: currentQuizVersion,
+    lastUpdated: new Date(),
+  };
+
+  await updateDoc(progressRef, {
+    quickQuizProgress,
+    totalXP: newTotalXP,
+    xpLevel,
+    lastActivityAt: serverTimestamp(),
+  });
+
+  return { xpAwarded: xpToAward, alreadyAnswered: false };
+}
+
+/**
+ * Get quick quiz progress for a user
+ * Returns null if no progress or if quiz version changed
+ */
+export async function getQuickQuizProgress(
+  userId: string,
+  currentQuizVersion: string
+): Promise<QuickQuizProgress | null> {
+  const progressRef = doc(db, STUDENT_PROGRESS, userId);
+  const snapshot = await getDoc(progressRef);
+
+  if (!snapshot.exists()) {
+    return null;
+  }
+
+  const data = snapshot.data();
+  const quickQuizProgress = data.quickQuizProgress as QuickQuizProgress | undefined;
+
+  if (!quickQuizProgress) {
+    return null;
+  }
+
+  // Check if quiz version matches (questions haven't changed)
+  if (quickQuizProgress.quizVersion !== currentQuizVersion) {
+    return null; // Progress reset needed due to question changes
+  }
+
+  return {
+    ...quickQuizProgress,
+    lastUpdated: (quickQuizProgress.lastUpdated as unknown as Timestamp)?.toDate() || new Date(),
+  };
+}
+
+/**
+ * Get current quiz version based on questions
+ */
+export async function getCurrentQuizVersion(): Promise<string> {
+  const questions = await getQuizQuestions();
+  return generateQuizVersion(questions);
 }
