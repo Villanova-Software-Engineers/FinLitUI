@@ -31,6 +31,10 @@ const StockMarketModule = () => {
   const [buyQuantity, setBuyQuantity] = useState(1);
   const [sellQuantity, setSellQuantity] = useState(1);
   const [notifications, setNotifications] = useState([]);
+  
+  // Financial news state
+  const [financialNews, setFinancialNews] = useState([]);
+  const [activeTab, setActiveTab] = useState('portfolio');
 
   // Module score saving state
   const [isSaving, setIsSaving] = useState(false);
@@ -380,6 +384,249 @@ const StockMarketModule = () => {
       duration: 10
     }
   ];
+
+  // Financial News Database
+  const newsDatabase = [
+    // Inflation & Economic News
+    {
+      id: 'inflation-up',
+      category: 'Economic',
+      title: '📈 Inflation Rises to 3.2%',
+      description: 'Consumer price index increases, affecting purchasing power and interest rates.',
+      impact: { type: 'sector', target: 'all', multiplier: 0.97, duration: 15 },
+      priority: 'high',
+      timestamp: new Date()
+    },
+    {
+      id: 'fed-rate-cut',
+      category: 'Monetary Policy',
+      title: '💰 Federal Reserve Cuts Interest Rates',
+      description: 'Fed announces 0.25% rate cut to stimulate economic growth.',
+      impact: { type: 'sector', target: 'all', multiplier: 1.04, duration: 20 },
+      priority: 'high',
+      timestamp: new Date()
+    },
+    {
+      id: 'gdp-growth',
+      category: 'Economic',
+      title: '🚀 GDP Growth Exceeds Expectations',
+      description: 'US economy grows 2.8% in latest quarter, beating forecasts.',
+      impact: { type: 'sector', target: 'all', multiplier: 1.03, duration: 18 },
+      priority: 'medium',
+      timestamp: new Date()
+    },
+    {
+      id: 'unemployment-low',
+      category: 'Employment',
+      title: '👥 Unemployment Hits 20-Year Low',
+      description: 'Job market remains strong with unemployment at 3.1%.',
+      impact: { type: 'sector', target: 'all', multiplier: 1.02, duration: 12 },
+      priority: 'medium',
+      timestamp: new Date()
+    },
+    
+    // Technology Sector News
+    {
+      id: 'ai-breakthrough',
+      category: 'Technology',
+      title: '🤖 Major AI Breakthrough Announced',
+      description: 'Revolutionary AI technology promises to transform multiple industries.',
+      impact: { type: 'sector', target: 'Technology', multiplier: 1.08, duration: 25 },
+      priority: 'high',
+      timestamp: new Date()
+    },
+    {
+      id: 'cyber-attack',
+      category: 'Security',
+      title: '🔒 Major Cybersecurity Breach Reported',
+      description: 'Large-scale security incident affects multiple tech companies.',
+      impact: { type: 'sector', target: 'Technology', multiplier: 0.94, duration: 15 },
+      priority: 'high',
+      timestamp: new Date()
+    },
+    {
+      id: 'chip-shortage',
+      category: 'Supply Chain',
+      title: '⚡ Global Chip Shortage Worsens',
+      description: 'Semiconductor supply issues impact tech and automotive sectors.',
+      impact: { type: 'sector', target: 'Technology', multiplier: 0.96, duration: 20 },
+      priority: 'medium',
+      timestamp: new Date()
+    },
+    
+    // Company-Specific News
+    {
+      id: 'apple-record',
+      category: 'Earnings',
+      title: '🍎 Apple Reports Record Revenue',
+      description: 'iPhone sales drive Apple to unprecedented quarterly results.',
+      impact: { type: 'stock', target: 'AAPL', multiplier: 1.12, duration: 15 },
+      priority: 'high',
+      timestamp: new Date()
+    },
+    {
+      id: 'tesla-recall',
+      category: 'Safety',
+      title: '🚗 Tesla Announces Vehicle Recall',
+      description: 'Autopilot software issue prompts recall of 100K vehicles.',
+      impact: { type: 'stock', target: 'TSLA', multiplier: 0.92, duration: 18 },
+      priority: 'medium',
+      timestamp: new Date()
+    },
+    {
+      id: 'google-antitrust',
+      category: 'Regulatory',
+      title: '⚖️ Google Faces New Antitrust Probe',
+      description: 'DOJ launches investigation into search monopoly practices.',
+      impact: { type: 'stock', target: 'GOOGL', multiplier: 0.95, duration: 20 },
+      priority: 'medium',
+      timestamp: new Date()
+    },
+    {
+      id: 'microsoft-acquisition',
+      category: 'M&A',
+      title: '💻 Microsoft Announces Major Acquisition',
+      description: '$15B deal to acquire cloud infrastructure company.',
+      impact: { type: 'stock', target: 'MSFT', multiplier: 1.07, duration: 12 },
+      priority: 'medium',
+      timestamp: new Date()
+    },
+    {
+      id: 'amazon-growth',
+      category: 'Business',
+      title: '📦 Amazon Expands Into New Markets',
+      description: 'E-commerce giant announces expansion into healthcare and logistics.',
+      impact: { type: 'stock', target: 'AMZN', multiplier: 1.06, duration: 16 },
+      priority: 'medium',
+      timestamp: new Date()
+    },
+    
+    // Sector-Wide Impact News
+    {
+      id: 'energy-crisis',
+      category: 'Energy',
+      title: '⛽ Energy Prices Spike Globally',
+      description: 'Geopolitical tensions drive oil and gas prices higher.',
+      impact: { type: 'sector', target: 'all', multiplier: 0.98, duration: 25 },
+      priority: 'high',
+      timestamp: new Date()
+    },
+    {
+      id: 'trade-war',
+      category: 'International',
+      title: '🌍 Trade Tensions Escalate',
+      description: 'New tariffs announced affecting international trade.',
+      impact: { type: 'sector', target: 'all', multiplier: 0.96, duration: 30 },
+      priority: 'high',
+      timestamp: new Date()
+    },
+    {
+      id: 'green-energy',
+      category: 'Environment',
+      title: '🌱 Green Energy Investment Surge',
+      description: 'Government announces $100B clean energy initiative.',
+      impact: { type: 'sector', target: 'Technology', multiplier: 1.05, duration: 22 },
+      priority: 'medium',
+      timestamp: new Date()
+    },
+    {
+      id: 'supply-chain',
+      category: 'Logistics',
+      title: '🚢 Global Supply Chain Disruption',
+      description: 'Port strikes and shipping delays impact global trade.',
+      impact: { type: 'sector', target: 'all', multiplier: 0.97, duration: 20 },
+      priority: 'medium',
+      timestamp: new Date()
+    },
+    
+    // Market Sentiment News
+    {
+      id: 'investor-confidence',
+      category: 'Market',
+      title: '📊 Investor Confidence Reaches New High',
+      description: 'Market sentiment surveys show bullish outlook for tech stocks.',
+      impact: { type: 'sector', target: 'Technology', multiplier: 1.04, duration: 15 },
+      priority: 'low',
+      timestamp: new Date()
+    },
+    {
+      id: 'market-volatility',
+      category: 'Market',
+      title: '⚠️ Market Volatility Increases',
+      description: 'Uncertainty around global events drives market instability.',
+      impact: { type: 'sector', target: 'all', multiplier: 0.99, duration: 10 },
+      priority: 'medium',
+      timestamp: new Date()
+    }
+  ];
+
+  // Generate financial news periodically
+  const generateFinancialNews = useCallback(() => {
+    if (financialNews.length >= 20) return; // Limit news items
+    
+    const availableNews = newsDatabase.filter(
+      news => !financialNews.some(existing => existing.id === news.id)
+    );
+    
+    if (availableNews.length > 0) {
+      const selectedNews = availableNews[Math.floor(Math.random() * availableNews.length)];
+      const newsItem = {
+        ...selectedNews,
+        timestamp: new Date(),
+        id: `${selectedNews.id}-${Date.now()}` // Make unique
+      };
+      
+      setFinancialNews(prev => [newsItem, ...prev]);
+      
+      // Apply market impact
+      applyNewsImpact(newsItem.impact);
+      
+      // Show notification
+      addNotification('info', 'Breaking News!', selectedNews.title);
+    }
+  }, [financialNews]);
+
+  // Apply news impact to market
+  const applyNewsImpact = (impact) => {
+    if (!impact) return;
+    
+    setMarketData(prevData =>
+      prevData.map(stock => {
+        let shouldApplyImpact = false;
+        
+        if (impact.type === 'stock' && stock.id === impact.target) {
+          shouldApplyImpact = true;
+        } else if (impact.type === 'sector') {
+          if (impact.target === 'all' || stock.sector === impact.target) {
+            shouldApplyImpact = true;
+          }
+        }
+        
+        if (shouldApplyImpact) {
+          const newPrice = parseFloat((stock.price * impact.multiplier).toFixed(2));
+          const change = newPrice - stock.price;
+          const changePercent = ((change / stock.price) * 100).toFixed(2);
+          
+          return {
+            ...stock,
+            price: newPrice,
+            change: parseFloat(change.toFixed(2)),
+            changePercent: parseFloat(changePercent)
+          };
+        }
+        
+        return stock;
+      })
+    );
+  };
+
+  // Generate news every 5 seconds during trading
+  useEffect(() => {
+    if (tradingActive) {
+      const newsInterval = setInterval(generateFinancialNews, 5000);
+      return () => clearInterval(newsInterval);
+    }
+  }, [tradingActive, generateFinancialNews]);
 
   // Check achievements
   const checkAchievements = useCallback(() => {
@@ -1309,7 +1556,7 @@ const StockMarketModule = () => {
                             </div>
                             <div className="flex justify-between py-1">
                               <span>Value:</span>
-                              <span className="font-bold">${(selectedStock.price * sellQuantity).toFixed(2)}</span>
+                              <span className="font-bold">${(selectedStock.price * (portfolio.find(p => p.id === selectedStock.id)?.shares || 0)).toFixed(2)}</span>
                             </div>
                           </div>
 
@@ -1338,49 +1585,147 @@ const StockMarketModule = () => {
 
             {/* Sidebar */}
             <div className="space-y-6">
-              {/* Portfolio */}
-              <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg border border-gray-100">
-                <h4 className="text-xl font-black mb-4 flex items-center gap-2 text-gray-900 tracking-tight">
-                  💼 Your Portfolio
-                </h4>
-                {portfolio.length === 0 ? (
-                  <p className="text-gray-500 text-center py-8 font-medium">No stocks yet. Start trading!</p>
-                ) : (
-                  <div className="space-y-3">
-                    {portfolio.map(stock => {
-                      const currentStock = marketData.find(m => m.id === stock.id);
-                      const currentPrice = currentStock?.price || stock.price;
-                      const profit = (currentPrice - stock.avgPrice) * stock.shares;
-                      return (
-                        <motion.div
-                          key={stock.id}
-                          className="flex items-center justify-between p-4 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition"
-                          onClick={() => setSelectedStock(currentStock)}
-                          layout
-                        >
-                          <div className="flex items-center gap-3">
-                            <span className="text-2xl">{stock.emoji}</span>
-                            <div>
-                              <div className="font-bold text-gray-900">{stock.symbol}</div>
-                              <div className="text-sm text-gray-500">{stock.shares} shares</div>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <div className="font-bold text-gray-900">${(currentPrice * stock.shares).toFixed(2)}</div>
-                            <div className={`text-sm font-bold ${
-                              profit >= 0 ? 'text-emerald-600' : 'text-rose-600'
-                            }`}>
-                              {profit >= 0 ? '+' : ''}${profit.toFixed(2)}
-                            </div>
-                          </div>
-                        </motion.div>
-                      );
-                    })}
-                  </div>
-                )}
+              {/* Tabbed Interface */}
+              <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+                {/* Tab Headers */}
+                <div className="flex border-b border-gray-200">
+                  <button
+                    onClick={() => setActiveTab('portfolio')}
+                    className={`flex-1 px-4 py-4 text-sm font-bold transition ${
+                      activeTab === 'portfolio'
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    💼 Portfolio
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('news')}
+                    className={`flex-1 px-4 py-4 text-sm font-bold transition relative ${
+                      activeTab === 'news'
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    📰 Financial News
+                    {financialNews.length > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center">
+                        {Math.min(financialNews.length, 9)}
+                      </span>
+                    )}
+                  </button>
+                </div>
+
+                {/* Tab Content */}
+                <div className="p-4 sm:p-6">
+                  {activeTab === 'portfolio' && (
+                    <>
+                      <h4 className="text-xl font-black mb-4 flex items-center gap-2 text-gray-900 tracking-tight">
+                        💼 Your Portfolio
+                      </h4>
+                      {portfolio.length === 0 ? (
+                        <p className="text-gray-500 text-center py-8 font-medium">No stocks yet. Start trading!</p>
+                      ) : (
+                        <div className="space-y-3">
+                          {portfolio.map(stock => {
+                            const currentStock = marketData.find(m => m.id === stock.id);
+                            const currentPrice = currentStock?.price || stock.price;
+                            const profit = (currentPrice - stock.avgPrice) * stock.shares;
+                            return (
+                              <motion.div
+                                key={stock.id}
+                                className="flex items-center justify-between p-4 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition"
+                                onClick={() => setSelectedStock(currentStock)}
+                                layout
+                              >
+                                <div className="flex items-center gap-3">
+                                  <span className="text-2xl">{stock.emoji}</span>
+                                  <div>
+                                    <div className="font-bold text-gray-900">{stock.symbol}</div>
+                                    <div className="text-sm text-gray-500">{stock.shares} shares</div>
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <div className="font-bold text-gray-900">${(currentPrice * stock.shares).toFixed(2)}</div>
+                                  <div className={`text-sm font-bold ${
+                                    profit >= 0 ? 'text-emerald-600' : 'text-rose-600'
+                                  }`}>
+                                    {profit >= 0 ? '+' : ''}${profit.toFixed(2)}
+                                  </div>
+                                </div>
+                              </motion.div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  {activeTab === 'news' && (
+                    <>
+                      <h4 className="text-xl font-black mb-4 flex items-center gap-2 text-gray-900 tracking-tight">
+                        📰 Financial News
+                      </h4>
+                      <div className="space-y-3 max-h-96 overflow-y-auto">
+                        {financialNews.length === 0 ? (
+                          <p className="text-gray-500 text-center py-8 font-medium">
+                            {tradingActive ? 'Waiting for news...' : 'Start trading to see financial news!'}
+                          </p>
+                        ) : (
+                          financialNews.map((news, index) => (
+                            <motion.div
+                              key={news.id}
+                              className={`p-4 rounded-xl border-l-4 ${
+                                news.priority === 'high'
+                                  ? 'bg-red-50 border-red-500'
+                                  : news.priority === 'medium'
+                                  ? 'bg-amber-50 border-amber-500'
+                                  : 'bg-blue-50 border-blue-500'
+                              }`}
+                              initial={{ opacity: 0, x: 20 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: index * 0.1 }}
+                            >
+                              <div className="flex items-start justify-between mb-2">
+                                <span className={`text-xs font-bold px-2 py-1 rounded ${
+                                  news.priority === 'high'
+                                    ? 'bg-red-200 text-red-800'
+                                    : news.priority === 'medium'
+                                    ? 'bg-amber-200 text-amber-800'
+                                    : 'bg-blue-200 text-blue-800'
+                                }`}>
+                                  {news.category}
+                                </span>
+                                <span className="text-xs text-gray-400">
+                                  {new Date(news.timestamp).toLocaleTimeString()}
+                                </span>
+                              </div>
+                              <h5 className="font-bold text-gray-900 mb-1 text-sm">
+                                {news.title}
+                              </h5>
+                              <p className="text-xs text-gray-600 leading-relaxed">
+                                {news.description}
+                              </p>
+                              {news.impact && (
+                                <div className="mt-2 text-xs">
+                                  <span className={`inline-block px-2 py-1 rounded text-white ${
+                                    news.impact.multiplier > 1 ? 'bg-emerald-500' : 'bg-rose-500'
+                                  }`}>
+                                    Market Impact: {news.impact.multiplier > 1 ? '📈' : '📉'} 
+                                    {((news.impact.multiplier - 1) * 100).toFixed(1)}%
+                                  </span>
+                                </div>
+                              )}
+                            </motion.div>
+                          ))
+                        )}
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
 
-              {/* Trade History */}
+              {/* Trade History - Moved below tabs */}
               <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg border border-gray-100">
                 <h4 className="text-xl font-black mb-4 flex items-center gap-2 text-gray-900 tracking-tight">
                   📜 Trade History

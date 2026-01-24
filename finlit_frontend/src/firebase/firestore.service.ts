@@ -420,9 +420,9 @@ export async function updateModuleScore(
     }
   }
 
-  // Calculate totalXP: sum of scores only for passed modules, capped at 100
+  // Calculate totalXP: sum of scores only for passed modules (no cap)
   const currentTotalXP = data.totalXP || 0;
-  const newTotalXP = Math.min(currentTotalXP + xpToAward, 100);
+  const newTotalXP = currentTotalXP + xpToAward;
   const xpLevel = Math.floor(newTotalXP / 100) + 1;
 
   await updateDoc(progressRef, {
@@ -666,11 +666,8 @@ export async function resetModuleProgress(
     score: 0,
   };
 
-  // Recalculate total XP - only count XP for passed modules, capped at 100
-  const totalXP = Math.min(
-    updatedScores.reduce((sum, s) => sum + (s.passed ? s.score : 0), 0),
-    100
-  );
+  // Recalculate total XP - only count XP for passed modules (no cap)
+  const totalXP = updatedScores.reduce((sum, s) => sum + (s.passed ? s.score : 0), 0);
   const xpLevel = Math.floor(totalXP / 100) + 1;
 
   await updateDoc(progressRef, {
