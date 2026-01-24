@@ -29,3 +29,4 @@ dist-ssr
 *.sw?
 
 firestore.rules
+rules.md

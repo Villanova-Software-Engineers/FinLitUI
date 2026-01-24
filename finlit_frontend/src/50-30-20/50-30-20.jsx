@@ -192,7 +192,7 @@
 // export default BudgetRuleChartStep;
 import React, { useRef, useEffect, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useModuleScore, MODULES } from '../hooks/useModuleScore';
 
 const categories = {
@@ -279,6 +279,10 @@ const quizQuestions = [
 ];
 
 const BudgetRuleChartStep = ({ activeCategoryKey = '50' }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { saveScore, isModulePassed, refreshProgress } = useModuleScore();
+
   const [selectedItem, setSelectedItem] = useState(null);
   const [showQuiz, setShowQuiz] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -291,9 +295,15 @@ const BudgetRuleChartStep = ({ activeCategoryKey = '50' }) => {
   const [isCorrect, setIsCorrect] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [shuffledQuestions, setShuffledQuestions] = useState([]); // Shuffled questions with shuffled answers
+  // Review mode - initialized from navigation state to persist across route changes
+  const [isReviewMode, setIsReviewMode] = useState(location.state?.isReviewMode || false);
 
-  const navigate = useNavigate();
-  const { saveScore, isModulePassed, refreshProgress } = useModuleScore();
+  // Update review mode when location state changes (for route navigation)
+  useEffect(() => {
+    if (location.state?.isReviewMode !== undefined) {
+      setIsReviewMode(location.state.isReviewMode);
+    }
+  }, [location.state?.isReviewMode]);
   const activeIndex = categoryOrder.indexOf(activeCategoryKey);
   const activeCategory = categories[activeCategoryKey];
 
@@ -347,14 +357,14 @@ const BudgetRuleChartStep = ({ activeCategoryKey = '50' }) => {
   const handlePrev = () => {
     if (activeIndex > 0) {
       const prevKey = categoryOrder[activeIndex - 1];
-      navigate(`/${categories[prevKey].route}`);
+      navigate(`/${categories[prevKey].route}`, { state: { isReviewMode } });
     }
   };
 
   const handleNext = () => {
     if (activeIndex < categoryOrder.length - 1) {
       const nextKey = categoryOrder[activeIndex + 1];
-      navigate(`/${categories[nextKey].route}`);
+      navigate(`/${categories[nextKey].route}`, { state: { isReviewMode } });
     } else {
       // Last category - show quiz instead of calculator
       setShowQuiz(true);
@@ -490,8 +500,13 @@ const BudgetRuleChartStep = ({ activeCategoryKey = '50' }) => {
     );
   };
 
-  // If module is already passed, show completion screen
-  if (modulePassed) {
+  // Start review mode
+  const startReviewMode = () => {
+    setIsReviewMode(true);
+  };
+
+  // If module is already passed and not in review mode, show completion screen
+  if (modulePassed && !isReviewMode) {
     return (
       <div
         className="min-h-screen p-6 relative overflow-hidden font-sans flex items-center justify-center"
@@ -523,14 +538,24 @@ const BudgetRuleChartStep = ({ activeCategoryKey = '50' }) => {
               <span className="font-semibold">100% Complete</span>
             </div>
           </div>
-          <motion.button
-            onClick={() => navigate('/game')}
-            className="w-full px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold transition"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            Back to Learning Path
-          </motion.button>
+          <div className="space-y-3">
+            <motion.button
+              onClick={startReviewMode}
+              className="w-full px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-semibold transition"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              Review Module
+            </motion.button>
+            <motion.button
+              onClick={() => navigate('/game')}
+              className="w-full px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold transition"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              Back to Learning Path
+            </motion.button>
+          </div>
         </motion.div>
       </div>
     );
@@ -605,8 +630,19 @@ const BudgetRuleChartStep = ({ activeCategoryKey = '50' }) => {
       </motion.div>
 
       <div className="max-w-4xl mx-auto relative z-10">
+        {/* Review Mode Banner */}
+        {isReviewMode && (
+          <motion.div
+            className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl text-blue-700 text-center"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <span className="font-semibold">Review Mode:</span> You're reviewing this module. Content is read-only.
+          </motion.div>
+        )}
+
         {/* Title */}
-        <motion.h2 
+        <motion.h2
           className="text-3xl font-bold mb-8 text-center text-gray-800"
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -784,13 +820,20 @@ const BudgetRuleChartStep = ({ activeCategoryKey = '50' }) => {
               {!showResult ? (
                 /* Quiz Questions */
                 <div className="p-8">
+                  {/* Review Mode Banner in Quiz */}
+                  {isReviewMode && (
+                    <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-700 text-sm text-center">
+                      <span className="font-semibold">Review Mode:</span> Correct answers are highlighted. You cannot change answers.
+                    </div>
+                  )}
+
                   {/* Quiz Header */}
                   <div className="flex items-center justify-between mb-6">
                     <button
-                      onClick={handleBackToLearning}
+                      onClick={isReviewMode ? () => navigate('/game') : handleBackToLearning}
                       className="text-gray-500 hover:text-gray-700"
                     >
-                      ← Back to Learning
+                      {isReviewMode ? '← Back to Learning Path' : '← Back to Learning'}
                     </button>
                     <div className="text-sm text-gray-500">
                       Question {currentQuestion + 1} of {quizQuestions.length}
@@ -814,42 +857,62 @@ const BudgetRuleChartStep = ({ activeCategoryKey = '50' }) => {
 
                   {/* Options */}
                   <div className="space-y-3 mb-6">
-                    {currentQ.options.map((option, idx) => (
-                      <motion.button
-                        key={idx}
-                        onClick={() => handleAnswerSelect(idx)}
-                        className={`w-full p-4 rounded-xl text-left transition-all ${
-                          showFeedback
-                            ? idx === currentQ.correctIndex
-                              ? 'bg-green-100 border-2 border-green-500 text-green-800'
-                              : selectedAnswer === idx
-                                ? 'bg-red-100 border-2 border-red-500 text-red-800'
-                                : 'bg-gray-100 border-2 border-gray-200 text-gray-600'
-                            : selectedAnswer === idx
-                              ? 'bg-blue-100 border-2 border-blue-500 text-blue-800'
-                              : 'bg-gray-100 border-2 border-gray-200 hover:bg-gray-200 text-gray-800'
-                        }`}
-                        whileHover={!showFeedback ? { scale: 1.02 } : {}}
-                        whileTap={!showFeedback ? { scale: 0.98 } : {}}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className={`w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold ${
-                            showFeedback
-                              ? idx === currentQ.correctIndex
-                                ? 'bg-green-500 text-white'
+                    {currentQ.options.map((option, idx) => {
+                      const isCorrectOption = idx === currentQ.correctIndex;
+                      const showAsCorrect = isReviewMode && isCorrectOption;
+                      const showAsIncorrect = isReviewMode && !isCorrectOption;
+
+                      return (
+                        <motion.button
+                          key={idx}
+                          onClick={() => !isReviewMode && handleAnswerSelect(idx)}
+                          disabled={isReviewMode}
+                          className={`w-full p-4 rounded-xl text-left transition-all ${
+                            isReviewMode
+                              ? showAsCorrect
+                                ? 'bg-green-100 border-2 border-green-500 text-green-800'
+                                : 'bg-gray-100 border-2 border-gray-200 text-gray-500 opacity-60'
+                              : showFeedback
+                                ? idx === currentQ.correctIndex
+                                  ? 'bg-green-100 border-2 border-green-500 text-green-800'
+                                  : selectedAnswer === idx
+                                    ? 'bg-red-100 border-2 border-red-500 text-red-800'
+                                    : 'bg-gray-100 border-2 border-gray-200 text-gray-600'
                                 : selectedAnswer === idx
-                                  ? 'bg-red-500 text-white'
+                                  ? 'bg-blue-100 border-2 border-blue-500 text-blue-800'
+                                  : 'bg-gray-100 border-2 border-gray-200 hover:bg-gray-200 text-gray-800'
+                          }`}
+                          whileHover={!showFeedback && !isReviewMode ? { scale: 1.02 } : {}}
+                          whileTap={!showFeedback && !isReviewMode ? { scale: 0.98 } : {}}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold ${
+                              isReviewMode
+                                ? showAsCorrect
+                                  ? 'bg-green-500 text-white'
                                   : 'bg-gray-300 text-gray-600'
-                              : selectedAnswer === idx
-                                ? 'bg-blue-500 text-white'
-                                : 'bg-gray-300 text-gray-600'
-                          }`}>
-                            {String.fromCharCode(65 + idx)}
+                                : showFeedback
+                                  ? idx === currentQ.correctIndex
+                                    ? 'bg-green-500 text-white'
+                                    : selectedAnswer === idx
+                                      ? 'bg-red-500 text-white'
+                                      : 'bg-gray-300 text-gray-600'
+                                  : selectedAnswer === idx
+                                    ? 'bg-blue-500 text-white'
+                                    : 'bg-gray-300 text-gray-600'
+                            }`}>
+                              {isReviewMode && showAsCorrect ? '✓' : String.fromCharCode(65 + idx)}
+                            </div>
+                            <span className="font-medium">{option}</span>
                           </div>
-                          <span className="font-medium">{option}</span>
-                        </div>
-                      </motion.button>
-                    ))}
+                          {isReviewMode && showAsCorrect && (
+                            <p className="text-sm text-green-700 mt-2 ml-9">
+                              {currentQ.explanation}
+                            </p>
+                          )}
+                        </motion.button>
+                      );
+                    })}
                   </div>
 
                   {/* Feedback */}
@@ -873,7 +936,22 @@ const BudgetRuleChartStep = ({ activeCategoryKey = '50' }) => {
 
                   {/* Action Button */}
                   <div className="flex justify-end">
-                    {!showFeedback ? (
+                    {isReviewMode ? (
+                      <motion.button
+                        onClick={() => {
+                          if (currentQuestion < quizQuestions.length - 1) {
+                            setCurrentQuestion(prev => prev + 1);
+                          } else {
+                            navigate('/game');
+                          }
+                        }}
+                        className="px-6 py-3 rounded-xl font-semibold bg-blue-500 text-white hover:bg-blue-600"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        {currentQuestion < quizQuestions.length - 1 ? 'Next Question →' : 'Finish Review'}
+                      </motion.button>
+                    ) : !showFeedback ? (
                       <motion.button
                         onClick={handleSubmitAnswer}
                         disabled={selectedAnswer === null}

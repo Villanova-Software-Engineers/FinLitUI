@@ -47,6 +47,7 @@ export default function NeedsWants() {
   const [shuffledQuiz, setShuffledQuiz] = useState([]);
   const [isProcessingSwipe, setIsProcessingSwipe] = useState(false);
   const [showCompletionScreen, setShowCompletionScreen] = useState(false);
+  const [isReviewMode, setIsReviewMode] = useState(false); // Review mode - view content without editing answers
 
   // Check if module is already passed
   const modulePassed = isModulePassed(MODULES.NEEDS_WANTS.id);
@@ -296,8 +297,18 @@ export default function NeedsWants() {
     );
   }
 
-  // If module is already passed, show completion screen
-  if (modulePassed || showCompletionScreen) {
+  // Start review mode
+  const startReviewMode = () => {
+    setIsReviewMode(true);
+    // Skip step 1 (item selection) and go directly to the swipe game
+    setStep(2);
+    // Re-initialize items for review
+    setItems(getRandomItem(hardcodedItems, 8));
+    setItems2(getRandomItem(hardcodedItems, 8));
+  };
+
+  // If module is already passed and not in review mode, show completion screen
+  if ((modulePassed || showCompletionScreen) && !isReviewMode) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-blue-100 p-6 flex items-center justify-center">
         <motion.div
@@ -313,7 +324,7 @@ export default function NeedsWants() {
           >
             🎉
           </motion.div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">{showCompletionScreen ? 'Module Passed! 🎉' : 'Module Already Completed!'}</h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">{showCompletionScreen ? 'Module Passed!' : 'Module Already Completed!'}</h2>
           <p className="text-gray-600 mb-6">
             You've already passed the Needs vs Wants module. Great job understanding the difference between needs and wants!
           </p>
@@ -323,14 +334,24 @@ export default function NeedsWants() {
               <span className="font-semibold">100% Complete</span>
             </div>
           </div>
-          <motion.button
-            onClick={() => navigate('/game')}
-            className="w-full px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold transition"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            Continue to Learning Path
-          </motion.button>
+          <div className="space-y-3">
+            <motion.button
+              onClick={startReviewMode}
+              className="w-full px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-semibold transition"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              Review Module
+            </motion.button>
+            <motion.button
+              onClick={() => navigate('/game')}
+              className="w-full px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold transition"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              Continue to Learning Path
+            </motion.button>
+          </div>
         </motion.div>
       </div>
     );
@@ -437,6 +458,17 @@ export default function NeedsWants() {
           {/* STEP 2: Enhanced Swipe Interface */}
           {step === 2 && !showQuiz && !showGray && (
             <div className="p-8">
+              {/* Review Mode Banner */}
+              {isReviewMode && (
+                <motion.div
+                  className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-700 text-sm text-center"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
+                  <span className="font-semibold">Review Mode:</span> You can play the swipe game or skip to the quiz.
+                </motion.div>
+              )}
+
               {/* Progress Bar */}
               <div className="mb-6">
                 <div className="flex justify-between text-sm text-gray-600 mb-2">
@@ -658,14 +690,46 @@ export default function NeedsWants() {
                   </motion.div>
                 )}
               </AnimatePresence>
+
+              {/* Skip to Quiz button in Review Mode */}
+              {isReviewMode && !finished && (
+                <motion.div
+                  className="flex justify-center mt-6"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                >
+                  <motion.button
+                    className="px-6 py-3 bg-purple-500 hover:bg-purple-600 text-white font-semibold rounded-xl shadow-lg"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => {
+                      setFinished(true);
+                      setShowQuiz(true);
+                    }}
+                  >
+                    Skip to Quiz →
+                  </motion.button>
+                </motion.div>
+              )}
             </div>
           )}
 
           {/* ENHANCED QUIZ */}
           {showQuiz && !showGray && (
             <div className="p-8">
+              {/* Review Mode Banner in Quiz */}
+              {isReviewMode && (
+                <motion.div
+                  className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-700 text-sm text-center"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
+                  <span className="font-semibold">Review Mode:</span> Correct answers are highlighted. You cannot change answers.
+                </motion.div>
+              )}
+
               <div className="text-center mb-8">
-                <motion.h1 
+                <motion.h1
                   className="text-3xl font-bold text-gray-800 mb-4"
                   initial={{ opacity: 0, y: -20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -697,22 +761,37 @@ export default function NeedsWants() {
                 </h2>
 
                 <div className="space-y-3 max-w-md mx-auto">
-                  {currentQuizQuestion.options.map((opt, i) => (
-                    <motion.button
-                      key={i}
-                      className="w-full p-4 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold rounded-xl border-2 border-transparent hover:border-purple-300 transition-all text-left"
-                      whileHover={{ scale: 1.02, y: -2 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => handleQuizAnswer(opt.correct)}
-                    >
-                      {opt.text}
-                    </motion.button>
-                  ))}
+                  {currentQuizQuestion.options.map((opt, i) => {
+                    const isCorrectOption = opt.correct;
+                    const showAsCorrect = isReviewMode && isCorrectOption;
+
+                    return (
+                      <motion.button
+                        key={i}
+                        className={`w-full p-4 font-semibold rounded-xl border-2 transition-all text-left ${
+                          isReviewMode
+                            ? showAsCorrect
+                              ? 'bg-green-100 border-green-500 text-green-800'
+                              : 'bg-gray-100 border-gray-200 text-gray-500 opacity-60'
+                            : 'bg-gray-100 hover:bg-gray-200 text-gray-800 border-transparent hover:border-purple-300'
+                        }`}
+                        whileHover={!isReviewMode ? { scale: 1.02, y: -2 } : {}}
+                        whileTap={!isReviewMode ? { scale: 0.98 } : {}}
+                        onClick={() => !isReviewMode && handleQuizAnswer(opt.correct)}
+                        disabled={isReviewMode}
+                      >
+                        <div className="flex items-center gap-2">
+                          {isReviewMode && showAsCorrect && <span>✓</span>}
+                          {opt.text}
+                        </div>
+                      </motion.button>
+                    );
+                  })}
                 </div>
               </motion.div>
 
               <AnimatePresence>
-                {quizFeedback && (
+                {quizFeedback && !isReviewMode && (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -728,8 +807,32 @@ export default function NeedsWants() {
                 )}
               </AnimatePresence>
 
-              {/* Show Next button after quiz is complete */}
-              {quizComplete && (
+              {/* Review Mode Navigation */}
+              {isReviewMode && (
+                <motion.div
+                  className="mt-8 text-center"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
+                  <motion.button
+                    className="px-8 py-4 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl shadow-lg transition-colors text-lg"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => {
+                      if (quizIndex < quiz.length - 1) {
+                        setQuizIndex(quizIndex + 1);
+                      } else {
+                        navigate('/game');
+                      }
+                    }}
+                  >
+                    {quizIndex < quiz.length - 1 ? 'Next Question →' : 'Finish Review'}
+                  </motion.button>
+                </motion.div>
+              )}
+
+              {/* Show Next button after quiz is complete (normal mode) */}
+              {quizComplete && !isReviewMode && (
                 <motion.div
                   className="mt-8 text-center"
                   initial={{ opacity: 0, y: 20 }}

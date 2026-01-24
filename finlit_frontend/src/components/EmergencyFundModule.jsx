@@ -10,6 +10,10 @@ const EmergencyFundModule = () => {
 
   // Check if module is already passed
   const modulePassed = isModulePassed(MODULES.EMERGENCY_FUND?.id);
+
+  // Review mode - allows viewing content without answering
+  const [isReviewMode, setIsReviewMode] = useState(false);
+
   const [currentPhase, setCurrentPhase] = useState('story'); // 'story', 'game', 'calculator', 'results'
   const [storyStep, setStoryStep] = useState(0);
   const [gameStep, setGameStep] = useState(0);
@@ -238,12 +242,16 @@ const EmergencyFundModule = () => {
     if (storyStep < storyContent.length - 1) {
       setStoryStep(storyStep + 1);
     } else {
+      // Continue to game phase (even in review mode, show all phases)
       setCurrentPhase('game');
     }
   };
 
   // Check if current game is complete
   const isCurrentGameComplete = () => {
+    // In review mode, all games are considered complete (can skip)
+    if (isReviewMode) return true;
+
     const currentGame = miniGames[gameStep];
     if (currentGame.type === 'sorting') return sortingComplete;
     if (currentGame.type === 'calculator') return calculatorComplete;
@@ -316,6 +324,9 @@ const EmergencyFundModule = () => {
       setScenarioAnswer(null);
       setScenarioFeedback('');
       setScenarioComplete(false);
+    } else if (isReviewMode) {
+      // In review mode, finish after games
+      navigate('/game');
     } else {
       setCurrentPhase('calculator');
     }
@@ -364,8 +375,15 @@ const EmergencyFundModule = () => {
     { key: 'other', label: 'Other Essential Expenses', icon: '📝', placeholder: '250' }
   ];
 
-  // If module is already passed, show completion screen
-  if (modulePassed) {
+  // Start review mode
+  const startReviewMode = () => {
+    setIsReviewMode(true);
+    setCurrentPhase('story');
+    setStoryStep(0);
+  };
+
+  // If module is already passed and not in review mode, show completion screen
+  if (modulePassed && !isReviewMode) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-emerald-50 to-blue-100 p-6 flex items-center justify-center">
         <motion.div
@@ -391,14 +409,24 @@ const EmergencyFundModule = () => {
               <span className="font-semibold">100% Complete</span>
             </div>
           </div>
-          <motion.button
-            onClick={() => navigate('/game')}
-            className="w-full px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold transition"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            Back to Learning Path
-          </motion.button>
+          <div className="space-y-3">
+            <motion.button
+              onClick={startReviewMode}
+              className="w-full px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-semibold transition"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              Review Module
+            </motion.button>
+            <motion.button
+              onClick={() => navigate('/game')}
+              className="w-full px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold transition"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              Back to Learning Path
+            </motion.button>
+          </div>
         </motion.div>
       </div>
     );
@@ -542,7 +570,7 @@ const EmergencyFundModule = () => {
                 onClick={nextStoryStep}
                 className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-medium transition"
               >
-                {storyStep === storyContent.length - 1 ? 'Play Games! 🎮' : 'Next →'}
+                {storyStep === storyContent.length - 1 ? (isReviewMode ? 'Finish Review' : 'Play Games! 🎮') : 'Next →'}
               </button>
             </div>
           </motion.div>

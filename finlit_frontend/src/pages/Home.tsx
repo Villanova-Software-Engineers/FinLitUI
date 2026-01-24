@@ -658,6 +658,17 @@ const FinLitApp: React.FC = () => {
 
           <button
             onClick={() => {
+              navigate('/games');
+              setMobileMenuOpen(false);
+            }}
+            className="flex items-center gap-3 p-3 hover:bg-blue-500 rounded-lg text-base sm:text-lg"
+          >
+            <Gamepad2 size={24} />
+            <span className="font-medium">Games</span>
+          </button>
+
+          <button
+            onClick={() => {
               navigate('/financial-tools');
               setMobileMenuOpen(false);
             }}
@@ -1021,15 +1032,15 @@ const FinLitApp: React.FC = () => {
 
                   {/* Clues */}
                   <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-8">
-                    <div className="bg-blue-50 p-3 sm:p-4 rounded-lg max-h-64 overflow-y-auto">
-                      <h3 className="font-bold text-blue-800 mb-2 sm:mb-3 text-lg sm:text-xl sticky top-0 bg-blue-50 pb-1">Across</h3>
+                    <div className="bg-blue-50 p-3 sm:p-4 rounded-lg">
+                      <h3 className="font-bold text-blue-800 mb-2 sm:mb-3 text-lg sm:text-xl">Across</h3>
                       <div className="space-y-1.5 sm:space-y-2">
                         {acrossClues.map(c => (
                           <button
                             key={c.number}
                             ref={el => { clueRefs.current[`${c.number}-across`] = el; }}
                             onClick={() => handleClueClick(c)}
-                            className={`w-full text-left p-2 rounded-lg transition-all text-xs sm:text-sm ${
+                            className={`w-full text-left p-2 sm:p-3 rounded-lg transition-all text-sm sm:text-base ${
                               selectedClue?.number === c.number && selectedClue?.direction === 'across'
                                 ? 'bg-blue-300 border-2 border-blue-600 shadow-md scale-[1.02]'
                                 : 'hover:bg-blue-100 border-2 border-transparent'
@@ -1040,15 +1051,15 @@ const FinLitApp: React.FC = () => {
                         ))}
                       </div>
                     </div>
-                    <div className="bg-emerald-50 p-3 sm:p-4 rounded-lg max-h-64 overflow-y-auto">
-                      <h3 className="font-bold text-emerald-800 mb-2 sm:mb-3 text-lg sm:text-xl sticky top-0 bg-emerald-50 pb-1">Down</h3>
+                    <div className="bg-emerald-50 p-3 sm:p-4 rounded-lg">
+                      <h3 className="font-bold text-emerald-800 mb-2 sm:mb-3 text-lg sm:text-xl">Down</h3>
                       <div className="space-y-1.5 sm:space-y-2">
                         {downClues.map(c => (
                           <button
                             key={c.number}
                             ref={el => { clueRefs.current[`${c.number}-down`] = el; }}
                             onClick={() => handleClueClick(c)}
-                            className={`w-full text-left p-2 rounded-lg transition-all text-xs sm:text-sm ${
+                            className={`w-full text-left p-2 sm:p-3 rounded-lg transition-all text-sm sm:text-base ${
                               selectedClue?.number === c.number && selectedClue?.direction === 'down'
                                 ? 'bg-emerald-300 border-2 border-emerald-600 shadow-md scale-[1.02]'
                                 : 'hover:bg-emerald-100 border-2 border-transparent'

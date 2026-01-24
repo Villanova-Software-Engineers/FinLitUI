@@ -11,6 +11,9 @@ const RetirementAccountsModule = () => {
   // Check if module is already passed
   const modulePassed = isModulePassed(MODULES.RETIREMENT_ACCOUNTS?.id);
 
+  // Review mode - allows viewing content without answering
+  const [isReviewMode, setIsReviewMode] = useState(false);
+
   // Phase management
   const [currentPhase, setCurrentPhase] = useState('intro');
   const [learnStep, setLearnStep] = useState(0);
@@ -709,13 +712,15 @@ const RetirementAccountsModule = () => {
               onClick={() => {
                 if (learnStep < learningSections.length - 1) {
                   setLearnStep(prev => prev + 1);
+                } else if (isReviewMode) {
+                  navigate('/game');
                 } else {
                   setCurrentPhase('quiz');
                 }
               }}
               className={`w-full bg-gradient-to-r ${section.color} text-white font-bold py-4 rounded-2xl text-lg shadow-lg flex items-center justify-center gap-2`}
             >
-              {learnStep < learningSections.length - 1 ? "CONTINUE JOURNEY" : "START QUIZ"}
+              {learnStep < learningSections.length - 1 ? "CONTINUE JOURNEY" : (isReviewMode ? "FINISH REVIEW" : "START QUIZ")}
               <ArrowRight size={20} />
             </motion.button>
           </motion.div>
@@ -1017,10 +1022,17 @@ const RetirementAccountsModule = () => {
     );
   };
 
+  // Start review mode
+  const startReviewMode = () => {
+    setIsReviewMode(true);
+    setCurrentPhase('intro');
+    setLearnStep(0);
+  };
+
   // ==========================================
   // ALREADY PASSED VIEW
   // ==========================================
-  if (modulePassed) {
+  if (modulePassed && !isReviewMode) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 p-6 flex items-center justify-center">
         <motion.div
@@ -1045,14 +1057,24 @@ const RetirementAccountsModule = () => {
               <span className="font-semibold">100% Complete</span>
             </div>
           </div>
-          <motion.button
-            onClick={() => navigate('/game')}
-            className="w-full px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold transition"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            Back to Learning Path
-          </motion.button>
+          <div className="space-y-3">
+            <motion.button
+              onClick={startReviewMode}
+              className="w-full px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-semibold transition"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              Review Module
+            </motion.button>
+            <motion.button
+              onClick={() => navigate('/game')}
+              className="w-full px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold transition"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              Back to Learning Path
+            </motion.button>
+          </div>
         </motion.div>
       </div>
     );

@@ -11,6 +11,9 @@ const DebtManagementModule = () => {
   // Check if module is already passed
   const modulePassed = isModulePassed(MODULES.DEBT_MANAGEMENT?.id);
 
+  // Review mode - allows viewing content without answering
+  const [isReviewMode, setIsReviewMode] = useState(false);
+
   // Phase management - intro, learn, quiz, results
   const [currentPhase, setCurrentPhase] = useState('intro');
   const [learnStep, setLearnStep] = useState(0);
@@ -394,7 +397,7 @@ const DebtManagementModule = () => {
           className="w-full bg-gradient-to-r from-orange-400 to-red-500 text-white font-bold py-4 px-8 rounded-2xl text-lg shadow-lg shadow-orange-200 flex items-center justify-center gap-2"
         >
           <Play size={24} fill="white" />
-          START LEARNING
+          {isReviewMode ? 'REVIEW CONTENT' : 'START LEARNING'}
         </motion.button>
       </div>
     </motion.div>
@@ -502,7 +505,7 @@ const DebtManagementModule = () => {
               }}
               className={`w-full bg-gradient-to-r ${section.color} text-white font-bold py-4 rounded-2xl text-lg shadow-lg flex items-center justify-center gap-2`}
             >
-              {learnStep < learningSections.length - 1 ? "CONTINUE" : "START QUIZ"}
+              {learnStep < learningSections.length - 1 ? "CONTINUE" : (isReviewMode ? "REVIEW QUIZ" : "START QUIZ")}
               <ArrowRight size={20} />
             </motion.button>
           </motion.div>
@@ -532,8 +535,12 @@ const DebtManagementModule = () => {
         </button>
 
         <div className="text-center">
-          <h1 className="text-lg sm:text-2xl font-bold text-gray-800">Scenario Quiz</h1>
-          <p className="text-xs sm:text-sm text-gray-600">Apply what you learned</p>
+          <h1 className="text-lg sm:text-2xl font-bold text-gray-800">
+            {isReviewMode ? 'Quiz Review' : 'Scenario Quiz'}
+          </h1>
+          <p className="text-xs sm:text-sm text-gray-600">
+            {isReviewMode ? 'Reviewing correct answers' : 'Apply what you learned'}
+          </p>
         </div>
 
         <div className="flex items-center gap-2 text-orange-600">
@@ -651,35 +658,66 @@ const DebtManagementModule = () => {
 
             {/* Strategy Options */}
             <div className="mb-6 sm:mb-8">
-              <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-4">What's the best debt management strategy?</h3>
+              <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-4">
+                {isReviewMode ? 'Correct answer:' : "What's the best debt management strategy?"}
+              </h3>
+              {isReviewMode && (
+                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-700 text-sm">
+                  You're reviewing this module. Answers are shown but cannot be changed.
+                </div>
+              )}
               <div className="space-y-3">
-                {scenarios[currentScenario].strategies.map((strategy) => (
-                  <motion.button
-                    key={strategy.id}
-                    className={`w-full p-3 sm:p-4 rounded-lg border-2 text-left transition-all ${selectedStrategies[currentScenario] === strategy.id
-                      ? 'border-orange-500 bg-orange-50'
-                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                      }`}
-                    onClick={() => handleStrategySelect(currentScenario, strategy.id)}
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.99 }}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className={`w-5 h-5 rounded-full border-2 mt-0.5 flex-shrink-0 ${selectedStrategies[currentScenario] === strategy.id
-                        ? 'border-orange-500 bg-orange-500'
-                        : 'border-gray-300'
+                {scenarios[currentScenario].strategies.map((strategy) => {
+                  const isSelected = selectedStrategies[currentScenario] === strategy.id;
+                  const showAsCorrect = isReviewMode && strategy.correct;
+                  const showAsIncorrect = isReviewMode && !strategy.correct;
+
+                  return (
+                    <motion.div
+                      key={strategy.id}
+                      className={`w-full p-3 sm:p-4 rounded-lg border-2 text-left transition-all ${
+                        showAsCorrect
+                          ? 'border-green-500 bg-green-50'
+                          : showAsIncorrect
+                          ? 'border-gray-200 bg-gray-50 opacity-60'
+                          : isSelected
+                          ? 'border-orange-500 bg-orange-50'
+                          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                      } ${isReviewMode ? 'cursor-default' : 'cursor-pointer'}`}
+                      onClick={() => !isReviewMode && handleStrategySelect(currentScenario, strategy.id)}
+                      whileHover={!isReviewMode ? { scale: 1.01 } : {}}
+                      whileTap={!isReviewMode ? { scale: 0.99 } : {}}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className={`w-5 h-5 rounded-full border-2 mt-0.5 flex-shrink-0 ${
+                          showAsCorrect
+                            ? 'border-green-500 bg-green-500'
+                            : isSelected
+                            ? 'border-orange-500 bg-orange-500'
+                            : 'border-gray-300'
                         }`}>
-                        {selectedStrategies[currentScenario] === strategy.id && (
-                          <div className="w-full h-full rounded-full bg-white scale-50"></div>
-                        )}
+                          {(isSelected || showAsCorrect) && (
+                            <div className="w-full h-full rounded-full bg-white scale-50"></div>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-semibold text-gray-800 text-sm sm:text-base">{strategy.name}</h4>
+                            {showAsCorrect && (
+                              <CheckCircle className="w-4 h-4 text-green-500" />
+                            )}
+                          </div>
+                          <p className="text-xs sm:text-sm text-gray-600">{strategy.description}</p>
+                          {isReviewMode && strategy.correct && (
+                            <p className="text-xs sm:text-sm text-green-700 mt-2 font-medium">
+                              {strategy.explanation}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                      <div>
-                        <h4 className="font-semibold text-gray-800 text-sm sm:text-base">{strategy.name}</h4>
-                        <p className="text-xs sm:text-sm text-gray-600">{strategy.description}</p>
-                      </div>
-                    </div>
-                  </motion.button>
-                ))}
+                    </motion.div>
+                  );
+                })}
               </div>
             </div>
 
@@ -695,13 +733,21 @@ const DebtManagementModule = () => {
               {currentScenario < scenarios.length - 1 ? (
                 <button
                   onClick={() => setCurrentScenario(currentScenario + 1)}
-                  disabled={!selectedStrategies[currentScenario]}
-                  className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition text-sm sm:text-base ${!selectedStrategies[currentScenario]
-                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                    : 'bg-orange-500 hover:bg-orange-600 text-white'
-                    }`}
+                  disabled={!isReviewMode && !selectedStrategies[currentScenario]}
+                  className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition text-sm sm:text-base ${
+                    !isReviewMode && !selectedStrategies[currentScenario]
+                      ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                      : 'bg-orange-500 hover:bg-orange-600 text-white'
+                  }`}
                 >
                   Next Scenario
+                </button>
+              ) : isReviewMode ? (
+                <button
+                  onClick={() => navigate('/game')}
+                  className="px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition text-sm sm:text-base bg-blue-500 hover:bg-blue-600 text-white"
+                >
+                  Finish Review
                 </button>
               ) : (
                 <button
@@ -818,8 +864,23 @@ const DebtManagementModule = () => {
     </div>
   );
 
-  // If module is already passed, show completion screen
-  if (modulePassed) {
+  // Start review mode - pre-populate correct answers for display
+  const startReviewMode = () => {
+    // Pre-select correct answers for each scenario
+    const correctAnswers = {};
+    scenarios.forEach((scenario, index) => {
+      const correctStrategy = scenario.strategies.find(s => s.correct);
+      if (correctStrategy) {
+        correctAnswers[index] = correctStrategy.id;
+      }
+    });
+    setSelectedStrategies(correctAnswers);
+    setIsReviewMode(true);
+    setCurrentPhase('intro');
+  };
+
+  // If module is already passed and not in review mode, show completion screen
+  if (modulePassed && !isReviewMode) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 p-6 flex items-center justify-center">
         <motion.div
@@ -845,14 +906,24 @@ const DebtManagementModule = () => {
               <span className="font-semibold">100% Complete</span>
             </div>
           </div>
-          <motion.button
-            onClick={() => navigate('/game')}
-            className="w-full px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold transition"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            Back to Learning Path
-          </motion.button>
+          <div className="space-y-3">
+            <motion.button
+              onClick={startReviewMode}
+              className="w-full px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-semibold transition"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              Review Module
+            </motion.button>
+            <motion.button
+              onClick={() => navigate('/game')}
+              className="w-full px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold transition"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              Back to Learning Path
+            </motion.button>
+          </div>
         </motion.div>
       </div>
     );

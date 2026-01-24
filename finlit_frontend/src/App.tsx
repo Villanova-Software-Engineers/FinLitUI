@@ -26,6 +26,8 @@ import Certificate from "./components/Certificate";
 import FinancialTools from "./components/FinancialTools";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
+import Games from "./pages/Games";
+import StockSimulation from "./components/StockSimulation";
 
 // Smart Auth component that redirects authenticated users appropriately
 const SmartAuthPage: React.FC = () => {
@@ -260,6 +262,26 @@ function App() {
             element={
               <ProtectedRoute>
                 <FinancialTools />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Games Route */}
+          <Route
+            path="/games"
+            element={
+              <ProtectedRoute>
+                <Games />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Stock Simulation Route */}
+          <Route
+            path="/stock-simulation"
+            element={
+              <ProtectedRoute>
+                <StockSimulation />
               </ProtectedRoute>
             }
           />
