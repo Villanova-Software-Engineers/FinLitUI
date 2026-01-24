@@ -1,16 +1,17 @@
-import React, { ReactNode } from 'react';
+import React from 'react';
+import type { ReactNode } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Lock, Play, CheckCircle } from 'lucide-react';
-import { useModuleScore, MODULES } from '../hooks/useModuleScore';
+import { useModuleScore, MODULES, type ModuleId } from '../hooks/useModuleScore';
 
 interface ModuleAccessControlProps {
   children: ReactNode;
-  moduleId: string;
+  moduleId: ModuleId;
   moduleName: string;
 }
 
 // Module order must match the LEARNING_MODULES order in Home.tsx
-const MODULE_ORDER = [
+const MODULE_ORDER: ModuleId[] = [
   MODULES.BUDGETING_50_30_20.id,
   MODULES.NEEDS_WANTS.id,
   MODULES.CREDIT_SCORE.id,
@@ -43,8 +44,8 @@ const ModuleAccessControl: React.FC<ModuleAccessControlProps> = ({
   // Check if module is accessible (previous module passed or is first module)
   const isModuleAccessible = (idx: number): boolean => {
     if (idx === 0) return true; // First module always accessible
-    const previousModuleId = MODULE_ORDER[idx - 1];
-    return isModulePassed(previousModuleId as Parameters<typeof isModulePassed>[0]);
+    const previousModuleId = MODULE_ORDER[idx - 1] as ModuleId;
+    return isModulePassed(previousModuleId);
   };
 
   // If module is not accessible, show access denied screen
