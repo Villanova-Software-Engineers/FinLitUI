@@ -11,6 +11,9 @@ const StockMarketModule = () => {
   // Check if module is already passed
   const modulePassed = isModulePassed(MODULES.STOCK_MARKET?.id);
 
+  // Review mode - allows viewing content without taking tests
+  const [isReviewMode, setIsReviewMode] = useState(false);
+
   const [currentPhase, setCurrentPhase] = useState('teaching'); // 'teaching', 'test', 'trading-sim', 'final-results'
   const [teachingStep, setTeachingStep] = useState(0);
   const [testQuestion, setTestQuestion] = useState(0);
@@ -629,8 +632,15 @@ const StockMarketModule = () => {
     </AnimatePresence>
   );
 
-  // If module is already passed, show completion screen
-  if (modulePassed) {
+  // Start review mode
+  const startReviewMode = () => {
+    setIsReviewMode(true);
+    setCurrentPhase('teaching');
+    setTeachingStep(0);
+  };
+
+  // If module is already passed and not in review mode, show completion screen
+  if (modulePassed && !isReviewMode) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6 flex items-center justify-center">
         <motion.div
@@ -656,14 +666,24 @@ const StockMarketModule = () => {
               <span className="font-semibold">100% Complete</span>
             </div>
           </div>
-          <motion.button
-            onClick={() => navigate('/game')}
-            className="w-full px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold transition"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            Back to Learning Path
-          </motion.button>
+          <div className="space-y-3">
+            <motion.button
+              onClick={startReviewMode}
+              className="w-full px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-semibold transition"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              Review Module
+            </motion.button>
+            <motion.button
+              onClick={() => navigate('/game')}
+              className="w-full px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold transition"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              Back to Learning Path
+            </motion.button>
+          </div>
         </motion.div>
       </div>
     );
@@ -841,6 +861,13 @@ const StockMarketModule = () => {
                   className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-bold shadow-lg transition transform hover:scale-105"
                 >
                   Next Lesson
+                </button>
+              ) : isReviewMode ? (
+                <button
+                  onClick={() => navigate('/game')}
+                  className="px-8 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white rounded-xl font-bold shadow-lg transition transform hover:scale-105"
+                >
+                  Finish Review
                 </button>
               ) : (
                 <button

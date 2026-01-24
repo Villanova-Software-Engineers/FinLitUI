@@ -94,6 +94,9 @@ const InvestmentBankingModule = () => {
   // Check if module is already passed
   const modulePassed = isModulePassed(MODULES.INVESTMENT_BANKING?.id);
 
+  // Review mode - allows viewing content without answering
+  const [isReviewMode, setIsReviewMode] = useState(false);
+
   const [currentPhase, setCurrentPhase] = useState('lessons'); // 'lessons', 'practice', 'truefalse', 'results'
   const [currentLesson, setCurrentLesson] = useState(0);
   const [currentActivity, setCurrentActivity] = useState(0);
@@ -131,6 +134,9 @@ const InvestmentBankingModule = () => {
 
   // Check if current activity is completed
   const isCurrentActivityCompleted = () => {
+    // In review mode, all activities are considered completed
+    if (isReviewMode) return true;
+
     const activity = practiceActivities[currentActivity];
     if (!activity) return false;
 
@@ -424,6 +430,9 @@ const InvestmentBankingModule = () => {
 
     if (currentActivity < practiceActivities.length - 1) {
       setCurrentActivity(currentActivity + 1);
+    } else if (isReviewMode) {
+      // In review mode, go back to game after practice activities
+      navigate('/game');
     } else {
       setCurrentPhase('truefalse');
     }
@@ -478,8 +487,15 @@ const InvestmentBankingModule = () => {
     return "🚀 Keep going! Building strong foundations!";
   };
 
-  // If module is already passed, show completion screen
-  if (modulePassed) {
+  // Start review mode
+  const startReviewMode = () => {
+    setIsReviewMode(true);
+    setCurrentPhase('lessons');
+    setCurrentLesson(0);
+  };
+
+  // If module is already passed and not in review mode, show completion screen
+  if (modulePassed && !isReviewMode) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 p-6 flex items-center justify-center">
         <motion.div
@@ -505,14 +521,24 @@ const InvestmentBankingModule = () => {
               <span className="font-semibold">100% Complete</span>
             </div>
           </div>
-          <motion.button
-            onClick={() => navigate('/game')}
-            className="w-full px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold transition"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            Back to Learning Path
-          </motion.button>
+          <div className="space-y-3">
+            <motion.button
+              onClick={startReviewMode}
+              className="w-full px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-semibold transition"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              Review Module
+            </motion.button>
+            <motion.button
+              onClick={() => navigate('/game')}
+              className="w-full px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold transition"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              Back to Learning Path
+            </motion.button>
+          </div>
         </motion.div>
       </div>
     );
@@ -782,6 +808,15 @@ const InvestmentBankingModule = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
+            {/* Review Mode Banner */}
+            {isReviewMode && (
+              <div className="mb-6 bg-orange-50 border border-orange-200 rounded-xl p-4 text-center">
+                <p className="text-orange-700 font-medium">
+                  📖 Review Mode - Try the activity or skip to next
+                </p>
+              </div>
+            )}
+
             {/* Activity Header */}
             <div className="text-center mb-8">
               <h2 className="text-2xl font-semibold text-slate-800 mb-2 tracking-tight">
@@ -1067,7 +1102,9 @@ const InvestmentBankingModule = () => {
               whileHover={isCurrentActivityCompleted() ? { scale: 1.02, y: -2 } : {}}
               whileTap={isCurrentActivityCompleted() ? { scale: 0.98 } : {}}
             >
-              {currentActivity === practiceActivities.length - 1 ? 'Take Assessment' : 'Next Activity'}
+              {currentActivity === practiceActivities.length - 1
+                ? (isReviewMode ? 'Finish Review' : 'Take Assessment')
+                : 'Next Activity'}
               <ChevronRight className="w-4 h-4" />
             </motion.button>
           </div>

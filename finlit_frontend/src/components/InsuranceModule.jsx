@@ -8,6 +8,9 @@ const InsuranceModule = () => {
   const navigate = useNavigate();
   const { saveScore, isModulePassed, refreshProgress } = useModuleScore();
 
+  // Review mode - allows viewing content without answering
+  const [isReviewMode, setIsReviewMode] = useState(false);
+
   const [currentPhase, setCurrentPhase] = useState('learning'); // 'learning', 'game', 'quiz', 'results'
   const [lessonStep, setLessonStep] = useState(0);
   const [gameState, setGameState] = useState('playing');
@@ -361,8 +364,15 @@ const InsuranceModule = () => {
   const totalCorrect = score + quizScore;
   const finalPercentage = Math.round((totalCorrect / totalQuestions) * 100);
 
-  // If module is already passed, show completion screen
-  if (modulePassed) {
+  // Start review mode
+  const startReviewMode = () => {
+    setIsReviewMode(true);
+    setCurrentPhase('learning');
+    setLessonStep(0);
+  };
+
+  // If module is already passed and not in review mode, show completion screen
+  if (modulePassed && !isReviewMode) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-green-50 to-purple-50 p-4 sm:p-6 flex items-center justify-center">
         <motion.div
@@ -388,14 +398,24 @@ const InsuranceModule = () => {
               <span className="font-semibold">100% Complete</span>
             </div>
           </div>
-          <motion.button
-            onClick={() => navigate('/game')}
-            className="w-full px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold transition"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            Back to Learning Path
-          </motion.button>
+          <div className="space-y-3">
+            <motion.button
+              onClick={startReviewMode}
+              className="w-full px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-semibold transition"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              Review Module
+            </motion.button>
+            <motion.button
+              onClick={() => navigate('/game')}
+              className="w-full px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold transition"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              Back to Learning Path
+            </motion.button>
+          </div>
         </motion.div>
       </div>
     );
@@ -527,13 +547,15 @@ const InsuranceModule = () => {
               onClick={() => {
                 if (lessonStep < lessons.length - 1) {
                   setLessonStep(prev => prev + 1);
+                } else if (isReviewMode) {
+                  navigate('/game');
                 } else {
                   setCurrentPhase('game');
                 }
               }}
               className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-medium transition"
             >
-              {lessonStep === lessons.length - 1 ? 'Start Matching Game!' : 'Next'}
+              {lessonStep === lessons.length - 1 ? (isReviewMode ? 'Finish Review' : 'Start Matching Game!') : 'Next'}
             </button>
           </div>
         </motion.div>

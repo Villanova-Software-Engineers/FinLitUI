@@ -13,7 +13,13 @@ import { useModuleScore, MODULES } from '../hooks/useModuleScore';
 
 const CryptoModule = () => {
   const navigate = useNavigate();
-  const { saveScore, resetModule, isLoading: progressLoading } = useModuleScore();
+  const { saveScore, resetModule, isModulePassed, isLoading: progressLoading } = useModuleScore();
+
+  // Check if module is already passed
+  const modulePassed = isModulePassed(MODULES.CRYPTO?.id);
+
+  // Review mode - allows viewing content without answering
+  const [isReviewMode, setIsReviewMode] = useState(false);
 
   // Phase management
   const [currentPhase, setCurrentPhase] = useState('intro');
@@ -584,7 +590,7 @@ const CryptoModule = () => {
               }}
               className={`w-full bg-gradient-to-r ${section.color} text-white font-bold py-4 rounded-2xl text-lg shadow-lg flex items-center justify-center gap-2`}
             >
-              {learnStep < learningSections.length - 1 ? "CONTINUE" : "NEXT: PROS & CONS"}
+              {learnStep < learningSections.length - 1 ? "CONTINUE" : (isReviewMode ? "REVIEW PROS & CONS" : "NEXT: PROS & CONS")}
               <ArrowRight size={20} />
             </motion.button>
           </motion.div>
@@ -729,11 +735,11 @@ const CryptoModule = () => {
           transition={{ delay: 0.7 }}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          onClick={() => setCurrentPhase('quiz')}
+          onClick={() => isReviewMode ? navigate('/game') : setCurrentPhase('quiz')}
           className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold py-4 rounded-2xl text-lg shadow-lg flex items-center justify-center gap-2"
         >
           <GraduationCap size={24} />
-          TAKE THE QUIZ
+          {isReviewMode ? 'FINISH REVIEW' : 'TAKE THE QUIZ'}
         </motion.button>
       </div>
     </motion.div>
@@ -970,6 +976,63 @@ const CryptoModule = () => {
           </motion.div>
           <p className="text-gray-500 font-medium">Loading...</p>
         </div>
+      </div>
+    );
+  }
+
+  // Start review mode
+  const startReviewMode = () => {
+    setIsReviewMode(true);
+    setCurrentPhase('intro');
+    setLearnStep(0);
+  };
+
+  // If module is already passed and not in review mode, show completion screen
+  if (modulePassed && !isReviewMode) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 p-6 flex items-center justify-center">
+        <motion.div
+          className="bg-white rounded-2xl shadow-xl p-8 max-w-md text-center"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          <motion.div
+            className="text-6xl mb-4"
+            animate={{ rotate: [0, -10, 10, -10, 0] }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+          >
+            🪙
+          </motion.div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Module Completed!</h2>
+          <p className="text-gray-600 mb-6">
+            You've already passed the Cryptocurrency module. Great job understanding digital currencies and blockchain!
+          </p>
+          <div className="bg-green-50 rounded-xl p-4 mb-6">
+            <div className="flex items-center justify-center gap-2 text-green-600">
+              <span className="text-2xl">✓</span>
+              <span className="font-semibold">100% Complete</span>
+            </div>
+          </div>
+          <div className="space-y-3">
+            <motion.button
+              onClick={startReviewMode}
+              className="w-full px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-semibold transition"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              Review Module
+            </motion.button>
+            <motion.button
+              onClick={() => navigate('/game')}
+              className="w-full px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold transition"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              Back to Learning Path
+            </motion.button>
+          </div>
+        </motion.div>
       </div>
     );
   }

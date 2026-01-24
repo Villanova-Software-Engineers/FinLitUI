@@ -8,6 +8,12 @@ const CreditScoreModule = () => {
   const navigate = useNavigate();
   const { saveScore, getModuleScore, isModulePassed, resetModule, isLoading: progressLoading } = useModuleScore();
 
+  // Check if module is already passed
+  const modulePassed = isModulePassed(MODULES.CREDIT_SCORE?.id);
+
+  // Review mode - allows viewing content without answering
+  const [isReviewMode, setIsReviewMode] = useState(false);
+
   const [currentStep, setCurrentStep] = useState('learning'); // 'learning', 'game', 'quiz', 'results'
   const [learningStep, setLearningStep] = useState(0);
   const [gameStep, setGameStep] = useState(0);
@@ -26,7 +32,7 @@ const CreditScoreModule = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [saveResult, setSaveResult] = useState(null); // { passed, attemptNumber, needsRetake }
   const [isResetting, setIsResetting] = useState(false);
-  
+
   // Game states
   const [gameScore, setGameScore] = useState(0);
   const [currentGameType, setCurrentGameType] = useState('');
@@ -39,9 +45,6 @@ const CreditScoreModule = () => {
   const [timelineOrder, setTimelineOrder] = useState([]);
   const [shuffledDefinitions, setShuffledDefinitions] = useState([]);
   const [showWrongAnswer, setShowWrongAnswer] = useState(false);
-
-  // Check if module is already passed
-  const modulePassed = isModulePassed(MODULES.CREDIT_SCORE?.id);
 
   // Fisher-Yates shuffle function
   const shuffleArray = (array) => {
@@ -514,8 +517,23 @@ const CreditScoreModule = () => {
     return "text-orange-600";
   };
 
-  // If module is already passed, show completion screen
-  if (modulePassed) {
+  // Start review mode - pre-populate correct answers for display
+  const startReviewMode = () => {
+    // Pre-select correct answers for each question
+    const correctAnswers = {};
+    questions.forEach((question, index) => {
+      const correctOption = question.options.find(opt => opt.correct);
+      if (correctOption) {
+        correctAnswers[index] = correctOption.id;
+      }
+    });
+    setSelectedAnswers(correctAnswers);
+    setIsReviewMode(true);
+    setCurrentStep('learning');
+  };
+
+  // If module is already passed and not in review mode, show completion screen
+  if (modulePassed && !isReviewMode) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-100 to-blue-200 p-6 flex items-center justify-center">
         <motion.div
@@ -541,14 +559,24 @@ const CreditScoreModule = () => {
               <span className="font-semibold">100% Complete</span>
             </div>
           </div>
-          <motion.button
-            onClick={() => navigate('/game')}
-            className="w-full px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold transition"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            Back to Learning Path
-          </motion.button>
+          <div className="space-y-3">
+            <motion.button
+              onClick={startReviewMode}
+              className="w-full px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-semibold transition"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              Review Module
+            </motion.button>
+            <motion.button
+              onClick={() => navigate('/game')}
+              className="w-full px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold transition"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              Back to Learning Path
+            </motion.button>
+          </div>
         </motion.div>
       </div>
     );
@@ -759,7 +787,7 @@ const CreditScoreModule = () => {
               onClick={nextLearningStep}
               className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-medium transition"
             >
-              {learningStep === learningContent.length - 1 ? 'Play Games! 🎮' : 'Next →'}
+              {learningStep === learningContent.length - 1 ? (isReviewMode ? 'Review Games! 🎮' : 'Play Games! 🎮') : 'Next →'}
             </button>
           </div>
         </motion.div>
@@ -1214,7 +1242,7 @@ const CreditScoreModule = () => {
             <motion.button
               onClick={nextGameStep}
               className="px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-xl font-bold transition shadow-lg relative overflow-hidden"
-              whileHover={{ 
+              whileHover={{
                 scale: 1.05,
                 boxShadow: "0 10px 25px rgba(168, 85, 247, 0.4)"
               }}
@@ -1227,7 +1255,7 @@ const CreditScoreModule = () => {
                 transition={{ duration: 0.5 }}
               />
               <span className="relative z-10">
-                {gameStep === miniGames.length - 1 ? 'Start Quiz! 🎯' : 'Next Game →'}
+                {gameStep === miniGames.length - 1 ? (isReviewMode ? 'Review Quiz! 🎯' : 'Start Quiz! 🎯') : 'Next Game →'}
               </span>
             </motion.button>
           </div>
@@ -1239,6 +1267,14 @@ const CreditScoreModule = () => {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
+          {/* Review Mode Banner */}
+          {isReviewMode && (
+            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl text-blue-700">
+              <div className="font-semibold mb-1">Review Mode</div>
+              <div className="text-sm">You're reviewing correct answers. Options cannot be changed.</div>
+            </div>
+          )}
+
           {/* Progress Bar */}
           <div className="mb-8">
             <div className="flex justify-between text-sm text-gray-600 mb-2">
@@ -1269,56 +1305,78 @@ const CreditScoreModule = () => {
                 animate={{ scale: [1, 1.2, 1] }}
                 transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 2 }}
               >
-                🤔
+                {isReviewMode ? '📖' : '🤔'}
               </motion.div>
               <h2 className="text-2xl font-bold text-gray-800 mb-2">
                 {questions[currentQuestion].question}
               </h2>
-              <p className="text-purple-600 font-medium">
-                +{questions[currentQuestion].xp} XP {streak > 0 && `(+${streak * 5} bonus!)`}
-              </p>
+              {!isReviewMode && (
+                <p className="text-purple-600 font-medium">
+                  +{questions[currentQuestion].xp} XP {streak > 0 && `(+${streak * 5} bonus!)`}
+                </p>
+              )}
             </div>
 
             <div className="space-y-4">
-              {questions[currentQuestion].options.map((option, index) => (
-                <motion.button
-                  key={option.id}
-                  className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
-                    selectedAnswers[currentQuestion] === option.id
-                      ? option.correct
+              {questions[currentQuestion].options.map((option, index) => {
+                const isSelected = selectedAnswers[currentQuestion] === option.id;
+                const showAsCorrect = isReviewMode && option.correct;
+                const showAsIncorrect = isReviewMode && !option.correct;
+
+                return (
+                  <motion.div
+                    key={option.id}
+                    className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
+                      showAsCorrect
                         ? 'border-green-500 bg-green-50 text-green-700'
-                        : 'border-red-500 bg-red-50 text-red-700'
-                      : 'border-gray-200 hover:border-purple-300 hover:bg-purple-50'
-                  }`}
-                  onClick={() => handleAnswerSelect(currentQuestion, option.id)}
-                  disabled={selectedAnswers[currentQuestion]}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-lg font-bold ${
-                      selectedAnswers[currentQuestion] === option.id
+                        : showAsIncorrect
+                        ? 'border-gray-200 bg-gray-50 opacity-60'
+                        : isSelected
                         ? option.correct
+                          ? 'border-green-500 bg-green-50 text-green-700'
+                          : 'border-red-500 bg-red-50 text-red-700'
+                        : 'border-gray-200 hover:border-purple-300 hover:bg-purple-50'
+                    } ${isReviewMode ? 'cursor-default' : 'cursor-pointer'}`}
+                    onClick={() => !isReviewMode && !selectedAnswers[currentQuestion] && handleAnswerSelect(currentQuestion, option.id)}
+                    whileHover={!isReviewMode && !selectedAnswers[currentQuestion] ? { scale: 1.02 } : {}}
+                    whileTap={!isReviewMode && !selectedAnswers[currentQuestion] ? { scale: 0.98 } : {}}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-lg font-bold ${
+                        showAsCorrect
                           ? 'border-green-500 bg-green-500 text-white'
-                          : 'border-red-500 bg-red-500 text-white'
-                        : 'border-purple-300 text-purple-500'
-                    }`}>
-                      {selectedAnswers[currentQuestion] === option.id
-                        ? (option.correct ? '✓' : '✗')
-                        : option.id
-                      }
+                          : isSelected
+                          ? option.correct
+                            ? 'border-green-500 bg-green-500 text-white'
+                            : 'border-red-500 bg-red-500 text-white'
+                          : 'border-purple-300 text-purple-500'
+                      }`}>
+                        {showAsCorrect || (isSelected && option.correct)
+                          ? '✓'
+                          : isSelected && !option.correct
+                          ? '✗'
+                          : option.id
+                        }
+                      </div>
+                      <div className="flex-1">
+                        <span className="text-lg">{option.text}</span>
+                        {isReviewMode && option.correct && (
+                          <p className="text-sm text-green-700 mt-2 font-medium">
+                            {questions[currentQuestion].explanation}
+                          </p>
+                        )}
+                      </div>
                     </div>
-                    <span className="text-lg">{option.text}</span>
-                  </div>
-                </motion.button>
-              ))}
+                  </motion.div>
+                );
+              })}
             </div>
 
-            {/* Show Explanation Button */}
-            {selectedAnswers[currentQuestion] && (
+            {/* Show Explanation Button - only in non-review mode */}
+            {!isReviewMode && selectedAnswers[currentQuestion] && (
               <motion.button
                 className="mt-4 px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition text-sm"
                 onClick={() => setShowExplanation(!showExplanation)}
@@ -1330,9 +1388,9 @@ const CreditScoreModule = () => {
               </motion.button>
             )}
 
-            {/* Explanation */}
+            {/* Explanation - only in non-review mode */}
             <AnimatePresence>
-              {showExplanation && (
+              {!isReviewMode && showExplanation && (
                 <motion.div
                   className="mt-4 p-4 bg-blue-50 border-l-4 border-blue-400 rounded-r-lg"
                   initial={{ opacity: 0, height: 0 }}
@@ -1360,17 +1418,35 @@ const CreditScoreModule = () => {
               Previous
             </button>
 
-            <button
-              onClick={handleNext}
-              disabled={!selectedAnswers[currentQuestion]}
-              className={`px-6 py-3 rounded-xl font-medium transition ${
-                !selectedAnswers[currentQuestion]
-                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                  : 'bg-blue-500 hover:bg-blue-600 text-white'
-              }`}
-            >
-              {currentQuestion === questions.length - 1 ? 'Finish Quiz' : 'Next Question'}
-            </button>
+            {isReviewMode ? (
+              currentQuestion < questions.length - 1 ? (
+                <button
+                  onClick={() => setCurrentQuestion(currentQuestion + 1)}
+                  className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-medium transition"
+                >
+                  Next Question
+                </button>
+              ) : (
+                <button
+                  onClick={() => navigate('/game')}
+                  className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-medium transition"
+                >
+                  Finish Review
+                </button>
+              )
+            ) : (
+              <button
+                onClick={handleNext}
+                disabled={!selectedAnswers[currentQuestion]}
+                className={`px-6 py-3 rounded-xl font-medium transition ${
+                  !selectedAnswers[currentQuestion]
+                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                    : 'bg-blue-500 hover:bg-blue-600 text-white'
+                }`}
+              >
+                {currentQuestion === questions.length - 1 ? 'Finish Quiz' : 'Next Question'}
+              </button>
+            )}
           </div>
         </motion.div>
       ) : (
