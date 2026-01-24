@@ -421,7 +421,9 @@ const CalculatorActions: React.FC<{
   onExportPDF: () => void;
   saving?: boolean;
   saved?: boolean;
-}> = ({ onSave, onExportCSV, onExportPDF, saving, saved }) => {
+  isLoadedCalculation?: boolean;
+  loadedCalculationName?: string;
+}> = ({ onSave, onExportCSV, onExportPDF, saving, saved, isLoadedCalculation, loadedCalculationName }) => {
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
   const [showNameInput, setShowNameInput] = useState(false);
   const [calculationName, setCalculationName] = useState('');
@@ -497,30 +499,40 @@ const CalculatorActions: React.FC<{
         )}
       </AnimatePresence>
 
-      {/* Save Button - Large */}
+      {/* Save Button or Loaded Indicator */}
       <div className="flex items-center gap-3">
-        <motion.button
-          onClick={saved ? undefined : handleSaveClick}
-          disabled={saving || showNameInput}
-          className={`flex-1 flex items-center justify-center gap-3 px-6 py-4 rounded-xl font-semibold text-lg transition-all ${
-            saved
-              ? 'bg-emerald-100 text-emerald-700 border-2 border-emerald-300'
-              : saving || showNameInput
-                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                : 'bg-blue-500 hover:bg-blue-600 text-white shadow-lg hover:shadow-xl'
-          }`}
-          whileHover={!saved && !saving && !showNameInput ? { scale: 1.02 } : {}}
-          whileTap={!saved && !saving && !showNameInput ? { scale: 0.98 } : {}}
-        >
-          {saving ? (
-            <Loader2 className="w-6 h-6 animate-spin" />
-          ) : saved ? (
-            <Check className="w-6 h-6" />
-          ) : (
-            <Save className="w-6 h-6" />
-          )}
-          {saving ? 'Saving...' : saved ? 'Saved!' : 'Save Calculation'}
-        </motion.button>
+        {isLoadedCalculation ? (
+          <div className="flex-1 flex items-center justify-center gap-3 px-6 py-4 rounded-xl font-semibold text-lg bg-emerald-100 text-emerald-700 border-2 border-emerald-300">
+            <FolderOpen className="w-6 h-6" />
+            <div className="text-left">
+              <div>Loaded: {loadedCalculationName}</div>
+              <div className="text-sm font-normal opacity-75">Already saved - no need to save again</div>
+            </div>
+          </div>
+        ) : (
+          <motion.button
+            onClick={saved ? undefined : handleSaveClick}
+            disabled={saving || showNameInput}
+            className={`flex-1 flex items-center justify-center gap-3 px-6 py-4 rounded-xl font-semibold text-lg transition-all ${
+              saved
+                ? 'bg-emerald-100 text-emerald-700 border-2 border-emerald-300'
+                : saving || showNameInput
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-blue-500 hover:bg-blue-600 text-white shadow-lg hover:shadow-xl'
+            }`}
+            whileHover={!saved && !saving && !showNameInput ? { scale: 1.02 } : {}}
+            whileTap={!saved && !saving && !showNameInput ? { scale: 0.98 } : {}}
+          >
+            {saving ? (
+              <Loader2 className="w-6 h-6 animate-spin" />
+            ) : saved ? (
+              <Check className="w-6 h-6" />
+            ) : (
+              <Save className="w-6 h-6" />
+            )}
+            {saving ? 'Saving...' : saved ? 'Saved!' : 'Save Calculation'}
+          </motion.button>
+        )}
 
         {/* Export Button - Dropdown */}
         <div className="relative">
@@ -614,7 +626,8 @@ const SavedCalculationsPanel: React.FC<{
   onDelete: (id: string) => Promise<boolean>;
   onClearAll: () => Promise<boolean>;
   onClose: () => void;
-}> = ({ calculations, loading, onDelete, onClearAll, onClose }) => {
+  onViewCalculation: (calculation: SavedCalculation) => void;
+}> = ({ calculations, loading, onDelete, onClearAll, onClose, onViewCalculation }) => {
   const [deleting, setDeleting] = useState<string | null>(null);
   const [clearing, setClearing] = useState(false);
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
@@ -767,7 +780,20 @@ const SavedCalculationsPanel: React.FC<{
                         ))}
                       </div>
                     </div>
-                    <div className="flex items-center gap-1 ml-4">
+                    <div className="flex items-center gap-2 ml-4">
+                      {/* View Calculator Button */}
+                      <button
+                        onClick={() => {
+                          onViewCalculation(calc);
+                          onClose();
+                        }}
+                        className="flex items-center gap-2 px-3 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition font-medium"
+                        title="View Calculator"
+                      >
+                        <Calculator className="w-4 h-4" />
+                        View Calculator
+                      </button>
+                      
                       {/* Export individual calculation with dropdown */}
                       <div className="relative">
                         <button
@@ -1046,11 +1072,13 @@ const ToolHeader: React.FC<{
 interface CalculatorProps {
   onBack: () => void;
   onSave: (type: ToolId, name: string, data: Record<string, any>, results: Record<string, any>) => Promise<boolean>;
+  loadedData?: Record<string, any>;
+  loadedName?: string;
 }
 
 // Budget Calculator Component
-const BudgetCalculator: React.FC<CalculatorProps> = ({ onBack, onSave }) => {
-  const [income, setIncome] = useState('');
+const BudgetCalculator: React.FC<CalculatorProps> = ({ onBack, onSave, loadedData, loadedName }) => {
+  const [income, setIncome] = useState(loadedData?.monthlyIncome?.toString() || '');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -1176,6 +1204,8 @@ const BudgetCalculator: React.FC<CalculatorProps> = ({ onBack, onSave }) => {
               onExportPDF={() => exportSingleAsPDF('budget', `Budget Plan - $${monthlyIncome.toLocaleString()}/mo`, { monthlyIncome }, { needs, wants, savings, annualSavings: savings * 12, weeklySpending: wants / 4 })}
               saving={saving}
               saved={saved}
+              isLoadedCalculation={!!loadedData}
+              loadedCalculationName={loadedName}
             />
           </motion.div>
         )}
@@ -1185,11 +1215,11 @@ const BudgetCalculator: React.FC<CalculatorProps> = ({ onBack, onSave }) => {
 };
 
 // Savings Planner Component
-const SavingsPlanner: React.FC<CalculatorProps> = ({ onBack, onSave }) => {
-  const [goalName, setGoalName] = useState('');
-  const [goalAmount, setGoalAmount] = useState('');
-  const [currentSavings, setCurrentSavings] = useState('');
-  const [monthlyContribution, setMonthlyContribution] = useState('');
+const SavingsPlanner: React.FC<CalculatorProps> = ({ onBack, onSave, loadedData, loadedName }) => {
+  const [goalName, setGoalName] = useState(loadedData?.goalName || loadedName || '');
+  const [goalAmount, setGoalAmount] = useState(loadedData?.goal?.toString() || '');
+  const [currentSavings, setCurrentSavings] = useState(loadedData?.current?.toString() || '');
+  const [monthlyContribution, setMonthlyContribution] = useState(loadedData?.monthly?.toString() || '');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -1326,6 +1356,8 @@ const SavingsPlanner: React.FC<CalculatorProps> = ({ onBack, onSave }) => {
               onExportPDF={() => exportSingleAsPDF('savings', goalName || 'Savings Goal', { goalName, goal, current, monthly }, { progress, remaining, monthsToGoal, yearlySavings: monthly * 12, targetDate })}
               saving={saving}
               saved={saved}
+              isLoadedCalculation={!!loadedData}
+              loadedCalculationName={loadedName}
             />
           </motion.div>
         )}
@@ -1335,10 +1367,10 @@ const SavingsPlanner: React.FC<CalculatorProps> = ({ onBack, onSave }) => {
 };
 
 // Loan Calculator Component
-const LoanCalculator: React.FC<CalculatorProps> = ({ onBack, onSave }) => {
-  const [loanAmount, setLoanAmount] = useState('');
-  const [interestRate, setInterestRate] = useState('');
-  const [loanTerm, setLoanTerm] = useState('');
+const LoanCalculator: React.FC<CalculatorProps> = ({ onBack, onSave, loadedData, loadedName }) => {
+  const [loanAmount, setLoanAmount] = useState(loadedData?.principal?.toString() || '');
+  const [interestRate, setInterestRate] = useState(loadedData?.interestRate?.toString() || '');
+  const [loanTerm, setLoanTerm] = useState(loadedData?.termYears?.toString() || '');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -1480,6 +1512,8 @@ const LoanCalculator: React.FC<CalculatorProps> = ({ onBack, onSave }) => {
               onExportPDF={() => exportSingleAsPDF('loan', `Loan - $${principal.toLocaleString()}`, { principal, interestRate: ratePercent, termYears: years }, { monthlyPayment, totalPayment, totalInterest, principalPercent })}
               saving={saving}
               saved={saved}
+              isLoadedCalculation={!!loadedData}
+              loadedCalculationName={loadedName}
             />
           </motion.div>
         )}
@@ -1489,7 +1523,7 @@ const LoanCalculator: React.FC<CalculatorProps> = ({ onBack, onSave }) => {
 };
 
 // Net Worth Calculator Component
-const NetWorthCalculator: React.FC<CalculatorProps> = ({ onBack, onSave }) => {
+const NetWorthCalculator: React.FC<CalculatorProps> = ({ onBack, onSave, loadedData, loadedName }) => {
   const [assets, setAssets] = useState({
     cash: '', investments: '', retirement: '', realEstate: '', vehicles: '', other: ''
   });
@@ -1637,11 +1671,11 @@ const NetWorthCalculator: React.FC<CalculatorProps> = ({ onBack, onSave }) => {
 };
 
 // Compound Interest Calculator Component
-const CompoundInterestCalculator: React.FC<CalculatorProps> = ({ onBack, onSave }) => {
-  const [principal, setPrincipal] = useState('');
-  const [monthlyContribution, setMonthlyContribution] = useState('');
-  const [interestRate, setInterestRate] = useState('');
-  const [years, setYears] = useState('');
+const CompoundInterestCalculator: React.FC<CalculatorProps> = ({ onBack, onSave, loadedData, loadedName }) => {
+  const [principal, setPrincipal] = useState(loadedData?.principal?.toString() || '');
+  const [monthlyContribution, setMonthlyContribution] = useState(loadedData?.monthlyContribution?.toString() || '');
+  const [interestRate, setInterestRate] = useState(loadedData?.interestRate?.toString() || '');
+  const [years, setYears] = useState(loadedData?.years?.toString() || '');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -1801,6 +1835,8 @@ const CompoundInterestCalculator: React.FC<CalculatorProps> = ({ onBack, onSave 
               onExportPDF={() => exportSingleAsPDF('compound', `Investment - $${p.toLocaleString()}`, { principal: p, monthlyContribution: pmt, interestRate: ratePercent, years: yearsNum }, { futureValue, totalContributed, totalInterest, growthPercent })}
               saving={saving}
               saved={saved}
+              isLoadedCalculation={!!loadedData}
+              loadedCalculationName={loadedName}
             />
           </motion.div>
         )}
@@ -1810,7 +1846,7 @@ const CompoundInterestCalculator: React.FC<CalculatorProps> = ({ onBack, onSave 
 };
 
 // Debt Payoff Planner Component
-const DebtPayoffPlanner: React.FC<CalculatorProps> = ({ onBack, onSave }) => {
+const DebtPayoffPlanner: React.FC<CalculatorProps> = ({ onBack, onSave, loadedData, loadedName }) => {
   const [debts, setDebts] = useState([
     { id: 1, name: '', balance: '', rate: '', minPayment: '' }
   ]);
@@ -2036,7 +2072,7 @@ const DebtPayoffPlanner: React.FC<CalculatorProps> = ({ onBack, onSave }) => {
 };
 
 // Emergency Fund Calculator Component
-const EmergencyFundCalculator: React.FC<CalculatorProps> = ({ onBack, onSave }) => {
+const EmergencyFundCalculator: React.FC<CalculatorProps> = ({ onBack, onSave, loadedData, loadedName }) => {
   const [monthlyExpenses, setMonthlyExpenses] = useState({
     housing: '',
     utilities: '',
@@ -2303,6 +2339,7 @@ const FinancialTools: React.FC = () => {
   const { user } = useAuthContext();
   const [selectedTool, setSelectedTool] = useState<ToolId | null>(null);
   const [showSavedPanel, setShowSavedPanel] = useState(false);
+  const [loadedCalculation, setLoadedCalculation] = useState<SavedCalculation | null>(null);
 
   const {
     calculations,
@@ -2321,8 +2358,22 @@ const FinancialTools: React.FC = () => {
     return await saveCalculation(type, name, data, results);
   };
 
+  const handleViewCalculation = (calculation: SavedCalculation) => {
+    setLoadedCalculation(calculation);
+    setSelectedTool(calculation.type);
+    setShowSavedPanel(false);
+  };
+
   const renderTool = () => {
-    const props = { onBack: () => setSelectedTool(null), onSave: handleSave };
+    const props = { 
+      onBack: () => {
+        setSelectedTool(null);
+        setLoadedCalculation(null);
+      }, 
+      onSave: handleSave,
+      loadedData: loadedCalculation?.data,
+      loadedName: loadedCalculation?.name
+    };
     switch (selectedTool) {
       case 'budget': return <BudgetCalculator {...props} />;
       case 'savings': return <SavingsPlanner {...props} />;
@@ -2346,6 +2397,7 @@ const FinancialTools: React.FC = () => {
             onDelete={deleteCalculation}
             onClearAll={clearAllCalculations}
             onClose={() => setShowSavedPanel(false)}
+            onViewCalculation={handleViewCalculation}
           />
         )}
       </AnimatePresence>
