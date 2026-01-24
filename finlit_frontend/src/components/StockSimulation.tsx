@@ -1,19 +1,60 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, DollarSign, TrendingUp, BarChart3, Target, Coins, RefreshCw, Home } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+
+interface Stock {
+  id: string;
+  symbol: string;
+  name: string;
+  basePrice: number;
+  emoji: string;
+  sector: string;
+  price: number;
+  changePercent: number;
+  volume: number;
+}
+
+interface Holding {
+  id: string;
+  symbol: string;
+  name: string;
+  emoji: string;
+  shares: number;
+  purchasePrice: number;
+}
+
+interface Notification {
+  id: number;
+  type: 'success' | 'warning' | 'info';
+  title: string;
+  message: string;
+  details: {
+    shares?: number;
+    price?: number;
+    total?: number;
+    profit?: number;
+  } | null;
+}
+
+interface PlayerStats {
+  coins: number;
+  experience: number;
+  level: number;
+  reputation: number;
+}
 
 const StockSimulation = () => {
   const navigate = useNavigate();
 
   const [playerStats, setPlayerStats] = useState({ coins: 10000, experience: 0, level: 1, reputation: 0 });
-  const [portfolio, setPortfolio] = useState([]);
-  const [marketData, setMarketData] = useState([]);
+  const [portfolio, setPortfolio] = useState<Holding[]>([]);
+  const [marketData, setMarketData] = useState<Stock[]>([]);
   const [gameTime, setGameTime] = useState(0);
-  const [selectedStock, setSelectedStock] = useState(null);
+  const [selectedStock, setSelectedStock] = useState<Stock | null>(null);
   const [buyQuantity, setBuyQuantity] = useState(1);
   const [sellQuantity, setSellQuantity] = useState(1);
-  const [notifications, setNotifications] = useState([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
 
   // Stock data
   const stockSymbols = [
@@ -74,7 +115,7 @@ const StockSimulation = () => {
     return getPortfolioValue() - totalCost;
   };
 
-  const addNotification = (type, title, message, details = null) => {
+  const addNotification = (type: 'success' | 'warning' | 'info', title: string, message: string, details: { shares?: number; price?: number; total?: number; profit?: number } | null = null) => {
     const id = Date.now();
     setNotifications(prev => [...prev, { id, type, title, message, details }]);
     setTimeout(() => {
@@ -83,7 +124,7 @@ const StockSimulation = () => {
   };
 
   // Trading functions
-  const buyStock = (stock, quantity) => {
+  const buyStock = (stock: Stock, quantity: number) => {
     const totalCost = stock.price * quantity;
     if (playerStats.coins >= totalCost) {
       setPlayerStats(prev => ({ ...prev, coins: prev.coins - totalCost }));
@@ -120,7 +161,7 @@ const StockSimulation = () => {
     }
   };
 
-  const sellStock = (stock, quantity) => {
+  const sellStock = (stock: Stock, quantity: number) => {
     const holding = portfolio.find(p => p.id === stock.id);
     if (holding && holding.shares >= quantity) {
       const totalValue = stock.price * quantity;
@@ -158,7 +199,7 @@ const StockSimulation = () => {
   };
 
   // Stock Card Component
-  const StockCard = ({ stock }) => {
+  const StockCard = ({ stock }: { stock: Stock }) => {
     const isOwned = portfolio.some(p => p.id === stock.id);
     const ownedStock = portfolio.find(p => p.id === stock.id);
     const isSelected = selectedStock?.id === stock.id;
@@ -184,7 +225,7 @@ const StockSimulation = () => {
           </div>
           {isOwned && (
             <div className="bg-blue-100 px-3 py-1 rounded-full">
-              <span className="text-sm font-bold text-blue-700">{ownedStock.shares} shares</span>
+              <span className="text-sm font-bold text-blue-700">{ownedStock?.shares} shares</span>
             </div>
           )}
         </div>
@@ -195,7 +236,7 @@ const StockSimulation = () => {
             <div className={`text-sm font-bold flex items-center gap-1 ${
               stock.changePercent >= 0 ? 'text-emerald-600' : 'text-rose-600'
             }`}>
-              {stock.changePercent >= 0 ? '▲' : '▼'} {Math.abs(stock.changePercent.toFixed(2))}%
+              {stock.changePercent >= 0 ? '▲' : '▼'} {Math.abs(stock.changePercent).toFixed(2)}%
             </div>
           </div>
         </div>
@@ -433,7 +474,7 @@ const StockSimulation = () => {
             <div className="mt-6">
               <h3 className="font-bold text-gray-800 mb-3">Your Portfolio</h3>
               <div className="space-y-2">
-                {portfolio.map((holding: any) => {
+                {portfolio.map((holding) => {
                   const currentStock = marketData.find(s => s.id === holding.id);
                   const currentValue = currentStock ? currentStock.price * holding.shares : 0;
                   const profit = currentValue - (holding.purchasePrice * holding.shares);
