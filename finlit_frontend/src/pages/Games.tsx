@@ -52,7 +52,7 @@ const Games = () => {
     }
   ];
 
-  const handleGameClick = (game) => {
+  const handleGameClick = (game: any) => {
     navigate(game.route);
   };
 

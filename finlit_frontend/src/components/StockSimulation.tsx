@@ -396,21 +396,21 @@ const StockSimulation = () => {
                 <div className="border rounded-lg p-4">
                   <h3 className="font-bold text-rose-600 mb-3">Sell Shares</h3>
                   <div className="text-sm text-gray-600 mb-2">
-                    You own: {portfolio.find(p => p.id === selectedStock.id)?.shares} shares
+                    You own: {portfolio.find(p => p.id === selectedStock?.id)?.shares || 0} shares
                   </div>
                   <div className="flex gap-2 mb-3">
                     <input
                       type="number"
                       value={sellQuantity}
-                      onChange={(e) => setSellQuantity(Math.max(1, Math.min(portfolio.find(p => p.id === selectedStock.id)?.shares || 1, parseInt(e.target.value) || 1)))}
+                      onChange={(e) => setSellQuantity(Math.max(1, Math.min(portfolio.find(p => p.id === selectedStock?.id)?.shares || 1, parseInt(e.target.value) || 1)))}
                       className="flex-1 p-2 border rounded"
                       min="1"
-                      max={portfolio.find(p => p.id === selectedStock.id)?.shares || 1}
+                      max={portfolio.find(p => p.id === selectedStock?.id)?.shares || 1}
                     />
                     <span className="p-2 text-gray-600">shares</span>
                   </div>
                   <div className="text-sm text-gray-600 mb-3">
-                    Total Value: ${(selectedStock.price * sellQuantity).toFixed(2)}
+                    Total Value: ${(selectedStock?.price * sellQuantity).toFixed(2)}
                   </div>
                   <button
                     onClick={() => sellStock(selectedStock, sellQuantity)}
@@ -433,7 +433,7 @@ const StockSimulation = () => {
             <div className="mt-6">
               <h3 className="font-bold text-gray-800 mb-3">Your Portfolio</h3>
               <div className="space-y-2">
-                {portfolio.map(holding => {
+                {portfolio.map((holding: any) => {
                   const currentStock = marketData.find(s => s.id === holding.id);
                   const currentValue = currentStock ? currentStock.price * holding.shares : 0;
                   const profit = currentValue - (holding.purchasePrice * holding.shares);
