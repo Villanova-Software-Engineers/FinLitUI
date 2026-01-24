@@ -658,6 +658,17 @@ const FinLitApp: React.FC = () => {
 
           <button
             onClick={() => {
+              navigate('/games');
+              setMobileMenuOpen(false);
+            }}
+            className="flex items-center gap-3 p-3 hover:bg-blue-500 rounded-lg text-base sm:text-lg"
+          >
+            <Gamepad2 size={24} />
+            <span className="font-medium">Games</span>
+          </button>
+
+          <button
+            onClick={() => {
               navigate('/financial-tools');
               setMobileMenuOpen(false);
             }}
