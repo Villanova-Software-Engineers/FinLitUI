@@ -28,6 +28,8 @@ import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import Games from "./pages/Games";
 import StockSimulation from "./components/StockSimulation";
+import ModuleAccessControl from "./components/ModuleAccessControl";
+import { MODULES } from "./hooks/useModuleScore";
 
 // Smart Auth component that redirects authenticated users appropriately
 const SmartAuthPage: React.FC = () => {
@@ -77,7 +79,9 @@ function App() {
             path="/50-30-20" 
             element={
               <ProtectedRoute>
-                <BudgetRuleChartStep activeCategoryKey="50" />
+                <ModuleAccessControl moduleId={MODULES.BUDGETING_50_30_20.id} moduleName="Budgeting Basics">
+                  <BudgetRuleChartStep activeCategoryKey="50" />
+                </ModuleAccessControl>
               </ProtectedRoute>
             } 
           />
@@ -127,7 +131,9 @@ function App() {
             path="/needs-wants" 
             element={
               <ProtectedRoute>
-                <NeedsWants />
+                <ModuleAccessControl moduleId={MODULES.NEEDS_WANTS.id} moduleName="Needs vs Wants">
+                  <NeedsWants />
+                </ModuleAccessControl>
               </ProtectedRoute>
             } 
           />
@@ -135,7 +141,9 @@ function App() {
             path="/need" 
             element={
               <ProtectedRoute>
-                <NeedsWants />
+                <ModuleAccessControl moduleId={MODULES.NEEDS_WANTS.id} moduleName="Needs vs Wants">
+                  <NeedsWants />
+                </ModuleAccessControl>
               </ProtectedRoute>
             } 
           />
@@ -143,7 +151,9 @@ function App() {
             path="/investment-quiz" 
             element={
               <ProtectedRoute>
-                <InvestmentBankingModule />
+                <ModuleAccessControl moduleId={MODULES.INVESTMENT_BANKING.id} moduleName="Investment Banking">
+                  <InvestmentBankingModule />
+                </ModuleAccessControl>
               </ProtectedRoute>
             } 
           />
@@ -167,7 +177,9 @@ function App() {
             path="/credit-score" 
             element={
               <ProtectedRoute>
-                <CreditScoreModule />
+                <ModuleAccessControl moduleId={MODULES.CREDIT_SCORE.id} moduleName="Credit Score">
+                  <CreditScoreModule />
+                </ModuleAccessControl>
               </ProtectedRoute>
             } 
           />
@@ -175,7 +187,9 @@ function App() {
             path="/emergency-fund" 
             element={
               <ProtectedRoute>
-                <EmergencyFundModule />
+                <ModuleAccessControl moduleId={MODULES.EMERGENCY_FUND.id} moduleName="Emergency Fund">
+                  <EmergencyFundModule />
+                </ModuleAccessControl>
               </ProtectedRoute>
             } 
           />
@@ -183,7 +197,9 @@ function App() {
             path="/stock-market" 
             element={
               <ProtectedRoute>
-                <StockMarketModule />
+                <ModuleAccessControl moduleId={MODULES.STOCK_MARKET.id} moduleName="Stock Market">
+                  <StockMarketModule />
+                </ModuleAccessControl>
               </ProtectedRoute>
             } 
           />
@@ -191,7 +207,9 @@ function App() {
             path="/insurance" 
             element={
               <ProtectedRoute>
-                <InsuranceModule />
+                <ModuleAccessControl moduleId={MODULES.INSURANCE.id} moduleName="Insurance">
+                  <InsuranceModule />
+                </ModuleAccessControl>
               </ProtectedRoute>
             } 
           />
@@ -199,7 +217,9 @@ function App() {
             path="/debt-management"
             element={
               <ProtectedRoute>
-                <DebtManagementModule />
+                <ModuleAccessControl moduleId={MODULES.DEBT_MANAGEMENT.id} moduleName="Debt Management">
+                  <DebtManagementModule />
+                </ModuleAccessControl>
               </ProtectedRoute>
             }
           />
@@ -207,7 +227,9 @@ function App() {
             path="/retirement-accounts"
             element={
               <ProtectedRoute>
-                <RetirementAccountsModule />
+                <ModuleAccessControl moduleId={MODULES.RETIREMENT_ACCOUNTS.id} moduleName="Retirement Accounts">
+                  <RetirementAccountsModule />
+                </ModuleAccessControl>
               </ProtectedRoute>
             }
           />
@@ -215,7 +237,9 @@ function App() {
             path="/crypto"
             element={
               <ProtectedRoute>
-                <CryptoModule />
+                <ModuleAccessControl moduleId={MODULES.CRYPTO.id} moduleName="Cryptocurrency">
+                  <CryptoModule />
+                </ModuleAccessControl>
               </ProtectedRoute>
             }
           />

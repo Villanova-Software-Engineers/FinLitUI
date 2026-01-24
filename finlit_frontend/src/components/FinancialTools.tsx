@@ -759,7 +759,7 @@ const SavedCalculationsPanel: React.FC<{
                   exit={{ opacity: 0, x: -20 }}
                   className="bg-gray-50 rounded-xl p-5 border border-gray-200 hover:border-gray-300 transition"
                 >
-                  <div className="flex items-start justify-between">
+                  <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
                         <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
@@ -771,7 +771,7 @@ const SavedCalculationsPanel: React.FC<{
                         </span>
                       </div>
                       <h3 className="font-semibold text-gray-800 text-lg mb-3">{calc.name}</h3>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                         {Object.entries(calc.results).filter(([, v]) => typeof v !== 'object').slice(0, 6).map(([key, value]) => (
                           <div key={key} className="bg-white px-3 py-2 rounded-lg border border-gray-200">
                             <div className="text-xs text-gray-500 mb-1">{formatKey(key)}</div>
@@ -780,29 +780,31 @@ const SavedCalculationsPanel: React.FC<{
                         ))}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 ml-4">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 lg:ml-4">
                       {/* View Calculator Button */}
                       <button
                         onClick={() => {
                           onViewCalculation(calc);
                           onClose();
                         }}
-                        className="flex items-center gap-2 px-3 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition font-medium"
+                        className="flex items-center justify-center gap-2 px-3 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition font-medium text-sm sm:text-base"
                         title="View Calculator"
                       >
                         <Calculator className="w-4 h-4" />
-                        View Calculator
+                        <span className="hidden sm:inline">View Calculator</span>
+                        <span className="sm:hidden">View</span>
                       </button>
                       
                       {/* Export individual calculation with dropdown */}
                       <div className="relative">
                         <button
                           onClick={() => setIndividualExportOpen(individualExportOpen === calc.id ? null : calc.id)}
-                          className="flex items-center gap-2 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition font-medium"
+                          className="flex items-center justify-center gap-2 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition font-medium text-sm sm:text-base"
                           title="Download"
                         >
                           <Download className="w-4 h-4" />
-                          Download
+                          <span className="hidden sm:inline">Download</span>
+                          <span className="sm:hidden">Export</span>
                         </button>
                         <AnimatePresence>
                           {individualExportOpen === calc.id && (

@@ -137,7 +137,6 @@ const DAILY_QUESTIONS = [
 const LEARNING_MODULES = [
   { id: MODULES.BUDGETING_50_30_20.id, title: "Budgeting Basics", subtitle: "50-30-20 Rule", icon: "💰", route: "/50-30-20", points: 100 },
   { id: MODULES.NEEDS_WANTS.id, title: "Needs vs Wants", subtitle: "Financial Priorities", icon: "⚖️", route: "/needs-wants", points: 100 },
-  { id: MODULES.INVESTMENT_BANKING.id, title: "Investment Banking", subtitle: "IPO Knowledge", icon: "🏦", route: "/investment-quiz", points: 150 },
   { id: MODULES.CREDIT_SCORE.id, title: "Credit Score", subtitle: "Credit Management", icon: "📊", route: "/credit-score", points: 150 },
   { id: MODULES.EMERGENCY_FUND.id, title: "Emergency Fund", subtitle: "Financial Safety", icon: "🆘", route: "/emergency-fund", points: 150 },
   { id: MODULES.STOCK_MARKET.id, title: "Stock Market", subtitle: "Investment Basics", icon: "📈", route: "/stock-market", points: 200 },
@@ -145,6 +144,7 @@ const LEARNING_MODULES = [
   { id: MODULES.DEBT_MANAGEMENT.id, title: "Debt Management", subtitle: "Debt Freedom", icon: "🔓", route: "/debt-management", points: 200 },
   { id: MODULES.RETIREMENT_ACCOUNTS.id, title: "Retirement Accounts", subtitle: "401(k) & Roth IRA", icon: "🏦", route: "/retirement-accounts", points: 200 },
   { id: MODULES.CRYPTO.id, title: "Cryptocurrency", subtitle: "Digital Assets", icon: "🪙", route: "/crypto", points: 200 },
+  { id: MODULES.INVESTMENT_BANKING.id, title: "Investment Banking", subtitle: "IPO Knowledge", icon: "🏦", route: "/investment-quiz", points: 150 },
 ];
 
 const FinLitApp: React.FC = () => {
@@ -197,7 +197,8 @@ const FinLitApp: React.FC = () => {
   const totalModules = LEARNING_MODULES.length;
   const streak = progress?.streak ?? 0;
   const totalXP = progress?.totalXP ?? 0;
-  const xpLevel = Math.min((totalXP / 100) * 100, 100);
+  const xpLevel = Math.floor(totalXP / 100) + 1; // Level based on 100 XP per level
+  const xpProgress = (totalXP % 100); // Progress within current level
 
   const isModuleAccessible = (idx: number) => idx === 0 || isModulePassed(moduleOrder[idx - 1]);
   const getModuleStatus = (moduleId: string, idx: number) => {
@@ -868,14 +869,14 @@ const FinLitApp: React.FC = () => {
               {/* XP and Learning Path */}
               <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm border border-gray-100">
                 <div className="mb-4 sm:mb-6">
-                  <h3 className="text-lg sm:text-xl font-bold mb-2">XP Level</h3>
+                  <h3 className="text-lg sm:text-xl font-bold mb-2">Level {xpLevel}</h3>
                   <div className="w-full bg-gray-200 rounded-full h-4 sm:h-5">
                     <div
                       className="bg-emerald-500 h-4 sm:h-5 rounded-full transition-all duration-500"
-                      style={{ width: `${xpLevel}%` }}
+                      style={{ width: `${xpProgress}%` }}
                     ></div>
                   </div>
-                  <div className="text-right text-base sm:text-lg text-gray-500 mt-1">{Math.round(xpLevel)}%</div>
+                  <div className="text-right text-base sm:text-lg text-gray-500 mt-1">{xpProgress}/100 XP</div>
                 </div>
 
                 <div>
@@ -887,31 +888,42 @@ const FinLitApp: React.FC = () => {
                   </div>
 
                   <div className="space-y-2">
-                    {LEARNING_MODULES.slice(0, 4).map((mod, idx) => {
-                      const status = getModuleStatus(mod.id, idx);
-                      return (
-                        <button
-                          key={mod.id}
-                          onClick={() => status !== 'locked' && navigate(mod.route)}
-                          disabled={status === 'locked'}
-                          className={`w-full flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg text-left ${
-                            status === 'completed' ? 'bg-emerald-50 border-2 border-emerald-300' :
-                            status === 'locked' ? 'bg-gray-100 opacity-60 cursor-not-allowed' :
-                            'bg-gray-50 hover:bg-blue-50 border-2 border-transparent hover:border-blue-200'
-                          }`}
-                        >
-                          <span className="text-xl sm:text-2xl">{mod.icon}</span>
-                          <span className="flex-1 text-sm sm:text-lg font-medium">{mod.title}</span>
-                          {status === 'completed' ? (
-                            <Check size={18} className="sm:w-5 sm:h-5 text-emerald-600" />
-                          ) : status === 'locked' ? (
-                            <Lock size={16} className="sm:w-[18px] sm:h-[18px] text-gray-400" />
-                          ) : (
-                            <Play size={16} className="sm:w-[18px] sm:h-[18px] text-blue-500" fill="currentColor" />
-                          )}
-                        </button>
-                      );
-                    })}
+                    {(() => {
+                      // Get next available modules (not completed) up to 4
+                      const availableModules = LEARNING_MODULES
+                        .map((mod, idx) => ({ ...mod, originalIndex: idx }))
+                        .filter((mod) => {
+                          const status = getModuleStatus(mod.id, mod.originalIndex);
+                          return status !== 'completed';
+                        })
+                        .slice(0, 4);
+                      
+                      return availableModules.map((mod) => {
+                        const status = getModuleStatus(mod.id, mod.originalIndex);
+                        return (
+                          <button
+                            key={mod.id}
+                            onClick={() => status !== 'locked' && navigate(mod.route)}
+                            disabled={status === 'locked'}
+                            className={`w-full flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg text-left ${
+                              status === 'completed' ? 'bg-emerald-50 border-2 border-emerald-300' :
+                              status === 'locked' ? 'bg-gray-100 opacity-60 cursor-not-allowed' :
+                              'bg-gray-50 hover:bg-blue-50 border-2 border-transparent hover:border-blue-200'
+                            }`}
+                          >
+                            <span className="text-xl sm:text-2xl">{mod.icon}</span>
+                            <span className="flex-1 text-sm sm:text-lg font-medium">{mod.title}</span>
+                            {status === 'completed' ? (
+                              <Check size={18} className="sm:w-5 sm:h-5 text-emerald-600" />
+                            ) : status === 'locked' ? (
+                              <Lock size={16} className="sm:w-[18px] sm:h-[18px] text-gray-400" />
+                            ) : (
+                              <Play size={16} className="sm:w-[18px] sm:h-[18px] text-blue-500" fill="currentColor" />
+                            )}
+                          </button>
+                        );
+                      });
+                    })()}
                   </div>
                 </div>
               </div>
