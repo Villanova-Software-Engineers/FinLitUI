@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Calculator, DollarSign, AlertTriangle, TrendingUp } from 'lucide-react';
+import { ArrowLeft, Calculator, DollarSign, AlertTriangle, TrendingUp, Download } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useModuleScore, MODULES } from '../hooks/useModuleScore';
 
@@ -39,6 +39,7 @@ const EmergencyFundModule = () => {
   const [sortingComplete, setSortingComplete] = useState(false);
   const [calculatorAnswer, setCalculatorAnswer] = useState('');
   const [calculatorComplete, setCalculatorComplete] = useState(false);
+  const [calculatorWrongAnswer, setCalculatorWrongAnswer] = useState(null);
   const [scenarioAnswer, setScenarioAnswer] = useState(null);
   const [scenarioFeedback, setScenarioFeedback] = useState('');
   const [scenarioComplete, setScenarioComplete] = useState(false);
@@ -238,6 +239,128 @@ const EmergencyFundModule = () => {
     return Math.min(100, (current / target) * 100);
   };
 
+  // PDF Export functionality
+  const formatKey = (key) => {
+    return key
+      .replace(/([A-Z])/g, ' $1')
+      .replace(/^./, str => str.toUpperCase())
+      .trim();
+  };
+
+  const formatValue = (key, value) => {
+    if (typeof value === 'number') {
+      if (key.toLowerCase().includes('percentage') || key.toLowerCase().includes('percent')) {
+        return `${value.toFixed(1)}%`;
+      }
+      if (key.toLowerCase().includes('month')) {
+        return value.toString();
+      }
+      return `$${value.toLocaleString()}`;
+    }
+    return value;
+  };
+
+  const exportEmergencyFundAsPDF = () => {
+    const scenario = scenarios.find(s => s.id === selectedScenario);
+    const target = getTargetAmount();
+    const current = parseFloat(currentSavings) || 0;
+    const monthly = parseFloat(monthlySavings) || 0;
+    const remaining = Math.max(0, target - current);
+    const monthsToGoal = getMonthsToSave();
+    const totalMonthlyExpenses = calculateTotalExpenses();
+    const progress = getProgressPercentage();
+
+    const data = {
+      'Monthly Housing': monthlyExpenses.housing ? `$${parseFloat(monthlyExpenses.housing).toLocaleString()}` : '$0',
+      'Monthly Utilities': monthlyExpenses.utilities ? `$${parseFloat(monthlyExpenses.utilities).toLocaleString()}` : '$0',
+      'Monthly Groceries': monthlyExpenses.groceries ? `$${parseFloat(monthlyExpenses.groceries).toLocaleString()}` : '$0',
+      'Monthly Transportation': monthlyExpenses.transportation ? `$${parseFloat(monthlyExpenses.transportation).toLocaleString()}` : '$0',
+      'Monthly Insurance': monthlyExpenses.insurance ? `$${parseFloat(monthlyExpenses.insurance).toLocaleString()}` : '$0',
+      'Other Monthly Expenses': monthlyExpenses.other ? `$${parseFloat(monthlyExpenses.other).toLocaleString()}` : '$0',
+      'Target Coverage': scenario ? `${scenario.months} months` : 'Not selected',
+      'Current Savings': `$${current.toLocaleString()}`,
+      'Monthly Savings Plan': `$${monthly.toLocaleString()}`
+    };
+
+    const results = {
+      'Total Monthly Expenses': `$${totalMonthlyExpenses.toLocaleString()}`,
+      'Emergency Fund Target': `$${target.toLocaleString()}`,
+      'Remaining to Save': `$${remaining.toLocaleString()}`,
+      'Current Progress': `${progress.toFixed(1)}%`,
+      'Months to Goal': monthsToGoal.toString(),
+      'Years to Goal': `${Math.ceil(monthsToGoal / 12)} years`,
+      'Annual Savings': `$${(monthly * 12).toLocaleString()}`
+    };
+
+    const formatTableRows = (obj) => {
+      return Object.entries(obj)
+        .map(([key, value]) => {
+          return `<tr><td style="padding: 10px 15px; border-bottom: 1px solid #e5e7eb;">${key}</td><td style="padding: 10px 15px; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 600;">${value}</td></tr>`;
+        })
+        .join('');
+    };
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Emergency Fund Calculator - ${scenario?.title || 'Plan'}</title>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 40px; color: #333; max-width: 800px; margin: 0 auto; }
+          h1 { color: #1e40af; margin-bottom: 5px; }
+          .subtitle { color: #6b7280; margin-bottom: 30px; }
+          .section { margin: 25px 0; }
+          .section-title { font-size: 14px; font-weight: 600; color: #374151; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 2px solid #e5e7eb; }
+          table { width: 100%; border-collapse: collapse; background: #f9fafb; border-radius: 8px; overflow: hidden; }
+          .results-table { background: #eff6ff; }
+          .results-table td { color: #1e40af; }
+          .footer { margin-top: 40px; text-align: center; color: #9ca3af; font-size: 12px; padding-top: 20px; border-top: 1px solid #e5e7eb; }
+          .highlight { background: #fef3c7; padding: 15px; border-radius: 8px; border-left: 4px solid #f59e0b; margin: 20px 0; }
+          @media print { body { padding: 20px; } }
+        </style>
+      </head>
+      <body>
+        <h1>Emergency Fund Calculator</h1>
+        <p class="subtitle">${scenario?.title || 'Emergency Fund Plan'}<br/>Generated on ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+
+        <div class="highlight">
+          <strong>Why Emergency Funds Matter:</strong> An emergency fund is your financial safety net that protects you from unexpected expenses like medical bills, car repairs, or job loss. Having 3-6 months of expenses saved can prevent you from going into debt during tough times.
+        </div>
+
+        <div class="section">
+          <div class="section-title">Your Financial Details</div>
+          <table>${formatTableRows(data)}</table>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Emergency Fund Analysis</div>
+          <table class="results-table">${formatTableRows(results)}</table>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Next Steps</div>
+          <ul style="line-height: 1.8; color: #374151;">
+            <li><strong>Automate Your Savings:</strong> Set up automatic transfers to your emergency fund</li>
+            <li><strong>Separate Account:</strong> Keep emergency funds in a high-yield savings account</li>
+            <li><strong>Start Small:</strong> Even $25/month becomes $300 in a year</li>
+            <li><strong>Review Regularly:</strong> Adjust your target as your expenses change</li>
+            <li><strong>Don't Touch It:</strong> Only use for true emergencies, not wants</li>
+          </ul>
+        </div>
+
+        <div class="footer">Generated by FinLit Emergency Fund Calculator</div>
+      </body>
+      </html>
+    `;
+
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+      setTimeout(() => printWindow.print(), 250);
+    }
+  };
+
   const nextStoryStep = () => {
     if (storyStep < storyContent.length - 1) {
       setStoryStep(storyStep + 1);
@@ -297,6 +420,15 @@ const EmergencyFundModule = () => {
     if (Math.abs(userAnswer - correct) < 100) { // Allow some margin
       setCalculatorComplete(true);
       setTotalXP(prev => prev + 25);
+      setCalculatorWrongAnswer(null);
+    } else {
+      // Wrong answer - show feedback
+      setCalculatorWrongAnswer({ 
+        userAnswer, 
+        correctAnswer: correct,
+        difference: Math.abs(userAnswer - correct)
+      });
+      setTimeout(() => setCalculatorWrongAnswer(null), 4000);
     }
   };
 
@@ -321,6 +453,7 @@ const EmergencyFundModule = () => {
       setSortingWrongAnswer(null);
       setCalculatorAnswer('');
       setCalculatorComplete(false);
+      setCalculatorWrongAnswer(null);
       setScenarioAnswer(null);
       setScenarioFeedback('');
       setScenarioComplete(false);
@@ -341,6 +474,7 @@ const EmergencyFundModule = () => {
       setSortingWrongAnswer(null);
       setCalculatorAnswer('');
       setCalculatorComplete(false);
+      setCalculatorWrongAnswer(null);
       setScenarioAnswer(null);
       setScenarioFeedback('');
       setScenarioComplete(false);
@@ -804,6 +938,40 @@ const EmergencyFundModule = () => {
               {/* Calculator Challenge Game */}
               {miniGames[gameStep].type === 'calculator' && (
                 <div className="space-y-6">
+                  {/* Wrong Answer Feedback */}
+                  <AnimatePresence>
+                    {calculatorWrongAnswer && (
+                      <motion.div
+                        className="p-4 bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-200 rounded-xl"
+                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <motion.span
+                            className="text-3xl"
+                            animate={{ rotate: [0, -10, 10, -10, 0] }}
+                            transition={{ duration: 0.5 }}
+                          >
+                            🤔
+                          </motion.span>
+                          <div>
+                            <p className="font-bold text-red-700">Not quite right!</p>
+                            <p className="text-sm text-red-600">
+                              Your answer: ${calculatorWrongAnswer.userAnswer?.toLocaleString() || 'N/A'}
+                            </p>
+                            <p className="text-sm text-red-600">
+                              {calculatorWrongAnswer.difference > 1000 
+                                ? "Try recalculating: monthly expenses × number of months" 
+                                : "You're close! Check your calculation again."}
+                            </p>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
                   <div className="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-md">
                     <div className="text-center mb-6">
                       <span className="text-4xl mb-2 block">
@@ -1276,6 +1444,21 @@ const EmergencyFundModule = () => {
                     </div>
                   </div>
                 </motion.div>
+              )}
+
+              {/* Export Button */}
+              {monthlySavings && (
+                <div className="flex justify-center mb-6">
+                  <motion.button
+                    onClick={exportEmergencyFundAsPDF}
+                    className="flex items-center gap-2 px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition shadow-lg"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Download className="w-5 h-5" />
+                    Export Plan as PDF
+                  </motion.button>
+                </div>
               )}
 
               <div className="flex justify-between mt-8">
