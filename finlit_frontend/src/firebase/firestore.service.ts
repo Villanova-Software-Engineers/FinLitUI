@@ -28,6 +28,7 @@ import type {
   CrosswordProgress,
   QuizQuestion,
   QuickQuizProgress,
+  DailyChallengeQuestion,
 } from '../auth/types/auth.types';
 
 // Type helper for Firestore documents with serverTimestamp
@@ -955,4 +956,134 @@ export async function getQuickQuizProgress(
 export async function getCurrentQuizVersion(): Promise<string> {
   const questions = await getQuizQuestions();
   return generateQuizVersion(questions);
+}
+
+// ============== Daily Challenge Functions ==============
+
+const DAILY_CHALLENGES = 'dailyChallenges';
+const DAILY_CHALLENGE_CONFIG = 'dailyChallengeConfig';
+
+/**
+ * Get all daily challenge questions
+ */
+export async function getDailyChallengeQuestions(): Promise<DailyChallengeQuestion[]> {
+  const q = query(
+    collection(db, DAILY_CHALLENGES),
+    orderBy('createdAt', 'asc')
+  );
+
+  const snapshot = await getDocs(q);
+
+  return snapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data(),
+    createdAt: (doc.data().createdAt as Timestamp)?.toDate() || new Date(),
+  })) as DailyChallengeQuestion[];
+}
+
+/**
+ * Add a new daily challenge question
+ */
+export async function addDailyChallengeQuestion(
+  question: string,
+  options: string[],
+  correct: number,
+  createdBy: string,
+  explanation?: string
+): Promise<DailyChallengeQuestion> {
+  const challengeRef = doc(collection(db, DAILY_CHALLENGES));
+
+  const challengeData = {
+    question,
+    options,
+    correct,
+    explanation: explanation || '',
+    createdAt: serverTimestamp(),
+    createdBy,
+  };
+
+  await setDoc(challengeRef, challengeData);
+
+  return {
+    id: challengeRef.id,
+    question,
+    options,
+    correct,
+    explanation: explanation || '',
+    createdAt: new Date(),
+    createdBy,
+  };
+}
+
+/**
+ * Delete a daily challenge question
+ */
+export async function deleteDailyChallengeQuestion(challengeId: string): Promise<void> {
+  const { deleteDoc } = await import('firebase/firestore');
+  await deleteDoc(doc(db, DAILY_CHALLENGES, challengeId));
+}
+
+/**
+ * Update a daily challenge question
+ */
+export async function updateDailyChallengeQuestion(
+  challengeId: string,
+  updates: Partial<Omit<DailyChallengeQuestion, 'id' | 'createdAt' | 'createdBy'>>
+): Promise<void> {
+  const challengeRef = doc(db, DAILY_CHALLENGES, challengeId);
+  await updateDoc(challengeRef, updates);
+}
+
+/**
+ * Set the active daily challenge
+ * This will reset progress for all users on the next day
+ */
+export async function setActiveDailyChallenge(challengeId: string): Promise<void> {
+  const configRef = doc(db, DAILY_CHALLENGE_CONFIG, 'active');
+  
+  // Update the active challenge ID and reset date
+  await setDoc(configRef, {
+    activeChallengeId: challengeId,
+    lastChanged: serverTimestamp(),
+    changedDate: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
+  }, { merge: true });
+}
+
+/**
+ * Get the currently active daily challenge ID
+ */
+export async function getActiveDailyChallenge(): Promise<string | null> {
+  const configRef = doc(db, DAILY_CHALLENGE_CONFIG, 'active');
+  const snapshot = await getDoc(configRef);
+
+  if (!snapshot.exists()) {
+    return null;
+  }
+
+  const data = snapshot.data();
+  return data.activeChallengeId || null;
+}
+
+/**
+ * Get the active daily challenge question
+ */
+export async function getActiveDailyChallengeQuestion(): Promise<DailyChallengeQuestion | null> {
+  const activeChallengeId = await getActiveDailyChallenge();
+  
+  if (!activeChallengeId) {
+    return null;
+  }
+
+  const challengeRef = doc(db, DAILY_CHALLENGES, activeChallengeId);
+  const snapshot = await getDoc(challengeRef);
+
+  if (!snapshot.exists()) {
+    return null;
+  }
+
+  return {
+    id: snapshot.id,
+    ...snapshot.data(),
+    createdAt: (snapshot.data().createdAt as Timestamp)?.toDate() || new Date(),
+  } as DailyChallengeQuestion;
 }
