@@ -21,6 +21,7 @@ import RetirementAccountsModule from "./components/RetirementAccountsModule";
 import AdminSetup from "./components/AdminSetup";
 import AdminDashboard from "./components/AdminDashboard";
 import QuizQuestionsAdmin from "./components/QuizQuestionsAdmin";
+import DailyChallengeAdmin from "./components/DailyChallengeAdmin";
 import EconomicNewsQuiz from "./components/EconomicNewsQuiz";
 import Certificate from "./components/Certificate";
 import FinancialTools from "./components/FinancialTools";
@@ -258,6 +259,14 @@ function App() {
             element={
               <ProtectedRoute requiredRole="owner">
                 <QuizQuestionsAdmin />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/daily-challenge-admin"
+            element={
+              <ProtectedRoute>
+                <DailyChallengeAdmin />
               </ProtectedRoute>
             }
           />
