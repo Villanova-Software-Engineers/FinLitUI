@@ -26,6 +26,8 @@ import {
   BookOpen,
   Menu,
   X,
+  Flame,
+  HelpCircle,
 } from 'lucide-react';
 import { useAuthContext } from '../auth/context/AuthContext';
 import {
@@ -269,6 +271,28 @@ const AdminDashboard: React.FC = () => {
           <button className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg rounded-xl">
             <Users size={20} />
             Students
+          </button>
+          {user?.role === 'owner' && (
+            <button
+              onClick={() => {
+                navigate('/admin/quiz-questions');
+                setMobileMenuOpen(false);
+              }}
+              className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-gradient-to-r hover:from-slate-50 hover:to-purple-50 rounded-xl transition-all duration-200"
+            >
+              <HelpCircle size={20} />
+              Quiz Questions
+            </button>
+          )}
+          <button
+            onClick={() => {
+              navigate('/daily-challenge-admin');
+              setMobileMenuOpen(false);
+            }}
+            className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-gradient-to-r hover:from-amber-50 hover:to-orange-50 rounded-xl transition-all duration-200"
+          >
+            <Flame size={20} />
+            Daily Challenges
           </button>
           <button
             onClick={() => {
