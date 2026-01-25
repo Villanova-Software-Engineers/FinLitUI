@@ -91,6 +91,17 @@ export interface QuickQuizProgress {
   lastUpdated: Date;
 }
 
+// Daily Challenge question structure (stored in Firestore)
+export interface DailyChallengeQuestion {
+  id: string;
+  question: string;
+  options: string[];
+  correct: number; // Index of correct answer (0-3)
+  explanation: string; // Explanation for the correct answer
+  createdAt: Date;
+  createdBy: string;
+}
+
 // Student progress document in Firestore
 export interface StudentProgress {
   id: string;
