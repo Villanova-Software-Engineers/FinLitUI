@@ -395,14 +395,6 @@ const FinancialRoadmap = () => {
                   fill="none" 
                   className="opacity-70"
                 />
-            <motion.path
-  d="M50,0 Q60,20 40,40 Q20,60 60,80 Q100,100 50,120 Q0,140 50,160 Q100,180 50,200"
-  stroke="#3182ce"
-  strokeWidth="3"
-  fill="none"
-  style={{ pathLength: pathDrawProgress }}
-/>
-
               </svg>
               
               {/* Module card */}
