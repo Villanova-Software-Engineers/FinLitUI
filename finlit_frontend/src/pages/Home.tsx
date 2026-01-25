@@ -5,6 +5,9 @@ import { motion } from 'framer-motion';
 import { useAuthContext } from '../auth/context/AuthContext';
 import { useModuleScore, MODULES } from '../hooks/useModuleScore';
 import HowToPlayModal from '../components/HowToPlayModal';
+import { getActiveDailyChallengeQuestion } from '../firebase/firestore.service';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { db } from '../firebase/config';
 
 // Crossword Data
 interface CrosswordCell {
@@ -124,8 +127,8 @@ const DAILY_TIPS = [
   { tip: "Track every expense for one month. Awareness alone can reduce unnecessary spending by 10-15%.", category: "Awareness", icon: Lightbulb, color: "from-yellow-400 to-amber-500" },
 ];
 
-// Daily Questions
-const DAILY_QUESTIONS = [
+// Default Daily Questions (fallback if no active challenge in database)
+const DEFAULT_DAILY_QUESTIONS = [
   { question: "What is compound interest?", options: ["Interest earned on interest", "Tax on investment gains", "Diversification of assets", "Money added to an account"], correct: 0 },
   { question: "What's the 50-30-20 rule?", options: ["50% save, 30% needs, 20% wants", "50% needs, 30% wants, 20% savings", "50% invest, 30% spend, 20% save", "50% wants, 30% save, 20% needs"], correct: 1 },
   { question: "What does APR stand for?", options: ["Annual Profit Rate", "Annual Percentage Rate", "Average Payment Ratio", "Asset Price Return"], correct: 1 },
@@ -154,7 +157,8 @@ const FinLitApp: React.FC = () => {
 
   const [activeSection, setActiveSection] = useState<'home' | 'profile'>('home');
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
-  const [dailyQuestion] = useState(() => DAILY_QUESTIONS[new Date().getDate() % DAILY_QUESTIONS.length]);
+  const [dailyQuestion, setDailyQuestion] = useState<{ question: string; options: string[]; correct: number; explanation?: string } | null>(null);
+  const [loadingDailyChallenge, setLoadingDailyChallenge] = useState(true);
   const [dailyTip, setDailyTip] = useState(() => DAILY_TIPS[new Date().getDate() % DAILY_TIPS.length]);
   const [answered, setAnswered] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
@@ -165,18 +169,89 @@ const FinLitApp: React.FC = () => {
   const [xpAwarded, setXpAwarded] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showHowToPlay, setShowHowToPlay] = useState(false);
+  const [previousChallengeId, setPreviousChallengeId] = useState<string | null>(null);
+  const [showChallengeUpdateNotification, setShowChallengeUpdateNotification] = useState(false);
 
-  // Check if daily challenge was already completed today
+  // Listen for real-time changes to active daily challenge
   useEffect(() => {
-    if (progress?.lastDailyChallengeDate) {
-      const today = new Date().toISOString().split('T')[0];
-      if (progress.lastDailyChallengeDate === today) {
-        setAnswered(true);
-        setIsCorrect(true);
-        setDailyChallengeCompleted(true);
+    if (!user) return;
+
+    setLoadingDailyChallenge(true);
+    
+    // Listen to changes in the daily challenge configuration
+    const configRef = doc(db, 'dailyChallengeConfig', 'active');
+    const unsubscribe = onSnapshot(configRef, async (configSnapshot) => {
+      try {
+        let activeChallengeId: string | null = null;
+        
+        if (configSnapshot.exists()) {
+          activeChallengeId = configSnapshot.data().activeChallengeId || null;
+        }
+        
+        // Load the active challenge question
+        const activeChallenge = await getActiveDailyChallengeQuestion();
+        
+        if (activeChallenge) {
+          setDailyQuestion({
+            question: activeChallenge.question,
+            options: activeChallenge.options,
+            correct: activeChallenge.correct,
+            explanation: activeChallenge.explanation
+          });
+          
+          // Check if challenge changed (reset progress)
+          if (previousChallengeId && previousChallengeId !== activeChallenge.id) {
+            console.log('Daily challenge changed, resetting progress');
+            // Challenge changed, reset user's answer state
+            setAnswered(false);
+            setIsCorrect(false);
+            setDailyChallengeCompleted(false);
+            setSelectedAnswer(null);
+            setXpAwarded(false);
+            
+            // Show update notification
+            setShowChallengeUpdateNotification(true);
+            setTimeout(() => setShowChallengeUpdateNotification(false), 4000);
+          } else {
+            // Check if user already completed today's challenge
+            if (progress?.lastDailyChallengeDate) {
+              const today = new Date().toISOString().split('T')[0];
+              if (progress.lastDailyChallengeDate === today) {
+                setAnswered(true);
+                setIsCorrect(true);
+                setDailyChallengeCompleted(true);
+              }
+            }
+          }
+          setPreviousChallengeId(activeChallenge.id);
+        } else {
+          // No active challenge, use default
+          const defaultQ = DEFAULT_DAILY_QUESTIONS[new Date().getDate() % DEFAULT_DAILY_QUESTIONS.length];
+          setDailyQuestion(defaultQ);
+          
+          // Check if user already completed today's challenge
+          if (progress?.lastDailyChallengeDate) {
+            const today = new Date().toISOString().split('T')[0];
+            if (progress.lastDailyChallengeDate === today) {
+              setAnswered(true);
+              setIsCorrect(true);
+              setDailyChallengeCompleted(true);
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Error loading daily challenge:', err);
+        // Fallback to default questions
+        const defaultQ = DEFAULT_DAILY_QUESTIONS[new Date().getDate() % DEFAULT_DAILY_QUESTIONS.length];
+        setDailyQuestion(defaultQ);
+      } finally {
+        setLoadingDailyChallenge(false);
       }
-    }
-  }, [progress?.lastDailyChallengeDate]);
+    });
+    
+    // Cleanup listener on unmount
+    return () => unsubscribe();
+  }, [user, progress?.lastDailyChallengeDate, previousChallengeId]);
 
   // Crossword state
   const [userInputs, setUserInputs] = useState<{ [key: string]: string }>({});
@@ -488,7 +563,7 @@ const FinLitApp: React.FC = () => {
   }, [selectedClue]);
 
   const handleSubmitAnswer = async () => {
-    if (selectedAnswer === null || answered) return;
+    if (selectedAnswer === null || answered || !dailyQuestion) return;
     const correct = selectedAnswer === dailyQuestion.correct;
     setIsCorrect(correct);
     setAnswered(true);
@@ -797,6 +872,28 @@ const FinLitApp: React.FC = () => {
                 </div>
               </div>
 
+              {/* Challenge Update Notification */}
+              {showChallengeUpdateNotification && (
+                <div className="lg:col-span-2 mb-4">
+                  <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 shadow-sm"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                        <Flame className="text-white" size={16} />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-blue-800">Daily Challenge Updated!</p>
+                        <p className="text-sm text-blue-600">A new question is now available. Give it a try!</p>
+                      </div>
+                    </div>
+                  </motion.div>
+                </div>
+              )}
+
               {/* Daily Challenge */}
               <div className="bg-amber-50 rounded-lg p-4 sm:p-6 shadow-sm border border-amber-100">
                 <div className="flex justify-between items-center mb-3 sm:mb-4">
@@ -814,9 +911,15 @@ const FinLitApp: React.FC = () => {
                   </div>
                 </div>
 
-                <h3 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4">{dailyQuestion.question}</h3>
-                <div className="flex flex-col gap-2 sm:gap-3 mb-4 sm:mb-6">
-                  {dailyQuestion.options.map((opt, i) => (
+                {loadingDailyChallenge ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="animate-spin text-amber-500" size={32} />
+                  </div>
+                ) : dailyQuestion ? (
+                  <>
+                    <h3 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4">{dailyQuestion.question}</h3>
+                    <div className="flex flex-col gap-2 sm:gap-3 mb-4 sm:mb-6">
+                      {dailyQuestion.options.map((opt, i) => (
                     <button
                       key={i}
                       onClick={() => !answered && setSelectedAnswer(i)}
@@ -833,17 +936,36 @@ const FinLitApp: React.FC = () => {
                             : 'bg-emerald-100 hover:bg-emerald-200'
                       }`}
                     >
-                      {opt}
-                    </button>
-                  ))}
-                </div>
+                        {opt}
+                      </button>
+                    ))}
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-center py-8 text-slate-500">
+                    <p>No daily challenge available at the moment.</p>
+                  </div>
+                )}
 
                 {answered && (
-                  <p className={`text-sm sm:text-lg font-semibold mb-3 sm:mb-4 ${isCorrect ? 'text-emerald-600' : 'text-red-500'}`}>
-                    {isCorrect
-                      ? (xpAwarded ? '🎉 Correct! +5 XP' : (dailyChallengeCompleted ? '🎉 Correct! (Already earned XP today)' : '🎉 Correct!'))
-                      : '❌ Not quite. Try again tomorrow!'}
-                  </p>
+                  <div className="mb-3 sm:mb-4">
+                    <p className={`text-sm sm:text-lg font-semibold mb-2 ${isCorrect ? 'text-emerald-600' : 'text-red-500'}`}>
+                      {isCorrect
+                        ? (xpAwarded ? '🎉 Correct! +5 XP' : (dailyChallengeCompleted ? '🎉 Correct! (Already earned XP today)' : '🎉 Correct!'))
+                        : '❌ Not quite. Try again tomorrow!'}
+                    </p>
+                    {dailyQuestion?.explanation && (
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
+                        <h4 className="font-semibold text-blue-800 mb-2 flex items-center gap-2">
+                          <Lightbulb size={16} className="text-blue-600" />
+                          Explanation
+                        </h4>
+                        <p className="text-sm sm:text-base text-blue-700 leading-relaxed">
+                          {dailyQuestion.explanation}
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 )}
 
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
