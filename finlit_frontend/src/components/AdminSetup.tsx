@@ -22,7 +22,8 @@ import {
   XCircle,
   Calendar,
   Loader2,
-  HelpCircle
+  HelpCircle,
+  Flame
 } from 'lucide-react';
 import { createOrganizationWithAdmin, getAllOrganizations, checkIsSuperAdmin, getQuizQuestions } from '../firebase/firestore.service';
 import { useAuthContext } from '../auth/context/AuthContext';
@@ -189,6 +190,13 @@ const AdminSetup: React.FC = () => {
           >
             <HelpCircle size={20} />
             Quiz Questions
+          </button>
+          <button
+            onClick={() => navigate('/daily-challenge-admin')}
+            className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-gradient-to-r hover:from-amber-50 hover:to-orange-50 rounded-xl transition-all duration-200"
+          >
+            <Flame size={20} />
+            Daily Challenges
           </button>
           <button
             onClick={() => navigate('/admin')}
