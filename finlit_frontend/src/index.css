@@ -1,6 +1,41 @@
 @import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Poppins:wght@100;200;300;400;500;600;700;800&display=swap');
+
+/* Horizon UI Theme Colors */
+@theme {
+  /* Navy colors */
+  --color-navy-50: #d0dcfb;
+  --color-navy-100: #aac0fe;
+  --color-navy-200: #a3b9f8;
+  --color-navy-300: #728fea;
+  --color-navy-400: #3652ba;
+  --color-navy-500: #1b3bbb;
+  --color-navy-600: #24388a;
+  --color-navy-700: #1B254B;
+  --color-navy-800: #111c44;
+  --color-navy-900: #0b1437;
+
+  /* Brand colors */
+  --color-brand-50: #E9E3FF;
+  --color-brand-100: #C0B8FE;
+  --color-brand-200: #A195FD;
+  --color-brand-300: #8171FC;
+  --color-brand-400: #7551FF;
+  --color-brand-500: #422AFB;
+  --color-brand-600: #3311DB;
+  --color-brand-700: #2111A5;
+  --color-brand-800: #190793;
+  --color-brand-900: #11047A;
+
+  /* Shadow colors */
+  --color-shadow-500: rgba(112, 144, 176, 0.08);
+
+  /* Font families */
+  --font-dm: 'DM Sans', sans-serif;
+  --font-poppins: 'Poppins', sans-serif;
+}
 
 * {
   box-sizing: border-box;
@@ -11,11 +46,12 @@ html, body {
   padding: 0;
   width: 100%;
   height: 100%;
-  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
   color: #1e293b;
-  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
-  font-optical-sizing: auto;
+  font-feature-settings: 'kern' !important;
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: -0.5px;
 }
 
 #root {
@@ -40,4 +76,30 @@ html, body {
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(212, 175, 55, 0.7);
+}
+
+/* Horizon UI Checkbox Styles */
+input.defaultCheckbox::before {
+	content: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="white"><path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/></svg>'); 
+	color: white;
+	opacity: 0; 
+	height: 16px; 
+	width: 16px;
+	position: absolute; 
+	left: 50%;
+	transform: translate(-50%, 0px);
+} 
+
+input:checked.defaultCheckbox::before { 
+	opacity: 1;
+}
+
+/* Light Primary Background */
+.bg-lightPrimary {
+  background-color: #f4f7fe;
+}
+
+/* Dark mode light primary */
+.dark .bg-lightPrimary {
+  background-color: #1B254B;
 }
