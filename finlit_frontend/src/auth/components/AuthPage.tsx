@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, UserPlus, LogIn, Sparkles } from 'lucide-react';
+import { BookOpen, Moon, Sun } from 'lucide-react';
 import { SignInForm } from './SignInForm';
 import { SignUpForm } from './SignUpForm';
 import { ForgotPasswordModal } from './ForgotPasswordModal';
@@ -49,6 +49,7 @@ const MovingFinanceKeywords: React.FC = () => {
 export const AuthPage: React.FC = () => {
   const [authMode, setAuthMode] = useState<AuthMode>('signin');
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
   
   const { signIn, signUp, isLoading, error, clearError, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
@@ -87,33 +88,30 @@ export const AuthPage: React.FC = () => {
     setShowForgotPassword(true);
   };
 
-  const journeySteps = [
-    {
-      icon: "💰",
-      title: "Budgeting Basics",
-      description: "Master the fundamentals of personal finance",
-      color: "#e8f5e9",
-      delay: 0.2
-    },
-    {
-      icon: "📈",
-      title: "Investment Growth",
-      description: "Learn to grow your wealth over time",
-      color: "#e3f2fd",
-      delay: 0.4
-    },
-    {
-      icon: "🏆",
-      title: "Financial Freedom",
-      description: "Achieve your financial goals",
-      color: "#fff3e0",
-      delay: 0.6
-    }
-  ];
+  const toggleDarkMode = () => {
+    setIsDarkMode(!isDarkMode);
+  };
+
 
   return (
-    <div className="min-h-screen flex">
-      {/* Left Side - Journey Section */}
+    <div className={`min-h-screen flex ${isDarkMode ? 'dark bg-navy-900' : 'bg-white'}`}>
+      {/* Dark Mode Toggle - Fixed position */}
+      <button
+        onClick={toggleDarkMode}
+        className={`fixed top-6 right-6 z-50 p-3 rounded-full transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 ${
+          isDarkMode 
+            ? 'bg-navy-800/80 backdrop-blur-sm border border-white/20 hover:bg-navy-700/80' 
+            : 'bg-white/80 backdrop-blur-sm border border-gray-200 hover:bg-white'
+        }`}
+      >
+        {isDarkMode ? (
+          <Sun className="w-5 h-5 text-yellow-400 transition-colors" />
+        ) : (
+          <Moon className="w-5 h-5 text-gray-700 transition-colors" />
+        )}
+      </button>
+
+      {/* Left Side - Journey Section with animations */}
       <div className="hidden lg:flex lg:flex-1 bg-gradient-to-br from-emerald-400 via-blue-500 to-blue-600 relative overflow-hidden">
         <div className="relative z-10 flex flex-col justify-center px-8 py-8 text-gray-900 min-h-screen w-full">
           <motion.div
@@ -158,9 +156,13 @@ export const AuthPage: React.FC = () => {
             </motion.p>
           </motion.div>
 
-          {/* Journey Steps */}
+          {/* Journey Steps with colorful icons */}
           <div className="space-y-6">
-            {journeySteps.map((step, index) => (
+            {[
+              { icon: "💰", title: "Budgeting Basics", description: "Master the fundamentals of personal finance", color: "#e8f5e9", delay: 0.2 },
+              { icon: "📈", title: "Investment Growth", description: "Learn to grow your wealth over time", color: "#e3f2fd", delay: 0.4 },
+              { icon: "🏆", title: "Financial Freedom", description: "Achieve your financial goals", color: "#fff3e0", delay: 0.6 }
+            ].map((step, index) => (
               <motion.div
                 key={index}
                 className="flex items-center gap-4 p-4 rounded-lg"
@@ -181,13 +183,6 @@ export const AuthPage: React.FC = () => {
                   <h3 className="font-semibold text-lg text-white">{step.title}</h3>
                   <p className="text-white text-sm">{step.description}</p>
                 </div>
-                <motion.div
-                  className="ml-auto"
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                >
-                  <Sparkles className="text-yellow-300" size={20} />
-                </motion.div>
               </motion.div>
             ))}
           </div>
@@ -205,138 +200,103 @@ export const AuthPage: React.FC = () => {
       </div>
 
       {/* Right Side - Auth Section */}
-      <div className="flex-1 flex items-center justify-center px-4 py-12 bg-gradient-to-br from-gray-50 to-white">
+      <div className={`flex-1 flex items-center justify-center px-4 py-12 transition-all duration-500 ${
+        isDarkMode ? 'bg-navy-900' : 'bg-white'
+      }`}>
         <motion.div
           className="w-full max-w-md"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <motion.div
-            className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden"
-            initial={{ scale: 0.95 }}
-            animate={{ scale: 1 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
-            <div className="p-8">
-              <div className="text-center mb-8">
-                <motion.div
-                  className="mx-auto w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mb-4 shadow-lg"
-                  whileHover={{ scale: 1.1, rotate: 5 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <BookOpen className="text-white" size={28} />
-                </motion.div>
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                  Welcome Back
-                </h1>
-                <p className="text-gray-600">
-                  {authMode === 'signin' 
-                    ? 'Continue your financial journey' 
-                    : 'Start your path to financial freedom'
-                  }
+          <div className="mt-[10vh] w-full max-w-full flex-col items-center md:pl-4 lg:pl-0 xl:max-w-[420px]">
+            {authMode === 'signin' ? (
+              <>
+                <h4 className={`mb-2.5 text-4xl font-bold transition-colors ${
+                  isDarkMode ? 'text-white' : 'text-navy-700'
+                }`}>
+                  Sign In
+                </h4>
+                <p className={`mb-9 ml-1 text-base transition-colors ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                }`}>
+                  Enter your email and password to sign in!
                 </p>
-              </div>
+              </>
+            ) : (
+              <>
+                <h4 className={`mb-2.5 text-4xl font-bold transition-colors ${
+                  isDarkMode ? 'text-white' : 'text-navy-700'
+                }`}>
+                  Sign Up
+                </h4>
+                <p className={`mb-9 ml-1 text-base transition-colors ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                }`}>
+                  Enter your information to create an account!
+                </p>
+              </>
+            )}
 
-              <div className="mb-6">
-                <div className="flex rounded-xl bg-gray-100 p-1">
-                  <motion.button
-                    onClick={() => handleModeSwitch('signin')}
-                    className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg text-sm font-medium transition-all ${
-                      authMode === 'signin'
-                        ? 'bg-white text-gray-900 shadow-md'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                    disabled={isLoading}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <LogIn size={16} />
-                    Sign In
-                  </motion.button>
-                  <motion.button
+            {authMode === 'signin' ? (
+              <SignInForm
+                onSubmit={handleSignIn}
+                isLoading={isLoading}
+                error={error}
+                onForgotPassword={handleForgotPassword}
+                isDarkMode={isDarkMode}
+              />
+            ) : (
+              <SignUpForm
+                onSubmit={handleSignUp}
+                isLoading={isLoading}
+                error={error}
+                isDarkMode={isDarkMode}
+              />
+            )}
+
+            <div className="mt-4">
+              {authMode === 'signin' ? (
+                <>
+                  <span className={`text-sm font-medium transition-colors ${
+                    isDarkMode ? 'text-gray-400' : 'text-navy-700'
+                  }`}>
+                    Not registered yet?
+                  </span>
+                  <button
                     onClick={() => handleModeSwitch('signup')}
-                    className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg text-sm font-medium transition-all ${
-                      authMode === 'signup'
-                        ? 'bg-white text-gray-900 shadow-md'
-                        : 'text-gray-600 hover:text-gray-900'
+                    className={`ml-1 text-sm font-medium transition-colors ${
+                      isDarkMode 
+                        ? 'text-white hover:text-gray-200' 
+                        : 'text-brand-500 hover:text-brand-600'
                     }`}
                     disabled={isLoading}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
                   >
-                    <UserPlus size={16} />
-                    Sign Up
-                  </motion.button>
-                </div>
-              </div>
-
-              <motion.div
-                key={authMode}
-                initial={{ opacity: 0, x: authMode === 'signin' ? -20 : 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                {authMode === 'signin' ? (
-                  <SignInForm
-                    onSubmit={handleSignIn}
-                    isLoading={isLoading}
-                    error={error}
-                    onForgotPassword={handleForgotPassword}
-                  />
-                ) : (
-                  <SignUpForm
-                    onSubmit={handleSignUp}
-                    isLoading={isLoading}
-                    error={error}
-                  />
-                )}
-              </motion.div>
-
-              <div className="mt-6 text-center text-sm text-gray-600">
-                {authMode === 'signin' ? (
-                  <span>
-                    New to FinLit?{' '}
-                    <button
-                      onClick={() => handleModeSwitch('signup')}
-                      className="text-blue-600 hover:text-blue-800 font-medium transition-colors"
-                      disabled={isLoading}
-                    >
-                      Create an account
-                    </button>
+                    Create an account
+                  </button>
+                </>
+              ) : (
+                <>
+                  <span className={`text-sm font-medium transition-colors ${
+                    isDarkMode ? 'text-gray-400' : 'text-navy-700'
+                  }`}>
+                    Already have an account?
                   </span>
-                ) : (
-                  <span>
-                    Already have an account?{' '}
-                    <button
-                      onClick={() => handleModeSwitch('signin')}
-                      className="text-blue-600 hover:text-blue-800 font-medium transition-colors"
-                      disabled={isLoading}
-                    >
-                      Sign in here
-                    </button>
-                  </span>
-                )}
-              </div>
+                  <button
+                    onClick={() => handleModeSwitch('signin')}
+                    className={`ml-1 text-sm font-medium transition-colors ${
+                      isDarkMode 
+                        ? 'text-white hover:text-gray-200' 
+                        : 'text-brand-500 hover:text-brand-600'
+                    }`}
+                    disabled={isLoading}
+                  >
+                    Sign in here
+                  </button>
+                </>
+              )}
             </div>
-
-            {/* Bottom gradient bar */}
-            <div className="h-2 bg-gradient-to-r from-emerald-400 via-blue-500 to-blue-600"></div>
-          </motion.div>
-
-          <motion.div
-            className="mt-8 text-center text-sm text-gray-500"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.8 }}
-          >
-            <p>© 2026 FinLit. All rights reserved.</p>
-            <div className="mt-2 space-x-4">
-              <a href="/privacy" className="hover:text-gray-700 transition-colors">Privacy Policy</a>
-              <a href="/terms" className="hover:text-gray-700 transition-colors">Terms of Service</a>
-              <a href="/support" className="hover:text-gray-700 transition-colors">Support</a>
-            </div>
-          </motion.div>
+          </div>
         </motion.div>
       </div>
 

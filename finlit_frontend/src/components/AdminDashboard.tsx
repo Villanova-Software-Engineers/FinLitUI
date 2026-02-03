@@ -1,6 +1,6 @@
 /**
  * Admin Dashboard
- * Professional enterprise-style admin panel for managing students
+ * Professional enterprise-style admin panel with Horizon UI styling
  */
 
 import React, { useState, useEffect } from 'react';
@@ -28,6 +28,10 @@ import {
   X,
   Flame,
   HelpCircle,
+  Search,
+  Moon,
+  Sun,
+  Bell,
 } from 'lucide-react';
 import { useAuthContext } from '../auth/context/AuthContext';
 import {
@@ -75,6 +79,7 @@ const AdminDashboard: React.FC = () => {
   const [selectedOrg, setSelectedOrg] = useState<Organization | null>(null);
   const [loadingOrgs, setLoadingOrgs] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
 
   useEffect(() => {
     if (user?.role !== 'admin' && user?.role !== 'owner') {
@@ -217,105 +222,139 @@ const AdminDashboard: React.FC = () => {
     ? Math.round(students.reduce((sum, s) => sum + (s.progress?.totalXP ?? 0), 0) / students.length)
     : 0;
 
+  const bgClass = darkMode ? 'bg-navy-900' : 'bg-gray-100';
+  const cardClass = darkMode ? 'bg-navy-800 border-navy-700' : 'bg-white border-gray-200';
+  const textClass = darkMode ? 'text-white' : 'text-navy-700';
+  const textSecondaryClass = darkMode ? 'text-gray-400' : 'text-gray-600';
+  const sidebarClass = darkMode ? 'bg-navy-800' : 'bg-white';
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30">
+    <div className={`min-h-screen ${bgClass} font-dm`}>
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm shadow-lg border-b border-slate-200/60 px-4 py-3">
+      <div className={`lg:hidden fixed top-0 left-0 right-0 z-50 ${cardClass} shadow-xl px-4 py-3`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+              className={`p-2 hover:bg-gray-100 ${darkMode ? 'hover:bg-navy-700' : ''} rounded-xl transition-colors`}
             >
-              {mobileMenuOpen ? <X size={24} className="text-slate-700" /> : <Menu size={24} className="text-slate-700" />}
+              {mobileMenuOpen ? <X size={24} className={textClass} /> : <Menu size={24} className={textClass} />}
             </button>
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-gradient-to-br from-brand-400 to-brand-600 rounded-xl flex items-center justify-center">
                 <BookOpen className="text-white" size={16} />
               </div>
-              <span className="font-bold text-slate-800">FinLit Admin</span>
+              <span className={`font-bold ${textClass}`}>FinLit</span>
             </div>
           </div>
+          <button
+            onClick={() => setDarkMode(!darkMode)}
+            className={`p-2 rounded-full ${darkMode ? 'bg-navy-700 text-white' : 'bg-gray-100 text-gray-600'}`}
+          >
+            {darkMode ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
         </div>
       </div>
 
       {/* Sidebar */}
       <aside className={`
-        fixed left-0 top-0 bottom-0 w-64 bg-white/95 backdrop-blur-sm shadow-xl border-r border-slate-200/60 p-4 sm:p-6 flex flex-col z-40
-        transform transition-transform duration-300 ease-in-out
+        fixed left-0 top-0 bottom-0 w-[290px] ${sidebarClass} shadow-2xl flex flex-col z-40
+        transform transition-all duration-300 ease-in-out
         ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
-        <div className="flex items-center gap-3 px-3 mb-6 sm:mb-8 mt-12 lg:mt-0">
-          <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-            <BookOpen className="text-white" size={18} />
-          </div>
-          <div className="flex flex-col">
-            <span className="font-bold text-slate-800 text-lg">FinLit</span>
-            <span className="text-xs text-slate-500 font-medium">Admin Portal</span>
+        {/* Logo */}
+        <div className="flex items-center gap-3 px-8 py-8 mt-2">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-brand-400 to-brand-600 rounded-xl flex items-center justify-center shadow-lg">
+              <BookOpen className="text-white" size={20} />
+            </div>
+            <div>
+              <span className={`font-poppins font-bold text-[26px] ${textClass}`}>
+                FinLit <span className="font-medium">Admin</span>
+              </span>
+            </div>
           </div>
         </div>
 
-        <nav className="flex-1 space-y-2">
+        {/* Divider */}
+        <div className={`mx-6 h-px ${darkMode ? 'bg-white/20' : 'bg-gray-200'}`} />
+
+        {/* Navigation */}
+        <nav className="flex-1 px-4 pt-6 space-y-1">
           {user.role === 'owner' && (
             <button
               onClick={() => {
                 navigate('/admin-setup');
                 setMobileMenuOpen(false);
               }}
-              className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-gradient-to-r hover:from-slate-50 hover:to-blue-50 rounded-xl transition-all duration-200"
+              className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${textSecondaryClass} hover:bg-gray-100 ${darkMode ? 'hover:bg-white/10' : ''}`}
             >
               <Building2 size={20} />
               Organizations
             </button>
           )}
-          <button className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg rounded-xl">
+
+          <button className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-white bg-gradient-to-br from-brand-400 to-brand-500 shadow-lg shadow-brand-500/40 rounded-xl">
             <Users size={20} />
             Students
           </button>
+
           {user?.role === 'owner' && (
             <button
               onClick={() => {
                 navigate('/admin/quiz-questions');
                 setMobileMenuOpen(false);
               }}
-              className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-gradient-to-r hover:from-slate-50 hover:to-purple-50 rounded-xl transition-all duration-200"
+              className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${textSecondaryClass} hover:bg-gray-100 ${darkMode ? 'hover:bg-white/10' : ''}`}
             >
               <HelpCircle size={20} />
               Quiz Questions
             </button>
           )}
+
           <button
             onClick={() => {
               navigate('/daily-challenge-admin');
               setMobileMenuOpen(false);
             }}
-            className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-gradient-to-r hover:from-amber-50 hover:to-orange-50 rounded-xl transition-all duration-200"
+            className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${textSecondaryClass} hover:bg-gray-100 ${darkMode ? 'hover:bg-white/10' : ''}`}
           >
             <Flame size={20} />
             Daily Challenges
           </button>
+
           <button
             onClick={() => {
               navigate('/dashboard');
               setMobileMenuOpen(false);
             }}
-            className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-gradient-to-r hover:from-slate-50 hover:to-blue-50 rounded-xl transition-all duration-200"
+            className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${textSecondaryClass} hover:bg-gray-100 ${darkMode ? 'hover:bg-white/10' : ''}`}
           >
             <LayoutDashboard size={20} />
             View App
           </button>
         </nav>
 
-        <div className="border-t border-slate-200/60 pt-4 sm:pt-6 mt-4 sm:mt-6">
-          <div className="px-4 py-3 bg-gradient-to-r from-slate-50 to-blue-50 rounded-xl mb-3">
-            <p className="text-xs text-slate-500 truncate font-medium">{user?.email}</p>
-            <p className="text-xs text-slate-400 font-medium">{user.role === 'owner' ? 'Super Admin' : user.organizationName}</p>
+        {/* User Section */}
+        <div className={`mx-4 mb-6 p-4 rounded-2xl ${darkMode ? 'bg-navy-700' : 'bg-gray-50'}`}>
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-white font-bold">
+              {user?.email?.charAt(0).toUpperCase()}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className={`text-sm font-semibold ${textClass} truncate`}>{user?.email}</p>
+              <p className={`text-xs ${textSecondaryClass}`}>
+                {user.role === 'owner' ? 'Super Admin' : user.organizationName}
+              </p>
+            </div>
           </div>
           <button
             onClick={handleSignOut}
-            className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200"
+            className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 ${
+              darkMode ? 'text-red-400 hover:bg-red-500/10' : 'text-red-500 hover:bg-red-50'
+            }`}
           >
-            <LogOut size={18} />
+            <LogOut size={16} />
             Sign out
           </button>
         </div>
@@ -324,72 +363,95 @@ const AdminDashboard: React.FC = () => {
       {/* Mobile Overlay */}
       {mobileMenuOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-30 lg:hidden"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 lg:hidden"
           onClick={() => setMobileMenuOpen(false)}
         />
       )}
 
       {/* Main Content */}
-      <main className="lg:ml-64 p-4 sm:p-6 md:p-8 pt-20 lg:pt-8">
-        <div className="max-w-7xl">
-          {/* Header */}
-          <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Students Dashboard</h1>
-              <p className="text-slate-600 mt-1 sm:mt-2 text-sm sm:text-base font-medium">
-                {user.role === 'owner'
-                  ? (selectedOrg ? `Viewing ${selectedOrg.name}` : 'Select an organization')
-                  : user.organizationName}
-              </p>
-            </div>
-            {selectedCode && students.length > 0 && (
-              <button
-                onClick={exportToExcel}
-                className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 text-sm font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
-              >
-                <Download size={18} />
-                Export Excel
-              </button>
-            )}
+      <main className="lg:ml-[290px] min-h-screen">
+        {/* Navbar */}
+        <nav className={`sticky top-4 z-20 mx-4 lg:mx-6 mt-4 flex items-center justify-between rounded-2xl ${
+          darkMode ? 'bg-navy-800/60' : 'bg-white/60'
+        } backdrop-blur-xl px-4 py-3 shadow-xl ${darkMode ? 'shadow-shadow-500' : ''}`}>
+          <div className="hidden lg:block">
+            <p className={`text-sm ${textSecondaryClass}`}>Pages / Students</p>
+            <h1 className={`text-2xl font-bold ${textClass}`}>Students Dashboard</h1>
           </div>
 
+          <div className="flex items-center gap-2 lg:gap-4">
+            {/* Search */}
+            <div className={`hidden md:flex items-center gap-2 px-4 py-2.5 rounded-full ${
+              darkMode ? 'bg-navy-700' : 'bg-gray-100'
+            }`}>
+              <Search size={16} className={textSecondaryClass} />
+              <input
+                type="text"
+                placeholder="Search..."
+                className={`bg-transparent text-sm outline-none w-32 lg:w-48 ${textClass} placeholder:${textSecondaryClass}`}
+              />
+            </div>
+
+            {/* Notifications */}
+            <button className={`p-2.5 rounded-full ${darkMode ? 'bg-navy-700' : 'bg-gray-100'}`}>
+              <Bell size={18} className={textSecondaryClass} />
+            </button>
+
+            {/* Dark Mode Toggle */}
+            <button
+              onClick={() => setDarkMode(!darkMode)}
+              className={`hidden lg:flex p-2.5 rounded-full ${darkMode ? 'bg-navy-700' : 'bg-gray-100'}`}
+            >
+              {darkMode ? <Sun size={18} className="text-white" /> : <Moon size={18} className={textSecondaryClass} />}
+            </button>
+
+            {/* User Avatar */}
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-white font-bold cursor-pointer">
+              {user?.email?.charAt(0).toUpperCase()}
+            </div>
+          </div>
+        </nav>
+
+        {/* Page Content */}
+        <div className="p-4 lg:p-6 pt-6 lg:pt-8">
+          {/* Error Banner */}
           {error && (
-            <div className="mb-6 px-5 py-4 bg-gradient-to-r from-red-50 to-pink-50 border border-red-200/60 rounded-xl text-sm text-red-700 flex items-center gap-3 shadow-sm">
-              <XCircle size={18} className="text-red-500" />
+            <div className="mb-6 px-5 py-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-sm text-red-500 flex items-center gap-3">
+              <XCircle size={18} />
               <span className="font-medium">{error}</span>
-              <button onClick={() => setError(null)} className="ml-auto text-red-500 hover:text-red-700 font-bold text-lg">×</button>
+              <button onClick={() => setError(null)} className="ml-auto hover:text-red-700 font-bold">×</button>
             </div>
           )}
 
           {/* Organization Selector for Super Admins */}
           {user.role === 'owner' && (
-            <div className="mb-6 sm:mb-8 bg-white/70 backdrop-blur-sm border border-slate-200/60 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg">
-              <p className="text-xs sm:text-sm font-bold text-slate-700 uppercase tracking-wide mb-3 sm:mb-4 flex items-center gap-2">
-                <Building2 size={16} className="text-blue-600" />
-                Organization
-              </p>
+            <div className={`mb-6 ${cardClass} rounded-2xl p-5 shadow-xl border`}>
+              <div className="flex items-center gap-2 mb-4">
+                <Building2 size={18} className="text-brand-500" />
+                <p className={`text-sm font-bold ${textClass} uppercase tracking-wide`}>Select Organization</p>
+              </div>
               {loadingOrgs ? (
-                <div className="flex items-center gap-3 text-sm text-slate-600">
-                  <Loader2 className="animate-spin text-blue-600" size={16} />
-                  <span className="font-medium">Loading organizations...</span>
+                <div className="flex items-center gap-3">
+                  <Loader2 className="animate-spin text-brand-500" size={18} />
+                  <span className={`text-sm ${textSecondaryClass}`}>Loading organizations...</span>
                 </div>
               ) : organizations.length === 0 ? (
-                <p className="text-sm text-slate-600">
+                <p className={`text-sm ${textSecondaryClass}`}>
                   No organizations found.{' '}
-                  <button onClick={() => navigate('/admin-setup')} className="text-blue-600 hover:text-blue-700 font-semibold underline">
+                  <button onClick={() => navigate('/admin-setup')} className="text-brand-500 hover:underline font-semibold">
                     Create one
                   </button>
                 </p>
               ) : (
-                <div className="flex flex-wrap gap-2 sm:gap-3">
+                <div className="flex flex-wrap gap-3">
                   {organizations.map((org) => (
                     <button
                       key={org.id}
                       onClick={() => handleOrgSelect(org)}
-                      className={`px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold rounded-lg sm:rounded-xl transition-all duration-200 shadow-md hover:shadow-lg ${
+                      className={`px-4 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200 ${
                         selectedOrg?.id === org.id
-                          ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white transform scale-105'
-                          : 'bg-white text-slate-700 hover:bg-gradient-to-r hover:from-slate-50 hover:to-blue-50 hover:text-slate-800'
+                          ? 'bg-gradient-to-br from-brand-400 to-brand-500 text-white shadow-lg shadow-brand-500/30'
+                          : `${darkMode ? 'bg-navy-700 text-white hover:bg-navy-600' : 'bg-gray-100 text-navy-700 hover:bg-gray-200'}`
                       }`}
                     >
                       {org.name}
@@ -402,45 +464,48 @@ const AdminDashboard: React.FC = () => {
 
           {/* Main Grid */}
           {(user.role === 'admin' || selectedOrg) ? (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
-              {/* Class Codes Sidebar */}
-              <div className="lg:col-span-3">
-                <div className="bg-white/70 backdrop-blur-sm border border-slate-200/60 rounded-xl sm:rounded-2xl shadow-xl">
-                  <div className="px-4 sm:px-5 py-3 sm:py-4 border-b border-slate-200/60 flex items-center justify-between">
-                    <h2 className="text-base sm:text-lg font-bold text-slate-800 flex items-center gap-2">
-                      <Users size={18} className="text-blue-600" />
+            <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+              {/* Class Codes Panel */}
+              <div className="xl:col-span-3">
+                <div className={`${cardClass} rounded-2xl shadow-xl border overflow-hidden`}>
+                  <div className={`px-5 py-4 border-b ${darkMode ? 'border-navy-700' : 'border-gray-100'} flex items-center justify-between`}>
+                    <h2 className={`text-lg font-bold ${textClass} flex items-center gap-2`}>
+                      <Users size={18} className="text-brand-500" />
                       Classes
                     </h2>
                     <button
                       onClick={() => setShowCreateModal(true)}
-                      className="p-2 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 rounded-xl transition-all duration-200 group"
-                      title="New class"
+                      className="p-2 hover:bg-brand-500/10 rounded-xl transition-all duration-200 group"
                     >
-                      <Plus size={18} className="text-slate-600 group-hover:text-blue-600 transition-colors" />
+                      <Plus size={18} className="text-brand-500" />
                     </button>
                   </div>
 
                   {loadingCodes ? (
-                    <div className="p-4 sm:p-6 text-center">
-                      <Loader2 className="animate-spin mx-auto text-blue-600" size={24} />
-                      <p className="text-xs sm:text-sm text-slate-600 mt-2 font-medium">Loading classes...</p>
+                    <div className="p-6 text-center">
+                      <Loader2 className="animate-spin mx-auto text-brand-500" size={28} />
+                      <p className={`text-sm ${textSecondaryClass} mt-3`}>Loading classes...</p>
                     </div>
                   ) : classCodes.length === 0 ? (
-                    <div className="p-4 sm:p-6 text-center text-xs sm:text-sm text-slate-600 font-medium">
-                      No classes yet
+                    <div className={`p-6 text-center text-sm ${textSecondaryClass}`}>
+                      No classes yet. Create one to get started.
                     </div>
                   ) : (
-                    <div className="divide-y divide-slate-200/60 max-h-[400px] lg:max-h-[600px] overflow-y-auto">
+                    <div className={`divide-y ${darkMode ? 'divide-navy-700' : 'divide-gray-100'} max-h-[500px] overflow-y-auto`}>
                       {classCodes.map((code) => (
                         <button
                           key={code.id}
                           onClick={() => loadStudents(code)}
-                          className={`w-full px-4 sm:px-5 py-3 sm:py-4 text-left hover:bg-gradient-to-r hover:from-slate-50 hover:to-blue-50 transition-all duration-200 ${
-                            selectedCode?.id === code.id ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-600' : ''
+                          className={`w-full px-5 py-4 text-left transition-all duration-200 ${
+                            selectedCode?.id === code.id
+                              ? `${darkMode ? 'bg-brand-500/20' : 'bg-brand-50'} border-l-4 border-brand-500`
+                              : `hover:${darkMode ? 'bg-navy-700' : 'bg-gray-50'}`
                           }`}
                         >
-                          <p className="text-xs sm:text-sm font-semibold text-slate-800">{code.name}</p>
-                          <p className="text-[10px] sm:text-xs text-slate-500 font-mono mt-1 bg-slate-100 px-2 py-1 rounded-md inline-block">{code.code}</p>
+                          <p className={`text-sm font-semibold ${textClass}`}>{code.name}</p>
+                          <p className={`text-xs font-mono mt-1 px-2 py-1 rounded-lg inline-block ${
+                            darkMode ? 'bg-navy-700 text-gray-300' : 'bg-gray-100 text-gray-600'
+                          }`}>{code.code}</p>
                         </button>
                       ))}
                     </div>
@@ -449,134 +514,149 @@ const AdminDashboard: React.FC = () => {
               </div>
 
               {/* Students Area */}
-              <div className="lg:col-span-9">
+              <div className="xl:col-span-9">
                 {selectedCode ? (
-                  <div className="bg-white/70 backdrop-blur-sm border border-slate-200/60 rounded-2xl shadow-xl">
+                  <div className={`${cardClass} rounded-2xl shadow-xl border overflow-hidden`}>
                     {/* Class Header */}
-                    <div className="px-6 py-5 border-b border-slate-200/60 bg-gradient-to-r from-slate-50/50 to-blue-50/50">
-                      <div className="flex items-center justify-between">
+                    <div className={`px-6 py-5 border-b ${darkMode ? 'border-navy-700 bg-navy-700/50' : 'border-gray-100 bg-gray-50'}`}>
+                      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                         <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-                            <Users className="text-white" size={20} />
+                          <div className="w-14 h-14 bg-gradient-to-br from-brand-400 to-brand-500 rounded-2xl flex items-center justify-center shadow-lg shadow-brand-500/30">
+                            <Users className="text-white" size={24} />
                           </div>
                           <div>
-                            <h2 className="text-xl font-bold text-slate-800">{selectedCode.name}</h2>
+                            <h2 className={`text-xl font-bold ${textClass}`}>{selectedCode.name}</h2>
                             <div className="flex items-center gap-3 mt-2">
-                              <code className="text-sm font-mono font-bold text-blue-700 bg-blue-100 px-3 py-1 rounded-lg">{selectedCode.code}</code>
-                              <button 
+                              <code className={`text-sm font-mono font-bold px-3 py-1 rounded-lg ${
+                                darkMode ? 'bg-navy-600 text-brand-300' : 'bg-brand-50 text-brand-600'
+                              }`}>{selectedCode.code}</code>
+                              <button
                                 onClick={() => copyToClipboard(selectedCode.code)}
-                                className="p-1 hover:bg-blue-100 rounded-md transition-colors"
+                                className={`p-1.5 rounded-lg transition-colors ${darkMode ? 'hover:bg-navy-600' : 'hover:bg-gray-100'}`}
                               >
-                                {copied ? <Check size={14} className="text-green-600" /> : <Copy size={14} className="text-slate-500" />}
+                                {copied ? <Check size={14} className="text-green-500" /> : <Copy size={14} className={textSecondaryClass} />}
                               </button>
                             </div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-6">
-                          <div className="text-center bg-white/60 backdrop-blur-sm px-4 py-3 rounded-xl shadow-md">
-                            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Students</p>
-                            <p className="text-2xl font-bold text-slate-800">{totalStudents}</p>
+                        <div className="flex items-center gap-4">
+                          <div className={`text-center px-5 py-3 rounded-2xl ${darkMode ? 'bg-navy-600' : 'bg-white'} shadow-lg`}>
+                            <p className={`text-xs font-semibold ${textSecondaryClass} uppercase tracking-wide`}>Students</p>
+                            <p className={`text-2xl font-bold ${textClass}`}>{totalStudents}</p>
                           </div>
-                          <div className="text-center bg-white/60 backdrop-blur-sm px-4 py-3 rounded-xl shadow-md">
-                            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Avg XP</p>
-                            <p className="text-2xl font-bold text-slate-800">{avgXP}</p>
+                          <div className={`text-center px-5 py-3 rounded-2xl ${darkMode ? 'bg-navy-600' : 'bg-white'} shadow-lg`}>
+                            <p className={`text-xs font-semibold ${textSecondaryClass} uppercase tracking-wide`}>Avg XP</p>
+                            <p className={`text-2xl font-bold ${textClass}`}>{avgXP}</p>
                           </div>
+                          {students.length > 0 && (
+                            <button
+                              onClick={exportToExcel}
+                              className="flex items-center gap-2 px-5 py-3 text-sm font-semibold text-white bg-gradient-to-br from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 rounded-xl shadow-lg shadow-green-500/30 transition-all duration-200"
+                            >
+                              <Download size={18} />
+                              Export
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
 
                     {loadingStudents ? (
                       <div className="p-12 text-center">
-                        <Loader2 className="animate-spin mx-auto text-blue-600" size={32} />
-                        <p className="text-lg font-semibold text-slate-700 mt-3">Loading students...</p>
+                        <Loader2 className="animate-spin mx-auto text-brand-500" size={36} />
+                        <p className={`text-lg font-semibold ${textClass} mt-4`}>Loading students...</p>
                       </div>
                     ) : students.length === 0 ? (
                       <div className="p-12 text-center">
-                        <div className="w-20 h-20 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                          <Users className="text-blue-600" size={40} />
+                        <div className={`w-24 h-24 ${darkMode ? 'bg-navy-700' : 'bg-gray-100'} rounded-full flex items-center justify-center mx-auto mb-4`}>
+                          <Users className={textSecondaryClass} size={48} />
                         </div>
-                        <h3 className="text-lg font-bold text-slate-700 mb-2">No students registered</h3>
-                        <p className="text-slate-500 mb-4">
-                          Share code <span className="font-mono font-bold text-blue-700 bg-blue-100 px-2 py-1 rounded">{selectedCode.code}</span> with students
+                        <h3 className={`text-lg font-bold ${textClass} mb-2`}>No students registered</h3>
+                        <p className={textSecondaryClass}>
+                          Share code <span className={`font-mono font-bold px-2 py-1 rounded ${darkMode ? 'bg-navy-700 text-brand-300' : 'bg-brand-50 text-brand-600'}`}>{selectedCode.code}</span> with students
                         </p>
                       </div>
                     ) : selectedStudent ? (
-                      /* Student Detail */
-                      <div className="p-5">
+                      /* Student Detail View */
+                      <div className="p-6">
                         <button
                           onClick={() => setSelectedStudent(null)}
-                          className="flex items-center gap-1 text-sm text-neutral-500 hover:text-neutral-700 mb-4"
+                          className={`flex items-center gap-2 text-sm ${textSecondaryClass} hover:${darkMode ? 'text-white' : 'text-navy-700'} mb-6 transition-colors`}
                         >
-                          <ArrowLeft size={14} />
+                          <ArrowLeft size={16} />
                           Back to list
                         </button>
 
-                        <div className="flex items-center gap-6 mb-8 pb-6 border-b border-slate-200/60">
-                          <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-2xl font-bold text-white shadow-lg">
+                        <div className={`flex flex-col lg:flex-row items-start lg:items-center gap-6 mb-8 pb-6 border-b ${darkMode ? 'border-navy-700' : 'border-gray-200'}`}>
+                          <div className="w-20 h-20 bg-gradient-to-br from-brand-400 to-brand-500 rounded-full flex items-center justify-center text-3xl font-bold text-white shadow-xl shadow-brand-500/30">
                             {selectedStudent.displayName.charAt(0).toUpperCase()}
                           </div>
                           <div className="flex-1">
-                            <h3 className="text-2xl font-bold text-slate-800">{selectedStudent.displayName}</h3>
-                            <p className="text-slate-600 mt-1">{selectedStudent.email}</p>
+                            <h3 className={`text-2xl font-bold ${textClass}`}>{selectedStudent.displayName}</h3>
+                            <p className={`${textSecondaryClass} mt-1`}>{selectedStudent.email}</p>
                           </div>
-                          <div className="text-center bg-gradient-to-r from-yellow-50 to-orange-50 px-6 py-4 rounded-xl shadow-md border border-orange-200">
-                            <div className="flex items-center gap-2 justify-center mb-1">
-                              <div className="w-6 h-6 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+                          <div className={`text-center px-8 py-5 rounded-2xl ${darkMode ? 'bg-navy-700' : 'bg-gradient-to-br from-amber-50 to-orange-50'} border ${darkMode ? 'border-navy-600' : 'border-amber-200'}`}>
+                            <div className="flex items-center gap-2 justify-center mb-2">
+                              <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center">
                                 <span className="text-white text-xs font-bold">XP</span>
                               </div>
                             </div>
-                            <p className="text-3xl font-bold text-slate-800">{selectedStudent.progress?.totalXP ?? 0}</p>
-                            <p className="text-xs font-semibold text-orange-600 uppercase tracking-wide">Total XP</p>
+                            <p className={`text-4xl font-bold ${textClass}`}>{selectedStudent.progress?.totalXP ?? 0}</p>
+                            <p className={`text-xs font-semibold ${darkMode ? 'text-amber-400' : 'text-amber-600'} uppercase tracking-wide mt-1`}>Total XP</p>
                           </div>
                         </div>
 
-                        <h4 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
-                          <BarChart3 className="text-blue-600" size={20} />
+                        <h4 className={`text-lg font-bold ${textClass} mb-6 flex items-center gap-2`}>
+                          <BarChart3 className="text-brand-500" size={20} />
                           Module Progress
                         </h4>
                         {selectedStudent.progress?.moduleScores && selectedStudent.progress.moduleScores.length > 0 ? (
-                          <div className="space-y-2">
+                          <div className="space-y-3">
                             {selectedStudent.progress.moduleScores.map((module) => (
-                              <div key={module.moduleId} className="border border-neutral-200 rounded-lg overflow-hidden">
+                              <div key={module.moduleId} className={`border ${darkMode ? 'border-navy-700' : 'border-gray-200'} rounded-xl overflow-hidden`}>
                                 <div
-                                  className="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-neutral-50"
+                                  className={`flex items-center justify-between px-4 py-3 cursor-pointer ${darkMode ? 'hover:bg-navy-700' : 'hover:bg-gray-50'} transition-colors`}
                                   onClick={() => toggleModuleExpanded(module.moduleId)}
                                 >
                                   <div className="flex items-center gap-3">
                                     {module.passed ? (
-                                      <CheckCircle className="text-green-500" size={16} />
+                                      <CheckCircle className="text-green-500" size={18} />
                                     ) : (
-                                      <XCircle className="text-neutral-300" size={16} />
+                                      <XCircle className={textSecondaryClass} size={18} />
                                     )}
-                                    <span className="text-sm font-medium text-neutral-900">{getModuleName(module.moduleId)}</span>
+                                    <span className={`text-sm font-semibold ${textClass}`}>{getModuleName(module.moduleId)}</span>
                                   </div>
                                   <div className="flex items-center gap-4">
-                                    <span className="text-sm text-neutral-600">{module.score}/{module.maxScore}</span>
-                                    <span className={`text-xs px-2 py-0.5 rounded ${module.passed ? 'bg-green-100 text-green-700' : 'bg-neutral-100 text-neutral-500'}`}>
+                                    <span className={`text-sm ${textSecondaryClass}`}>{module.score}/{module.maxScore}</span>
+                                    <span className={`text-xs px-3 py-1 rounded-full font-semibold ${
+                                      module.passed
+                                        ? 'bg-green-500/10 text-green-500'
+                                        : `${darkMode ? 'bg-navy-700 text-gray-400' : 'bg-gray-100 text-gray-500'}`
+                                    }`}>
                                       {module.passed ? 'Passed' : 'Not passed'}
                                     </span>
-                                    {expandedModules.has(module.moduleId) ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                                    {expandedModules.has(module.moduleId) ? <ChevronUp size={16} className={textSecondaryClass} /> : <ChevronDown size={16} className={textSecondaryClass} />}
                                   </div>
                                 </div>
                                 {expandedModules.has(module.moduleId) && module.attemptHistory && (
-                                  <div className="bg-neutral-50 px-4 py-3 border-t border-neutral-200">
-                                    <p className="text-xs font-medium text-neutral-500 mb-2">Attempt History</p>
-                                    <table className="w-full text-xs">
+                                  <div className={`${darkMode ? 'bg-navy-700' : 'bg-gray-50'} px-4 py-4 border-t ${darkMode ? 'border-navy-600' : 'border-gray-200'}`}>
+                                    <p className={`text-xs font-semibold ${textSecondaryClass} mb-3 uppercase tracking-wide`}>Attempt History</p>
+                                    <table className="w-full text-sm">
                                       <thead>
-                                        <tr className="text-neutral-500">
-                                          <th className="text-left pb-2">#</th>
-                                          <th className="text-left pb-2">Score</th>
-                                          <th className="text-left pb-2">Result</th>
-                                          <th className="text-left pb-2">Date</th>
+                                        <tr className={textSecondaryClass}>
+                                          <th className="text-left pb-2 font-semibold">#</th>
+                                          <th className="text-left pb-2 font-semibold">Score</th>
+                                          <th className="text-left pb-2 font-semibold">Result</th>
+                                          <th className="text-left pb-2 font-semibold">Date</th>
                                         </tr>
                                       </thead>
                                       <tbody>
                                         {module.attemptHistory.map((attempt, idx) => (
-                                          <tr key={idx} className="text-neutral-700">
-                                            <td className="py-1">{attempt.attemptNumber}</td>
+                                          <tr key={idx} className={textClass}>
+                                            <td className="py-1.5">{attempt.attemptNumber}</td>
                                             <td>{attempt.score}/{attempt.maxScore}</td>
-                                            <td>{attempt.passed ? <span className="text-green-600">Pass</span> : <span className="text-neutral-400">Fail</span>}</td>
-                                            <td className="text-neutral-500">{formatDateTime(attempt.completedAt)}</td>
+                                            <td>{attempt.passed ? <span className="text-green-500 font-semibold">Pass</span> : <span className={textSecondaryClass}>Fail</span>}</td>
+                                            <td className={textSecondaryClass}>{formatDateTime(attempt.completedAt)}</td>
                                           </tr>
                                         ))}
                                       </tbody>
@@ -587,69 +667,71 @@ const AdminDashboard: React.FC = () => {
                             ))}
                           </div>
                         ) : (
-                          <p className="text-sm text-neutral-500">No module progress yet</p>
+                          <p className={`text-sm ${textSecondaryClass}`}>No module progress yet</p>
                         )}
                       </div>
                     ) : (
                       /* Student Table */
-                      <div className="overflow-hidden">
+                      <div className="overflow-x-auto">
                         <table className="w-full">
-                          <thead className="bg-gradient-to-r from-slate-100/70 to-blue-100/70 border-b border-slate-200/60">
+                          <thead className={`${darkMode ? 'bg-navy-700' : 'bg-gray-50'} border-b ${darkMode ? 'border-navy-600' : 'border-gray-200'}`}>
                             <tr>
-                              <th className="px-6 py-4 text-left text-sm font-bold text-slate-700 uppercase tracking-wide">Student</th>
-                              <th className="px-6 py-4 text-left text-sm font-bold text-slate-700 uppercase tracking-wide">XP</th>
-                              <th className="px-6 py-4 text-left text-sm font-bold text-slate-700 uppercase tracking-wide">Progress</th>
-                              <th className="px-6 py-4 text-left text-sm font-bold text-slate-700 uppercase tracking-wide">Joined</th>
-                              <th className="px-6 py-4 text-right text-sm font-bold text-slate-700 uppercase tracking-wide">Actions</th>
+                              <th className={`px-6 py-4 text-left text-xs font-bold ${textSecondaryClass} uppercase tracking-wide`}>Student</th>
+                              <th className={`px-6 py-4 text-left text-xs font-bold ${textSecondaryClass} uppercase tracking-wide`}>XP</th>
+                              <th className={`px-6 py-4 text-left text-xs font-bold ${textSecondaryClass} uppercase tracking-wide`}>Progress</th>
+                              <th className={`px-6 py-4 text-left text-xs font-bold ${textSecondaryClass} uppercase tracking-wide`}>Joined</th>
+                              <th className={`px-6 py-4 text-right text-xs font-bold ${textSecondaryClass} uppercase tracking-wide`}>Actions</th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-slate-200/60">
+                          <tbody className={`divide-y ${darkMode ? 'divide-navy-700' : 'divide-gray-100'}`}>
                             {students.map((student) => {
                               const passedCount = student.progress?.moduleScores?.filter(m => m.passed).length ?? 0;
                               const allSystemModules = Object.values(MODULES).length;
                               const progressPercentage = Math.round((passedCount / allSystemModules) * 100);
                               return (
-                                <tr key={student.userId} className="hover:bg-gradient-to-r hover:from-slate-50 hover:to-blue-50/50 transition-all duration-200">
-                                  <td className="px-6 py-5">
+                                <tr key={student.userId} className={`${darkMode ? 'hover:bg-navy-700' : 'hover:bg-gray-50'} transition-colors`}>
+                                  <td className="px-6 py-4">
                                     <div className="flex items-center gap-4">
-                                      <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-lg font-bold text-white shadow-lg">
+                                      <div className="w-11 h-11 bg-gradient-to-br from-brand-400 to-brand-500 rounded-full flex items-center justify-center text-base font-bold text-white shadow-lg shadow-brand-500/20">
                                         {student.displayName.charAt(0).toUpperCase()}
                                       </div>
                                       <div>
-                                        <p className="text-sm font-semibold text-slate-800">{student.displayName}</p>
-                                        <p className="text-sm text-slate-500">{student.email}</p>
+                                        <p className={`text-sm font-semibold ${textClass}`}>{student.displayName}</p>
+                                        <p className={`text-xs ${textSecondaryClass}`}>{student.email}</p>
                                       </div>
                                     </div>
                                   </td>
-                                  <td className="px-6 py-5">
+                                  <td className="px-6 py-4">
                                     <div className="flex items-center gap-2">
-                                      <div className="w-8 h-8 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+                                      <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center">
                                         <span className="text-white text-xs font-bold">XP</span>
                                       </div>
-                                      <span className="text-lg font-bold text-slate-800">{student.progress?.totalXP ?? 0}</span>
+                                      <span className={`text-base font-bold ${textClass}`}>{student.progress?.totalXP ?? 0}</span>
                                     </div>
                                   </td>
-                                  <td className="px-6 py-5">
-                                    <div className="flex items-center gap-3">
-                                      <div className="flex-1">
-                                        <div className="flex justify-between text-xs font-medium text-slate-600 mb-1">
-                                          <span>{passedCount}/{allSystemModules} modules</span>
-                                          <span>{progressPercentage}%</span>
-                                        </div>
-                                        <div className="w-full bg-slate-200 rounded-full h-2">
-                                          <div 
-                                            className="bg-gradient-to-r from-emerald-500 to-teal-600 h-2 rounded-full transition-all duration-300"
-                                            style={{width: `${progressPercentage}%`}}
-                                          ></div>
-                                        </div>
+                                  <td className="px-6 py-4">
+                                    <div className="w-40">
+                                      <div className={`flex justify-between text-xs font-medium ${textSecondaryClass} mb-1.5`}>
+                                        <span>{passedCount}/{allSystemModules} modules</span>
+                                        <span>{progressPercentage}%</span>
+                                      </div>
+                                      <div className={`w-full ${darkMode ? 'bg-navy-600' : 'bg-gray-200'} rounded-full h-2`}>
+                                        <div
+                                          className="bg-gradient-to-r from-brand-400 to-brand-500 h-2 rounded-full transition-all duration-300"
+                                          style={{width: `${progressPercentage}%`}}
+                                        ></div>
                                       </div>
                                     </div>
                                   </td>
-                                  <td className="px-6 py-5 text-sm font-medium text-slate-600">{student.registeredAt.toLocaleDateString()}</td>
-                                  <td className="px-6 py-5 text-right">
+                                  <td className={`px-6 py-4 text-sm ${textSecondaryClass}`}>{student.registeredAt.toLocaleDateString()}</td>
+                                  <td className="px-6 py-4 text-right">
                                     <button
                                       onClick={() => setSelectedStudent(student)}
-                                      className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-blue-600 hover:text-white hover:bg-gradient-to-r hover:from-blue-600 hover:to-indigo-600 rounded-lg transition-all duration-200 border border-blue-200 hover:border-transparent"
+                                      className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl transition-all duration-200 ${
+                                        darkMode
+                                          ? 'text-brand-400 hover:bg-brand-500/20'
+                                          : 'text-brand-500 hover:bg-brand-50'
+                                      }`}
                                     >
                                       <Eye size={16} />
                                       View
@@ -664,23 +746,23 @@ const AdminDashboard: React.FC = () => {
                     )}
                   </div>
                 ) : (
-                  <div className="bg-white/70 backdrop-blur-sm border border-slate-200/60 rounded-2xl p-12 text-center shadow-xl">
-                    <div className="w-24 h-24 bg-gradient-to-r from-slate-100 to-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                      <Users className="text-slate-400" size={48} />
+                  <div className={`${cardClass} rounded-2xl p-12 text-center shadow-xl border`}>
+                    <div className={`w-24 h-24 ${darkMode ? 'bg-navy-700' : 'bg-gray-100'} rounded-full flex items-center justify-center mx-auto mb-6`}>
+                      <Users className={textSecondaryClass} size={48} />
                     </div>
-                    <h3 className="text-xl font-bold text-slate-700 mb-2">Select a class to view students</h3>
-                    <p className="text-slate-500">Choose a class from the sidebar to see student data and analytics</p>
+                    <h3 className={`text-xl font-bold ${textClass} mb-2`}>Select a class to view students</h3>
+                    <p className={textSecondaryClass}>Choose a class from the sidebar to see student data and analytics</p>
                   </div>
                 )}
               </div>
             </div>
           ) : (
-            <div className="bg-white/70 backdrop-blur-sm border border-slate-200/60 rounded-2xl p-12 text-center shadow-xl">
-              <div className="w-24 h-24 bg-gradient-to-r from-slate-100 to-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Building2 className="text-slate-400" size={48} />
+            <div className={`${cardClass} rounded-2xl p-12 text-center shadow-xl border`}>
+              <div className={`w-24 h-24 ${darkMode ? 'bg-navy-700' : 'bg-gray-100'} rounded-full flex items-center justify-center mx-auto mb-6`}>
+                <Building2 className={textSecondaryClass} size={48} />
               </div>
-              <h3 className="text-xl font-bold text-slate-700 mb-2">Select an organization to continue</h3>
-              <p className="text-slate-500">Choose an organization from above to access student data</p>
+              <h3 className={`text-xl font-bold ${textClass} mb-2`}>Select an organization to continue</h3>
+              <p className={textSecondaryClass}>Choose an organization from above to access student data</p>
             </div>
           )}
         </div>
@@ -689,17 +771,17 @@ const AdminDashboard: React.FC = () => {
       {/* Create Class Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl max-w-md w-full border border-slate-200/60">
-            <div className="px-6 py-5 border-b border-slate-200/60 bg-gradient-to-r from-slate-50 to-blue-50">
-              <h3 className="text-lg font-bold text-slate-800 flex items-center gap-3">
+          <div className={`${cardClass} rounded-2xl shadow-2xl max-w-md w-full border`}>
+            <div className={`px-6 py-5 border-b ${darkMode ? 'border-navy-700 bg-navy-700' : 'border-gray-100 bg-gray-50'} rounded-t-2xl`}>
+              <h3 className={`text-lg font-bold ${textClass} flex items-center gap-3`}>
                 {createdCode ? (
                   <>
-                    <CheckCircle className="text-green-600" size={20} />
+                    <CheckCircle className="text-green-500" size={22} />
                     Class Created Successfully
                   </>
                 ) : (
                   <>
-                    <Plus className="text-blue-600" size={20} />
+                    <Plus className="text-brand-500" size={22} />
                     Create New Class
                   </>
                 )}
@@ -708,33 +790,33 @@ const AdminDashboard: React.FC = () => {
 
             {createdCode ? (
               <div className="p-6">
-                <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200/60 rounded-xl p-5 mb-5">
+                <div className={`${darkMode ? 'bg-green-500/10 border-green-500/20' : 'bg-green-50 border-green-200'} border rounded-xl p-5 mb-5`}>
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center">
+                    <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-green-500 rounded-full flex items-center justify-center">
                       <Check className="text-white" size={20} />
                     </div>
                     <div>
-                      <h4 className="font-bold text-green-800">Class Created!</h4>
-                      <p className="text-sm text-green-700">{createdCode.name}</p>
+                      <h4 className="font-bold text-green-600">Class Created!</h4>
+                      <p className="text-sm text-green-600">{createdCode.name}</p>
                     </div>
                   </div>
-                  <div className="bg-white rounded-lg p-4 border border-green-200">
-                    <p className="text-sm font-semibold text-slate-700 mb-2">Class Code:</p>
+                  <div className={`${darkMode ? 'bg-navy-700' : 'bg-white'} rounded-xl p-4 border ${darkMode ? 'border-navy-600' : 'border-green-200'}`}>
+                    <p className={`text-sm font-semibold ${textClass} mb-2`}>Class Code:</p>
                     <div className="flex items-center gap-3">
-                      <code className="text-xl font-mono font-bold text-blue-700 bg-blue-100 px-4 py-2 rounded-lg flex-1 text-center">{createdCode.code}</code>
-                      <button 
+                      <code className={`text-xl font-mono font-bold flex-1 text-center py-2 rounded-lg ${darkMode ? 'bg-navy-600 text-brand-300' : 'bg-brand-50 text-brand-600'}`}>{createdCode.code}</code>
+                      <button
                         onClick={() => copyToClipboard(createdCode.code)}
-                        className="p-2 hover:bg-green-100 rounded-lg transition-colors"
+                        className={`p-2.5 rounded-xl transition-colors ${darkMode ? 'hover:bg-navy-600' : 'hover:bg-green-100'}`}
                       >
-                        {copied ? <Check size={18} className="text-green-600" /> : <Copy size={18} className="text-slate-500" />}
+                        {copied ? <Check size={18} className="text-green-500" /> : <Copy size={18} className={textSecondaryClass} />}
                       </button>
                     </div>
                   </div>
                 </div>
-                <p className="text-sm text-slate-600 mb-5 text-center">Share this code with your students to let them register for the class.</p>
+                <p className={`text-sm ${textSecondaryClass} mb-5 text-center`}>Share this code with your students to let them register for the class.</p>
                 <button
                   onClick={closeModalAndReset}
-                  className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-semibold rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg"
+                  className="w-full py-3 bg-gradient-to-br from-brand-400 to-brand-500 text-white text-sm font-semibold rounded-xl hover:from-brand-500 hover:to-brand-600 transition-all duration-200 shadow-lg shadow-brand-500/30"
                 >
                   Done
                 </button>
@@ -742,12 +824,16 @@ const AdminDashboard: React.FC = () => {
             ) : (
               <form onSubmit={handleCreateCode} className="p-6">
                 <div className="mb-6">
-                  <label className="block text-sm font-semibold text-slate-700 mb-3">Class Name</label>
+                  <label className={`block text-sm font-semibold ${textClass} mb-3`}>Class Name</label>
                   <input
                     type="text"
                     value={newCodeName}
                     onChange={(e) => setNewCodeName(e.target.value)}
-                    className="w-full px-4 py-3 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent bg-slate-50 hover:bg-white transition-colors"
+                    className={`w-full px-4 py-3 text-sm border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all ${
+                      darkMode
+                        ? 'bg-navy-700 border-navy-600 text-white placeholder:text-gray-500'
+                        : 'bg-gray-50 border-gray-200 text-navy-700 hover:bg-white'
+                    }`}
                     placeholder="e.g., Fall 2024 Section A"
                     required
                   />
@@ -756,14 +842,18 @@ const AdminDashboard: React.FC = () => {
                   <button
                     type="button"
                     onClick={closeModalAndReset}
-                    className="flex-1 py-3 text-sm font-semibold text-slate-600 border border-slate-300 rounded-xl hover:bg-slate-50 transition-colors"
+                    className={`flex-1 py-3 text-sm font-semibold rounded-xl transition-colors ${
+                      darkMode
+                        ? 'text-gray-400 border border-navy-600 hover:bg-navy-700'
+                        : 'text-gray-600 border border-gray-200 hover:bg-gray-50'
+                    }`}
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isCreating || !newCodeName}
-                    className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-semibold rounded-xl hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg flex items-center justify-center gap-2"
+                    className="flex-1 py-3 bg-gradient-to-br from-brand-400 to-brand-500 text-white text-sm font-semibold rounded-xl hover:from-brand-500 hover:to-brand-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg shadow-brand-500/30 flex items-center justify-center gap-2"
                   >
                     {isCreating ? (
                       <>

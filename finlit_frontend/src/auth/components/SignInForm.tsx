@@ -8,6 +8,7 @@ interface SignInFormProps {
   isLoading: boolean;
   error: string | null;
   onForgotPassword: () => void;
+  isDarkMode: boolean;
 }
 
 export const SignInForm: React.FC<SignInFormProps> = ({
@@ -15,6 +16,7 @@ export const SignInForm: React.FC<SignInFormProps> = ({
   isLoading,
   error,
   onForgotPassword,
+  isDarkMode,
 }) => {
   const [formData, setFormData] = useState({
     email: '',
@@ -108,40 +110,43 @@ export const SignInForm: React.FC<SignInFormProps> = ({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-md p-4 flex items-center gap-3">
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 flex items-center gap-3">
           <AlertCircle className="text-red-500" size={20} />
-          <span className="text-red-700 text-sm">{error}</span>
+          <span className="text-red-700 dark:text-red-300 text-sm">{error}</span>
         </div>
       )}
 
       <div className="relative">
+        <label 
+          htmlFor="email" 
+          style={{ color: isDarkMode ? '#ffffff' : '#1B254B' }}
+          className="block text-sm font-medium text-gray-700 dark:text-white mb-2"
+        >
+          Email*
+        </label>
         <div className="relative">
-          <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 transition-colors duration-200" size={20} />
+          <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 transition-colors duration-200" size={20} />
           <input
             id="email"
             type="email"
             value={formData.email}
             onChange={(e) => handleInputChange('email', e.target.value)}
             onBlur={() => handleBlur('email')}
-            className={`w-full pl-12 pr-4 py-4 border-2 rounded-xl bg-gray-50 focus:bg-white focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all duration-200 placeholder-transparent peer ${
-              fieldErrors.email ? 'border-red-300 bg-red-50 focus:ring-red-100 focus:border-red-500' : 'border-gray-200 hover:border-gray-300'
+            style={{ 
+              backgroundColor: isDarkMode ? '#111c44' : 'white', 
+              color: isDarkMode ? '#ffffff' : '#1B254B' 
+            }}
+            className={`w-full pl-12 pr-4 py-3.5 rounded-xl border bg-white dark:bg-navy-800 focus:ring-2 focus:ring-brand-100 dark:focus:ring-brand-900/30 focus:border-brand-500 dark:focus:border-brand-400 outline-none transition-all duration-200 text-navy-700 dark:text-white ${
+              fieldErrors.email 
+                ? 'border-red-300 !bg-red-50 dark:!bg-red-900/20 dark:border-red-600 focus:ring-red-100 dark:focus:ring-red-800 focus:border-red-500' 
+                : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
             }`}
-            placeholder="Enter your email"
+            placeholder="mail@example.com"
             disabled={isLoading}
           />
-          <label 
-            htmlFor="email" 
-            className={`absolute left-12 transition-all duration-200 pointer-events-none ${
-              formData.email 
-                ? 'top-2 text-xs text-gray-500 font-medium' 
-                : 'top-1/2 -translate-y-1/2 text-gray-400 peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-600 peer-focus:font-medium'
-            }`}
-          >
-            Email Address
-          </label>
         </div>
         {fieldErrors.email && (
-          <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+          <p className="mt-2 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
             <AlertCircle size={16} />
             {fieldErrors.email}
           </p>
@@ -149,41 +154,44 @@ export const SignInForm: React.FC<SignInFormProps> = ({
       </div>
 
       <div className="relative">
+        <label 
+          htmlFor="password" 
+          style={{ color: isDarkMode ? '#ffffff' : '#1B254B' }}
+          className="block text-sm font-medium text-gray-700 dark:text-white mb-2"
+        >
+          Password*
+        </label>
         <div className="relative">
-          <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 transition-colors duration-200" size={20} />
+          <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 transition-colors duration-200" size={20} />
           <input
             id="password"
             type={showPassword ? 'text' : 'password'}
             value={formData.password}
             onChange={(e) => handleInputChange('password', e.target.value)}
             onBlur={() => handleBlur('password')}
-            className={`w-full pl-12 pr-14 py-4 border-2 rounded-xl bg-gray-50 focus:bg-white focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all duration-200 placeholder-transparent peer ${
-              fieldErrors.password ? 'border-red-300 bg-red-50 focus:ring-red-100 focus:border-red-500' : 'border-gray-200 hover:border-gray-300'
+            style={{ 
+              backgroundColor: isDarkMode ? '#111c44' : 'white', 
+              color: isDarkMode ? '#ffffff' : '#1B254B' 
+            }}
+            className={`w-full pl-12 pr-14 py-3.5 rounded-xl border bg-white dark:bg-navy-800 focus:ring-2 focus:ring-brand-100 dark:focus:ring-brand-900/30 focus:border-brand-500 dark:focus:border-brand-400 outline-none transition-all duration-200 text-navy-700 dark:text-white ${
+              fieldErrors.password 
+                ? 'border-red-300 !bg-red-50 dark:!bg-red-900/20 dark:border-red-600 focus:ring-red-100 dark:focus:ring-red-800 focus:border-red-500' 
+                : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
             }`}
-            placeholder="Enter your password"
+            placeholder="Min. 8 characters"
             disabled={isLoading}
           />
-          <label 
-            htmlFor="password" 
-            className={`absolute left-12 transition-all duration-200 pointer-events-none ${
-              formData.password 
-                ? 'top-2 text-xs text-gray-500 font-medium' 
-                : 'top-1/2 -translate-y-1/2 text-gray-400 peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-600 peer-focus:font-medium'
-            }`}
-          >
-            Password
-          </label>
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200 p-1 rounded-md hover:bg-gray-100"
+            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200 p-1 rounded-md hover:bg-gray-100 dark:hover:bg-navy-700"
             disabled={isLoading}
           >
             {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
           </button>
         </div>
         {fieldErrors.password && (
-          <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+          <p className="mt-2 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
             <AlertCircle size={16} />
             {fieldErrors.password}
           </p>
@@ -196,16 +204,17 @@ export const SignInForm: React.FC<SignInFormProps> = ({
             type="checkbox"
             checked={formData.rememberMe}
             onChange={(e) => handleInputChange('rememberMe', e.target.checked)}
-            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            style={{ backgroundColor: isDarkMode ? '#111c44' : 'white' }}
+            className="h-4 w-4 text-brand-600 dark:text-brand-400 focus:ring-brand-500 dark:focus:ring-brand-400 border-gray-300 dark:border-gray-500 bg-white dark:bg-navy-800 rounded"
             disabled={isLoading}
           />
-          <span className="ml-2 text-sm text-gray-600">Remember me</span>
+          <span style={{ color: isDarkMode ? '#ffffff' : '#1B254B' }} className="ml-3 text-sm font-medium text-gray-700 dark:text-white">Remember me</span>
         </label>
         
         <button
           type="button"
           onClick={onForgotPassword}
-          className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+          className="text-sm text-brand-600 dark:text-brand-400 hover:text-brand-800 dark:hover:text-brand-300 font-semibold transition-colors"
           disabled={isLoading}
         >
           Forgot password?
@@ -215,7 +224,7 @@ export const SignInForm: React.FC<SignInFormProps> = ({
       <button
         type="submit"
         disabled={isLoading || Object.keys(fieldErrors).length > 0}
-        className="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+        className="linear mt-2 w-full rounded-xl bg-brand-500 py-3 text-base font-medium text-white transition duration-200 hover:bg-brand-600 active:bg-brand-700 dark:bg-brand-400 dark:text-white dark:hover:bg-brand-300 dark:active:bg-brand-200 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {isLoading ? (
           <div className="flex items-center justify-center gap-2">

@@ -8,12 +8,14 @@ interface SignUpFormProps {
   onSubmit: (userData: SignUpRequest) => Promise<void>;
   isLoading: boolean;
   error: string | null;
+  isDarkMode: boolean;
 }
 
 export const SignUpForm: React.FC<SignUpFormProps> = ({
   onSubmit,
   isLoading,
   error,
+  isDarkMode,
 }) => {
   const [formData, setFormData] = useState({
     email: '',
@@ -218,98 +220,102 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-md p-4 flex items-center gap-3">
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 flex items-center gap-3">
           <AlertCircle className="text-red-500" size={20} />
-          <span className="text-red-700 text-sm">{error}</span>
+          <span className="text-red-700 dark:text-red-300 text-sm">{error}</span>
         </div>
       )}
 
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor="email" style={{ color: isDarkMode ? '#ffffff' : '#1B254B' }} className="block text-sm font-medium text-gray-700 dark:text-white mb-2">
           Email Address
         </label>
         <div className="relative">
-          <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+          <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" size={20} />
           <input
             id="email"
             type="email"
             value={formData.email}
             onChange={(e) => handleInputChange('email', e.target.value)}
             onBlur={() => handleBlur('email')}
-            className={`w-full pl-10 pr-4 py-3 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
-              fieldErrors.email ? 'border-red-300 bg-red-50' : 'border-gray-300'
+            style={{ backgroundColor: isDarkMode ? '#111c44' : 'white', color: isDarkMode ? '#ffffff' : '#1B254B' }}
+            className={`w-full pl-10 pr-4 py-3 border rounded-xl bg-white dark:bg-navy-800 focus:ring-2 focus:ring-brand-100 dark:focus:ring-brand-900/30 focus:border-brand-500 dark:focus:border-brand-400 outline-none transition-all duration-200 text-navy-700 dark:text-white ${
+              fieldErrors.email ? 'border-red-300 !bg-red-50 dark:!bg-red-900/20 dark:border-red-600' : 'border-gray-200 dark:border-gray-600'
             }`}
             placeholder="Enter your email"
             disabled={isLoading}
           />
         </div>
         {fieldErrors.email && (
-          <p className="mt-1 text-sm text-red-600">{fieldErrors.email}</p>
+          <p className="mt-1 text-sm text-red-600 dark:text-red-400">{fieldErrors.email}</p>
         )}
       </div>
 
       <div>
-        <label htmlFor="displayName" className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor="displayName" style={{ color: isDarkMode ? '#ffffff' : '#1B254B' }} className="block text-sm font-medium text-gray-700 dark:text-white mb-2">
           Display Name
         </label>
         <div className="relative">
-          <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+          <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" size={20} />
           <input
             id="displayName"
             type="text"
             value={formData.displayName}
             onChange={(e) => handleInputChange('displayName', e.target.value)}
             onBlur={() => handleBlur('displayName')}
-            className={`w-full pl-10 pr-4 py-3 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
-              fieldErrors.displayName ? 'border-red-300 bg-red-50' : 'border-gray-300'
+            style={{ backgroundColor: isDarkMode ? '#111c44' : 'white', color: isDarkMode ? '#ffffff' : '#1B254B' }}
+            className={`w-full pl-10 pr-4 py-3 border rounded-xl bg-white dark:bg-navy-800 focus:ring-2 focus:ring-brand-100 dark:focus:ring-brand-900/30 focus:border-brand-500 dark:focus:border-brand-400 outline-none transition-all duration-200 text-navy-700 dark:text-white ${
+              fieldErrors.displayName ? 'border-red-300 !bg-red-50 dark:!bg-red-900/20 dark:border-red-600' : 'border-gray-200 dark:border-gray-600'
             }`}
             placeholder="Enter your name"
             disabled={isLoading}
           />
         </div>
         {fieldErrors.displayName && (
-          <p className="mt-1 text-sm text-red-600">{fieldErrors.displayName}</p>
+          <p className="mt-1 text-sm text-red-600 dark:text-red-400">{fieldErrors.displayName}</p>
         )}
       </div>
 
       <div>
-        <label htmlFor="classCode" className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor="classCode" style={{ color: isDarkMode ? '#ffffff' : '#1B254B' }} className="block text-sm font-medium text-gray-700 dark:text-white mb-2">
           Class Code
         </label>
         <div className="relative">
-          <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+          <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" size={20} />
           <input
             id="classCode"
             type="text"
             value={formData.classCode}
             onChange={(e) => handleInputChange('classCode', e.target.value.toUpperCase())}
             onBlur={() => handleBlur('classCode')}
-            className={`w-full pl-10 pr-4 py-3 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
-              fieldErrors.classCode ? 'border-red-300 bg-red-50' : 'border-gray-300'
+            style={{ backgroundColor: isDarkMode ? '#111c44' : 'white', color: isDarkMode ? '#ffffff' : '#1B254B' }}
+            className={`w-full pl-10 pr-4 py-3 border rounded-xl bg-white dark:bg-navy-800 focus:ring-2 focus:ring-brand-100 dark:focus:ring-brand-900/30 focus:border-brand-500 dark:focus:border-brand-400 outline-none transition-all duration-200 text-navy-700 dark:text-white ${
+              fieldErrors.classCode ? 'border-red-300 !bg-red-50 dark:!bg-red-900/20 dark:border-red-600' : 'border-gray-200 dark:border-gray-600'
             }`}
             placeholder="Enter class code from instructor"
             disabled={isLoading}
           />
         </div>
         {fieldErrors.classCode && (
-          <p className="mt-1 text-sm text-red-600">{fieldErrors.classCode}</p>
+          <p className="mt-1 text-sm text-red-600 dark:text-red-400">{fieldErrors.classCode}</p>
         )}
       </div>
 
       <div>
-        <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor="password" style={{ color: isDarkMode ? '#ffffff' : '#1B254B' }} className="block text-sm font-medium text-gray-700 dark:text-white mb-2">
           Password
         </label>
         <div className="relative">
-          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" size={20} />
           <input
             id="password"
             type={showPassword ? 'text' : 'password'}
             value={formData.password}
             onChange={(e) => handleInputChange('password', e.target.value)}
             onBlur={() => handleBlur('password')}
-            className={`w-full pl-10 pr-12 py-3 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
-              fieldErrors.password ? 'border-red-300 bg-red-50' : 'border-gray-300'
+            style={{ backgroundColor: isDarkMode ? '#111c44' : 'white', color: isDarkMode ? '#ffffff' : '#1B254B' }}
+            className={`w-full pl-10 pr-12 py-3 border rounded-xl bg-white dark:bg-navy-800 focus:ring-2 focus:ring-brand-100 dark:focus:ring-brand-900/30 focus:border-brand-500 dark:focus:border-brand-400 outline-none transition-all duration-200 text-navy-700 dark:text-white ${
+              fieldErrors.password ? 'border-red-300 !bg-red-50 dark:!bg-red-900/20 dark:border-red-600' : 'border-gray-200 dark:border-gray-600'
             }`}
             placeholder="Create a password"
             disabled={isLoading}
@@ -317,7 +323,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
             disabled={isLoading}
           >
             {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
@@ -327,38 +333,38 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
         {passwordStrength && formData.password && (
           <div className="mt-2 space-y-2">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600">Password strength:</span>
+              <span className="text-gray-600 dark:text-gray-300">Password strength:</span>
               <span className={`font-medium ${
-                passwordStrength.score < 2 ? 'text-red-600' :
-                passwordStrength.score < 4 ? 'text-yellow-600' : 'text-green-600'
+                passwordStrength.score < 2 ? 'text-red-600 dark:text-red-400' :
+                passwordStrength.score < 4 ? 'text-yellow-600 dark:text-yellow-400' : 'text-green-600 dark:text-green-400'
               }`}>
                 {getPasswordStrengthText(passwordStrength.score)}
               </span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
+            <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
               <div
                 className={`h-2 rounded-full transition-all duration-300 ${getPasswordStrengthColor(passwordStrength.score)}`}
                 style={{ width: `${(passwordStrength.score / 5) * 100}%` }}
               ></div>
             </div>
             <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className={`flex items-center gap-1 ${passwordStrength.hasUppercase ? 'text-green-600' : 'text-gray-400'}`}>
+              <div className={`flex items-center gap-1 ${passwordStrength.hasUppercase ? 'text-green-600 dark:text-green-400' : 'text-gray-400 dark:text-gray-500'}`}>
                 <CheckCircle size={12} />
                 Uppercase letter
               </div>
-              <div className={`flex items-center gap-1 ${passwordStrength.hasLowercase ? 'text-green-600' : 'text-gray-400'}`}>
+              <div className={`flex items-center gap-1 ${passwordStrength.hasLowercase ? 'text-green-600 dark:text-green-400' : 'text-gray-400 dark:text-gray-500'}`}>
                 <CheckCircle size={12} />
                 Lowercase letter
               </div>
-              <div className={`flex items-center gap-1 ${passwordStrength.hasNumber ? 'text-green-600' : 'text-gray-400'}`}>
+              <div className={`flex items-center gap-1 ${passwordStrength.hasNumber ? 'text-green-600 dark:text-green-400' : 'text-gray-400 dark:text-gray-500'}`}>
                 <CheckCircle size={12} />
                 Number
               </div>
-              <div className={`flex items-center gap-1 ${passwordStrength.hasSpecialChar ? 'text-green-600' : 'text-gray-400'}`}>
+              <div className={`flex items-center gap-1 ${passwordStrength.hasSpecialChar ? 'text-green-600 dark:text-green-400' : 'text-gray-400 dark:text-gray-500'}`}>
                 <CheckCircle size={12} />
                 Special character
               </div>
-              <div className={`flex items-center gap-1 ${passwordStrength.isMinLength ? 'text-green-600' : 'text-gray-400'}`}>
+              <div className={`flex items-center gap-1 ${passwordStrength.isMinLength ? 'text-green-600 dark:text-green-400' : 'text-gray-400 dark:text-gray-500'}`}>
                 <CheckCircle size={12} />
                 8+ characters
               </div>
@@ -367,26 +373,27 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
         )}
 
         {fieldErrors.password && (
-          <p className="mt-1 text-sm text-red-600">{fieldErrors.password}</p>
+          <p className="mt-1 text-sm text-red-600 dark:text-red-400">{fieldErrors.password}</p>
         )}
       </div>
 
       <div>
-        <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor="confirmPassword" style={{ color: isDarkMode ? '#ffffff' : '#1B254B' }} className="block text-sm font-medium text-gray-700 dark:text-white mb-2">
           Confirm Password
         </label>
         <div className="relative">
-          <Shield className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+          <Shield className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" size={20} />
           <input
             id="confirmPassword"
             type={showConfirmPassword ? 'text' : 'password'}
             value={formData.confirmPassword}
             onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
             onBlur={() => handleBlur('confirmPassword')}
-            className={`w-full pl-10 pr-12 py-3 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
-              fieldErrors.confirmPassword ? 'border-red-300 bg-red-50' :
-              formData.confirmPassword && !fieldErrors.confirmPassword && formData.password === formData.confirmPassword ? 'border-green-300 bg-green-50' :
-              'border-gray-300'
+            style={{ backgroundColor: isDarkMode ? '#111c44' : 'white', color: isDarkMode ? '#ffffff' : '#1B254B' }}
+            className={`w-full pl-10 pr-12 py-3 border rounded-xl bg-white dark:bg-navy-800 focus:ring-2 focus:ring-brand-100 dark:focus:ring-brand-900/30 focus:border-brand-500 dark:focus:border-brand-400 outline-none transition-all duration-200 text-navy-700 dark:text-white ${
+              fieldErrors.confirmPassword ? 'border-red-300 !bg-red-50 dark:!bg-red-900/20 dark:border-red-600' :
+              formData.confirmPassword && !fieldErrors.confirmPassword && formData.password === formData.confirmPassword ? 'border-green-300 !bg-green-50 dark:!bg-green-900/20 dark:border-green-600' :
+              'border-gray-200 dark:border-gray-600'
             }`}
             placeholder="Confirm your password"
             disabled={isLoading}
@@ -394,14 +401,14 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
           <button
             type="button"
             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
             disabled={isLoading}
           >
             {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
           </button>
         </div>
         {fieldErrors.confirmPassword && (
-          <p className="mt-1 text-sm text-red-600">{fieldErrors.confirmPassword}</p>
+          <p className="mt-1 text-sm text-red-600 dark:text-red-400">{fieldErrors.confirmPassword}</p>
         )}
       </div>
 
@@ -411,29 +418,29 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
             type="checkbox"
             checked={formData.acceptedTerms}
             onChange={(e) => handleInputChange('acceptedTerms', e.target.checked)}
-            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-0.5"
+            className="h-4 w-4 text-brand-600 dark:text-brand-400 focus:ring-brand-500 dark:focus:ring-brand-400 border-gray-300 dark:border-gray-500 dark:bg-navy-800 rounded mt-0.5"
             disabled={isLoading}
           />
-          <span className="text-sm text-gray-600">
+          <span style={{ color: isDarkMode ? '#ffffff' : '#1B254B' }} className="text-sm text-gray-600 dark:text-gray-300">
             I agree to the{' '}
-            <a href="/terms" className="text-blue-600 hover:text-blue-800 font-medium">
+            <a href="/terms" className="text-brand-600 dark:text-brand-400 hover:text-brand-800 dark:hover:text-brand-300 font-medium">
               Terms and Conditions
             </a>{' '}
             and{' '}
-            <a href="/privacy" className="text-blue-600 hover:text-blue-800 font-medium">
+            <a href="/privacy" className="text-brand-600 dark:text-brand-400 hover:text-brand-800 dark:hover:text-brand-300 font-medium">
               Privacy Policy
             </a>
           </span>
         </label>
         {fieldErrors.acceptedTerms && (
-          <p className="mt-1 text-sm text-red-600">{fieldErrors.acceptedTerms}</p>
+          <p className="mt-1 text-sm text-red-600 dark:text-red-400">{fieldErrors.acceptedTerms}</p>
         )}
       </div>
 
       <button
         type="submit"
         disabled={isLoading || codeValidation.isValidating || Object.keys(fieldErrors).length > 0 || !formData.acceptedTerms}
-        className="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+        className="linear mt-2 w-full rounded-xl bg-brand-500 py-3 text-base font-medium text-white transition duration-200 hover:bg-brand-600 active:bg-brand-700 dark:bg-brand-400 dark:text-white dark:hover:bg-brand-300 dark:active:bg-brand-200 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {isLoading || codeValidation.isValidating ? (
           <div className="flex items-center justify-center gap-2">
