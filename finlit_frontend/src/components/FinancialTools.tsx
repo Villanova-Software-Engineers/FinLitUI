@@ -26,7 +26,7 @@ import {
   FolderOpen,
   Loader2
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { db } from '../firebase/config';
 import { useAuthContext } from '../auth/context/AuthContext';
 import {
@@ -1044,7 +1044,7 @@ const ProgressBar: React.FC<{
 const BackButton: React.FC<{ onClick: () => void }> = ({ onClick }) => (
   <motion.button
     onClick={onClick}
-    className="flex items-center gap-2 text-gray-500 hover:text-gray-700 transition-colors mb-6"
+    className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors mb-6"
     whileHover={{ x: -4 }}
   >
     <ArrowLeft className="w-5 h-5" />
@@ -2339,9 +2339,18 @@ const EmergencyFundCalculator: React.FC<CalculatorProps> = ({ onBack, onSave, lo
 const FinancialTools: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuthContext();
+  const [searchParams] = useSearchParams();
   const [selectedTool, setSelectedTool] = useState<ToolId | null>(null);
   const [showSavedPanel, setShowSavedPanel] = useState(false);
   const [loadedCalculation, setLoadedCalculation] = useState<SavedCalculation | null>(null);
+
+  // Auto-select tool from query parameter
+  useEffect(() => {
+    const toolParam = searchParams.get('tool') as ToolId | null;
+    if (toolParam && ['budget', 'savings', 'loan', 'networth', 'compound', 'debt-payoff', 'emergency-fund'].includes(toolParam)) {
+      setSelectedTool(toolParam);
+    }
+  }, [searchParams]);
 
   const {
     calculations,
@@ -2367,11 +2376,10 @@ const FinancialTools: React.FC = () => {
   };
 
   const renderTool = () => {
-    const props = { 
+    const props = {
       onBack: () => {
-        setSelectedTool(null);
-        setLoadedCalculation(null);
-      }, 
+        navigate('/financial-tools');
+      },
       onSave: handleSave,
       loadedData: loadedCalculation?.data,
       loadedName: loadedCalculation?.name
@@ -2410,7 +2418,7 @@ const FinancialTools: React.FC = () => {
           <div className="flex items-center justify-between">
             <button
               onClick={() => navigate('/dashboard')}
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors"
+              className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
               <span className="hidden sm:inline font-medium">Dashboard</span>
