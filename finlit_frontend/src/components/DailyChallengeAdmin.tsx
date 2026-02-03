@@ -1,6 +1,8 @@
 /**
  * Daily Challenge Admin Page
  * Manage daily challenge questions for the dashboard
+ * NOTE: Only super admin (owner) can add/edit/delete challenges
+ *       Regular admins can only view the current challenge
  */
 
 import React, { useState, useEffect } from 'react';
@@ -14,8 +16,9 @@ import {
   Loader2,
   Flame,
   CheckCircle,
-  Shield,
-  AlertTriangle
+  AlertTriangle,
+  Lock,
+  Eye
 } from 'lucide-react';
 import { useAuthContext } from '../auth/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -93,6 +96,11 @@ const DailyChallengeAdmin: React.FC = () => {
     
     try {
       if (!user) throw new Error('User not authenticated');
+      if (user.role !== 'owner') {
+        setError('Only super administrators can edit daily challenges');
+        setIsSubmitting(false);
+        return;
+      }
       
       if (editingChallengeId) {
         // Update existing challenge
@@ -150,6 +158,11 @@ const DailyChallengeAdmin: React.FC = () => {
   };
 
   const handleDeleteChallenge = async (challengeId: string) => {
+    if (!user || user.role !== 'owner') {
+      setError('Only super administrators can delete daily challenges');
+      return;
+    }
+    
     if (!confirm('Are you sure you want to delete this challenge?')) return;
     
     try {
@@ -168,6 +181,11 @@ const DailyChallengeAdmin: React.FC = () => {
   };
 
   const handleEditChallenge = (challenge: DailyChallengeQuestion) => {
+    if (!user || user.role !== 'owner') {
+      setError('Only super administrators can edit daily challenges');
+      return;
+    }
+    
     setNewChallenge({
       question: challenge.question,
       options: challenge.options,
@@ -202,6 +220,9 @@ const DailyChallengeAdmin: React.FC = () => {
 
   if (!user || (user.role !== 'admin' && user.role !== 'owner')) return null;
 
+  // Check if user is super admin (owner) - only they can edit
+  const isSuperAdmin = user.role === 'owner';
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 p-4 sm:p-6 md:p-8">
       <div className="max-w-6xl mx-auto">
@@ -217,13 +238,21 @@ const DailyChallengeAdmin: React.FC = () => {
             </button>
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
-                Daily Challenge Manager
+                Daily Challenge {isSuperAdmin ? 'Manager' : 'Viewer'}
               </h1>
               <p className="text-slate-600 mt-1 text-sm sm:text-base font-medium">
-                Manage daily challenge questions for the dashboard
+                {isSuperAdmin
+                  ? 'Manage daily challenge questions for the dashboard'
+                  : 'View the current daily challenge question'}
               </p>
             </div>
           </div>
+          {!isSuperAdmin && (
+            <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 border border-amber-200 rounded-xl">
+              <Eye size={16} className="text-amber-600" />
+              <span className="text-sm font-medium text-amber-700">View Only</span>
+            </div>
+          )}
         </div>
 
         {/* Messages */}
@@ -263,22 +292,24 @@ const DailyChallengeAdmin: React.FC = () => {
                 {dailyChallenges.length > 0 ? 'Active' : 'None set'}
               </span>
             </div>
-            <button
-              onClick={() => {
-                setShowChallengeForm(true);
-                setEditingChallengeId(null);
-                setNewChallenge({
-                  question: '',
-                  options: ['', '', '', ''],
-                  correct: 0,
-                  explanation: '',
-                });
-              }}
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white text-sm font-semibold rounded-xl hover:from-amber-600 hover:to-orange-700 transition-all duration-200 shadow-lg"
-            >
-              <Plus size={18} />
-              {dailyChallenges.length > 0 ? 'Replace Challenge' : 'Add Challenge'}
-            </button>
+            {isSuperAdmin && (
+              <button
+                onClick={() => {
+                  setShowChallengeForm(true);
+                  setEditingChallengeId(null);
+                  setNewChallenge({
+                    question: '',
+                    options: ['', '', '', ''],
+                    correct: 0,
+                    explanation: '',
+                  });
+                }}
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white text-sm font-semibold rounded-xl hover:from-amber-600 hover:to-orange-700 transition-all duration-200 shadow-lg"
+              >
+                <Plus size={18} />
+                {dailyChallenges.length > 0 ? 'Replace Challenge' : 'Add Challenge'}
+              </button>
+            )}
           </div>
 
           <div className="p-6">
@@ -334,22 +365,24 @@ const DailyChallengeAdmin: React.FC = () => {
                           Added {challenge.createdAt.toLocaleDateString()}
                         </p>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => handleEditChallenge(challenge)}
-                          className="p-2 hover:bg-blue-100 rounded-lg transition-colors text-blue-600"
-                          title="Edit challenge"
-                        >
-                          <Edit3 size={18} />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteChallenge(challenge.id)}
-                          className="p-2 hover:bg-red-100 rounded-lg transition-colors text-red-600"
-                          title="Replace with new challenge"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
+                      {isSuperAdmin && (
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleEditChallenge(challenge)}
+                            className="p-2 hover:bg-blue-100 rounded-lg transition-colors text-blue-600"
+                            title="Edit challenge"
+                          >
+                            <Edit3 size={18} />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteChallenge(challenge.id)}
+                            className="p-2 hover:bg-red-100 rounded-lg transition-colors text-red-600"
+                            title="Replace with new challenge"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -358,18 +391,26 @@ const DailyChallengeAdmin: React.FC = () => {
 
             <div className="mt-6 px-4 py-3 bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg border border-amber-200">
               <div className="flex items-start gap-3">
-                <AlertTriangle size={18} className="text-amber-600 mt-0.5" />
+                {isSuperAdmin ? (
+                  <AlertTriangle size={18} className="text-amber-600 mt-0.5" />
+                ) : (
+                  <Lock size={18} className="text-amber-600 mt-0.5" />
+                )}
                 <div className="text-sm text-amber-700">
-                  <p className="font-semibold mb-1">How it works:</p>
-                  <p>Only one daily challenge can be active at a time. Adding a new challenge will replace the current one and reset all user progress.</p>
+                  <p className="font-semibold mb-1">{isSuperAdmin ? 'How it works:' : 'View Only Mode:'}</p>
+                  {isSuperAdmin ? (
+                    <p>Only one daily challenge can be active at a time. Adding a new challenge will replace the current one and reset all user progress.</p>
+                  ) : (
+                    <p>Only <strong>Super Administrators</strong> can add, edit, or delete daily challenges. Contact your super admin to make changes.</p>
+                  )}
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Add/Edit Challenge Form */}
-        {showChallengeForm && (
+        {/* Add/Edit Challenge Form - Only for Super Admins */}
+        {showChallengeForm && isSuperAdmin && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
             <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl max-w-2xl w-full border border-slate-200/60 max-h-[90vh] overflow-y-auto">
               <div className="px-6 py-5 border-b border-slate-200/60 bg-gradient-to-r from-slate-50 to-amber-50">
