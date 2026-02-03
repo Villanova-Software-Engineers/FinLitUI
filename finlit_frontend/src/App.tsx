@@ -28,6 +28,8 @@ import FinancialTools from "./components/FinancialTools";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import Games from "./pages/Games";
+import GamesHorizon from "./pages/GamesHorizon";
+import FinancialToolsHorizon from "./pages/FinancialToolsHorizon";
 import StockSimulation from "./components/StockSimulation";
 import ModuleAccessControl from "./components/ModuleAccessControl";
 import { MODULES } from "./hooks/useModuleScore";
@@ -289,9 +291,19 @@ function App() {
             }
           />
 
-          {/* Financial Tools Route */}
+          {/* Financial Tools Route - Horizon UI (New Default) */}
           <Route
             path="/financial-tools"
+            element={
+              <ProtectedRoute>
+                <FinancialToolsHorizon />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Financial Tools Route - Original (Backup) */}
+          <Route
+            path="/financial-tools-original"
             element={
               <ProtectedRoute>
                 <FinancialTools />
@@ -299,9 +311,19 @@ function App() {
             }
           />
 
-          {/* Games Route */}
+          {/* Games Route - Horizon UI (New Default) */}
           <Route
             path="/games"
+            element={
+              <ProtectedRoute>
+                <GamesHorizon />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Games Route - Original (Backup) */}
+          <Route
+            path="/games-original"
             element={
               <ProtectedRoute>
                 <Games />
