@@ -26,6 +26,17 @@ export default function NeedsWants() {
     return selected.length === count ? selected : [...list].slice(0, count);
   }
 
+  // Get balanced items with exactly 5 needs and 3 wants for island game
+  function getBalancedItems(allItems) {
+    const needs = allItems.filter(item => item.type === "need");
+    const wants = allItems.filter(item => item.type === "want");
+
+    const selectedNeeds = getRandomItem(needs, 5);
+    const selectedWants = getRandomItem(wants, 3);
+
+    return shuffleArray([...selectedNeeds, ...selectedWants]);
+  }
+
   const [step, setStep] = useState(1);
   const [selected, setSelected] = useState([]);
   const [current, setCurrent] = useState(0);
@@ -90,7 +101,7 @@ export default function NeedsWants() {
 
   // Initialize with hardcoded items
   useEffect(() => {
-    setItems(getRandomItem(hardcodedItems, 8));
+    setItems(getBalancedItems(hardcodedItems)); // Always 5 needs + 3 wants
     setItems2(getRandomItem(hardcodedItems, 8)); // Reduced from 15 to 8 questions
   }, []);
 
