@@ -26,13 +26,13 @@ export default function NeedsWants() {
     return selected.length === count ? selected : [...list].slice(0, count);
   }
 
-  // Get balanced items with exactly 5 needs and 3 wants for island game
+  // Get balanced items with exactly 5 needs and 4 wants for island game
   function getBalancedItems(allItems) {
     const needs = allItems.filter(item => item.type === "need");
     const wants = allItems.filter(item => item.type === "want");
 
     const selectedNeeds = getRandomItem(needs, 5);
-    const selectedWants = getRandomItem(wants, 3);
+    const selectedWants = getRandomItem(wants, 4);
 
     return shuffleArray([...selectedNeeds, ...selectedWants]);
   }
