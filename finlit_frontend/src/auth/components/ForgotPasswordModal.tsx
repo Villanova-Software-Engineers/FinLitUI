@@ -79,8 +79,8 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
               <CheckCircle className="text-green-600" size={24} />
             </div>
             <p className="text-gray-600 mb-6">
-              We've sent a password reset link to <strong>{email}</strong>. 
-              Please check your email and follow the instructions to reset your password.
+              We've sent a password reset link to <strong>{email}</strong>.
+              Please check your email (including spam/junk folder) and follow the instructions to reset your password.
             </p>
             <button
               onClick={handleClose}
