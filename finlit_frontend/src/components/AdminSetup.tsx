@@ -27,7 +27,8 @@ import {
   Search,
   Moon,
   Sun,
-  Bell
+  Bell,
+  BookOpen
 } from 'lucide-react';
 import { createOrganizationWithAdmin, getAllOrganizations, checkIsSuperAdmin, getQuizQuestions } from '../firebase/firestore.service';
 import { useAuthContext } from '../auth/context/AuthContext';
@@ -220,6 +221,14 @@ const AdminSetup: React.FC = () => {
           >
             <Flame size={20} />
             Daily Challenges
+          </button>
+
+          <button
+            onClick={() => navigate('/case-study-admin')}
+            className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${textSecondaryClass} hover:bg-gray-100 ${darkMode ? 'hover:bg-white/10' : ''}`}
+          >
+            <BookOpen size={20} />
+            Case Studies
           </button>
 
           <button
