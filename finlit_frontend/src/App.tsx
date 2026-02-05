@@ -22,6 +22,8 @@ import AdminSetup from "./components/AdminSetup";
 import AdminDashboard from "./components/AdminDashboard";
 import QuizQuestionsAdmin from "./components/QuizQuestionsAdmin";
 import DailyChallengeAdmin from "./components/DailyChallengeAdmin";
+import CaseStudyAdmin from "./components/CaseStudyAdmin";
+import CaseStudyPage from "./pages/CaseStudy";
 import EconomicNewsQuiz from "./components/EconomicNewsQuiz";
 import Certificate from "./components/Certificate";
 import FinancialTools from "./components/FinancialTools";
@@ -273,6 +275,14 @@ function App() {
             }
           />
           <Route
+            path="/case-study-admin"
+            element={
+              <ProtectedRoute requiredRole="owner">
+                <CaseStudyAdmin />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/admin"
             element={
               <ProtectedRoute>
@@ -337,6 +347,16 @@ function App() {
             element={
               <ProtectedRoute>
                 <StockSimulation />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Case Study Route */}
+          <Route
+            path="/case-study"
+            element={
+              <ProtectedRoute>
+                <CaseStudyPage />
               </ProtectedRoute>
             }
           />
