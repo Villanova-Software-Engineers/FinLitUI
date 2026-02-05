@@ -1,6 +1,7 @@
 import { initializeApp, getApps, deleteApp } from 'firebase/app';
 import { getAuth, browserLocalPersistence, setPersistence } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 import { getAnalytics, isSupported } from 'firebase/analytics';
 
 const firebaseConfig = {
@@ -53,6 +54,9 @@ export const isPersistenceReady = () => persistenceReady;
 
 // Initialize Firestore
 export const db = getFirestore(app);
+
+// Initialize Firebase Storage
+export const storage = getStorage(app);
 
 // Initialize Analytics (only in browser environment)
 export const initAnalytics = async () => {
