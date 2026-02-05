@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, TrendingUp, Brain, Target, Play, Zap, Trophy, Star } from 'lucide-react';
+import { ArrowLeft, Target, Play } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const Games = () => {
@@ -12,7 +12,7 @@ const Games = () => {
       id: 'stock-simulation',
       title: 'Stock Trading Game',
       description: 'Master the markets with real-time trading simulation',
-      icon: TrendingUp,
+      image: '/stock.jpeg',
       route: '/stock-simulation',
       difficulty: 'Expert',
       estimatedTime: '15-20 min',
@@ -26,7 +26,7 @@ const Games = () => {
       id: 'crossword',
       title: 'Financial Crossword',
       description: 'Challenge your financial vocabulary knowledge',
-      icon: Brain,
+      image: '/crossword.jpg',
       route: '/',
       difficulty: 'Rookie',
       estimatedTime: '10-15 min',
@@ -40,7 +40,7 @@ const Games = () => {
       id: 'daily-challenge',
       title: 'Daily Challenge',
       description: 'Build your streak with daily financial quests',
-      icon: Zap,
+      image: '/dailyc.png',
       route: '/',
       difficulty: 'Dynamic',
       estimatedTime: '2-3 min',
@@ -106,123 +106,64 @@ const Games = () => {
               onClick={() => handleGameClick(game)}
               className="group cursor-pointer h-full flex flex-col"
             >
-              <div 
-                className="relative overflow-hidden rounded-2xl transition-all duration-500 group-hover:scale-[1.02] flex-1 flex flex-col"
-                style={{ 
-                  background: `linear-gradient(135deg, ${game.primaryColor} 0%, ${game.primaryColor}E6 100%)`,
+              <div
+                className="relative overflow-hidden rounded-2xl transition-all duration-500 group-hover:scale-[1.02] flex-1 flex flex-col bg-white"
+                style={{
                   border: `1px solid ${game.accentColor}20`,
-                  boxShadow: `0 8px 32px ${game.glowColor}15, inset 0 1px 0 rgba(255,255,255,0.1)`
+                  boxShadow: `0 8px 32px ${game.glowColor}15`
                 }}
               >
-                {/* Glow effect */}
-                <div 
-                  className="absolute -inset-1 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-lg"
-                  style={{ background: `linear-gradient(135deg, ${game.glowColor}30, transparent)` }}
-                />
-                
-                {/* Glass effect overlay */}
-                <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent" />
-                
-                {/* Geometric pattern */}
-                <div 
-                  className="absolute top-0 right-0 w-32 h-32 opacity-5"
-                  style={{
-                    background: `radial-gradient(circle at center, ${game.accentColor} 1px, transparent 1px)`,
-                    backgroundSize: '20px 20px'
-                  }}
-                />
-                
-                <div className="relative p-8 flex-1 flex flex-col">
-                  {/* Header */}
-                  <div className="flex items-start gap-6 mb-8">
-                    <div 
-                      className="w-16 h-16 rounded-xl flex items-center justify-center shadow-2xl transform group-hover:scale-110 transition-transform duration-300"
-                      style={{ 
-                        background: `linear-gradient(135deg, ${game.accentColor}, ${game.accentColor}CC)`,
-                        boxShadow: `0 8px 25px ${game.accentColor}40`
-                      }}
+                {/* Banner Image */}
+                <div className="relative h-48 overflow-hidden">
+                  <img
+                    src={game.image}
+                    alt={game.title}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                  <div className="absolute top-3 left-3 flex items-center gap-2">
+                    <span
+                      className="px-3 py-1 text-xs font-bold rounded-full text-white"
+                      style={{ background: game.accentColor }}
                     >
-                      <game.icon className="w-8 h-8 text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-3">
-                        <span 
-                          className="px-3 py-1 text-xs font-bold rounded-full text-white"
-                          style={{ background: game.accentColor, border: `1px solid ${game.accentColor}` }}
-                        >
-                          {game.category}
-                        </span>
-                        <span 
-                          className={`text-xs font-bold ${
-                            game.difficulty === 'Expert' ? 'text-red-600' :
-                            game.difficulty === 'Rookie' ? 'text-emerald-600' :
-                            'text-yellow-600'
-                          }`}
-                        >
-                          {game.difficulty}
-                        </span>
-                      </div>
-                      <h3 
-                        className="text-2xl font-bold text-gray-800 mb-2 group-hover:text-gray-700 transition-colors"
-                        style={{ fontFamily: '"SF Pro Display", -apple-system, BlinkMacSystemFont, sans-serif' }}
-                      >
-                        {game.title}
-                      </h3>
-                      <p className="text-gray-600 text-sm leading-relaxed">
-                        {game.description}
-                      </p>
-                    </div>
+                      {game.category}
+                    </span>
+                    <span
+                      className={`px-3 py-1 text-xs font-bold rounded-full bg-white/90 ${
+                        game.difficulty === 'Expert' ? 'text-red-600' :
+                        game.difficulty === 'Rookie' ? 'text-emerald-600' :
+                        'text-yellow-600'
+                      }`}
+                    >
+                      {game.difficulty}
+                    </span>
                   </div>
-
-                  {/* Stats Grid */}
-                  <div className="grid grid-cols-2 gap-4 mb-8 flex-grow">
-                    <div 
-                      className="rounded-xl p-4 text-center backdrop-blur-sm"
-                      style={{ background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.3)' }}
-                    >
-                      <div className="text-gray-600 text-xs font-medium mb-2 uppercase tracking-wide">Duration</div>
-                      <div className="text-gray-800 font-bold text-lg">{game.estimatedTime}</div>
-                    </div>
-                    <div 
-                      className="rounded-xl p-4 text-center backdrop-blur-sm"
-                      style={{ 
-                        background: `linear-gradient(135deg, ${game.accentColor}20, ${game.accentColor}10)`,
-                        border: `1px solid ${game.accentColor}30`
-                      }}
-                    >
-                      <div className="text-gray-600 text-xs font-medium mb-2 uppercase tracking-wide">Reward</div>
-                      <div className="flex items-center justify-center gap-2">
-                        <Star className="w-4 h-4 fill-yellow-500 text-yellow-500" />
-                        <span className="text-gray-800 font-bold text-lg">
-                          {typeof game.xpReward === 'number' ? `${game.xpReward} XP` : game.xpReward}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Play button */}
-                  <button 
-                    className="w-full py-4 rounded-xl text-white font-bold text-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-3 relative overflow-hidden"
-                    style={{ 
-                      background: `linear-gradient(135deg, ${game.accentColor}, ${game.accentColor}DD)`,
-                      boxShadow: `0 8px 25px ${game.accentColor}40`
-                    }}
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-white/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                    <Play className="w-6 h-6 relative z-10" />
-                    <span className="relative z-10 tracking-wide">START GAME</span>
-                  </button>
                 </div>
 
-                {/* Accent lines */}
-                <div 
-                  className="absolute top-0 left-0 right-0 h-px"
-                  style={{ background: `linear-gradient(90deg, transparent, ${game.accentColor}, transparent)` }}
-                />
-                <div 
-                  className="absolute bottom-0 left-0 right-0 h-px"
-                  style={{ background: `linear-gradient(90deg, transparent, ${game.accentColor}60, transparent)` }}
-                />
+                {/* Content */}
+                <div className="p-6 flex-1 flex flex-col">
+                  <h3
+                    className="text-xl font-bold text-gray-800 mb-2"
+                    style={{ fontFamily: '"SF Pro Display", -apple-system, BlinkMacSystemFont, sans-serif' }}
+                  >
+                    {game.title}
+                  </h3>
+                  <p className="text-gray-600 text-sm mb-4 flex-grow">
+                    {game.description}
+                  </p>
+
+                  {/* Play button */}
+                  <button
+                    className="w-full py-3 rounded-xl text-white font-bold text-base hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2"
+                    style={{
+                      background: `linear-gradient(135deg, ${game.accentColor}, ${game.accentColor}DD)`,
+                      boxShadow: `0 4px 15px ${game.accentColor}40`
+                    }}
+                  >
+                    <Play className="w-5 h-5" />
+                    <span>Play Now</span>
+                  </button>
+                </div>
               </div>
             </motion.div>
           ))}
