@@ -13,7 +13,14 @@ import {
   orderBy,
 } from 'firebase/firestore';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { db, getSecondaryAuth, cleanupSecondaryApp } from './config';
+import { getSecondaryAuth, cleanupSecondaryApp } from './config';
+import {
+  ref,
+  uploadBytes,
+  getDownloadURL,
+  deleteObject,
+} from 'firebase/storage';
+import { db, storage } from './config';
 import type {
   Organization,
   ClassCode,
@@ -29,6 +36,9 @@ import type {
   QuizQuestion,
   QuickQuizProgress,
   DailyChallengeQuestion,
+  CaseStudy,
+  CaseStudyContent,
+  CaseStudyProgress,
 } from '../auth/types/auth.types';
 
 // Type helper for Firestore documents with serverTimestamp
@@ -1086,4 +1096,386 @@ export async function getActiveDailyChallengeQuestion(): Promise<DailyChallengeQ
     ...snapshot.data(),
     createdAt: (snapshot.data().createdAt as Timestamp)?.toDate() || new Date(),
   } as DailyChallengeQuestion;
+}
+
+// ============== Case Study Functions ==============
+
+const CASE_STUDIES = 'caseStudies';
+
+/**
+ * Upload an image to Firebase Storage for case studies
+ * Returns the download URL
+ */
+export async function uploadCaseStudyImage(
+  file: File,
+  caseStudyId: string,
+  imageType: 'person' | 'company1' | 'company2'
+): Promise<string> {
+  const fileExtension = file.name.split('.').pop() || 'jpg';
+  const fileName = `case-studies/${caseStudyId}/${imageType}.${fileExtension}`;
+  const storageRef = ref(storage, fileName);
+
+  await uploadBytes(storageRef, file);
+  const downloadUrl = await getDownloadURL(storageRef);
+
+  return downloadUrl;
+}
+
+/**
+ * Delete a case study image from Firebase Storage
+ */
+export async function deleteCaseStudyImage(
+  caseStudyId: string,
+  imageType: 'person' | 'company1' | 'company2'
+): Promise<void> {
+  try {
+    // Try common extensions
+    const extensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+    for (const ext of extensions) {
+      try {
+        const storageRef = ref(storage, `case-studies/${caseStudyId}/${imageType}.${ext}`);
+        await deleteObject(storageRef);
+        return;
+      } catch {
+        // Continue trying other extensions
+      }
+    }
+  } catch (error) {
+    console.error('Error deleting case study image:', error);
+  }
+}
+
+/**
+ * Create a new case study
+ */
+export async function createCaseStudy(
+  caseStudyContent: CaseStudyContent,
+  personImage: File,
+  companyImage1: File,
+  companyImage2: File,
+  createdBy: string
+): Promise<CaseStudy> {
+  // Create the document first to get the ID
+  const caseStudyRef = doc(collection(db, CASE_STUDIES));
+  const caseStudyId = caseStudyRef.id;
+
+  // Upload images in parallel
+  const [personImageUrl, companyImageUrl1, companyImageUrl2] = await Promise.all([
+    uploadCaseStudyImage(personImage, caseStudyId, 'person'),
+    uploadCaseStudyImage(companyImage1, caseStudyId, 'company1'),
+    uploadCaseStudyImage(companyImage2, caseStudyId, 'company2'),
+  ]);
+
+  const caseStudyData = {
+    case_study: caseStudyContent,
+    personImageUrl,
+    companyImageUrl1,
+    companyImageUrl2,
+    isActive: false, // Not active until explicitly set
+    createdAt: serverTimestamp(),
+    createdBy,
+  };
+
+  await setDoc(caseStudyRef, caseStudyData);
+
+  return {
+    id: caseStudyId,
+    case_study: caseStudyContent,
+    personImageUrl,
+    companyImageUrl1,
+    companyImageUrl2,
+    isActive: false,
+    createdAt: new Date(),
+    createdBy,
+  };
+}
+
+/**
+ * Get all case studies (for admin)
+ */
+export async function getAllCaseStudies(): Promise<CaseStudy[]> {
+  const q = query(
+    collection(db, CASE_STUDIES),
+    orderBy('createdAt', 'desc')
+  );
+
+  const snapshot = await getDocs(q);
+
+  return snapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data(),
+    createdAt: (doc.data().createdAt as Timestamp)?.toDate() || new Date(),
+    updatedAt: doc.data().updatedAt ? (doc.data().updatedAt as Timestamp)?.toDate() : undefined,
+  })) as CaseStudy[];
+}
+
+/**
+ * Get the currently active case study (for students)
+ */
+export async function getActiveCaseStudy(): Promise<CaseStudy | null> {
+  const q = query(
+    collection(db, CASE_STUDIES),
+    where('isActive', '==', true)
+  );
+
+  const snapshot = await getDocs(q);
+
+  if (snapshot.empty) {
+    return null;
+  }
+
+  const doc = snapshot.docs[0];
+  return {
+    id: doc.id,
+    ...doc.data(),
+    createdAt: (doc.data().createdAt as Timestamp)?.toDate() || new Date(),
+    updatedAt: doc.data().updatedAt ? (doc.data().updatedAt as Timestamp)?.toDate() : undefined,
+  } as CaseStudy;
+}
+
+/**
+ * Get a case study by ID
+ */
+export async function getCaseStudyById(caseStudyId: string): Promise<CaseStudy | null> {
+  const caseStudyRef = doc(db, CASE_STUDIES, caseStudyId);
+  const snapshot = await getDoc(caseStudyRef);
+
+  if (!snapshot.exists()) {
+    return null;
+  }
+
+  return {
+    id: snapshot.id,
+    ...snapshot.data(),
+    createdAt: (snapshot.data().createdAt as Timestamp)?.toDate() || new Date(),
+    updatedAt: snapshot.data().updatedAt ? (snapshot.data().updatedAt as Timestamp)?.toDate() : undefined,
+  } as CaseStudy;
+}
+
+/**
+ * Set a case study as active (deactivates all others)
+ */
+export async function setActiveCaseStudy(caseStudyId: string): Promise<void> {
+  // First, deactivate all case studies
+  const allCaseStudies = await getAllCaseStudies();
+
+  const deactivatePromises = allCaseStudies
+    .filter(cs => cs.isActive)
+    .map(cs => updateDoc(doc(db, CASE_STUDIES, cs.id), { isActive: false }));
+
+  await Promise.all(deactivatePromises);
+
+  // Then activate the selected one
+  await updateDoc(doc(db, CASE_STUDIES, caseStudyId), {
+    isActive: true,
+    updatedAt: serverTimestamp(),
+  });
+}
+
+/**
+ * Deactivate a case study
+ */
+export async function deactivateCaseStudy(caseStudyId: string): Promise<void> {
+  await updateDoc(doc(db, CASE_STUDIES, caseStudyId), {
+    isActive: false,
+    updatedAt: serverTimestamp(),
+  });
+}
+
+/**
+ * Update a case study's content
+ */
+export async function updateCaseStudyContent(
+  caseStudyId: string,
+  caseStudyContent: CaseStudyContent
+): Promise<void> {
+  await updateDoc(doc(db, CASE_STUDIES, caseStudyId), {
+    case_study: caseStudyContent,
+    updatedAt: serverTimestamp(),
+  });
+}
+
+/**
+ * Update a case study's image
+ */
+export async function updateCaseStudyImage(
+  caseStudyId: string,
+  imageType: 'person' | 'company1' | 'company2',
+  newImage: File
+): Promise<string> {
+  // Delete old image
+  await deleteCaseStudyImage(caseStudyId, imageType);
+
+  // Upload new image
+  const newUrl = await uploadCaseStudyImage(newImage, caseStudyId, imageType);
+
+  // Update document with new URL
+  const fieldName = imageType === 'person'
+    ? 'personImageUrl'
+    : imageType === 'company1'
+      ? 'companyImageUrl1'
+      : 'companyImageUrl2';
+
+  await updateDoc(doc(db, CASE_STUDIES, caseStudyId), {
+    [fieldName]: newUrl,
+    updatedAt: serverTimestamp(),
+  });
+
+  return newUrl;
+}
+
+/**
+ * Delete a case study and all its images
+ */
+export async function deleteCaseStudy(caseStudyId: string): Promise<void> {
+  const { deleteDoc: deleteDocument } = await import('firebase/firestore');
+
+  // Delete images
+  await Promise.all([
+    deleteCaseStudyImage(caseStudyId, 'person'),
+    deleteCaseStudyImage(caseStudyId, 'company1'),
+    deleteCaseStudyImage(caseStudyId, 'company2'),
+  ]);
+
+  // Delete document
+  await deleteDocument(doc(db, CASE_STUDIES, caseStudyId));
+}
+
+/**
+ * Save case study progress for a student
+ */
+export async function saveCaseStudyProgress(
+  userId: string,
+  caseStudyId: string,
+  week: number,
+  questionIndex: number,
+  selectedAnswer: string,
+  isCorrect: boolean
+): Promise<{ xpAwarded: number; alreadyAnswered: boolean }> {
+  const progressRef = doc(db, STUDENT_PROGRESS, userId);
+  const snapshot = await getDoc(progressRef);
+
+  if (!snapshot.exists()) {
+    return { xpAwarded: 0, alreadyAnswered: false };
+  }
+
+  const data = snapshot.data();
+  const caseStudyProgressArray: CaseStudyProgress[] = data.caseStudyProgress || [];
+
+  // Find existing progress for this case study
+  let existingProgressIndex = caseStudyProgressArray.findIndex(
+    p => p.caseStudyId === caseStudyId
+  );
+
+  let currentProgress: CaseStudyProgress;
+
+  if (existingProgressIndex >= 0) {
+    currentProgress = caseStudyProgressArray[existingProgressIndex];
+
+    // Check if already answered this question
+    if (currentProgress.quizAnswers[questionIndex] !== undefined) {
+      return { xpAwarded: 0, alreadyAnswered: true };
+    }
+  } else {
+    currentProgress = {
+      caseStudyId,
+      week,
+      quizAnswers: {},
+      correctAnswers: [],
+    };
+  }
+
+  // Update answers
+  currentProgress.quizAnswers[questionIndex] = selectedAnswer;
+  if (isCorrect) {
+    currentProgress.correctAnswers.push(questionIndex);
+  }
+
+  // Award XP (5 XP per correct answer)
+  const xpToAward = isCorrect ? 5 : 0;
+  const currentXP = data.totalXP || 0;
+  const newTotalXP = currentXP + xpToAward;
+  const xpLevel = Math.floor(newTotalXP / 100) + 1;
+
+  // Update the progress array
+  if (existingProgressIndex >= 0) {
+    caseStudyProgressArray[existingProgressIndex] = currentProgress;
+  } else {
+    caseStudyProgressArray.push(currentProgress);
+  }
+
+  await updateDoc(progressRef, {
+    caseStudyProgress: caseStudyProgressArray,
+    totalXP: newTotalXP,
+    xpLevel,
+    lastActivityAt: serverTimestamp(),
+  });
+
+  return { xpAwarded: xpToAward, alreadyAnswered: false };
+}
+
+/**
+ * Get case study progress for a student
+ */
+export async function getCaseStudyProgress(
+  userId: string,
+  caseStudyId: string
+): Promise<CaseStudyProgress | null> {
+  const progressRef = doc(db, STUDENT_PROGRESS, userId);
+  const snapshot = await getDoc(progressRef);
+
+  if (!snapshot.exists()) {
+    return null;
+  }
+
+  const data = snapshot.data();
+  const caseStudyProgressArray: CaseStudyProgress[] = data.caseStudyProgress || [];
+
+  return caseStudyProgressArray.find(p => p.caseStudyId === caseStudyId) || null;
+}
+
+/**
+ * Mark a case study as completed and calculate final score
+ */
+export async function completeCaseStudy(
+  userId: string,
+  caseStudyId: string,
+  totalQuestions: number
+): Promise<{ score: number; passed: boolean }> {
+  const progressRef = doc(db, STUDENT_PROGRESS, userId);
+  const snapshot = await getDoc(progressRef);
+
+  if (!snapshot.exists()) {
+    return { score: 0, passed: false };
+  }
+
+  const data = snapshot.data();
+  const caseStudyProgressArray: CaseStudyProgress[] = data.caseStudyProgress || [];
+
+  const progressIndex = caseStudyProgressArray.findIndex(
+    p => p.caseStudyId === caseStudyId
+  );
+
+  if (progressIndex < 0) {
+    return { score: 0, passed: false };
+  }
+
+  const progress = caseStudyProgressArray[progressIndex];
+  const correctCount = progress.correctAnswers.length;
+  const score = Math.round((correctCount / totalQuestions) * 100);
+  const passed = score >= 70; // 70% to pass
+
+  // Update progress with completion info
+  caseStudyProgressArray[progressIndex] = {
+    ...progress,
+    score,
+    completedAt: new Date(),
+  };
+
+  await updateDoc(progressRef, {
+    caseStudyProgress: caseStudyProgressArray,
+    lastActivityAt: serverTimestamp(),
+  });
+
+  return { score, passed };
 }
