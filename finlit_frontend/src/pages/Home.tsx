@@ -745,6 +745,17 @@ const FinLitApp: React.FC = () => {
 
           <button
             onClick={() => {
+              navigate('/case-study');
+              setMobileMenuOpen(false);
+            }}
+            className="flex items-center gap-3 p-3 hover:bg-blue-500 rounded-lg text-base sm:text-lg"
+          >
+            <BookOpen size={24} />
+            <span className="font-medium">Case Study</span>
+          </button>
+
+          <button
+            onClick={() => {
               navigate('/financial-tools');
               setMobileMenuOpen(false);
             }}
@@ -770,12 +781,9 @@ const FinLitApp: React.FC = () => {
             onClick={() => {
               navigate('/certificate');
               setMobileMenuOpen(false);
-            }}
-            className={`flex items-center gap-3 p-3 hover:bg-blue-500 rounded-lg text-base sm:text-lg ${
-              completedModules === totalModules
-                ? 'bg-emerald-600/80 border-2 border-emerald-300'
-                : 'bg-yellow-600/60 border-2 border-yellow-300/50'
-            }`}
+            }}            
+            className={`flex items-center gap-3 p-3 rounded-lg text-base sm:text-lg ${completedModules === totalModules ? 'bg-emerald-500' : 'hover:bg-blue-500'}`}
+
           >
             <GraduationCap
               size={24}
