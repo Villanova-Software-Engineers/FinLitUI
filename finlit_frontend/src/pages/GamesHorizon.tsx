@@ -3,19 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft,
-  TrendingUp,
-  Brain,
-  Zap,
   Trophy,
-  Star,
-  Play,
-  BarChart2,
-  Target,
-  Puzzle,
-  Grid3x3,
-  Gamepad2,
-  Coins,
-  BookOpen
+  Play
 } from 'lucide-react';
 
 const GamesHorizon = () => {
@@ -31,7 +20,7 @@ const GamesHorizon = () => {
       estimatedTime: '15-20 min',
       xpReward: 100,
       category: 'Strategy',
-      icon: TrendingUp,
+      image: '/stock.jpeg',
       bgGradient: 'from-blue-500 to-cyan-600',
       iconBg: 'bg-blue-50',
       iconColor: 'text-blue-600',
@@ -48,7 +37,7 @@ const GamesHorizon = () => {
       estimatedTime: '10-15 min',
       xpReward: '2 XP per word',
       category: 'Puzzle',
-      icon: BookOpen,
+      image: '/crossword.jpg',
       bgGradient: 'from-orange-500 to-rose-500',
       iconBg: 'bg-orange-50',
       iconColor: 'text-orange-600',
@@ -65,7 +54,7 @@ const GamesHorizon = () => {
       estimatedTime: '2-3 min',
       xpReward: 5,
       category: 'Quest',
-      icon: Coins,
+      image: '/dc.png',
       bgGradient: 'from-teal-500 to-green-500',
       iconBg: 'bg-teal-50',
       iconColor: 'text-teal-600',
@@ -118,62 +107,23 @@ const GamesHorizon = () => {
               onClick={() => handleGameClick(game)}
               className="bg-white rounded-3xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer border border-gray-100"
             >
-              {/* Icon and Menu */}
-              <div className="flex items-start justify-between mb-4">
-                <div className={`w-14 h-14 ${game.iconBg} rounded-2xl flex items-center justify-center shadow-sm`}>
-                  <game.icon className={`w-7 h-7 ${game.iconColor}`} strokeWidth={2} />
-                </div>
-                <div className="flex gap-1">
-                  <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
-                  <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
-                  <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
-                </div>
-              </div>
-
               {/* Visual Area */}
-              <div className={`w-full h-44 bg-gradient-to-br ${game.bgGradient} rounded-2xl mb-4 relative overflow-hidden`}>
-                <div className="absolute inset-0 bg-white/10 backdrop-blur-sm">
-                  {/* Decorative chart/visual */}
-                  <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-end gap-3">
-                    <div className="w-10 h-14 bg-white/30 rounded-t-lg"></div>
-                    <div className="w-10 h-20 bg-white/50 rounded-t-lg"></div>
-                    <div className="w-10 h-24 bg-white/70 rounded-t-lg"></div>
-                    <div className="w-10 h-16 bg-white/40 rounded-t-lg"></div>
-                  </div>
-
-                  {/* XP Badge */}
-                  <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg">
-                    <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />
-                    <span className="text-xs font-bold text-gray-800">
-                      {typeof game.xpReward === 'number' ? `${game.xpReward} XP` : game.xpReward}
-                    </span>
-                  </div>
-                </div>
+              <div className="w-full h-56 rounded-2xl mb-4 relative overflow-hidden">
+                <img
+                  src={game.image}
+                  alt={game.title}
+                  className={`w-full h-full bg-gray-50 ${game.id === 'crossword' ? 'object-cover scale-90' : 'object-contain'}`}
+                />
               </div>
 
               {/* Title */}
               <h3 className="text-xl font-bold text-gray-900 mb-2" style={{ fontFamily: '"Playfair Display", "Georgia", serif' }}>{game.title}</h3>
 
               {/* Bottom Section */}
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center mb-4">
                 <span className={`px-3 py-1 ${game.categoryBg} ${game.categoryText} text-xs font-semibold rounded-full`}>
                   {game.category}
                 </span>
-
-                {/* Participants */}
-                <div className="flex items-center gap-1">
-                  {[...Array(Math.min(game.participants, 3))].map((_, i) => (
-                    <div
-                      key={i}
-                      className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-400 to-cyan-500 border-2 border-white shadow-sm -ml-2 first:ml-0"
-                    />
-                  ))}
-                  {game.participants > 3 && (
-                    <div className="w-7 h-7 rounded-full bg-gray-100 border-2 border-white shadow-sm -ml-2 flex items-center justify-center">
-                      <span className="text-[10px] font-bold text-gray-600">+{game.participants - 3}</span>
-                    </div>
-                  )}
-                </div>
               </div>
 
               {/* Play Button */}

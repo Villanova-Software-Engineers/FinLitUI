@@ -190,3 +190,68 @@ export interface UserDashboardData {
   user: User;
   progress: StudentProgress | null;
 }
+
+// ============ CASE STUDY TYPES ============
+
+// Quiz question within a case study
+export interface CaseStudyQuizQuestion {
+  question: string;
+  options: string[];
+  answer: string; // The correct answer text
+  teaching_point: string;
+}
+
+// Case Study section types
+export interface CaseStudyWhoIsThis {
+  title: string;
+  content: string;
+}
+
+export interface CaseStudyWhatHappened {
+  title: string;
+  content: string;
+}
+
+export interface CaseStudyMoneyIdea {
+  title: string;
+  what_it_means: string;
+  why_it_matters: string;
+  formula?: string; // LaTeX formula (optional)
+  risk: string;
+  real_life: string;
+}
+
+// Main Case Study content structure (matches JSON format)
+export interface CaseStudyContent {
+  week: number;
+  subject: string;
+  topic: string;
+  who_is_this: CaseStudyWhoIsThis;
+  what_happened: CaseStudyWhatHappened;
+  money_idea: CaseStudyMoneyIdea;
+  quiz: CaseStudyQuizQuestion[];
+}
+
+// Case Study document in Firestore
+export interface CaseStudy {
+  id: string;
+  case_study: CaseStudyContent;
+  // Image URLs (stored in Firebase Storage)
+  personImageUrl: string;      // Image of the person (e.g., Elon Musk)
+  companyImageUrl1: string;    // First company/related image
+  companyImageUrl2: string;    // Second company/related image
+  isActive: boolean;           // Whether this is the current week's case study
+  createdAt: Date;
+  createdBy: string;
+  updatedAt?: Date;
+}
+
+// Case Study progress tracking for students
+export interface CaseStudyProgress {
+  caseStudyId: string;
+  week: number;
+  quizAnswers: { [questionIndex: number]: string }; // Index -> selected answer
+  correctAnswers: number[];    // Indices of correctly answered questions
+  completedAt?: Date;
+  score?: number;              // Final score (correct/total * 100)
+}
