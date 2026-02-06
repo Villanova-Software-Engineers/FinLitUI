@@ -33,6 +33,7 @@ import Games from "./pages/Games";
 import GamesHorizon from "./pages/GamesHorizon";
 import FinancialToolsHorizon from "./pages/FinancialToolsHorizon";
 import StockSimulation from "./components/StockSimulation";
+import MoneyPersonality from "./components/MoneyPersonality";
 import ModuleAccessControl from "./components/ModuleAccessControl";
 import { MODULES } from "./hooks/useModuleScore";
 
@@ -357,6 +358,16 @@ function App() {
             element={
               <ProtectedRoute>
                 <CaseStudyPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Money Personality Route */}
+          <Route
+            path="/money-personality"
+            element={
+              <ProtectedRoute>
+                <MoneyPersonality />
               </ProtectedRoute>
             }
           />
