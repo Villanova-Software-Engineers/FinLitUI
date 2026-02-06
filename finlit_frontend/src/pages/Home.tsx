@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Star, BookOpen, Home, Target, User, Check, Flame, GraduationCap, Loader2, Lock, Play, Zap, Lightbulb, TrendingUp, PiggyBank, Shield, CreditCard, Wallet, RefreshCw, Settings, Menu, X, Calculator, ChevronRight, Trophy, Gamepad2, Brain, Award, HelpCircle, LogOut } from 'lucide-react';
+import { Star, BookOpen, Home, Target, User, Check, Flame, GraduationCap, Loader2, Lock, Play, Zap, Lightbulb, TrendingUp, PiggyBank, Shield, CreditCard, Wallet, RefreshCw, Settings, Menu, X, Calculator, ChevronRight, Trophy, Gamepad2, Brain, Award, HelpCircle, LogOut, DollarSign } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuthContext } from '../auth/context/AuthContext';
@@ -769,6 +769,17 @@ const FinLitApp: React.FC = () => {
 
           <button
             onClick={() => {
+              navigate('/big-money-decisions');
+              setMobileMenuOpen(false);
+            }}
+            className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 hover:bg-blue-500 rounded-lg text-sm sm:text-base lg:text-lg"
+          >
+            <DollarSign size={20} className="sm:w-6 sm:h-6" />
+            <span className="font-medium">Big Money Decisions</span>
+          </button>
+
+          <button
+            onClick={() => {
               navigate('/money-personality');
               setMobileMenuOpen(false);
             }}
@@ -947,14 +958,14 @@ const FinLitApp: React.FC = () => {
                           onClick={() => !answered && setSelectedAnswer(i)}
                           disabled={answered}
                           className={`p-3 sm:p-4 rounded-lg text-left text-sm sm:text-lg transition ${answered
-                              ? i === dailyQuestion.correct
-                                ? 'bg-emerald-500 text-white'
-                                : selectedAnswer === i
-                                  ? 'bg-red-400 text-white'
-                                  : 'bg-emerald-100'
+                            ? i === dailyQuestion.correct
+                              ? 'bg-emerald-500 text-white'
                               : selectedAnswer === i
-                                ? 'bg-emerald-500 text-white'
-                                : 'bg-emerald-100 hover:bg-emerald-200'
+                                ? 'bg-red-400 text-white'
+                                : 'bg-emerald-100'
+                            : selectedAnswer === i
+                              ? 'bg-emerald-500 text-white'
+                              : 'bg-emerald-100 hover:bg-emerald-200'
                             }`}
                         >
                           {opt}
@@ -1009,7 +1020,7 @@ const FinLitApp: React.FC = () => {
                 </div>
               </div>
 
-         
+
 
               {/* XP and Learning Path */}
               <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm border border-gray-100">
@@ -1051,8 +1062,8 @@ const FinLitApp: React.FC = () => {
                             onClick={() => status !== 'locked' && navigate(mod.route)}
                             disabled={status === 'locked'}
                             className={`w-full flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg text-left ${status === 'completed' ? 'bg-emerald-50 border-2 border-emerald-300' :
-                                status === 'locked' ? 'bg-gray-100 opacity-60 cursor-not-allowed' :
-                                  'bg-gray-50 hover:bg-blue-50 border-2 border-transparent hover:border-blue-200'
+                              status === 'locked' ? 'bg-gray-100 opacity-60 cursor-not-allowed' :
+                                'bg-gray-50 hover:bg-blue-50 border-2 border-transparent hover:border-blue-200'
                               }`}
                           >
                             <span className="text-xl sm:text-2xl">{mod.icon}</span>
@@ -1196,8 +1207,8 @@ const FinLitApp: React.FC = () => {
                             ref={el => { clueRefs.current[`${c.number}-across`] = el; }}
                             onClick={() => handleClueClick(c)}
                             className={`w-full text-left p-2 sm:p-3 rounded-lg transition-all text-sm sm:text-base ${selectedClue?.number === c.number && selectedClue?.direction === 'across'
-                                ? 'bg-blue-300 border-2 border-blue-600 shadow-md scale-[1.02]'
-                                : 'hover:bg-blue-100 border-2 border-transparent'
+                              ? 'bg-blue-300 border-2 border-blue-600 shadow-md scale-[1.02]'
+                              : 'hover:bg-blue-100 border-2 border-transparent'
                               }`}
                           >
                             <span className="font-bold text-blue-700">{c.number}.</span> {c.clue}
@@ -1214,8 +1225,8 @@ const FinLitApp: React.FC = () => {
                             ref={el => { clueRefs.current[`${c.number}-down`] = el; }}
                             onClick={() => handleClueClick(c)}
                             className={`w-full text-left p-2 sm:p-3 rounded-lg transition-all text-sm sm:text-base ${selectedClue?.number === c.number && selectedClue?.direction === 'down'
-                                ? 'bg-emerald-300 border-2 border-emerald-600 shadow-md scale-[1.02]'
-                                : 'hover:bg-emerald-100 border-2 border-transparent'
+                              ? 'bg-emerald-300 border-2 border-emerald-600 shadow-md scale-[1.02]'
+                              : 'hover:bg-emerald-100 border-2 border-transparent'
                               }`}
                           >
                             <span className="font-bold text-emerald-700">{c.number}.</span> {c.clue}
