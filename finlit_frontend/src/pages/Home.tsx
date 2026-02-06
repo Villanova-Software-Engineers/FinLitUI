@@ -177,20 +177,20 @@ const FinLitApp: React.FC = () => {
     if (!user) return;
 
     setLoadingDailyChallenge(true);
-    
+
     // Listen to changes in the daily challenge configuration
     const configRef = doc(db, 'dailyChallengeConfig', 'active');
     const unsubscribe = onSnapshot(configRef, async (configSnapshot) => {
       try {
         let activeChallengeId: string | null = null;
-        
+
         if (configSnapshot.exists()) {
           activeChallengeId = configSnapshot.data().activeChallengeId || null;
         }
-        
+
         // Load the active challenge question
         const activeChallenge = await getActiveDailyChallengeQuestion();
-        
+
         if (activeChallenge) {
           setDailyQuestion({
             question: activeChallenge.question,
@@ -198,7 +198,7 @@ const FinLitApp: React.FC = () => {
             correct: activeChallenge.correct,
             explanation: activeChallenge.explanation
           });
-          
+
           // Check if challenge changed (reset progress)
           if (previousChallengeId && previousChallengeId !== activeChallenge.id) {
             console.log('Daily challenge changed, resetting progress');
@@ -208,7 +208,7 @@ const FinLitApp: React.FC = () => {
             setDailyChallengeCompleted(false);
             setSelectedAnswer(null);
             setXpAwarded(false);
-            
+
             // Show update notification
             setShowChallengeUpdateNotification(true);
             setTimeout(() => setShowChallengeUpdateNotification(false), 4000);
@@ -228,7 +228,7 @@ const FinLitApp: React.FC = () => {
           // No active challenge, use default
           const defaultQ = DEFAULT_DAILY_QUESTIONS[new Date().getDate() % DEFAULT_DAILY_QUESTIONS.length];
           setDailyQuestion(defaultQ);
-          
+
           // Check if user already completed today's challenge
           if (progress?.lastDailyChallengeDate) {
             const today = new Date().toISOString().split('T')[0];
@@ -248,7 +248,7 @@ const FinLitApp: React.FC = () => {
         setLoadingDailyChallenge(false);
       }
     });
-    
+
     // Cleanup listener on unmount
     return () => unsubscribe();
   }, [user, progress?.lastDailyChallengeDate, previousChallengeId]);
@@ -288,10 +288,10 @@ const FinLitApp: React.FC = () => {
   // Helper function to find which words a cell belongs to
   const getWordsForCell = useCallback((row: number, col: number) => {
     const words: { across: ClueData | null, down: ClueData | null } = { across: null, down: null };
-    
+
     CROSSWORD_CLUES.forEach(clue => {
       const { startRow, startCol, direction, answer } = clue;
-      
+
       if (direction === 'across') {
         if (row === startRow && col >= startCol && col < startCol + answer.length) {
           words.across = clue;
@@ -302,15 +302,15 @@ const FinLitApp: React.FC = () => {
         }
       }
     });
-    
+
     return words;
   }, []);
 
   const handleCellClick = (row: number, col: number) => {
     if (GRID[row][col].isBlack) return;
-    
+
     const words = getWordsForCell(row, col);
-    
+
     if (selectedCell?.row === row && selectedCell?.col === col) {
       // Toggle direction if clicking the same cell, but only if both directions are valid
       if (words.across && words.down) {
@@ -318,7 +318,7 @@ const FinLitApp: React.FC = () => {
       }
     } else {
       setSelectedCell({ row, col });
-      
+
       // Smart direction selection based on available words
       if (words.across && words.down) {
         // If both directions are available, prefer the one that starts at this cell
@@ -326,7 +326,7 @@ const FinLitApp: React.FC = () => {
         if (cellNumber) {
           const startsAcross = words.across.number === cellNumber;
           const startsDown = words.down.number === cellNumber;
-          
+
           if (startsAcross && !startsDown) {
             setSelectedDirection('across');
             setSelectedClue(words.across);
@@ -367,22 +367,22 @@ const FinLitApp: React.FC = () => {
     const delta = forward ? 1 : -1;
     let nextRow = dir === 'down' ? row + delta : row;
     let nextCol = dir === 'across' ? col + delta : col;
-    
+
     // Keep looking for next valid cell
     while (nextRow >= 0 && nextRow < GRID.length && nextCol >= 0 && nextCol < GRID[0].length) {
       // If it's a black cell, stop
       if (GRID[nextRow][nextCol].isBlack) {
         break;
       }
-      
+
       // If we found a valid cell
       const nextKey = `${nextRow}-${nextCol}`;
-      
+
       // If we're not skipping filled cells, or this cell is empty, return it
       if (!skipFilled || !userInputs[nextKey]) {
         return { row: nextRow, col: nextCol };
       }
-      
+
       // Move to next cell
       nextRow = dir === 'down' ? nextRow + delta : nextRow;
       nextCol = dir === 'across' ? nextCol + delta : nextCol;
@@ -399,12 +399,12 @@ const FinLitApp: React.FC = () => {
       if (letter !== '') {
         // First try to find the next empty cell
         let next = getNextCell(row, col, selectedDirection, true, true);
-        
+
         // If no empty cell found, go to the next available cell (even if filled)
         if (!next) {
           next = getNextCell(row, col, selectedDirection, true, false);
         }
-        
+
         if (next) {
           setSelectedCell(next);
           setTimeout(() => inputRefs.current[`${next.row}-${next.col}`]?.focus(), 0);
@@ -492,14 +492,14 @@ const FinLitApp: React.FC = () => {
 
   const getCellHighlight = (row: number, col: number) => {
     if (GRID[row][col].isBlack) return '';
-    
+
     // Highlight the active cell
     if (selectedCell?.row === row && selectedCell?.col === col) return 'bg-blue-400';
-    
+
     // Highlight the word being worked on
     if (selectedClue) {
       const { startRow, startCol, direction, answer } = selectedClue;
-      
+
       if (direction === 'across') {
         if (row === startRow && col >= startCol && col < startCol + answer.length) {
           return 'bg-blue-100';
@@ -510,7 +510,7 @@ const FinLitApp: React.FC = () => {
         }
       }
     }
-    
+
     return '';
   };
 
@@ -781,7 +781,7 @@ const FinLitApp: React.FC = () => {
             onClick={() => {
               navigate('/certificate');
               setMobileMenuOpen(false);
-            }}            
+            }}
             className={`flex items-center gap-3 p-3 rounded-lg text-base sm:text-lg ${completedModules === totalModules ? 'bg-emerald-500' : 'hover:bg-blue-500'}`}
 
           >
@@ -833,7 +833,7 @@ const FinLitApp: React.FC = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
               {/* Daily Financial Tip - Compact on mobile */}
               <div className="lg:col-span-2">
-                <div className={`relative overflow-hidden rounded-lg sm:rounded-2xl bg-gradient-to-r ${dailyTip.color} p-3 sm:p-6 shadow-lg`}>
+                <div className="relative overflow-hidden rounded-lg sm:rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-700 p-3 sm:p-6 shadow-lg">
                   <div className="absolute top-0 right-0 w-20 h-20 sm:w-64 sm:h-64 opacity-10">
                     <dailyTip.icon className="w-full h-full" />
                   </div>
@@ -928,25 +928,24 @@ const FinLitApp: React.FC = () => {
                     <h3 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4">{dailyQuestion.question}</h3>
                     <div className="flex flex-col gap-2 sm:gap-3 mb-4 sm:mb-6">
                       {dailyQuestion.options.map((opt, i) => (
-                    <button
-                      key={i}
-                      onClick={() => !answered && setSelectedAnswer(i)}
-                      disabled={answered}
-                      className={`p-3 sm:p-4 rounded-lg text-left text-sm sm:text-lg transition ${
-                        answered
-                          ? i === dailyQuestion.correct
-                            ? 'bg-emerald-500 text-white'
-                            : selectedAnswer === i
-                              ? 'bg-red-400 text-white'
-                              : 'bg-emerald-100'
-                          : selectedAnswer === i
-                            ? 'bg-emerald-500 text-white'
-                            : 'bg-emerald-100 hover:bg-emerald-200'
-                      }`}
-                    >
-                        {opt}
-                      </button>
-                    ))}
+                        <button
+                          key={i}
+                          onClick={() => !answered && setSelectedAnswer(i)}
+                          disabled={answered}
+                          className={`p-3 sm:p-4 rounded-lg text-left text-sm sm:text-lg transition ${answered
+                              ? i === dailyQuestion.correct
+                                ? 'bg-emerald-500 text-white'
+                                : selectedAnswer === i
+                                  ? 'bg-red-400 text-white'
+                                  : 'bg-emerald-100'
+                              : selectedAnswer === i
+                                ? 'bg-emerald-500 text-white'
+                                : 'bg-emerald-100 hover:bg-emerald-200'
+                            }`}
+                        >
+                          {opt}
+                        </button>
+                      ))}
                     </div>
                   </>
                 ) : (
@@ -1027,7 +1026,7 @@ const FinLitApp: React.FC = () => {
                           return status !== 'completed';
                         })
                         .slice(0, 4);
-                      
+
                       return availableModules.map((mod) => {
                         const status = getModuleStatus(mod.id, mod.originalIndex);
                         return (
@@ -1035,11 +1034,10 @@ const FinLitApp: React.FC = () => {
                             key={mod.id}
                             onClick={() => status !== 'locked' && navigate(mod.route)}
                             disabled={status === 'locked'}
-                            className={`w-full flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg text-left ${
-                              status === 'completed' ? 'bg-emerald-50 border-2 border-emerald-300' :
-                              status === 'locked' ? 'bg-gray-100 opacity-60 cursor-not-allowed' :
-                              'bg-gray-50 hover:bg-blue-50 border-2 border-transparent hover:border-blue-200'
-                            }`}
+                            className={`w-full flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg text-left ${status === 'completed' ? 'bg-emerald-50 border-2 border-emerald-300' :
+                                status === 'locked' ? 'bg-gray-100 opacity-60 cursor-not-allowed' :
+                                  'bg-gray-50 hover:bg-blue-50 border-2 border-transparent hover:border-blue-200'
+                              }`}
                           >
                             <span className="text-xl sm:text-2xl">{mod.icon}</span>
                             <span className="flex-1 text-sm sm:text-lg font-medium">{mod.title}</span>
@@ -1146,9 +1144,8 @@ const FinLitApp: React.FC = () => {
                                   }
                                 }}
                                 maxLength={1}
-                                className={`w-full h-full text-center text-lg font-bold uppercase bg-transparent outline-none cursor-pointer ${
-                                  isCorrectCell ? 'text-green-600' : isWrongCell ? 'text-red-500' : 'text-gray-900'
-                                }`}
+                                className={`w-full h-full text-center text-lg font-bold uppercase bg-transparent outline-none cursor-pointer ${isCorrectCell ? 'text-green-600' : isWrongCell ? 'text-red-500' : 'text-gray-900'
+                                  }`}
                               />
                             </div>
                           );
@@ -1182,11 +1179,10 @@ const FinLitApp: React.FC = () => {
                             key={c.number}
                             ref={el => { clueRefs.current[`${c.number}-across`] = el; }}
                             onClick={() => handleClueClick(c)}
-                            className={`w-full text-left p-2 sm:p-3 rounded-lg transition-all text-sm sm:text-base ${
-                              selectedClue?.number === c.number && selectedClue?.direction === 'across'
+                            className={`w-full text-left p-2 sm:p-3 rounded-lg transition-all text-sm sm:text-base ${selectedClue?.number === c.number && selectedClue?.direction === 'across'
                                 ? 'bg-blue-300 border-2 border-blue-600 shadow-md scale-[1.02]'
                                 : 'hover:bg-blue-100 border-2 border-transparent'
-                            }`}
+                              }`}
                           >
                             <span className="font-bold text-blue-700">{c.number}.</span> {c.clue}
                           </button>
@@ -1201,11 +1197,10 @@ const FinLitApp: React.FC = () => {
                             key={c.number}
                             ref={el => { clueRefs.current[`${c.number}-down`] = el; }}
                             onClick={() => handleClueClick(c)}
-                            className={`w-full text-left p-2 sm:p-3 rounded-lg transition-all text-sm sm:text-base ${
-                              selectedClue?.number === c.number && selectedClue?.direction === 'down'
+                            className={`w-full text-left p-2 sm:p-3 rounded-lg transition-all text-sm sm:text-base ${selectedClue?.number === c.number && selectedClue?.direction === 'down'
                                 ? 'bg-emerald-300 border-2 border-emerald-600 shadow-md scale-[1.02]'
                                 : 'hover:bg-emerald-100 border-2 border-transparent'
-                            }`}
+                              }`}
                           >
                             <span className="font-bold text-emerald-700">{c.number}.</span> {c.clue}
                           </button>
@@ -1303,7 +1298,7 @@ const FinLitApp: React.FC = () => {
           )}
         </div>
       </div>
-      
+
       {/* How to Play Modal */}
       <HowToPlayModal isOpen={showHowToPlay} onClose={() => setShowHowToPlay(false)} steps={GUIDE_STEPS} />
     </div>
