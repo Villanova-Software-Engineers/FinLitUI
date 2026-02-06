@@ -608,7 +608,7 @@ const FinLitApp: React.FC = () => {
           </button>
 
           <img
-            src="/veo2.png"
+            src="/veo5.png"
             alt="FinLit Logo"
             className="h-8 sm:h-10 w-auto object-contain"
             style={{
