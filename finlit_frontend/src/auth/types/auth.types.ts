@@ -118,6 +118,7 @@ export interface StudentProgress {
   lastDailyChallengeDate?: string; // YYYY-MM-DD format for tracking daily challenge completion
   crosswordProgress?: CrosswordProgress; // Crossword answers and progress
   quickQuizProgress?: QuickQuizProgress; // Quick Quiz answers and progress
+  moneyPersonality?: MoneyPersonalityResult; // Money personality quiz result
 }
 
 export interface SignInRequest {
@@ -254,4 +255,16 @@ export interface CaseStudyProgress {
   correctAnswers: number[];    // Indices of correctly answered questions
   completedAt?: Date;
   score?: number;              // Final score (correct/total * 100)
+}
+
+// ============ MONEY PERSONALITY TYPES ============
+
+// Money Personality quiz result
+export interface MoneyPersonalityResult {
+  primaryPersonalityId: string;
+  secondaryPersonalityId: string | null;
+  scores: { [personalityId: string]: number };
+  answers: number[]; // Array of selected option indices
+  completedAt: Date;
+  version: number; // To track quiz version changes
 }
