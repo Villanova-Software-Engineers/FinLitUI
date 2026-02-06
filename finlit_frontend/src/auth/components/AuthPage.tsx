@@ -131,7 +131,7 @@ export const AuthPage: React.FC = () => {
               transition={{ duration: 0.6, delay: 0.4 }}
             >
               <img
-                src="/veo3.png"
+                src="/veo5.png"
                 alt="FinLit Logo"
                 className="h-12 w-auto object-contain transition-all duration-300"
                 style={{
