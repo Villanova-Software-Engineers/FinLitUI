@@ -167,25 +167,25 @@ const CaseStudyPage: React.FC = () => {
   return (
     <div className="h-screen bg-slate-50 flex flex-col overflow-hidden relative">
       {/* Immersive Header */}
-      <header className="bg-white border-b border-gray-100 py-3 px-6 z-30 shrink-0">
+      <header className="bg-white border-b border-gray-100 py-2 sm:py-3 px-3 sm:px-6 z-30 shrink-0">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <button
             onClick={() => navigate('/dashboard')}
-            className="flex items-center gap-2 text-gray-500 hover:text-indigo-600 transition-colors font-medium group"
+            className="flex items-center gap-1 sm:gap-2 text-gray-500 hover:text-indigo-600 transition-colors font-medium group"
           >
-            <div className="p-2 rounded-lg bg-gray-100 group-hover:bg-indigo-50 transition-colors">
-              <ArrowLeft size={18} />
+            <div className="p-1.5 sm:p-2 rounded-lg bg-gray-100 group-hover:bg-indigo-50 transition-colors">
+              <ArrowLeft size={16} className="sm:w-[18px] sm:h-[18px]" />
             </div>
             <span className="hidden sm:inline">Dashboard</span>
           </button>
 
           {/* Expanded Progress Bar */}
-          <div className="flex-1 max-w-md mx-8">
+          <div className="flex-1 max-w-[140px] sm:max-w-md mx-2 sm:mx-8">
             <div className="flex justify-between mb-1">
-              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Progress</span>
-              <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider">{currentPage + 1} / {totalPages}</span>
+              <span className="text-[8px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-wider">Progress</span>
+              <span className="text-[8px] sm:text-[10px] font-bold text-indigo-600 uppercase tracking-wider">{currentPage + 1} / {totalPages}</span>
             </div>
-            <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
+            <div className="w-full bg-gray-100 h-1 sm:h-1.5 rounded-full overflow-hidden">
               <motion.div
                 className="h-full bg-indigo-600 rounded-full"
                 initial={{ width: `${(currentPage / totalPages) * 100}%` }}
@@ -195,17 +195,17 @@ const CaseStudyPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <span className="hidden sm:inline text-right">
-              <span className="block text-xs font-bold text-gray-900 leading-tight">{content.subject}</span>
-              <span className="block text-[10px] font-semibold text-gray-400 uppercase">Week {content.week}</span>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <span className="text-right">
+              <span className="block text-[10px] sm:text-xs font-bold text-gray-900 leading-tight truncate max-w-[80px] sm:max-w-none">{content.subject}</span>
+              <span className="block text-[8px] sm:text-[10px] font-semibold text-gray-400 uppercase">Week {content.week}</span>
             </span>
           </div>
         </div>
       </header>
 
       {/* Main Content - Full Height & Width */}
-      <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-6 bg-slate-50">
+      <main className="flex-1 overflow-y-auto overflow-x-hidden p-2 sm:p-4 md:p-6 bg-slate-50">
         <div className="max-w-7xl mx-auto h-full grid place-items-center">
           <AnimatePresence mode="wait">
             <motion.div
@@ -214,44 +214,44 @@ const CaseStudyPage: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-              className="w-full h-full min-h-[600px] flex flex-col select-none"
+              className="w-full h-full min-h-[400px] sm:min-h-[500px] md:min-h-[600px] flex flex-col select-none"
             >
               {/* Page 0: Introduction */}
               {currentPage === 0 && (
-                <div className="flex-1 bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden grid lg:grid-cols-2">
-                  <div className="order-2 lg:order-1 p-8 lg:p-16 flex flex-col justify-center">
+                <div className="flex-1 bg-white rounded-xl sm:rounded-3xl shadow-xl border border-gray-100 overflow-hidden grid lg:grid-cols-2">
+                  <div className="order-2 lg:order-1 p-4 sm:p-8 lg:p-16 flex flex-col justify-center">
                     <motion.div
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.2 }}
                     >
-                      <span className="inline-block px-4 py-1.5 rounded-full bg-indigo-50 text-indigo-600 font-bold text-xs uppercase tracking-wider mb-6 border border-indigo-100">
+                      <span className="inline-block px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-indigo-50 text-indigo-600 font-bold text-[10px] sm:text-xs uppercase tracking-wider mb-3 sm:mb-6 border border-indigo-100">
                         Case Study • Week {content.week}
                       </span>
-                      <h1 className="text-4xl lg:text-6xl font-black text-slate-900 mb-6 leading-tight tracking-tight">
+                      <h1 className="text-2xl sm:text-4xl lg:text-6xl font-black text-slate-900 mb-3 sm:mb-6 leading-tight tracking-tight">
                         {content.subject}
                       </h1>
-                      <p className="text-xl lg:text-2xl text-slate-500 font-medium mb-10 leading-relaxed max-w-lg">
+                      <p className="text-base sm:text-xl lg:text-2xl text-slate-500 font-medium mb-6 sm:mb-10 leading-relaxed max-w-lg">
                         {content.topic}
                       </p>
 
-                      <div className="grid grid-cols-2 gap-4 max-w-md">
-                        <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100">
-                          <div className="font-bold text-slate-900 text-lg mb-1">5 Mins</div>
-                          <div className="text-xs text-slate-500 font-semibold uppercase">Read Time</div>
+                      <div className="grid grid-cols-2 gap-2 sm:gap-4 max-w-md">
+                        <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-gray-50 border border-gray-100">
+                          <div className="font-bold text-slate-900 text-sm sm:text-lg mb-0.5 sm:mb-1">5 Mins</div>
+                          <div className="text-[10px] sm:text-xs text-slate-500 font-semibold uppercase">Read Time</div>
                         </div>
-                        <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100">
-                          <div className="font-bold text-slate-900 text-lg mb-1">{content.quiz.length} Questions</div>
-                          <div className="text-xs text-slate-500 font-semibold uppercase">Knowledge Check</div>
+                        <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-gray-50 border border-gray-100">
+                          <div className="font-bold text-slate-900 text-sm sm:text-lg mb-0.5 sm:mb-1">{content.quiz.length} Questions</div>
+                          <div className="text-[10px] sm:text-xs text-slate-500 font-semibold uppercase">Knowledge Check</div>
                         </div>
                       </div>
                     </motion.div>
                   </div>
 
-                  <div className="order-1 lg:order-2 bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-800 relative overflow-hidden flex items-center justify-center p-12">
+                  <div className="order-1 lg:order-2 bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-800 relative overflow-hidden flex items-center justify-center p-6 sm:p-12 min-h-[200px] sm:min-h-[300px]">
                     {/* Abstract shapes */}
-                    <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2"></div>
-                    <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-400/20 rounded-full blur-3xl transform -translate-x-1/2 translate-y-1/2"></div>
+                    <div className="absolute top-0 right-0 w-48 sm:w-96 h-48 sm:h-96 bg-white/10 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2"></div>
+                    <div className="absolute bottom-0 left-0 w-32 sm:w-64 h-32 sm:h-64 bg-indigo-400/20 rounded-full blur-3xl transform -translate-x-1/2 translate-y-1/2"></div>
 
                     <motion.div
                       className="relative z-10 text-center"
@@ -262,11 +262,11 @@ const CaseStudyPage: React.FC = () => {
                       <img
                         src={caseStudy.personImageUrl}
                         alt={content.subject}
-                        className="w-64 h-64 lg:w-80 lg:h-80 rounded-full object-cover border-[8px] border-white/20 shadow-2xl mb-8 mx-auto"
+                        className="w-32 h-32 sm:w-64 sm:h-64 lg:w-80 lg:h-80 rounded-full object-cover border-4 sm:border-[8px] border-white/20 shadow-2xl mb-4 sm:mb-8 mx-auto"
                       />
-                      <div className="flex justify-center gap-4">
-                        <img src={caseStudy.companyImageUrl1} alt="" className="w-16 h-16 rounded-2xl object-cover bg-white/90 shadow-lg p-1" />
-                        <img src={caseStudy.companyImageUrl2} alt="" className="w-16 h-16 rounded-2xl object-cover bg-white/90 shadow-lg p-1" />
+                      <div className="flex justify-center gap-2 sm:gap-4">
+                        <img src={caseStudy.companyImageUrl1} alt="" className="w-10 h-10 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl object-cover bg-white/90 shadow-lg p-0.5 sm:p-1" />
+                        <img src={caseStudy.companyImageUrl2} alt="" className="w-10 h-10 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl object-cover bg-white/90 shadow-lg p-0.5 sm:p-1" />
                       </div>
                     </motion.div>
                   </div>
@@ -275,37 +275,37 @@ const CaseStudyPage: React.FC = () => {
 
               {/* Page 1: Who Is This? */}
               {currentPage === 1 && (
-                <div className="flex-1 bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden grid lg:grid-cols-12 gap-0 relative">
-                  <div className="lg:col-span-5 relative h-64 lg:h-auto bg-slate-50 flex items-center justify-center p-6 lg:p-10">
-                    <div className="relative w-full max-w-sm">
-                      <div className="absolute inset-0 bg-indigo-900/5 rounded-2xl transform rotate-3"></div>
+                <div className="flex-1 bg-white rounded-xl sm:rounded-3xl shadow-xl border border-gray-100 overflow-hidden grid lg:grid-cols-12 gap-0 relative">
+                  <div className="lg:col-span-5 relative h-44 sm:h-64 lg:h-auto bg-slate-50 flex items-center justify-center p-3 sm:p-6 lg:p-10">
+                    <div className="relative w-full max-w-[120px] sm:max-w-sm">
+                      <div className="absolute inset-0 bg-indigo-900/5 rounded-xl sm:rounded-2xl transform rotate-3"></div>
                       <img
                         src={caseStudy.personImageUrl}
                         alt={content.subject}
-                        className="relative w-full h-auto aspect-[3/4] object-cover object-top rounded-2xl shadow-xl"
+                        className="relative w-full h-auto aspect-square sm:aspect-[3/4] object-cover object-top rounded-xl sm:rounded-2xl shadow-xl"
                       />
                     </div>
                   </div>
 
-                  <div className="lg:col-span-7 p-8 lg:p-16 flex flex-col justify-center bg-white">
-                    <div className="flex items-center gap-3 mb-6">
-                      <div className="p-3 bg-indigo-100 rounded-xl text-indigo-600">
-                        <User size={28} />
+                  <div className="lg:col-span-7 p-4 sm:p-8 lg:p-16 flex flex-col justify-center bg-white">
+                    <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-6">
+                      <div className="p-2 sm:p-3 bg-indigo-100 rounded-lg sm:rounded-xl text-indigo-600">
+                        <User size={20} className="sm:w-7 sm:h-7" />
                       </div>
-                      <span className="text-sm font-bold text-indigo-600 uppercase tracking-wider">Profile</span>
+                      <span className="text-xs sm:text-sm font-bold text-indigo-600 uppercase tracking-wider">Profile</span>
                     </div>
 
-                    <h2 className="text-3xl lg:text-5xl font-black text-slate-900 mb-8 leading-tight">
+                    <h2 className="text-xl sm:text-3xl lg:text-5xl font-black text-slate-900 mb-4 sm:mb-8 leading-tight">
                       Who is {content.subject}?
                     </h2>
 
-                    <p className="text-lg lg:text-2xl text-slate-600 leading-relaxed font-medium mb-10 text-pretty">
+                    <p className="text-sm sm:text-lg lg:text-2xl text-slate-600 leading-relaxed font-medium mb-6 sm:mb-10 text-pretty">
                       {content.who_is_this.content}
                     </p>
 
-                    <div className="flex flex-wrap gap-3">
+                    <div className="flex flex-wrap gap-2 sm:gap-3">
                       {['Visionary', 'Leader', 'Strategist'].map((tag) => (
-                        <span key={tag} className="px-4 py-2 border border-slate-200 rounded-full text-sm font-bold text-slate-600">
+                        <span key={tag} className="px-3 sm:px-4 py-1.5 sm:py-2 border border-slate-200 rounded-full text-xs sm:text-sm font-bold text-slate-600">
                           {tag}
                         </span>
                       ))}
@@ -316,35 +316,35 @@ const CaseStudyPage: React.FC = () => {
 
               {/* Page 2: What Happened? */}
               {currentPage === 2 && (
-                <div className="flex-1 bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden flex flex-col">
-                  <div className="h-2 bg-gradient-to-r from-purple-500 to-indigo-500"></div>
-                  <div className="flex-1 p-8 lg:p-16 grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+                <div className="flex-1 bg-white rounded-xl sm:rounded-3xl shadow-xl border border-gray-100 overflow-hidden flex flex-col">
+                  <div className="h-1.5 sm:h-2 bg-gradient-to-r from-purple-500 to-indigo-500"></div>
+                  <div className="flex-1 p-4 sm:p-8 lg:p-16 grid lg:grid-cols-2 gap-6 sm:gap-12 lg:gap-20 items-center">
                     <div>
-                      <div className="flex items-center gap-3 mb-8">
-                        <div className="p-3 bg-purple-100 rounded-xl text-purple-600">
-                          <TrendingUp size={28} />
+                      <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-8">
+                        <div className="p-2 sm:p-3 bg-purple-100 rounded-lg sm:rounded-xl text-purple-600">
+                          <TrendingUp size={20} className="sm:w-7 sm:h-7" />
                         </div>
-                        <span className="text-sm font-bold text-purple-600 uppercase tracking-wider">The Story</span>
+                        <span className="text-xs sm:text-sm font-bold text-purple-600 uppercase tracking-wider">The Story</span>
                       </div>
 
-                      <h2 className="text-3xl lg:text-5xl font-black text-slate-900 mb-6 leading-tight">
+                      <h2 className="text-xl sm:text-3xl lg:text-5xl font-black text-slate-900 mb-3 sm:mb-6 leading-tight">
                         {content.what_happened.title}
                       </h2>
-                      <p className="text-lg lg:text-xl text-slate-600 leading-relaxed font-medium text-pretty">
+                      <p className="text-sm sm:text-lg lg:text-xl text-slate-600 leading-relaxed font-medium text-pretty">
                         {content.what_happened.content}
                       </p>
                     </div>
 
                     <div className="relative group">
-                      <div className="absolute inset-0 bg-purple-200 rounded-3xl transform rotate-3 group-hover:rotate-1 transition-transform"></div>
+                      <div className="absolute inset-0 bg-purple-200 rounded-xl sm:rounded-3xl transform rotate-3 group-hover:rotate-1 transition-transform"></div>
                       <img
                         src={caseStudy.companyImageUrl1}
                         alt="Company context"
-                        className="relative w-full aspect-video rounded-3xl object-cover shadow-2xl transform -rotate-1 group-hover:rotate-0 transition-transform"
+                        className="relative w-full aspect-video rounded-xl sm:rounded-3xl object-cover shadow-2xl transform -rotate-1 group-hover:rotate-0 transition-transform"
                       />
-                      <div className="absolute -bottom-6 -left-6 bg-white p-6 rounded-2xl shadow-xl max-w-xs hidden lg:block">
-                        <p className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                          <Zap size={16} className="text-yellow-500 fill-yellow-500" />
+                      <div className="absolute -bottom-4 sm:-bottom-6 -left-2 sm:-left-6 bg-white p-3 sm:p-6 rounded-xl sm:rounded-2xl shadow-xl max-w-[200px] sm:max-w-xs hidden md:block">
+                        <p className="text-xs sm:text-sm font-bold text-slate-800 flex items-center gap-2">
+                          <Zap size={14} className="sm:w-4 sm:h-4 text-yellow-500 fill-yellow-500" />
                           Defining Moment
                         </p>
                       </div>
@@ -355,27 +355,27 @@ const CaseStudyPage: React.FC = () => {
 
               {/* Page 3: The Concept */}
               {currentPage === 3 && (
-                <div className="flex-1 bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden flex flex-col justify-center p-8 lg:p-16">
+                <div className="flex-1 bg-white rounded-xl sm:rounded-3xl shadow-xl border border-gray-100 overflow-hidden flex flex-col justify-center p-4 sm:p-8 lg:p-16">
                   <div className="max-w-4xl mx-auto w-full">
-                    <div className="flex items-center gap-3 mb-8 justify-center lg:justify-start">
-                      <div className="p-3 bg-amber-100 rounded-xl text-amber-600">
-                        <Lightbulb size={28} />
+                    <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-8 justify-center lg:justify-start">
+                      <div className="p-2 sm:p-3 bg-amber-100 rounded-lg sm:rounded-xl text-amber-600">
+                        <Lightbulb size={20} className="sm:w-7 sm:h-7" />
                       </div>
-                      <span className="text-sm font-bold text-amber-600 uppercase tracking-wider">The Concept</span>
+                      <span className="text-xs sm:text-sm font-bold text-amber-600 uppercase tracking-wider">The Concept</span>
                     </div>
 
-                    <h2 className="text-3xl lg:text-5xl font-black text-slate-900 mb-8 text-center lg:text-left">
+                    <h2 className="text-xl sm:text-3xl lg:text-5xl font-black text-slate-900 mb-4 sm:mb-8 text-center lg:text-left">
                       {content.money_idea.title}
                     </h2>
 
-                    <div className="bg-amber-50 p-8 rounded-3xl border border-amber-100 mb-8">
-                      <p className="text-lg lg:text-2xl text-amber-900 font-medium leading-relaxed">
+                    <div className="bg-amber-50 p-4 sm:p-8 rounded-xl sm:rounded-3xl border border-amber-100 mb-4 sm:mb-8">
+                      <p className="text-sm sm:text-lg lg:text-2xl text-amber-900 font-medium leading-relaxed">
                         {content.money_idea.what_it_means}
                       </p>
                     </div>
 
                     {content.money_idea.formula && (
-                      <div className="font-mono text-xl lg:text-3xl text-slate-700 font-bold bg-slate-100 p-6 rounded-2xl inline-block max-w-fit">
+                      <div className="font-mono text-sm sm:text-xl lg:text-3xl text-slate-700 font-bold bg-slate-100 p-3 sm:p-6 rounded-xl sm:rounded-2xl inline-block max-w-fit overflow-x-auto">
                         {content.money_idea.formula.replace(/\$\$/g, '')}
                       </div>
                     )}
@@ -385,38 +385,38 @@ const CaseStudyPage: React.FC = () => {
 
               {/* Page 4: Why It Matters */}
               {currentPage === 4 && (
-                <div className="flex-1 bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden p-8 lg:p-16 flex flex-col justify-center">
+                <div className="flex-1 bg-white rounded-xl sm:rounded-3xl shadow-xl border border-gray-100 overflow-hidden p-4 sm:p-8 lg:p-16 flex flex-col justify-center">
                   <div className="max-w-4xl mx-auto w-full">
-                    <div className="flex items-center gap-3 mb-8 justify-center">
-                      <div className="p-3 bg-emerald-100 rounded-xl text-emerald-600">
-                        <Target size={28} />
+                    <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-8 justify-center">
+                      <div className="p-2 sm:p-3 bg-emerald-100 rounded-lg sm:rounded-xl text-emerald-600">
+                        <Target size={20} className="sm:w-7 sm:h-7" />
                       </div>
-                      <span className="text-sm font-bold text-emerald-600 uppercase tracking-wider">Impact</span>
+                      <span className="text-xs sm:text-sm font-bold text-emerald-600 uppercase tracking-wider">Impact</span>
                     </div>
 
-                    <h2 className="text-3xl lg:text-6xl font-black text-center text-slate-900 mb-12">
+                    <h2 className="text-xl sm:text-3xl lg:text-6xl font-black text-center text-slate-900 mb-6 sm:mb-12">
                       Why does this matter to you?
                     </h2>
 
-                    <div className="grid lg:grid-cols-2 gap-12 items-center">
+                    <div className="grid lg:grid-cols-2 gap-6 sm:gap-12 items-center">
                       <div className="relative">
-                        <div className="absolute -top-10 -left-10 text-emerald-100">
-                          <Quote size={120} />
+                        <div className="absolute -top-6 sm:-top-10 -left-4 sm:-left-10 text-emerald-100">
+                          <Quote size={60} className="sm:w-[120px] sm:h-[120px]" />
                         </div>
-                        <p className="relative text-2xl lg:text-3xl font-medium text-slate-700 leading-relaxed text-pretty">
+                        <p className="relative text-base sm:text-2xl lg:text-3xl font-medium text-slate-700 leading-relaxed text-pretty">
                           "{content.money_idea.why_it_matters}"
                         </p>
                       </div>
 
-                      <div className="bg-emerald-50 rounded-3xl p-8 lg:p-10 flex items-center gap-6 border border-emerald-100">
+                      <div className="bg-emerald-50 rounded-xl sm:rounded-3xl p-4 sm:p-8 lg:p-10 flex items-center gap-4 sm:gap-6 border border-emerald-100">
                         <img
                           src={caseStudy.personImageUrl}
                           alt="Expert"
-                          className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-lg shrink-0"
+                          className="w-14 h-14 sm:w-20 sm:h-20 rounded-full object-cover border-2 sm:border-4 border-white shadow-lg shrink-0"
                         />
                         <div>
-                          <h4 className="font-bold text-emerald-900 text-lg mb-1">{content.subject}'s Strategy</h4>
-                          <p className="text-emerald-700 leading-snug">Understanding this principle is key to long-term wealth building.</p>
+                          <h4 className="font-bold text-emerald-900 text-sm sm:text-lg mb-0.5 sm:mb-1">{content.subject}'s Strategy</h4>
+                          <p className="text-emerald-700 leading-snug text-xs sm:text-base">Understanding this principle is key to long-term wealth building.</p>
                         </div>
                       </div>
                     </div>
@@ -426,35 +426,35 @@ const CaseStudyPage: React.FC = () => {
 
               {/* Page 5: The Risk */}
               {currentPage === 5 && (
-                <div className="flex-1 bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden grid lg:grid-cols-2">
-                  <div className="bg-red-600 p-12 lg:p-20 flex flex-col justify-center text-white relative overflow-hidden">
-                    <AlertTriangle className="absolute -right-12 -bottom-12 text-red-500 w-96 h-96 opacity-50" />
+                <div className="flex-1 bg-white rounded-xl sm:rounded-3xl shadow-xl border border-gray-100 overflow-hidden grid lg:grid-cols-2">
+                  <div className="bg-red-600 p-6 sm:p-12 lg:p-20 flex flex-col justify-center text-white relative overflow-hidden min-h-[200px] sm:min-h-[280px]">
+                    <AlertTriangle className="absolute -right-8 sm:-right-12 -bottom-8 sm:-bottom-12 text-red-500 w-48 h-48 sm:w-96 sm:h-96 opacity-50" />
                     <div className="relative z-10">
-                      <div className="flex items-center gap-3 mb-8">
-                        <div className="p-2 bg-red-500 rounded-lg text-white border border-red-400">
-                          <Shield size={24} />
+                      <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-8">
+                        <div className="p-1.5 sm:p-2 bg-red-500 rounded-md sm:rounded-lg text-white border border-red-400">
+                          <Shield size={18} className="sm:w-6 sm:h-6" />
                         </div>
-                        <span className="text-sm font-bold text-red-100 uppercase tracking-wider">Warning</span>
+                        <span className="text-xs sm:text-sm font-bold text-red-100 uppercase tracking-wider">Warning</span>
                       </div>
-                      <h2 className="text-4xl lg:text-6xl font-black mb-8">The Risk Factor</h2>
-                      <p className="text-xl lg:text-2xl font-medium text-red-100 leading-relaxed">
+                      <h2 className="text-2xl sm:text-4xl lg:text-6xl font-black mb-4 sm:mb-8">The Risk Factor</h2>
+                      <p className="text-sm sm:text-xl lg:text-2xl font-medium text-red-100 leading-relaxed">
                         Every opportunity comes with potential downsides. Here's what you need to watch out for.
                       </p>
                     </div>
                   </div>
 
-                  <div className="p-12 lg:p-20 flex flex-col justify-center bg-white">
-                    <div className="prose prose-lg prose-red">
-                      <h3 className="text-2xl font-bold text-red-600 mb-6">Critical Considerations</h3>
-                      <p className="text-xl text-slate-600 leading-relaxed">
+                  <div className="p-4 sm:p-12 lg:p-20 flex flex-col justify-center bg-white">
+                    <div className="prose prose-sm sm:prose-lg prose-red">
+                      <h3 className="text-lg sm:text-2xl font-bold text-red-600 mb-3 sm:mb-6">Critical Considerations</h3>
+                      <p className="text-sm sm:text-xl text-slate-600 leading-relaxed">
                         {content.money_idea.risk}
                       </p>
 
-                      <div className="mt-10 bg-red-50 rounded-2xl p-6 flex items-start gap-4">
-                        <img src={caseStudy.companyImageUrl1} alt="Risk" className="w-12 h-12 rounded-lg object-cover bg-red-200" />
+                      <div className="mt-6 sm:mt-10 bg-red-50 rounded-xl sm:rounded-2xl p-4 sm:p-6 flex items-start gap-3 sm:gap-4">
+                        <img src={caseStudy.companyImageUrl1} alt="Risk" className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg object-cover bg-red-200" />
                         <div>
-                          <h4 className="font-bold text-red-900 text-sm uppercase mb-1">Lesson</h4>
-                          <p className="text-red-700 text-sm font-medium">Always calculate the downside before jumping in.</p>
+                          <h4 className="font-bold text-red-900 text-xs sm:text-sm uppercase mb-0.5 sm:mb-1">Lesson</h4>
+                          <p className="text-red-700 text-xs sm:text-sm font-medium">Always calculate the downside before jumping in.</p>
                         </div>
                       </div>
                     </div>
@@ -464,23 +464,23 @@ const CaseStudyPage: React.FC = () => {
 
               {/* Page 6: Real Life Example */}
               {currentPage === 6 && (
-                <div className="flex-1 bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden p-8 lg:p-16 flex flex-col items-center justify-center text-center relative">
-                  <div className="absolute top-0 left-0 w-full h-4 bg-gradient-to-r from-orange-400 to-amber-400"></div>
+                <div className="flex-1 bg-white rounded-xl sm:rounded-3xl shadow-xl border border-gray-100 overflow-hidden p-4 sm:p-8 lg:p-16 flex flex-col items-center justify-center text-center relative">
+                  <div className="absolute top-0 left-0 w-full h-2 sm:h-4 bg-gradient-to-r from-orange-400 to-amber-400"></div>
 
                   <div className="max-w-4xl mx-auto">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-50 rounded-full text-orange-600 text-sm font-bold uppercase tracking-wider mb-8">
-                      <HomeIcon size={16} /> Real Life Application
+                    <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-orange-50 rounded-full text-orange-600 text-xs sm:text-sm font-bold uppercase tracking-wider mb-4 sm:mb-8">
+                      <HomeIcon size={14} className="sm:w-4 sm:h-4" /> Real Life Application
                     </div>
 
-                    <h2 className="text-2xl lg:text-4xl font-black text-slate-900 mb-12 leading-tight">
+                    <h2 className="text-lg sm:text-2xl lg:text-4xl font-black text-slate-900 mb-6 sm:mb-12 leading-tight px-2">
                       "{content.money_idea.real_life}"
                     </h2>
 
-                    <div className="bg-slate-50 rounded-3xl p-8 lg:p-10 border border-slate-100 inline-flex flex-col md:flex-row items-center gap-8 text-left max-w-3xl">
-                      <img src={caseStudy.companyImageUrl2} alt="Example" className="w-32 h-32 rounded-2xl object-cover shadow-lg" />
+                    <div className="bg-slate-50 rounded-xl sm:rounded-3xl p-4 sm:p-8 lg:p-10 border border-slate-100 inline-flex flex-col md:flex-row items-center gap-4 sm:gap-8 text-left max-w-3xl">
+                      <img src={caseStudy.companyImageUrl2} alt="Example" className="w-20 h-20 sm:w-32 sm:h-32 rounded-xl sm:rounded-2xl object-cover shadow-lg" />
                       <div>
-                        <h3 className="text-2xl font-bold text-slate-800 mb-2">Apply this today</h3>
-                        <p className="text-slate-600 text-lg">
+                        <h3 className="text-lg sm:text-2xl font-bold text-slate-800 mb-1 sm:mb-2">Apply this today</h3>
+                        <p className="text-slate-600 text-sm sm:text-lg">
                           Take a moment to reflect on your own finances. Where can you apply this principle right now?
                         </p>
                       </div>
@@ -491,33 +491,33 @@ const CaseStudyPage: React.FC = () => {
 
               {/* Page 7: Quiz */}
               {currentPage === 7 && (
-                <div className="flex-1 bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden flex flex-col">
-                  <div className="flex-1 p-8 lg:p-20 flex flex-col justify-center items-center">
+                <div className="flex-1 bg-white rounded-xl sm:rounded-3xl shadow-xl border border-gray-100 overflow-hidden flex flex-col">
+                  <div className="flex-1 p-4 sm:p-8 lg:p-20 flex flex-col justify-center items-center overflow-y-auto">
                     {quizCompleted && finalScore ? (
                       <motion.div
                         initial={{ scale: 0.9, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         className="max-w-xl w-full text-center"
                       >
-                        <div className={`w-32 h-32 mx-auto rounded-full flex items-center justify-center mb-8 shadow-2xl ${finalScore.passed ? 'bg-green-500' : 'bg-amber-500'
+                        <div className={`w-20 h-20 sm:w-32 sm:h-32 mx-auto rounded-full flex items-center justify-center mb-4 sm:mb-8 shadow-2xl ${finalScore.passed ? 'bg-green-500' : 'bg-amber-500'
                           }`}>
-                          {finalScore.passed ? <Award size={64} className="text-white" /> : <AlertTriangle size={64} className="text-white" />}
+                          {finalScore.passed ? <Award size={40} className="sm:w-16 sm:h-16 text-white" /> : <AlertTriangle size={40} className="sm:w-16 sm:h-16 text-white" />}
                         </div>
-                        <h2 className="text-5xl font-black text-slate-900 mb-4">{finalScore.passed ? 'Nailed It!' : 'Nice Try!'}</h2>
-                        <p className="text-2xl text-slate-500 mb-10">You scored <span className="font-bold text-slate-900">{finalScore.score}%</span> on this case study.</p>
+                        <h2 className="text-2xl sm:text-5xl font-black text-slate-900 mb-2 sm:mb-4">{finalScore.passed ? 'Nailed It!' : 'Nice Try!'}</h2>
+                        <p className="text-lg sm:text-2xl text-slate-500 mb-6 sm:mb-10">You scored <span className="font-bold text-slate-900">{finalScore.score}%</span> on this case study.</p>
                         <button
                           onClick={() => navigate('/dashboard')}
-                          className="w-full py-5 bg-slate-900 text-white rounded-2xl font-bold text-xl hover:bg-slate-800 transition-all shadow-xl hover:shadow-2xl"
+                          className="w-full py-3 sm:py-5 bg-slate-900 text-white rounded-xl sm:rounded-2xl font-bold text-base sm:text-xl hover:bg-slate-800 transition-all shadow-xl hover:shadow-2xl"
                         >
                           Complete & Return Home
                         </button>
                       </motion.div>
                     ) : (
                       <div className="max-w-4xl w-full">
-                        <div className="flex justify-between items-end mb-10 border-b border-gray-100 pb-6">
+                        <div className="flex justify-between items-end mb-4 sm:mb-10 border-b border-gray-100 pb-3 sm:pb-6">
                           <div>
-                            <span className="text-sm font-bold text-indigo-600 uppercase tracking-wider block mb-2">Question {currentQuizIndex + 1} of {content.quiz.length}</span>
-                            <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 leading-tight">
+                            <span className="text-xs sm:text-sm font-bold text-indigo-600 uppercase tracking-wider block mb-1 sm:mb-2">Question {currentQuizIndex + 1} of {content.quiz.length}</span>
+                            <h2 className="text-lg sm:text-3xl lg:text-4xl font-bold text-slate-900 leading-tight">
                               {content.quiz[currentQuizIndex].question}
                             </h2>
                           </div>
@@ -526,7 +526,7 @@ const CaseStudyPage: React.FC = () => {
                           </div>
                         </div>
 
-                        <div className="grid md:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6">
                           {content.quiz[currentQuizIndex].options.map((option, idx) => {
                             const isSelected = selectedAnswer === option;
                             const isCorrect = option === content.quiz[currentQuizIndex].answer;
@@ -537,7 +537,7 @@ const CaseStudyPage: React.FC = () => {
                                 key={idx}
                                 onClick={() => handleAnswerSelect(option)}
                                 disabled={showResult}
-                                className={`p-6 lg:p-8 rounded-2xl text-left border-2 transition-all flex items-start gap-4 ${showCorrectness
+                                className={`p-3 sm:p-6 lg:p-8 rounded-xl sm:rounded-2xl text-left border-2 transition-all flex items-start gap-2 sm:gap-4 ${showCorrectness
                                     ? isCorrect
                                       ? 'bg-green-50 border-green-500 text-green-900'
                                       : isSelected
@@ -548,15 +548,15 @@ const CaseStudyPage: React.FC = () => {
                                       : 'bg-white border-slate-200 hover:border-indigo-400 hover:shadow-md'
                                   }`}
                               >
-                                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${showCorrectness && isCorrect ? 'bg-green-500 text-white' :
+                                <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-bold text-xs sm:text-sm shrink-0 ${showCorrectness && isCorrect ? 'bg-green-500 text-white' :
                                     showCorrectness && isSelected ? 'bg-red-500 text-white' :
                                       isSelected ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-500'
                                   }`}>
                                   {String.fromCharCode(65 + idx)}
                                 </div>
-                                <span className="text-lg lg:text-xl font-medium leading-snug">{option}</span>
-                                {showCorrectness && isCorrect && <CheckCircle className="ml-auto text-green-600 shrink-0" />}
-                                {showCorrectness && isSelected && !isCorrect && <XCircle className="ml-auto text-red-600 shrink-0" />}
+                                <span className="text-sm sm:text-lg lg:text-xl font-medium leading-snug flex-1">{option}</span>
+                                {showCorrectness && isCorrect && <CheckCircle className="ml-auto text-green-600 shrink-0 w-5 h-5 sm:w-6 sm:h-6" />}
+                                {showCorrectness && isSelected && !isCorrect && <XCircle className="ml-auto text-red-600 shrink-0 w-5 h-5 sm:w-6 sm:h-6" />}
                               </button>
                             );
                           })}
@@ -566,17 +566,17 @@ const CaseStudyPage: React.FC = () => {
                           <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="mt-8 bg-slate-900 text-white p-8 rounded-3xl flex flex-col md:flex-row items-center gap-8 shadow-2xl"
+                            className="mt-4 sm:mt-8 bg-slate-900 text-white p-4 sm:p-8 rounded-xl sm:rounded-3xl flex flex-col md:flex-row items-center gap-4 sm:gap-8 shadow-2xl"
                           >
                             <div className="flex-1">
-                              <h4 className="font-bold text-indigo-400 uppercase tracking-wider text-sm mb-2">Teaching Point</h4>
-                              <p className="text-lg leading-relaxed text-slate-200">
+                              <h4 className="font-bold text-indigo-400 uppercase tracking-wider text-xs sm:text-sm mb-1 sm:mb-2">Teaching Point</h4>
+                              <p className="text-sm sm:text-lg leading-relaxed text-slate-200">
                                 {content.quiz[currentQuizIndex].teaching_point}
                               </p>
                             </div>
                             <button
                               onClick={handleNextQuestion}
-                              className="px-8 py-4 bg-white text-slate-900 rounded-xl font-bold hover:bg-indigo-50 transition-colors whitespace-nowrap"
+                              className="w-full md:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-white text-slate-900 rounded-lg sm:rounded-xl font-bold hover:bg-indigo-50 transition-colors whitespace-nowrap text-sm sm:text-base"
                             >
                               Next Question
                             </button>
@@ -593,23 +593,23 @@ const CaseStudyPage: React.FC = () => {
       </main>
 
       {/* Side Navigation Buttons */}
-      <div className="fixed inset-y-0 left-0 flex items-center px-4 z-50 pointer-events-none">
+      <div className="fixed inset-y-0 left-0 flex items-center px-1 sm:px-4 z-50 pointer-events-none">
         <button
           onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
           disabled={currentPage === 0}
-          className="w-14 h-14 flex items-center justify-center rounded-full bg-white/90 backdrop-blur-sm text-slate-800 shadow-xl hover:scale-110 active:scale-95 disabled:opacity-0 disabled:scale-100 transition-all pointer-events-auto border border-white/50"
+          className="w-10 h-10 sm:w-14 sm:h-14 flex items-center justify-center rounded-full bg-white/90 backdrop-blur-sm text-slate-800 shadow-xl hover:scale-110 active:scale-95 disabled:opacity-0 disabled:scale-100 transition-all pointer-events-auto border border-white/50"
         >
-          <ChevronLeft size={32} />
+          <ChevronLeft size={24} className="sm:w-8 sm:h-8" />
         </button>
       </div>
 
-      <div className="fixed inset-y-0 right-0 flex items-center px-4 z-50 pointer-events-none">
+      <div className="fixed inset-y-0 right-0 flex items-center px-1 sm:px-4 z-50 pointer-events-none">
         <button
           onClick={() => setCurrentPage(Math.min(totalPages - 1, currentPage + 1))}
           disabled={currentPage === totalPages - 1}
-          className="w-14 h-14 flex items-center justify-center rounded-full bg-indigo-600/90 backdrop-blur-sm text-white shadow-xl hover:scale-110 active:scale-95 disabled:opacity-0 disabled:scale-100 transition-all pointer-events-auto border border-white/20"
+          className="w-10 h-10 sm:w-14 sm:h-14 flex items-center justify-center rounded-full bg-indigo-600/90 backdrop-blur-sm text-white shadow-xl hover:scale-110 active:scale-95 disabled:opacity-0 disabled:scale-100 transition-all pointer-events-auto border border-white/20"
         >
-          <ChevronRight size={32} />
+          <ChevronRight size={24} className="sm:w-8 sm:h-8" />
         </button>
       </div>
     </div>
