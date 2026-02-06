@@ -39,6 +39,7 @@ import type {
   CaseStudy,
   CaseStudyContent,
   CaseStudyProgress,
+  MoneyPersonalityResult,
 } from '../auth/types/auth.types';
 
 // Type helper for Firestore documents with serverTimestamp
@@ -1478,4 +1479,96 @@ export async function completeCaseStudy(
   });
 
   return { score, passed };
+}
+
+// ============== Money Personality Functions ==============
+
+const PERSONALITY_QUIZ_VERSION = 1; // Increment when quiz questions change significantly
+
+/**
+ * Save money personality quiz result
+ * Awards XP on first completion (10 XP)
+ */
+export async function saveMoneyPersonalityResult(
+  userId: string,
+  primaryPersonalityId: string,
+  secondaryPersonalityId: string | null,
+  scores: { [personalityId: string]: number },
+  answers: number[]
+): Promise<{ xpAwarded: number; isFirstTime: boolean }> {
+  const progressRef = doc(db, STUDENT_PROGRESS, userId);
+  const snapshot = await getDoc(progressRef);
+
+  if (!snapshot.exists()) {
+    return { xpAwarded: 0, isFirstTime: false };
+  }
+
+  const data = snapshot.data();
+  const existingPersonality = data.moneyPersonality as MoneyPersonalityResult | undefined;
+
+  // Check if this is the first time taking the quiz
+  const isFirstTime = !existingPersonality;
+
+  // Award 10 XP on first completion
+  const xpToAward = isFirstTime ? 10 : 0;
+  const currentXP = data.totalXP || 0;
+  const newTotalXP = currentXP + xpToAward;
+  const xpLevel = Math.floor(newTotalXP / 100) + 1;
+
+  const personalityResult: MoneyPersonalityResult = {
+    primaryPersonalityId,
+    secondaryPersonalityId,
+    scores,
+    answers,
+    completedAt: new Date(),
+    version: PERSONALITY_QUIZ_VERSION,
+  };
+
+  await updateDoc(progressRef, {
+    moneyPersonality: personalityResult,
+    totalXP: newTotalXP,
+    xpLevel,
+    lastActivityAt: serverTimestamp(),
+  });
+
+  return { xpAwarded: xpToAward, isFirstTime };
+}
+
+/**
+ * Get money personality result for a user
+ * Returns null if no result exists
+ */
+export async function getMoneyPersonalityResult(
+  userId: string
+): Promise<MoneyPersonalityResult | null> {
+  const progressRef = doc(db, STUDENT_PROGRESS, userId);
+  const snapshot = await getDoc(progressRef);
+
+  if (!snapshot.exists()) {
+    return null;
+  }
+
+  const data = snapshot.data();
+  const personality = data.moneyPersonality as MoneyPersonalityResult | undefined;
+
+  if (!personality) {
+    return null;
+  }
+
+  return {
+    ...personality,
+    completedAt: (personality.completedAt as unknown as Timestamp)?.toDate() || new Date(),
+  };
+}
+
+/**
+ * Clear money personality result (allows retaking)
+ */
+export async function clearMoneyPersonalityResult(userId: string): Promise<void> {
+  const progressRef = doc(db, STUDENT_PROGRESS, userId);
+
+  await updateDoc(progressRef, {
+    moneyPersonality: null,
+    lastActivityAt: serverTimestamp(),
+  });
 }
