@@ -35,6 +35,10 @@ import FinancialToolsHorizon from "./pages/FinancialToolsHorizon";
 import StockSimulation from "./components/StockSimulation";
 import MoneyPersonality from "./components/MoneyPersonality";
 import ModuleAccessControl from "./components/ModuleAccessControl";
+import BigMoneyDecisions from "./pages/BigMoneyDecisions";
+import HomeImmersion from "./pages/big-money/HomeImmersion";
+import CarImmersion from "./pages/big-money/CarImmersion";
+import CollegeImmersion from "./pages/big-money/CollegeImmersion";
 import { MODULES } from "./hooks/useModuleScore";
 
 // Smart Auth component that redirects authenticated users appropriately
@@ -53,115 +57,115 @@ function App() {
         <Routes>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/auth" element={<SmartAuthPage />} />
-          
+
           {/* Protected Dashboard Routes */}
-          <Route 
-            path="/dashboard" 
+          <Route
+            path="/dashboard"
             element={
               <ProtectedRoute>
                 <Dashboard />
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/game" 
+          <Route
+            path="/game"
             element={
               <ProtectedRoute>
                 <FinancialRoadmap />
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/fin" 
+          <Route
+            path="/fin"
             element={
               <ProtectedRoute>
                 <FinancialRoadmap />
               </ProtectedRoute>
-            } 
+            }
           />
 
           {/* Protected 50-30-20 Budget Rule Routes */}
-          <Route 
-            path="/50-30-20" 
+          <Route
+            path="/50-30-20"
             element={
               <ProtectedRoute>
                 <ModuleAccessControl moduleId={MODULES.BUDGETING_50_30_20.id} moduleName="Budgeting Basics">
                   <BudgetRuleChartStep activeCategoryKey="50" />
                 </ModuleAccessControl>
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/mainpage" 
+          <Route
+            path="/mainpage"
             element={
               <ProtectedRoute>
                 <MainPage />
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/needs" 
+          <Route
+            path="/needs"
             element={
               <ProtectedRoute>
                 <NeedsPage />
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/wants" 
+          <Route
+            path="/wants"
             element={
               <ProtectedRoute>
                 <WantsPage />
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/savings" 
+          <Route
+            path="/savings"
             element={
               <ProtectedRoute>
                 <SavingsPage />
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/calculator" 
+          <Route
+            path="/calculator"
             element={
               <ProtectedRoute>
                 <CalculatorPage />
               </ProtectedRoute>
-            } 
+            }
           />
 
           {/* Protected Learning Modules */}
-          <Route 
-            path="/needs-wants" 
+          <Route
+            path="/needs-wants"
             element={
               <ProtectedRoute>
                 <ModuleAccessControl moduleId={MODULES.NEEDS_WANTS.id} moduleName="Needs vs Wants">
                   <NeedsWants />
                 </ModuleAccessControl>
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/need" 
+          <Route
+            path="/need"
             element={
               <ProtectedRoute>
                 <ModuleAccessControl moduleId={MODULES.NEEDS_WANTS.id} moduleName="Needs vs Wants">
                   <NeedsWants />
                 </ModuleAccessControl>
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/investment-quiz" 
+          <Route
+            path="/investment-quiz"
             element={
               <ProtectedRoute>
                 <ModuleAccessControl moduleId={MODULES.INVESTMENT_BANKING.id} moduleName="Investment Banking">
                   <InvestmentBankingModule />
                 </ModuleAccessControl>
               </ProtectedRoute>
-            } 
+            }
           />
           <Route
             path="/truefalse"
@@ -179,45 +183,45 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route 
-            path="/credit-score" 
+          <Route
+            path="/credit-score"
             element={
               <ProtectedRoute>
                 <ModuleAccessControl moduleId={MODULES.CREDIT_SCORE.id} moduleName="Credit Score">
                   <CreditScoreModule />
                 </ModuleAccessControl>
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/emergency-fund" 
+          <Route
+            path="/emergency-fund"
             element={
               <ProtectedRoute>
                 <ModuleAccessControl moduleId={MODULES.EMERGENCY_FUND.id} moduleName="Emergency Fund">
                   <EmergencyFundModule />
                 </ModuleAccessControl>
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/stock-market" 
+          <Route
+            path="/stock-market"
             element={
               <ProtectedRoute>
                 <ModuleAccessControl moduleId={MODULES.STOCK_MARKET.id} moduleName="Stock Market">
                   <StockMarketModule />
                 </ModuleAccessControl>
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/insurance" 
+          <Route
+            path="/insurance"
             element={
               <ProtectedRoute>
                 <ModuleAccessControl moduleId={MODULES.INSURANCE.id} moduleName="Insurance">
                   <InsuranceModule />
                 </ModuleAccessControl>
               </ProtectedRoute>
-            } 
+            }
           />
           <Route
             path="/debt-management"
@@ -368,6 +372,40 @@ function App() {
             element={
               <ProtectedRoute>
                 <MoneyPersonality />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Big Money Decisions Routes */}
+          <Route
+            path="/big-money-decisions"
+            element={
+              <ProtectedRoute>
+                <BigMoneyDecisions />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/big-money-decisions/home"
+            element={
+              <ProtectedRoute>
+                <HomeImmersion />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/big-money-decisions/car"
+            element={
+              <ProtectedRoute>
+                <CarImmersion />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/big-money-decisions/college"
+            element={
+              <ProtectedRoute>
+                <CollegeImmersion />
               </ProtectedRoute>
             }
           />
