@@ -607,10 +607,15 @@ const FinLitApp: React.FC = () => {
             {mobileMenuOpen ? <X size={24} className="text-blue-700" /> : <Menu size={24} className="text-blue-700" />}
           </button>
 
-          <div className="bg-emerald-500 text-white p-1.5 sm:p-2 rounded-lg">
-            <BookOpen size={18} className="sm:w-[22px] sm:h-[22px]" />
-          </div>
-          <h1 className="text-xl sm:text-2xl font-bold text-blue-700">FinLit</h1>
+          <img
+            src="/veo2.png"
+            alt="FinLit Logo"
+            className="h-8 sm:h-10 w-auto object-contain"
+            style={{
+              mixBlendMode: 'darken',
+              filter: 'brightness(1.1) contrast(1.2)'
+            }}
+          />
         </div>
 
         <div className="flex items-center gap-2 sm:gap-4 md:gap-6">
