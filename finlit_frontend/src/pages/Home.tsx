@@ -767,6 +767,17 @@ const FinLitApp: React.FC = () => {
 
           <button
             onClick={() => {
+              navigate('/money-personality');
+              setMobileMenuOpen(false);
+            }}
+            className="flex items-center gap-3 p-3 hover:bg-blue-500 rounded-lg text-base sm:text-lg"
+          >
+            <Brain size={24} />
+            <span className="font-medium">Money Personality</span>
+          </button>
+
+          <button
+            onClick={() => {
               setActiveSection('profile');
               setMobileMenuOpen(false);
             }}
@@ -992,6 +1003,43 @@ const FinLitApp: React.FC = () => {
                       Submit
                     </button>
                   )}
+                </div>
+              </div>
+
+              {/* Money Personality Card */}
+              <div
+                onClick={() => navigate('/money-personality')}
+                className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-lg p-4 sm:p-6 shadow-sm border border-purple-100 cursor-pointer hover:shadow-md transition-all group"
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-2xl sm:text-3xl">🧠</span>
+                      <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Money Personality</h2>
+                    </div>
+                    <p className="text-sm sm:text-base text-gray-600 mb-3">
+                      What type of money person are you? Take a quick quiz to discover your financial personality type.
+                    </p>
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {['🐿️ Saver', '🛍️ Spender', '📈 Investor', '📊 Planner'].map((type) => (
+                        <span key={type} className="px-2 py-1 bg-white/70 rounded-full text-xs sm:text-sm text-gray-600">
+                          {type}
+                        </span>
+                      ))}
+                      <span className="px-2 py-1 bg-white/70 rounded-full text-xs sm:text-sm text-gray-600">+2 more</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-purple-600 font-medium group-hover:gap-3 transition-all">
+                      <span>Discover yours</span>
+                      <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  </div>
+                  <div className="hidden sm:flex flex-col gap-1 text-right">
+                    <div className="flex items-center gap-1 text-amber-500">
+                      <Star className="fill-amber-500" size={16} />
+                      <span className="font-bold">+10 XP</span>
+                    </div>
+                    <span className="text-xs text-gray-500">First time bonus</span>
+                  </div>
                 </div>
               </div>
 
