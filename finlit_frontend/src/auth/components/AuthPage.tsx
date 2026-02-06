@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Moon, Sun } from 'lucide-react';
+import { Moon, Sun } from 'lucide-react';
 import { SignInForm } from './SignInForm';
 import { SignUpForm } from './SignUpForm';
 import { ForgotPasswordModal } from './ForgotPasswordModal';
@@ -112,7 +112,11 @@ export const AuthPage: React.FC = () => {
       </button>
 
       {/* Left Side - Journey Section with animations */}
-      <div className="hidden lg:flex lg:flex-1 bg-gradient-to-br from-emerald-400 via-blue-500 to-blue-600 relative overflow-hidden">
+      <div className={`hidden lg:flex lg:flex-1 relative overflow-hidden transition-all duration-500 ${
+        isDarkMode
+          ? 'bg-gradient-to-br from-navy-800 via-navy-700 to-navy-900'
+          : 'bg-gradient-to-br from-emerald-400 via-blue-500 to-blue-600'
+      }`}>
         <div className="relative z-10 flex flex-col justify-center px-8 py-8 text-gray-900 min-h-screen w-full">
           <motion.div
             initial={{ opacity: 0, y: 50 }}
@@ -126,10 +130,15 @@ export const AuthPage: React.FC = () => {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
             >
-              <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center shadow-lg">
-                <BookOpen className="text-blue-600" size={24} />
-              </div>
-              <span className="text-xl font-bold text-white">FinLit</span>
+              <img
+                src="/veo3.png"
+                alt="FinLit Logo"
+                className="h-12 w-auto object-contain transition-all duration-300"
+                style={{
+                  mixBlendMode: isDarkMode ? 'normal' : 'multiply',
+                  filter: isDarkMode ? 'brightness(0) invert(1)' : 'none'
+                }}
+              />
             </motion.div>
             
             <motion.h1
