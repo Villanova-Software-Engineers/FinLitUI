@@ -142,6 +142,7 @@ const LEARNING_MODULES = [
   { id: MODULES.NEEDS_WANTS.id, title: "Needs vs Wants", subtitle: "Financial Priorities", icon: "⚖️", route: "/needs-wants", points: 100 },
   { id: MODULES.CREDIT_SCORE.id, title: "Credit Score", subtitle: "Credit Management", icon: "📊", route: "/credit-score", points: 150 },
   { id: MODULES.EMERGENCY_FUND.id, title: "Emergency Fund", subtitle: "Financial Safety", icon: "🆘", route: "/emergency-fund", points: 150 },
+  { id: MODULES.BONDS.id, title: "Bonds", subtitle: "Fixed-Income Securities", icon: "📜", route: "/bonds", points: 100 },
   { id: MODULES.STOCK_MARKET.id, title: "Stock Market", subtitle: "Investment Basics", icon: "📈", route: "/stock-market", points: 200 },
   { id: MODULES.INSURANCE.id, title: "Insurance", subtitle: "Risk Management", icon: "🛡️", route: "/insurance", points: 150 },
   { id: MODULES.DEBT_MANAGEMENT.id, title: "Debt Management", subtitle: "Debt Freedom", icon: "🔓", route: "/debt-management", points: 200 },

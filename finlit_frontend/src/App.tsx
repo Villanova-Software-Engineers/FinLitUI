@@ -18,6 +18,7 @@ import DebtManagementModule from "./components/DebtManagementModule";
 import InvestmentBankingModule from "./components/InvestmentBankingModule";
 import CryptoModule from "./components/CryptoModule";
 import RetirementAccountsModule from "./components/RetirementAccountsModule";
+import BondsPage from "./pages/Bonds";
 import AdminSetup from "./components/AdminSetup";
 import AdminDashboard from "./components/AdminDashboard";
 import QuizQuestionsAdmin from "./components/QuizQuestionsAdmin";
@@ -199,6 +200,16 @@ function App() {
               <ProtectedRoute>
                 <ModuleAccessControl moduleId={MODULES.EMERGENCY_FUND.id} moduleName="Emergency Fund">
                   <EmergencyFundModule />
+                </ModuleAccessControl>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/bonds"
+            element={
+              <ProtectedRoute>
+                <ModuleAccessControl moduleId={MODULES.BONDS.id} moduleName="Bonds">
+                  <BondsPage />
                 </ModuleAccessControl>
               </ProtectedRoute>
             }
