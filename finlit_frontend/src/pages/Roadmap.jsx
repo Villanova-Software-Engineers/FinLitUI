@@ -30,12 +30,13 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 0.7], [0, 1]);
     MODULES.NEEDS_WANTS.id,            // 2. Needs vs Wants
     MODULES.CREDIT_SCORE.id,           // 3. Credit Score
     MODULES.EMERGENCY_FUND.id,         // 4. Emergency Fund
-    MODULES.STOCK_MARKET.id,           // 5. Stock Market
-    MODULES.INSURANCE.id,              // 6. Insurance
-    MODULES.DEBT_MANAGEMENT.id,        // 7. Debt Management
-    MODULES.RETIREMENT_ACCOUNTS.id,    // 8. Retirement Accounts
-    MODULES.CRYPTO.id,                 // 9. Cryptocurrency
-    MODULES.INVESTMENT_BANKING.id,     // 10. Investment Banking
+    MODULES.BONDS.id,                  // 5. Bonds
+    MODULES.STOCK_MARKET.id,           // 6. Stock Market
+    MODULES.INSURANCE.id,              // 7. Insurance
+    MODULES.DEBT_MANAGEMENT.id,        // 8. Debt Management
+    MODULES.RETIREMENT_ACCOUNTS.id,    // 9. Retirement Accounts
+    MODULES.CRYPTO.id,                 // 10. Cryptocurrency
+    MODULES.INVESTMENT_BANKING.id,     // 11. Investment Banking
   ];
 
   // Check if a module is accessible (previous module passed or is first module)
@@ -112,77 +113,90 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 0.7], [0, 1]);
     },
     {
       id: 5,
+      moduleId: MODULES.BONDS.id,
+      title: "Bonds",
+      subtitle: "Fixed-Income Securities",
+      icon: "📜",
+      color: "#e8f5e9",
+      position: "left",
+      route: "/bonds",
+      component: "bonds-module",
+      description: "Learn about bonds, fixed-income investing, and steady returns.",
+      quizType: "mcq"
+    },
+    {
+      id: 6,
       moduleId: MODULES.STOCK_MARKET.id,
       title: "Stock Market Basics",
       subtitle: "Investment Fundamentals",
       icon: "📈",
       color: "#f5f5f5",
-      position: "left",
+      position: "right",
       route: "/stock-market",
       component: "stock-module",
       description: "Learn the fundamentals of stock market investing and portfolio building.",
       quizType: "matching"
     },
     {
-      id: 6,
+      id: 7,
       moduleId: MODULES.INSURANCE.id,
       title: "Insurance Protection",
       subtitle: "Risk Management",
       icon: "🛡️",
       color: "#f5f5f5",
-      position: "right",
+      position: "left",
       route: "/insurance",
       component: "insurance-module",
       description: "Understand different types of insurance and how to protect your assets.",
       quizType: "drag-drop"
     },
     {
-      id: 7,
+      id: 8,
       moduleId: MODULES.DEBT_MANAGEMENT.id,
       title: "Debt Management",
       subtitle: "Debt Freedom",
       icon: "🔓",
       color: "#f5f5f5",
-      position: "left",
+      position: "right",
       route: "/debt-management",
       component: "debt-module",
       description: "Strategies for managing and eliminating debt effectively.",
       quizType: "scenario"
     },
     {
-      id: 8,
+      id: 9,
       moduleId: MODULES.RETIREMENT_ACCOUNTS.id,
       title: "Retirement Accounts",
       subtitle: "401(k) & Roth IRA",
       icon: "🏛️",
       color: "#e8f5e9",
-      position: "right",
+      position: "left",
       route: "/retirement-accounts",
       component: "retirement-module",
       description: "Master retirement savings with 401(k)s, Roth IRAs, and tax-advantaged investing.",
       quizType: "mcq"
     },
     {
-      id: 9,
+      id: 10,
       moduleId: MODULES.CRYPTO.id,
       title: "Cryptocurrency Fundamentals",
       subtitle: "Digital Assets",
       icon: "🪙",
       color: "#f5f5f5",
-      position: "left",
+      position: "right",
       route: "/crypto",
       component: "crypto-module",
       description: "Learn the fundamentals of cryptocurrency and blockchain technology.",
       quizType: "mcq"
     },
     {
-      id: 10,
+      id: 11,
       moduleId: MODULES.INVESTMENT_BANKING.id,
       title: "Investment Banking",
       subtitle: "IPO Knowledge",
       icon: "🏦",
       color: "#e3f2fd",
-      position: "right",
+      position: "left",
       route: "/investment-quiz",
       component: "truefalse",
       description: "Test your knowledge about Initial Public Offerings and investment banking.",
