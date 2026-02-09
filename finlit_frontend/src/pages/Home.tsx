@@ -27,25 +27,25 @@ interface ClueData {
 
 const CROSSWORD_CLUES: ClueData[] = [
   // Across - from CSV data
-  { number: 1, clue: "Money paid for borrowing money", answer: "INTEREST", startRow: 0, startCol: 0, direction: 'across' },
-  { number: 4, clue: "Strategy for financial success", answer: "PLAN", startRow: 2, startCol: 3, direction: 'across' },
-  { number: 6, clue: "Fixed period for a loan or investment", answer: "TERM", startRow: 3, startCol: 7, direction: 'across' },
-  { number: 7, clue: "Money available for a purpose", answer: "FUNDS", startRow: 4, startCol: 1, direction: 'across' },
-  { number: 9, clue: "Value of ownership in an asset", answer: "EQUITY", startRow: 5, startCol: 5, direction: 'across' },
-  { number: 10, clue: "To put money into a venture", answer: "INVEST", startRow: 6, startCol: 0, direction: 'across' },
-  { number: 15, clue: "To be in debt", answer: "OWE", startRow: 8, startCol: 4, direction: 'across' },
-  { number: 16, clue: "To give money for goods or services", answer: "PAY", startRow: 8, startCol: 8, direction: 'across' },
-  { number: 17, clue: "A payment for a service", answer: "FEE", startRow: 10, startCol: 0, direction: 'across' },
+  { number: 1, clue: "The cost charged by a lender for using borrowed money, usually expressed as a percentage.", answer: "INTEREST", startRow: 0, startCol: 0, direction: 'across' },
+  { number: 4, clue: "A set of steps to reach a goal.", answer: "PLAN", startRow: 2, startCol: 3, direction: 'across' },
+  { number: 6, clue: "The length of time until a loan must be repaid or an investment matures.", answer: "TERM", startRow: 3, startCol: 7, direction: 'across' },
+  { number: 7, clue: "Cash or resources set aside for a specific goal or use.", answer: "FUNDS", startRow: 4, startCol: 1, direction: 'across' },
+  { number: 9, clue: "The portion of an asset you actually own after debts are subtracted.", answer: "EQUITY", startRow: 5, startCol: 5, direction: 'across' },
+  { number: 10, clue: "To commit money with the expectation of earning a return in the future.", answer: "INVEST", startRow: 6, startCol: 0, direction: 'across' },
+  { number: 15, clue: "To have to pay back.", answer: "OWE", startRow: 8, startCol: 4, direction: 'across' },
+  { number: 16, clue: "To exchange money in return for a product or service.", answer: "PAY", startRow: 8, startCol: 8, direction: 'across' },
+  { number: 17, clue: "Money charged for professional or specialized work.", answer: "FEE", startRow: 10, startCol: 0, direction: 'across' },
   { number: 18, clue: "Mandatory contributions to state revenue", answer: "TAXES", startRow: 10, startCol: 6, direction: 'across' },
   // Down - from CSV data
-  { number: 2, clue: "Money spent on goods or services", answer: "EXPENSE", startRow: 0, startCol: 3, direction: 'down' },
-  { number: 3, clue: "Ability to borrow money with a promise to repay", answer: "CREDIT", startRow: 1, startCol: 8, direction: 'down' },
-  { number: 5, clue: "Something of value owned", answer: "ASSET", startRow: 2, startCol: 5, direction: 'down' },
-  { number: 8, clue: "Potential for loss in an investment", answer: "RISK", startRow: 5, startCol: 0, direction: 'down' },
-  { number: 11, clue: "Worth of an asset", answer: "VALUE", startRow: 6, startCol: 2, direction: 'down' },
-  { number: 12, clue: "Type of security representing ownership", answer: "STOCK", startRow: 6, startCol: 4, direction: 'down' },
-  { number: 13, clue: "Money owed to another party", answer: "DEBT", startRow: 7, startCol: 6, direction: 'down' },
-  { number: 14, clue: "Percentage of interest", answer: "RATE", startRow: 7, startCol: 9, direction: 'down' }
+  { number: 2, clue: "Funds used to purchase items or experiences, not saved or invested.", answer: "EXPENSE", startRow: 0, startCol: 3, direction: 'down' },
+  { number: 3, clue: "Trustworthiness that determines whether lenders will loan you money.", answer: "CREDIT", startRow: 1, startCol: 8, direction: 'down' },
+  { number: 5, clue: "Any resource you own that can provide future economic benefit.", answer: "ASSET", startRow: 2, startCol: 5, direction: 'down' },
+  { number: 8, clue: "The chance that an investment's actual return will be lower than expected.", answer: "RISK", startRow: 5, startCol: 0, direction: 'down' },
+  { number: 11, clue: "The monetary value of something based on what it could sell for.", answer: "VALUE", startRow: 6, startCol: 2, direction: 'down' },
+  { number: 12, clue: "A financial instrument that gives the holder partial ownership in a company.", answer: "STOCK", startRow: 6, startCol: 4, direction: 'down' },
+  { number: 13, clue: "A financial obligation that must be repaid in the future.", answer: "DEBT", startRow: 7, startCol: 6, direction: 'down' },
+  { number: 14, clue: "A price per unit.", answer: "RATE", startRow: 7, startCol: 9, direction: 'down' }
 ];
 
 const generateGrid = (): CrosswordCell[][] => {
