@@ -2,12 +2,8 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthPage, AuthProvider, ProtectedRoute } from "./auth";
 import FinLitApp from "./pages/Home";
 import FinancialRoadmap from "./pages/Roadmap";
-import NeedsPage from "./50-30-20/needs";
-import WantsPage from "./50-30-20/wants";
-import SavingsPage from "./50-30-20/savings";
+import BudgetingBasics from "./50-30-20/BudgetingBasics";
 import CalculatorPage from "./50-30-20/calculator";
-import MainPage from "./50-30-20/MainPage";
-import BudgetRuleChartStep from "./50-30-20/50-30-20";
 import NeedsWants from "./needs-wants/nwModule";
 import TrueFalseCard from "./TrueFalse/TrueFalseCard";
 import CreditScoreModule from "./components/CreditScoreModule";
@@ -85,46 +81,14 @@ function App() {
             }
           />
 
-          {/* Protected 50-30-20 Budget Rule Routes */}
+          {/* Protected Budgeting Basics Module - Single Unified Route */}
           <Route
             path="/50-30-20"
             element={
               <ProtectedRoute>
                 <ModuleAccessControl moduleId={MODULES.BUDGETING_50_30_20.id} moduleName="Budgeting Basics">
-                  <BudgetRuleChartStep activeCategoryKey="50" />
+                  <BudgetingBasics />
                 </ModuleAccessControl>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/mainpage"
-            element={
-              <ProtectedRoute>
-                <MainPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/needs"
-            element={
-              <ProtectedRoute>
-                <NeedsPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/wants"
-            element={
-              <ProtectedRoute>
-                <WantsPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/savings"
-            element={
-              <ProtectedRoute>
-                <SavingsPage />
               </ProtectedRoute>
             }
           />
