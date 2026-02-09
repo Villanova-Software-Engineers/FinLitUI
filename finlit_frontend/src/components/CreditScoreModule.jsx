@@ -21,7 +21,6 @@ const CreditScoreModule = () => {
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [showResults, setShowResults] = useState(false);
   const [score, setScore] = useState(0);
-  const [showExplanation, setShowExplanation] = useState(false);
   const [characterDialogue, setCharacterDialogue] = useState("");
   const [lives, setLives] = useState(3);
   const [streak, setStreak] = useState(0);
@@ -132,7 +131,8 @@ const CreditScoreModule = () => {
         { term: "Payment History", definition: "35% - Most important factor", emoji: "⏰", matched: false },
         { term: "Credit Utilization", definition: "30% - Amount of credit used", emoji: "📊", matched: false },
         { term: "Credit History Length", definition: "15% - How long you've had credit", emoji: "📅", matched: false },
-        { term: "Credit Mix", definition: "10% - Different types of accounts", emoji: "🔀", matched: false }
+        { term: "Credit Mix", definition: "10% - Different types of accounts", emoji: "🔀", matched: false },
+        { term: "New Credit", definition: "10% - Recent credit inquiries", emoji: "🆕", matched: false }
       ]
     },
     {
@@ -226,6 +226,66 @@ const CreditScoreModule = () => {
       ],
       explanation: "A credit score of 800-850 is considered excellent. This range typically qualifies you for the best interest rates and credit terms available.",
       xp: 25
+    },
+    {
+      id: 6,
+      question: "What happens to your credit score when you check it yourself?",
+      options: [
+        { id: 'A', text: "It decreases by 5-10 points", correct: false },
+        { id: 'B', text: "It stays the same (soft inquiry)", correct: true },
+        { id: 'C', text: "It increases slightly", correct: false },
+        { id: 'D', text: "It gets frozen for 30 days", correct: false }
+      ],
+      explanation: "Checking your own credit score is a 'soft inquiry' and does NOT affect your credit score. You should regularly check your credit report to monitor for errors or fraud.",
+      xp: 25
+    },
+    {
+      id: 7,
+      question: "Which type of credit inquiry can temporarily lower your score?",
+      options: [
+        { id: 'A', text: "Checking your own credit score", correct: false },
+        { id: 'B', text: "A lender checking your credit for a loan application", correct: true },
+        { id: 'C', text: "Your employer checking your credit", correct: false },
+        { id: 'D', text: "A pre-approved credit card offer", correct: false }
+      ],
+      explanation: "A 'hard inquiry' occurs when a lender checks your credit for a loan or credit application. This can temporarily lower your score by a few points.",
+      xp: 25
+    },
+    {
+      id: 8,
+      question: "What is the BEST strategy for building credit history?",
+      options: [
+        { id: 'A', text: "Open many credit cards at once", correct: false },
+        { id: 'B', text: "Max out your credit cards and pay minimum", correct: false },
+        { id: 'C', text: "Use credit responsibly and pay on time consistently", correct: true },
+        { id: 'D', text: "Never use credit cards at all", correct: false }
+      ],
+      explanation: "The best way to build credit is to use credit responsibly - make small purchases, pay your balance in full each month, and always pay on time.",
+      xp: 25
+    },
+    {
+      id: 9,
+      question: "Why is it generally bad to close old credit card accounts?",
+      options: [
+        { id: 'A', text: "It reduces your available credit and shortens credit history", correct: true },
+        { id: 'B', text: "It costs money to close accounts", correct: false },
+        { id: 'C', text: "Banks charge a closing fee", correct: false },
+        { id: 'D', text: "It's illegal to close credit accounts", correct: false }
+      ],
+      explanation: "Closing old credit accounts reduces your total available credit (hurting utilization ratio) and can shorten your credit history length - both factors that affect your score.",
+      xp: 25
+    },
+    {
+      id: 10,
+      question: "If you have a $5,000 credit limit, what's the maximum balance you should carry to maintain good credit health?",
+      options: [
+        { id: 'A', text: "$5,000", correct: false },
+        { id: 'B', text: "$3,500", correct: false },
+        { id: 'C', text: "$1,500", correct: true },
+        { id: 'D', text: "$4,000", correct: false }
+      ],
+      explanation: "To maintain good credit health, keep your balance below 30% of your credit limit. 30% of $5,000 = $1,500. Even lower (under 10%) is better!",
+      xp: 25
     }
   ];
 
@@ -291,7 +351,11 @@ const CreditScoreModule = () => {
     try {
       // Convert score to percentage (0-100)
       const percentageScore = Math.round((finalScore / questions.length) * 100);
-      const result = await saveScore('credit-score', percentageScore, 100);
+
+      // Firebase requires score === maxScore to mark as passed
+      // If student passed the threshold (80%), save it as 100 to mark as passed
+      const scoreToSave = percentageScore >= 80 ? 100 : percentageScore;
+      const result = await saveScore('credit-score', scoreToSave, 100);
       setSaveResult(result);
     } catch (err) {
       console.error('Error saving score:', err);
@@ -464,6 +528,10 @@ const CreditScoreModule = () => {
       setGameCompleted(false);
       setCurrentGameType('');
       resetGameState();
+    } else {
+      // Go back to learning phase from first game
+      setCurrentStep('learning');
+      setLearningStep(learningContent.length - 1);
     }
   };
 
@@ -1217,14 +1285,9 @@ const CreditScoreModule = () => {
           <div className="flex justify-between items-center">
             <button
               onClick={prevGameStep}
-              disabled={gameStep === 0}
-              className={`px-6 py-3 rounded-xl font-medium transition ${
-                gameStep === 0
-                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                  : 'bg-gray-300 hover:bg-gray-400 text-gray-700'
-              }`}
+              className="px-6 py-3 rounded-xl font-medium transition bg-gray-300 hover:bg-gray-400 text-gray-700"
             >
-              ← Previous Game
+              ← {gameStep === 0 ? 'Back to Learning' : 'Previous Game'}
             </button>
 
             <div className="flex gap-2">
@@ -1241,19 +1304,26 @@ const CreditScoreModule = () => {
 
             <motion.button
               onClick={nextGameStep}
-              className="px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-xl font-bold transition shadow-lg relative overflow-hidden"
-              whileHover={{
+              disabled={!gameCompleted}
+              className={`px-8 py-4 rounded-xl font-bold transition shadow-lg relative overflow-hidden ${
+                gameCompleted
+                  ? 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white'
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              }`}
+              whileHover={gameCompleted ? {
                 scale: 1.05,
                 boxShadow: "0 10px 25px rgba(168, 85, 247, 0.4)"
-              }}
-              whileTap={{ scale: 0.95 }}
+              } : {}}
+              whileTap={gameCompleted ? { scale: 0.95 } : {}}
             >
-              <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-orange-400 opacity-20"
-                initial={{ x: "-100%" }}
-                whileHover={{ x: "100%" }}
-                transition={{ duration: 0.5 }}
-              />
+              {gameCompleted && (
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-orange-400 opacity-20"
+                  initial={{ x: "-100%" }}
+                  whileHover={{ x: "100%" }}
+                  transition={{ duration: 0.5 }}
+                />
+              )}
               <span className="relative z-10">
                 {gameStep === miniGames.length - 1 ? (isReviewMode ? 'Review Quiz! 🎯' : 'Start Quiz! 🎯') : 'Next Game →'}
               </span>
@@ -1262,7 +1332,7 @@ const CreditScoreModule = () => {
         </motion.div>
       ) : currentStep === 'quiz' && !showResults ? (
         <motion.div
-          className="max-w-2xl mx-auto"
+          className="max-w-4xl mx-auto"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
@@ -1276,14 +1346,14 @@ const CreditScoreModule = () => {
           )}
 
           {/* Progress Bar */}
-          <div className="mb-8">
-            <div className="flex justify-between text-sm text-gray-600 mb-2">
-              <span>Question {currentQuestion + 1} of {questions.length}</span>
-              <span>{Math.round(((currentQuestion + 1) / questions.length) * 100)}% Complete</span>
+          <div className="mb-6">
+            <div className="flex justify-between mb-2">
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Progress</span>
+              <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">{currentQuestion + 1} / {questions.length}</span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
+            <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
               <motion.div
-                className="bg-blue-500 h-2 rounded-full"
+                className="h-full bg-blue-600 rounded-full"
                 initial={{ width: 0 }}
                 animate={{ width: `${((currentQuestion + 1) / questions.length) * 100}%` }}
                 transition={{ duration: 0.5 }}
@@ -1291,121 +1361,113 @@ const CreditScoreModule = () => {
             </div>
           </div>
 
-          {/* Question Card */}
+          {/* Question Card - Case Study Style */}
           <motion.div
             key={currentQuestion}
-            className="bg-white rounded-2xl p-8 shadow-lg mb-6"
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5 }}
+            className="bg-white rounded-xl sm:rounded-3xl shadow-xl border border-gray-100 overflow-hidden"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
           >
-            <div className="text-center mb-8">
-              <motion.div
-                className="text-4xl mb-4"
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 2 }}
-              >
-                {isReviewMode ? '📖' : '🤔'}
-              </motion.div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">
-                {questions[currentQuestion].question}
-              </h2>
-              {!isReviewMode && (
-                <p className="text-purple-600 font-medium">
-                  +{questions[currentQuestion].xp} XP {streak > 0 && `(+${streak * 5} bonus!)`}
-                </p>
-              )}
-            </div>
+            <div className="p-4 sm:p-8 lg:p-12">
+              {/* Question Header */}
+              <div className="flex justify-between items-end mb-6 sm:mb-10 border-b border-gray-100 pb-4 sm:pb-6">
+                <div>
+                  <span className="text-xs sm:text-sm font-bold text-blue-600 uppercase tracking-wider block mb-2">
+                    Question {currentQuestion + 1} of {questions.length}
+                  </span>
+                  <h2 className="text-lg sm:text-2xl lg:text-3xl font-bold text-slate-900 leading-tight">
+                    {questions[currentQuestion].question}
+                  </h2>
+                </div>
+                <div className="hidden lg:block text-slate-200">
+                  <Trophy size={48} />
+                </div>
+              </div>
 
-            <div className="space-y-4">
-              {questions[currentQuestion].options.map((option, index) => {
-                const isSelected = selectedAnswers[currentQuestion] === option.id;
-                const showAsCorrect = isReviewMode && option.correct;
-                const showAsIncorrect = isReviewMode && !option.correct;
+              {/* Options Grid - Case Study Style */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                {questions[currentQuestion].options.map((option, index) => {
+                  const isSelected = selectedAnswers[currentQuestion] === option.id;
+                  const showAsCorrect = (isReviewMode && option.correct) || (selectedAnswers[currentQuestion] && option.correct);
+                  const showAsIncorrect = selectedAnswers[currentQuestion] && isSelected && !option.correct;
+                  const showCorrectness = selectedAnswers[currentQuestion] && (isSelected || option.correct);
 
-                return (
-                  <motion.div
-                    key={option.id}
-                    className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
-                      showAsCorrect
-                        ? 'border-green-500 bg-green-50 text-green-700'
-                        : showAsIncorrect
-                        ? 'border-gray-200 bg-gray-50 opacity-60'
-                        : isSelected
-                        ? option.correct
-                          ? 'border-green-500 bg-green-50 text-green-700'
-                          : 'border-red-500 bg-red-50 text-red-700'
-                        : 'border-gray-200 hover:border-purple-300 hover:bg-purple-50'
-                    } ${isReviewMode ? 'cursor-default' : 'cursor-pointer'}`}
-                    onClick={() => !isReviewMode && !selectedAnswers[currentQuestion] && handleAnswerSelect(currentQuestion, option.id)}
-                    whileHover={!isReviewMode && !selectedAnswers[currentQuestion] ? { scale: 1.02 } : {}}
-                    whileTap={!isReviewMode && !selectedAnswers[currentQuestion] ? { scale: 0.98 } : {}}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-lg font-bold ${
-                        showAsCorrect
-                          ? 'border-green-500 bg-green-500 text-white'
-                          : isSelected
+                  return (
+                    <button
+                      key={option.id}
+                      onClick={() => !isReviewMode && !selectedAnswers[currentQuestion] && handleAnswerSelect(currentQuestion, option.id)}
+                      disabled={!!selectedAnswers[currentQuestion] || isReviewMode}
+                      className={`p-4 sm:p-6 rounded-xl sm:rounded-2xl text-left border-2 transition-all flex items-start gap-3 sm:gap-4 ${
+                        showCorrectness
                           ? option.correct
-                            ? 'border-green-500 bg-green-500 text-white'
-                            : 'border-red-500 bg-red-500 text-white'
-                          : 'border-purple-300 text-purple-500'
+                            ? 'bg-green-50 border-green-500 text-green-900'
+                            : isSelected
+                              ? 'bg-red-50 border-red-500 text-red-900'
+                              : 'bg-white border-slate-100 opacity-50'
+                          : isSelected
+                            ? 'bg-blue-50 border-blue-600 shadow-lg scale-[1.02]'
+                            : 'bg-white border-slate-200 hover:border-blue-400 hover:shadow-md'
+                      } ${(!!selectedAnswers[currentQuestion] || isReviewMode) ? 'cursor-default' : 'cursor-pointer'}`}
+                    >
+                      <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${
+                        showCorrectness && option.correct ? 'bg-green-500 text-white' :
+                        showCorrectness && isSelected ? 'bg-red-500 text-white' :
+                        isSelected ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-500'
                       }`}>
-                        {showAsCorrect || (isSelected && option.correct)
-                          ? '✓'
-                          : isSelected && !option.correct
-                          ? '✗'
-                          : option.id
-                        }
-                      </div>
-                      <div className="flex-1">
-                        <span className="text-lg">{option.text}</span>
-                        {isReviewMode && option.correct && (
-                          <p className="text-sm text-green-700 mt-2 font-medium">
-                            {questions[currentQuestion].explanation}
-                          </p>
+                        {showAsCorrect ? (
+                          <CheckCircle size={20} />
+                        ) : showAsIncorrect ? (
+                          <XCircle size={20} />
+                        ) : (
+                          option.id
                         )}
                       </div>
+                      <span className="text-sm sm:text-lg font-medium leading-snug flex-1">{option.text}</span>
+                      {showCorrectness && option.correct && <CheckCircle className="ml-auto text-green-600 shrink-0 w-5 h-5 sm:w-6 sm:h-6" />}
+                      {showCorrectness && isSelected && !option.correct && <XCircle className="ml-auto text-red-600 shrink-0 w-5 h-5 sm:w-6 sm:h-6" />}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Teaching Point - Dark Box (Case Study Style) */}
+              <AnimatePresence>
+                {selectedAnswers[currentQuestion] && !isReviewMode && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 20 }}
+                    className="mt-6 sm:mt-8 bg-slate-900 text-white p-4 sm:p-8 rounded-xl sm:rounded-2xl flex flex-col md:flex-row items-center gap-4 sm:gap-8 shadow-2xl"
+                  >
+                    <div className="flex-1">
+                      <h4 className="font-bold text-blue-400 uppercase tracking-wider text-xs sm:text-sm mb-2">Explanation</h4>
+                      <p className="text-sm sm:text-lg leading-relaxed text-slate-200">
+                        {questions[currentQuestion].explanation}
+                      </p>
                     </div>
+                    <button
+                      onClick={handleNext}
+                      className="w-full md:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-white text-slate-900 rounded-lg sm:rounded-xl font-bold hover:bg-blue-50 transition-colors whitespace-nowrap text-sm sm:text-base"
+                    >
+                      {currentQuestion === questions.length - 1 ? 'Finish Quiz' : 'Next Question'}
+                    </button>
                   </motion.div>
-                );
-              })}
-            </div>
+                )}
+              </AnimatePresence>
 
-            {/* Show Explanation Button - only in non-review mode */}
-            {!isReviewMode && selectedAnswers[currentQuestion] && (
-              <motion.button
-                className="mt-4 px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition text-sm"
-                onClick={() => setShowExplanation(!showExplanation)}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-              >
-                {showExplanation ? 'Hide' : 'Show'} Explanation
-              </motion.button>
-            )}
-
-            {/* Explanation - only in non-review mode */}
-            <AnimatePresence>
-              {!isReviewMode && showExplanation && (
-                <motion.div
-                  className="mt-4 p-4 bg-blue-50 border-l-4 border-blue-400 rounded-r-lg"
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <p className="text-blue-800 text-sm">{questions[currentQuestion].explanation}</p>
-                </motion.div>
+              {/* Review Mode - Show explanation inline */}
+              {isReviewMode && (
+                <div className="mt-6 p-4 sm:p-6 bg-green-50 border border-green-200 rounded-xl">
+                  <h4 className="font-bold text-green-800 text-sm mb-2">Explanation</h4>
+                  <p className="text-green-700 text-sm sm:text-base">{questions[currentQuestion].explanation}</p>
+                </div>
               )}
-            </AnimatePresence>
+            </div>
           </motion.div>
 
           {/* Navigation Buttons */}
-          <div className="flex justify-between">
+          <div className="flex justify-between mt-6">
             <button
               onClick={handlePrevious}
               disabled={currentQuestion === 0}
@@ -1422,31 +1484,23 @@ const CreditScoreModule = () => {
               currentQuestion < questions.length - 1 ? (
                 <button
                   onClick={() => setCurrentQuestion(currentQuestion + 1)}
-                  className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-medium transition"
+                  className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition"
                 >
                   Next Question
                 </button>
               ) : (
                 <button
                   onClick={() => navigate('/game')}
-                  className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-medium transition"
+                  className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition"
                 >
                   Finish Review
                 </button>
               )
-            ) : (
-              <button
-                onClick={handleNext}
-                disabled={!selectedAnswers[currentQuestion]}
-                className={`px-6 py-3 rounded-xl font-medium transition ${
-                  !selectedAnswers[currentQuestion]
-                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                    : 'bg-blue-500 hover:bg-blue-600 text-white'
-                }`}
-              >
-                {currentQuestion === questions.length - 1 ? 'Finish Quiz' : 'Next Question'}
-              </button>
-            )}
+            ) : !selectedAnswers[currentQuestion] ? (
+              <div className="px-6 py-3 bg-gray-200 text-gray-400 rounded-xl font-medium cursor-not-allowed">
+                Select an answer
+              </div>
+            ) : null}
           </div>
         </motion.div>
       ) : (
@@ -1472,39 +1526,12 @@ const CreditScoreModule = () => {
             </p>
 
             {/* Final Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-              <div className="bg-purple-50 rounded-lg p-4 text-center">
-                <div className="text-2xl sm:text-3xl font-bold text-purple-600">{totalXP}</div>
-                <div className="text-sm text-gray-600">Total XP</div>
-              </div>
-              <div className="bg-green-50 rounded-lg p-4 text-center">
-                <div className="text-2xl sm:text-3xl font-bold text-green-600">{score}</div>
-                <div className="text-sm text-gray-600">Correct</div>
-              </div>
-              <div className="bg-blue-50 rounded-lg p-4 text-center">
-                <div className="text-2xl sm:text-3xl font-bold text-blue-600">{lives}</div>
-                <div className="text-sm text-gray-600">Lives Left</div>
-              </div>
-              <div className="bg-orange-50 rounded-lg p-4 text-center">
-                <div className="text-2xl sm:text-3xl font-bold text-orange-600">{achievements.length}</div>
-                <div className="text-sm text-gray-600">Achievements</div>
+            <div className="flex justify-center mb-8">
+              <div className="bg-green-50 rounded-lg p-6 text-center">
+                <div className="text-3xl sm:text-4xl font-bold text-green-600">{score}/{questions.length}</div>
+                <div className="text-sm text-gray-600">Correct Answers</div>
               </div>
             </div>
-
-            {/* Achievements */}
-            {achievements.length > 0 && (
-              <div className="mb-6">
-                <h3 className="text-lg font-bold text-gray-800 mb-3">🏆 Achievements Unlocked:</h3>
-                <div className="flex flex-wrap justify-center gap-2">
-                  {achievements.map(achievement => (
-                    <div key={achievement.id} className="bg-yellow-100 border border-yellow-300 rounded-lg px-3 py-2">
-                      <span className="text-lg mr-2">{achievement.emoji}</span>
-                      <span className="text-sm font-medium text-yellow-800">{achievement.name}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
 
             {/* Answer Review */}
             <div className="text-left mb-6">
@@ -1557,7 +1584,7 @@ const CreditScoreModule = () => {
                       <div className="text-center">
                         <p className="font-bold text-green-800 text-lg">Module Passed! 🎉</p>
                         <p className="text-green-600 text-sm">
-                          You achieved 100% - Attempt #{saveResult.attemptNumber}
+                          You scored {score}/{questions.length} ({Math.round((score / questions.length) * 100)}%) - Attempt #{saveResult.attemptNumber}
                         </p>
                       </div>
                     </>
@@ -1567,7 +1594,7 @@ const CreditScoreModule = () => {
                       <div className="text-center">
                         <p className="font-bold text-orange-800 text-lg">Keep Practicing!</p>
                         <p className="text-orange-600 text-sm">
-                          100% required to pass - Attempt #{saveResult.attemptNumber}
+                          You scored {score}/{questions.length} ({Math.round((score / questions.length) * 100)}%) - 80% required to pass - Attempt #{saveResult.attemptNumber}
                         </p>
                       </div>
                     </>
