@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Shield, Trophy, RotateCcw, CheckCircle, XCircle, BookOpen } from 'lucide-react';
+import { ArrowLeft, Shield, Trophy, RotateCcw, CheckCircle, XCircle, BookOpen, Loader2, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useModuleScore, MODULES } from '../hooks/useModuleScore';
 
 const InsuranceModule = () => {
   const navigate = useNavigate();
-  const { saveScore, isModulePassed, refreshProgress } = useModuleScore();
+  const { saveScore, isModulePassed, resetModule, refreshProgress } = useModuleScore();
 
   // Review mode - allows viewing content without answering
   const [isReviewMode, setIsReviewMode] = useState(false);
@@ -21,9 +21,12 @@ const InsuranceModule = () => {
   const [quizIndex, setQuizIndex] = useState(0);
   const [quizScore, setQuizScore] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
+  const [selectedAnswers, setSelectedAnswers] = useState({}); // Track all answers like CreditScoreModule
   const [showFeedback, setShowFeedback] = useState(false);
   const [shuffledQuiz, setShuffledQuiz] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [saveResult, setSaveResult] = useState(null);
+  const [isResetting, setIsResetting] = useState(false);
 
   // Check if module is already passed
   const modulePassed = isModulePassed(MODULES.INSURANCE?.id);
@@ -197,57 +200,128 @@ const InsuranceModule = () => {
     }
   ];
 
-  // Final Quiz Questions
+  // Final Quiz Questions - 10 questions, 80% (8/10) to pass
   const quizQuestions = [
     {
+      id: 1,
       question: "What is the purpose of a deductible in insurance?",
       options: [
-        { text: "The amount the insurance company pays you", correct: false },
-        { text: "The amount you pay before insurance coverage kicks in", correct: true },
-        { text: "The monthly payment for insurance", correct: false },
-        { text: "A bonus for not filing claims", correct: false }
+        { id: 'A', text: "The amount the insurance company pays you", correct: false },
+        { id: 'B', text: "The monthly payment for insurance", correct: false },
+        { id: 'C', text: "The amount you pay before insurance coverage kicks in", correct: true },
+        { id: 'D', text: "A bonus for not filing claims", correct: false }
       ],
-      explanation: "A deductible is the amount you must pay out-of-pocket before your insurance starts covering costs."
+      explanation: "A deductible is the amount you must pay out-of-pocket before your insurance starts covering costs.",
+      xp: 25
     },
     {
+      id: 2,
       question: "Which type of insurance is typically required by law for drivers?",
       options: [
-        { text: "Life Insurance", correct: false },
-        { text: "Health Insurance", correct: false },
-        { text: "Auto Insurance", correct: true },
-        { text: "Travel Insurance", correct: false }
+        { id: 'A', text: "Life Insurance", correct: false },
+        { id: 'B', text: "Health Insurance", correct: false },
+        { id: 'C', text: "Travel Insurance", correct: false },
+        { id: 'D', text: " Auto Insurance", correct: true }
       ],
-      explanation: "Auto insurance is required by law in most states to protect other drivers and pedestrians."
+      explanation: "Auto insurance is required by law in most states to protect other drivers and pedestrians.",
+      xp: 25
     },
     {
+      id: 3,
       question: "What does 'liability coverage' in auto insurance protect against?",
       options: [
-        { text: "Damage to your own car", correct: false },
-        { text: "Damage or injuries you cause to others", correct: true },
-        { text: "Theft of your vehicle", correct: false },
-        { text: "Weather damage to your car", correct: false }
+        { id: 'A', text: "Damage to your own car", correct: false },
+        { id: 'B', text: "Damage or injuries you cause to others", correct: true },
+        { id: 'C', text: "Theft of your vehicle", correct: false },
+        { id: 'D', text: "Weather damage to your car", correct: false }
       ],
-      explanation: "Liability coverage pays for damage or injuries you cause to other people or their property."
+      explanation: "Liability coverage pays for damage or injuries you cause to other people or their property.",
+      xp: 25
     },
     {
+      id: 4,
       question: "Which insurance would help your family financially if you passed away?",
       options: [
-        { text: "Health Insurance", correct: false },
-        { text: "Home Insurance", correct: false },
-        { text: "Life Insurance", correct: true },
-        { text: "Auto Insurance", correct: false }
+        { id: 'A', text: "Health Insurance", correct: false },
+        { id: 'B', text: "Home Insurance", correct: false },
+        { id: 'C', text: "Life Insurance", correct: true },
+        { id: 'D', text: "Auto Insurance", correct: false }
       ],
-      explanation: "Life insurance provides a death benefit to your beneficiaries to replace lost income."
+      explanation: "Life insurance provides a death benefit to your beneficiaries to replace lost income.",
+      xp: 25
     },
     {
-      question: "What is NOT typically covered by home insurance?",
+      id: 5,
+      question: "What is NOT typically covered by standard home insurance?",
       options: [
-        { text: "Fire damage to your house", correct: false },
-        { text: "Theft of belongings", correct: false },
-        { text: "Flood damage", correct: true },
-        { text: "Wind damage from storms", correct: false }
+        { id: 'A', text: "Fire damage to your house", correct: false },
+        { id: 'B', text: "Theft of belongings", correct: false },
+        { id: 'C', text: "Wind damage from storms", correct: false },
+        { id: 'D', text: "Flood damage", correct: true },
+
       ],
-      explanation: "Flood damage typically requires separate flood insurance and is not covered by standard home insurance."
+      explanation: "Flood damage typically requires separate flood insurance and is not covered by standard home insurance.",
+      xp: 25
+    },
+    {
+      id: 6,
+      question: "What is a 'premium' in insurance?",
+      options: [
+        { id: 'A', text: "The regular payment you make to keep your insurance active", correct: true },
+        { id: 'B', text: "The maximum amount insurance will pay", correct: false },
+        { id: 'C', text: "A bonus for staying healthy", correct: false },
+        { id: 'D', text: "The amount you pay when you make a claim", correct: false }
+      ],
+      explanation: "A premium is the regular payment (monthly, quarterly, or annually) you make to maintain your insurance coverage.",
+      xp: 25
+    },
+    {
+      id: 7,
+      question: "What is the difference between term life and whole life insurance?",
+      options: [
+        { id: 'A', text: "Term life is permanent, whole life is temporary", correct: false },
+        { id: 'B', text: "Term life covers a specific period, whole life covers your entire life", correct: true },
+        { id: 'C', text: "Term life is more expensive than whole life", correct: false },
+        { id: 'D', text: "There is no difference", correct: false }
+      ],
+      explanation: "Term life insurance covers you for a specific period (like 20 years), while whole life insurance provides coverage for your entire lifetime and often includes a cash value component.",
+      xp: 25
+    },
+    {
+      id: 8,
+      question: "What does 'comprehensive coverage' in auto insurance typically cover?",
+      options: [
+        { id: 'A', text: "Only accidents with other vehicles", correct: false },
+        { id: 'B', text: "Theft, vandalism, weather damage, and animal collisions", correct: true },
+        { id: 'C', text: "Only medical expenses", correct: false },
+        { id: 'D', text: "Only liability to others", correct: false }
+      ],
+      explanation: "Comprehensive coverage protects your vehicle from non-collision events like theft, vandalism, natural disasters, falling objects, and animal strikes.",
+      xp: 25
+    },
+    {
+      id: 9,
+      question: "Why might travel insurance be important for international trips?",
+      options: [
+        { id: 'A', text: "Your regular health insurance typically doesn't cover you abroad", correct: true },
+        { id: 'B', text: "It's required by all countries", correct: false },
+        { id: 'C', text: "It makes your passport valid", correct: false },
+        { id: 'D', text: "It guarantees good weather", correct: false }
+      ],
+      explanation: "Most domestic health insurance plans have limited or no coverage outside your home country, making travel insurance essential for medical emergencies abroad.",
+      xp: 25
+    },
+    {
+      id: 10,
+      question: "What is a 'beneficiary' in life insurance?",
+      options: [
+        { id: 'A', text: "The insurance company", correct: false },
+        { id: 'B', text: "The person who sells the insurance", correct: false },
+        { id: 'C', text: "The person or entity who receives the death benefit", correct: true },
+        { id: 'D', text: "The doctor who examines you", correct: false }
+      ],
+      explanation: "A beneficiary is the person, people, or organization you designate to receive the life insurance payout (death benefit) when you pass away.",
+      xp: 25
     }
   ];
 
@@ -262,7 +336,6 @@ const InsuranceModule = () => {
     }
   }, [currentPhase]);
 
-  const currentQuizQuestion = shuffledQuiz.length > 0 ? shuffledQuiz[quizIndex] : quizQuestions[quizIndex];
 
   const handleDragStart = (e, insurance) => {
     setDraggedItem(insurance);
@@ -318,51 +391,97 @@ const InsuranceModule = () => {
     return attempts > 0 ? Math.round((score / attempts) * 100) : 0;
   };
 
-  const handleQuizAnswer = (optionIndex) => {
-    if (showFeedback) return;
+  const handleAnswerSelect = (questionIndex, optionId) => {
+    if (selectedAnswers[questionIndex]) return; // Already answered
 
-    const option = currentQuizQuestion.options[optionIndex];
-    setSelectedAnswer(optionIndex);
-    setShowFeedback(true);
+    setSelectedAnswers({
+      ...selectedAnswers,
+      [questionIndex]: optionId
+    });
 
-    if (option.correct) {
+    const question = quizQuestions[questionIndex];
+    const selectedOption = question.options.find(opt => opt.id === optionId);
+
+    if (selectedOption.correct) {
       setQuizScore(prev => prev + 1);
     }
   };
 
-  const handleNextQuestion = () => {
+  const handleNextQuestion = async () => {
     if (quizIndex < quizQuestions.length - 1) {
       setQuizIndex(prev => prev + 1);
-      setSelectedAnswer(null);
-      setShowFeedback(false);
     } else {
-      // Quiz finished - save score
-      handleSaveScore();
+      // Quiz finished - calculate and save score
+      const finalScore = calculateQuizScore();
+      await saveModuleScore(finalScore);
+      setCurrentPhase('results');
     }
   };
 
-  const handleSaveScore = async () => {
+  const handlePreviousQuestion = () => {
+    if (quizIndex > 0) {
+      setQuizIndex(prev => prev - 1);
+    }
+  };
+
+  const calculateQuizScore = () => {
+    let correctAnswers = 0;
+    quizQuestions.forEach((question, index) => {
+      const selectedOption = selectedAnswers[index];
+      const correctOption = question.options.find(opt => opt.correct);
+      if (selectedOption === correctOption.id) {
+        correctAnswers++;
+      }
+    });
+    setQuizScore(correctAnswers);
+    return correctAnswers;
+  };
+
+  const saveModuleScore = async (finalScore) => {
     setIsSaving(true);
     try {
-      // Calculate combined score: matching game + quiz
-      const gameScore = Math.round((score / scenarios.length) * 50); // 50% from game
-      const quizScorePercent = Math.round((quizScore / quizQuestions.length) * 50); // 50% from quiz
-      const totalScore = gameScore + quizScorePercent;
+      // Convert score to percentage (0-100)
+      const percentageScore = Math.round((finalScore / quizQuestions.length) * 100);
 
-      await saveScore(MODULES.INSURANCE?.id || 'insurance', totalScore, 100);
+      // If student passed the threshold (80%), save it as 100 to mark as passed
+      const scoreToSave = percentageScore >= 80 ? 100 : percentageScore;
+      const result = await saveScore(MODULES.INSURANCE?.id || 'insurance', scoreToSave, 100);
+      setSaveResult(result);
       await refreshProgress();
     } catch (error) {
       console.error('Failed to save score:', error);
     } finally {
       setIsSaving(false);
-      setCurrentPhase('results');
+    }
+  };
+
+  // Handle reset module
+  const handleResetModule = async () => {
+    setIsResetting(true);
+    try {
+      await resetModule(MODULES.INSURANCE?.id || 'insurance');
+      // Reset local state to start over
+      setCurrentPhase('learning');
+      setLessonStep(0);
+      setGameState('playing');
+      setAssignments({});
+      setScore(0);
+      setAttempts(0);
+      setQuizIndex(0);
+      setQuizScore(0);
+      setSelectedAnswer(null);
+      setSelectedAnswers({});
+      setShowFeedback(false);
+      setShuffledQuiz([]);
+      setSaveResult(null);
+    } catch (err) {
+      console.error('Error resetting module:', err);
+    } finally {
+      setIsResetting(false);
     }
   };
 
   const isGameComplete = Object.keys(assignments).length === scenarios.length;
-  const totalQuestions = scenarios.length + quizQuestions.length;
-  const totalCorrect = score + quizScore;
-  const finalPercentage = Math.round((totalCorrect / totalQuestions) * 100);
 
   // Start review mode
   const startReviewMode = () => {
@@ -732,188 +851,336 @@ const InsuranceModule = () => {
         </motion.div>
       )}
 
-      {/* Quiz Phase */}
+      {/* Quiz Phase - CreditScoreModule Style */}
       {currentPhase === 'quiz' && (
         <motion.div
-          className="max-w-2xl mx-auto"
+          className="max-w-4xl mx-auto"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
         >
-          {/* Quiz Progress */}
-          <div className="mb-6">
-            <div className="flex justify-between text-sm text-gray-600 mb-2">
-              <span>Question {quizIndex + 1} of {quizQuestions.length}</span>
-              <span>Score: {quizScore}/{quizIndex + (showFeedback ? 1 : 0)}</span>
+          {/* Review Mode Banner */}
+          {isReviewMode && (
+            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl text-blue-700">
+              <div className="font-semibold mb-1">Review Mode</div>
+              <div className="text-sm">You're reviewing correct answers. Options cannot be changed.</div>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-3">
+          )}
+
+          {/* Progress Bar */}
+          <div className="mb-6">
+            <div className="flex justify-between mb-2">
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Progress</span>
+              <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">{quizIndex + 1} / {quizQuestions.length}</span>
+            </div>
+            <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
               <motion.div
-                className="bg-gradient-to-r from-purple-500 to-pink-500 h-3 rounded-full"
+                className="h-full bg-blue-600 rounded-full"
+                initial={{ width: 0 }}
                 animate={{ width: `${((quizIndex + 1) / quizQuestions.length) * 100}%` }}
+                transition={{ duration: 0.5 }}
               />
             </div>
           </div>
 
-          {/* Quiz Card */}
+          {/* Question Card - Case Study Style */}
           <motion.div
             key={quizIndex}
-            className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 shadow-lg"
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
+            className="bg-white rounded-xl sm:rounded-3xl shadow-xl border border-gray-100 overflow-hidden"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
           >
-            <h3 className="text-xl font-bold text-gray-800 mb-6">
-              {currentQuizQuestion?.question}
-            </h3>
+            <div className="p-4 sm:p-8 lg:p-12">
+              {/* Question Header */}
+              <div className="flex justify-between items-end mb-6 sm:mb-10 border-b border-gray-100 pb-4 sm:pb-6">
+                <div>
+                  <span className="text-xs sm:text-sm font-bold text-blue-600 uppercase tracking-wider block mb-2">
+                    Question {quizIndex + 1} of {quizQuestions.length}
+                  </span>
+                  <h2 className="text-lg sm:text-2xl lg:text-3xl font-bold text-slate-900 leading-tight">
+                    {quizQuestions[quizIndex].question}
+                  </h2>
+                </div>
+                <div className="hidden lg:block text-slate-200">
+                  <Trophy size={48} />
+                </div>
+              </div>
 
-            <div className="space-y-3 mb-6">
-              {currentQuizQuestion?.options.map((option, idx) => (
-                <motion.button
-                  key={idx}
-                  onClick={() => handleQuizAnswer(idx)}
-                  disabled={showFeedback}
-                  className={`w-full p-4 rounded-xl text-left transition-all border-2 ${
-                    showFeedback
-                      ? option.correct
-                        ? 'bg-green-100 border-green-500 text-green-800'
-                        : selectedAnswer === idx
-                          ? 'bg-red-100 border-red-500 text-red-800'
-                          : 'bg-gray-100 border-gray-200 text-gray-600'
-                      : selectedAnswer === idx
-                        ? 'bg-blue-100 border-blue-500 text-blue-800'
-                        : 'bg-gray-100 border-gray-200 hover:bg-gray-200 text-gray-800'
-                  }`}
-                  whileHover={!showFeedback ? { scale: 1.02 } : {}}
-                  whileTap={!showFeedback ? { scale: 0.98 } : {}}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                      showFeedback
-                        ? option.correct
-                          ? 'bg-green-500 text-white'
-                          : selectedAnswer === idx
-                            ? 'bg-red-500 text-white'
-                            : 'bg-gray-300 text-gray-600'
-                        : selectedAnswer === idx
-                          ? 'bg-blue-500 text-white'
-                          : 'bg-gray-300 text-gray-600'
-                    }`}>
-                      {showFeedback && option.correct ? '✓' :
-                       showFeedback && selectedAnswer === idx && !option.correct ? '✗' :
-                       String.fromCharCode(65 + idx)}
+              {/* Options Grid - Case Study Style */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                {quizQuestions[quizIndex].options.map((option, index) => {
+                  const isSelected = selectedAnswers[quizIndex] === option.id;
+                  const showAsCorrect = (isReviewMode && option.correct) || (selectedAnswers[quizIndex] && option.correct);
+                  const showAsIncorrect = selectedAnswers[quizIndex] && isSelected && !option.correct;
+                  const showCorrectness = selectedAnswers[quizIndex] && (isSelected || option.correct);
+
+                  return (
+                    <button
+                      key={option.id}
+                      onClick={() => !isReviewMode && !selectedAnswers[quizIndex] && handleAnswerSelect(quizIndex, option.id)}
+                      disabled={!!selectedAnswers[quizIndex] || isReviewMode}
+                      className={`p-4 sm:p-6 rounded-xl sm:rounded-2xl text-left border-2 transition-all flex items-start gap-3 sm:gap-4 ${
+                        showCorrectness
+                          ? option.correct
+                            ? 'bg-green-50 border-green-500 text-green-900'
+                            : isSelected
+                              ? 'bg-red-50 border-red-500 text-red-900'
+                              : 'bg-white border-slate-100 opacity-50'
+                          : isSelected
+                            ? 'bg-blue-50 border-blue-600 shadow-lg scale-[1.02]'
+                            : 'bg-white border-slate-200 hover:border-blue-400 hover:shadow-md'
+                      } ${(!!selectedAnswers[quizIndex] || isReviewMode) ? 'cursor-default' : 'cursor-pointer'}`}
+                    >
+                      <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${
+                        showCorrectness && option.correct ? 'bg-green-500 text-white' :
+                        showCorrectness && isSelected ? 'bg-red-500 text-white' :
+                        isSelected ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-500'
+                      }`}>
+                        {showAsCorrect ? (
+                          <CheckCircle size={20} />
+                        ) : showAsIncorrect ? (
+                          <XCircle size={20} />
+                        ) : (
+                          option.id
+                        )}
+                      </div>
+                      <span className="text-sm sm:text-lg font-medium leading-snug flex-1">{option.text}</span>
+                      {showCorrectness && option.correct && <CheckCircle className="ml-auto text-green-600 shrink-0 w-5 h-5 sm:w-6 sm:h-6" />}
+                      {showCorrectness && isSelected && !option.correct && <XCircle className="ml-auto text-red-600 shrink-0 w-5 h-5 sm:w-6 sm:h-6" />}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Teaching Point - Dark Box (Case Study Style) */}
+              <AnimatePresence>
+                {selectedAnswers[quizIndex] && !isReviewMode && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 20 }}
+                    className="mt-6 sm:mt-8 bg-slate-900 text-white p-4 sm:p-8 rounded-xl sm:rounded-2xl flex flex-col md:flex-row items-center gap-4 sm:gap-8 shadow-2xl"
+                  >
+                    <div className="flex-1">
+                      <h4 className="font-bold text-blue-400 uppercase tracking-wider text-xs sm:text-sm mb-2">Explanation</h4>
+                      <p className="text-sm sm:text-lg leading-relaxed text-slate-200">
+                        {quizQuestions[quizIndex].explanation}
+                      </p>
                     </div>
-                    <span className="font-medium">{option.text}</span>
-                  </div>
-                </motion.button>
-              ))}
+                    <button
+                      onClick={handleNextQuestion}
+                      className="w-full md:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-white text-slate-900 rounded-lg sm:rounded-xl font-bold hover:bg-blue-50 transition-colors whitespace-nowrap text-sm sm:text-base"
+                    >
+                      {quizIndex === quizQuestions.length - 1 ? 'Finish Quiz' : 'Next Question'}
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Review Mode - Show explanation inline */}
+              {isReviewMode && (
+                <div className="mt-6 p-4 sm:p-6 bg-green-50 border border-green-200 rounded-xl">
+                  <h4 className="font-bold text-green-800 text-sm mb-2">Explanation</h4>
+                  <p className="text-green-700 text-sm sm:text-base">{quizQuestions[quizIndex].explanation}</p>
+                </div>
+              )}
             </div>
-
-            {/* Feedback */}
-            {showFeedback && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className={`p-4 rounded-xl mb-6 ${
-                  currentQuizQuestion?.options[selectedAnswer]?.correct
-                    ? 'bg-green-50 border border-green-200'
-                    : 'bg-orange-50 border border-orange-200'
-                }`}
-              >
-                <p className={`font-semibold mb-1 ${
-                  currentQuizQuestion?.options[selectedAnswer]?.correct
-                    ? 'text-green-700'
-                    : 'text-orange-700'
-                }`}>
-                  {currentQuizQuestion?.options[selectedAnswer]?.correct ? '✅ Correct!' : '❌ Not quite right'}
-                </p>
-                <p className="text-gray-700 text-sm">
-                  {currentQuizQuestion?.explanation}
-                </p>
-              </motion.div>
-            )}
-
-            {/* Next Button */}
-            {showFeedback && (
-              <button
-                onClick={handleNextQuestion}
-                className="w-full px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-medium transition"
-              >
-                {quizIndex < quizQuestions.length - 1 ? 'Next Question' : 'See Results'}
-              </button>
-            )}
           </motion.div>
+
+          {/* Navigation Buttons */}
+          <div className="flex justify-between mt-6">
+            <button
+              onClick={handlePreviousQuestion}
+              disabled={quizIndex === 0}
+              className={`px-6 py-3 rounded-xl font-medium transition ${
+                quizIndex === 0
+                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                  : 'bg-gray-300 hover:bg-gray-400 text-gray-700'
+              }`}
+            >
+              Previous
+            </button>
+
+            {isReviewMode ? (
+              quizIndex < quizQuestions.length - 1 ? (
+                <button
+                  onClick={() => setQuizIndex(quizIndex + 1)}
+                  className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition"
+                >
+                  Next Question
+                </button>
+              ) : (
+                <button
+                  onClick={() => navigate('/game')}
+                  className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition"
+                >
+                  Finish Review
+                </button>
+              )
+            ) : !selectedAnswers[quizIndex] ? (
+              <div className="px-6 py-3 bg-gray-200 text-gray-400 rounded-xl font-medium cursor-not-allowed">
+                Select an answer
+              </div>
+            ) : null}
+          </div>
         </motion.div>
       )}
 
-      {/* Results Phase */}
+      {/* Results Phase - CreditScoreModule Style */}
       {currentPhase === 'results' && (
         <motion.div
           className="max-w-2xl mx-auto text-center"
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
         >
-          <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 shadow-lg">
+          {/* Results Card */}
+          <div className="bg-white rounded-2xl p-8 shadow-lg">
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              transition={{ delay: 0.2, type: "spring" }}
+              transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
             >
               <Trophy className="w-20 h-20 mx-auto text-yellow-500 mb-6" />
             </motion.div>
 
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-4">
-              {finalPercentage === 100 ? 'Perfect Score! 🎉' :
-               finalPercentage >= 80 ? 'Great Job! 🌟' :
-               finalPercentage >= 60 ? 'Good Effort! 👍' : 'Keep Learning! 📚'}
-            </h2>
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-4">Insurance Protection Complete! 🎉</h2>
+            <p className="text-xl text-gray-600 mb-6">
+              {quizScore === quizQuestions.length ? "Perfect! You're an insurance expert! 🏆" :
+               quizScore >= Math.ceil(quizQuestions.length * 0.8) ? "Excellent! You have strong insurance knowledge! ⭐" :
+               quizScore >= Math.ceil(quizQuestions.length * 0.6) ? "Good job! Keep learning about insurance! 👍" :
+               "Keep studying insurance basics - you'll get there! 📚"}
+            </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-8">
-              <div className="bg-green-50 rounded-lg p-4">
-                <div className="text-2xl font-bold text-green-600">{score}/{scenarios.length}</div>
-                <div className="text-sm text-gray-600">Matching Game</div>
-              </div>
-              <div className="bg-purple-50 rounded-lg p-4">
-                <div className="text-2xl font-bold text-purple-600">{quizScore}/{quizQuestions.length}</div>
-                <div className="text-sm text-gray-600">Quiz Score</div>
-              </div>
-              <div className="bg-blue-50 rounded-lg p-4">
-                <div className="text-2xl font-bold text-blue-600">{finalPercentage}%</div>
-                <div className="text-sm text-gray-600">Overall</div>
+            {/* Final Stats */}
+            <div className="flex justify-center mb-8">
+              <div className="bg-green-50 rounded-lg p-6 text-center">
+                <div className="text-3xl sm:text-4xl font-bold text-green-600">{quizScore}/{quizQuestions.length}</div>
+                <div className="text-sm text-gray-600">Correct Answers</div>
               </div>
             </div>
 
-            <p className="text-gray-600 mb-6">
-              {finalPercentage === 100
-                ? 'You\'ve mastered insurance protection! Module complete!'
-                : 'You need 100% to pass this module. Keep practicing!'}
-            </p>
+            {/* Answer Review */}
+            <div className="text-left mb-6">
+              <h3 className="text-lg font-bold text-gray-800 mb-4">Review Your Answers:</h3>
+              {quizQuestions.map((question, index) => {
+                const selectedOption = selectedAnswers[index];
+                const correctOption = question.options.find(opt => opt.correct);
+                const isCorrect = selectedOption === correctOption.id;
 
-            {isSaving && (
-              <p className="text-gray-500 mb-4">Saving your score...</p>
+                return (
+                  <div key={index} className="mb-4 p-4 rounded-lg border border-gray-200">
+                    <div className="flex items-start gap-2 mb-2">
+                      {isCorrect ? (
+                        <CheckCircle className="w-5 h-5 text-green-500 mt-1 flex-shrink-0" />
+                      ) : (
+                        <XCircle className="w-5 h-5 text-red-500 mt-1 flex-shrink-0" />
+                      )}
+                      <div>
+                        <p className="font-medium text-gray-800">{question.question}</p>
+                        <p className={`text-sm ${isCorrect ? 'text-green-600' : 'text-red-600'}`}>
+                          Your answer: {question.options.find(opt => opt.id === selectedOption)?.text}
+                        </p>
+                        {!isCorrect && (
+                          <p className="text-sm text-green-600">
+                            Correct answer: {correctOption.text}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Pass/Fail Status Banner */}
+            {saveResult && (
+              <motion.div
+                className={`mb-6 p-4 rounded-xl border-2 ${
+                  saveResult.passed
+                    ? 'bg-green-50 border-green-300'
+                    : 'bg-orange-50 border-orange-300'
+                }`}
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <div className="flex items-center justify-center gap-3">
+                  {saveResult.passed ? (
+                    <>
+                      <CheckCircle className="text-green-600" size={28} />
+                      <div className="text-center">
+                        <p className="font-bold text-green-800 text-lg">Module Passed! 🎉</p>
+                        <p className="text-green-600 text-sm">
+                          You scored {quizScore}/{quizQuestions.length} ({Math.round((quizScore / quizQuestions.length) * 100)}%) - Attempt #{saveResult.attemptNumber}
+                        </p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <XCircle className="text-orange-600" size={28} />
+                      <div className="text-center">
+                        <p className="font-bold text-orange-800 text-lg">Keep Practicing!</p>
+                        <p className="text-orange-600 text-sm">
+                          You scored {quizScore}/{quizQuestions.length} ({Math.round((quizScore / quizQuestions.length) * 100)}%) - 80% required to pass - Attempt #{saveResult.attemptNumber}
+                        </p>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </motion.div>
             )}
 
-            <div className="flex gap-4 justify-center">
+            {isSaving && (
+              <div className="mb-6 flex items-center justify-center gap-2 text-blue-600">
+                <Loader2 className="animate-spin" size={20} />
+                <span>Saving your progress...</span>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex gap-4 justify-center flex-wrap">
               <button
                 onClick={() => navigate('/game')}
                 className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-medium transition"
               >
                 Back to Roadmap
               </button>
-              {finalPercentage < 100 && (
+
+              {/* Show Reset & Retry button if not passed */}
+              {saveResult && !saveResult.passed && (
                 <button
-                  onClick={() => {
-                    setCurrentPhase('learning');
-                    setLessonStep(0);
-                    resetGame();
-                    setQuizIndex(0);
-                    setQuizScore(0);
-                    setSelectedAnswer(null);
-                    setShowFeedback(false);
-                    setShuffledQuiz([]);
-                  }}
-                  className="px-6 py-3 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-xl font-medium transition"
+                  onClick={handleResetModule}
+                  disabled={isResetting}
+                  className="px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-medium transition flex items-center gap-2 disabled:opacity-50"
                 >
-                  Try Again
+                  {isResetting ? (
+                    <Loader2 className="animate-spin" size={18} />
+                  ) : (
+                    <RefreshCw size={18} />
+                  )}
+                  Reset & Try Again
                 </button>
               )}
+
+              {/* Play Again (for practice, doesn't reset progress) */}
+              <button
+                onClick={() => {
+                  setCurrentPhase('learning');
+                  setLessonStep(0);
+                  resetGame();
+                  setQuizIndex(0);
+                  setQuizScore(0);
+                  setSelectedAnswer(null);
+                  setSelectedAnswers({});
+                  setShowFeedback(false);
+                  setShuffledQuiz([]);
+                  setSaveResult(null);
+                }}
+                className="px-6 py-3 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-xl font-medium transition"
+              >
+                Play Again
+              </button>
             </div>
           </div>
         </motion.div>
