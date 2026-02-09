@@ -148,7 +148,7 @@ const Certificate: React.FC = () => {
   // Check if user has completed all modules
   const allModules = Object.values(MODULES);
   const completedModules = allModules.filter(module => isModulePassed(module.id)).length;
-  const totalModules = allModules.length-1;
+  const totalModules = allModules.length;
   const hasCompletedAllModules = completedModules === totalModules;
   
   // If not completed, show access denied page
