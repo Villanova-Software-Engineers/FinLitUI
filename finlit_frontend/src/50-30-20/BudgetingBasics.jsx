@@ -162,98 +162,83 @@ const savingsData = {
   ]
 };
 
-// Step 0: Intro Page
-const IntroPage = ({ handleNext, navigate }) => (
+const IntroPage = ({ handleNext }) => (
   <div className="min-h-screen p-6 relative overflow-hidden" style={{ background: 'linear-gradient(120deg, #e0f7fa 0%, #e8f5e9 50%, #e3f2fd 100%)' }}>
-    {/* Header - Back to Learning Path */}
-    <button
-      className="fixed top-4 left-4 px-4 py-2 rounded-lg text-blue-600 hover:bg-blue-50/50 font-medium transition z-50"
-      onClick={() => navigate('/game')}
-    >
-      ← Back to Learning Path
-    </button>
+    <div className="max-w-5xl mx-auto pt-16">
 
-    {/* Side Navigation Arrows */}
-    <button
-      onClick={handleNext}
-      className="fixed right-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600 transition flex items-center justify-center z-40"
-      aria-label="Next"
-    >
-      →
-    </button>
-
-    <div className="max-w-5xl mx-auto">
-      <motion.div className="text-center mb-12" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
-        <h1 className="text-5xl font-bold mb-4 text-gray-800">What is the 50/30/20 Budget Rule?</h1>
-        <p className="text-xl text-gray-600">A simple, time-tested framework for managing your money</p>
-      </motion.div>
-
-      <div className="space-y-6 mb-12">
-        {/* What it is */}
-        <motion.div className="p-8 rounded-3xl shadow-xl bg-white" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
-          <div className="flex items-start gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-blue-500 flex items-center justify-center shadow-lg flex-shrink-0">
-              <span className="text-3xl">💡</span>
-            </div>
-            <div>
-              <h3 className="text-2xl font-bold text-gray-800 mb-3">What It Is</h3>
-              <p className="text-gray-700 text-lg leading-relaxed">
-                The 50/30/20 rule is a budgeting guideline popularized by Senator <span className="font-semibold">Elizabeth Warren</span>.
-                It divides your after-tax income into three categories: <span className="font-bold text-green-600">50% for needs</span>,
-                <span className="font-bold text-blue-600"> 30% for wants</span>, and <span className="font-bold text-purple-600"> 20% for savings</span>.
-              </p>
-            </div>
-          </div>
+      <div className="max-w-5xl mx-auto">
+        <motion.div className="text-center mb-12" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
+          <h1 className="text-5xl font-bold mb-4 text-gray-800">What is the 50/30/20 Budget Rule?</h1>
+          <p className="text-xl text-gray-600">A simple, time-tested framework for managing your money</p>
         </motion.div>
 
-        {/* Where it's used */}
-        <motion.div className="p-8 rounded-3xl shadow-xl bg-white" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}>
-          <div className="flex items-start gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-green-500 flex items-center justify-center shadow-lg flex-shrink-0">
-              <span className="text-3xl">🌍</span>
-            </div>
-            <div>
-              <h3 className="text-2xl font-bold text-gray-800 mb-3">Where It's Used</h3>
-              <p className="text-gray-700 text-lg leading-relaxed">
-                Used <span className="font-semibold">worldwide by millions</span>, from graduates to families to financial advisors.
-                Taught in personal finance courses and featured in budgeting apps.
-              </p>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Why it's popular */}
-        <motion.div className="p-8 rounded-3xl shadow-xl bg-white" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}>
-          <div className="flex items-start gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-purple-500 flex items-center justify-center shadow-lg flex-shrink-0">
-              <span className="text-3xl">⭐</span>
-            </div>
-            <div>
-              <h3 className="text-2xl font-bold text-gray-800 mb-4">Why It's Popular</h3>
-              <div className="space-y-3">
-                {[
-                  "Simple to remember: Just three categories",
-                  "Flexible: Works for any income level",
-                  "Balanced: Covers essentials while allowing enjoyment",
-                  "Easy to start: No complex tracking",
-                  "Proven results: Helps build wealth over time"
-                ].map((item, i) => (
-                  <div key={i} className="flex items-start gap-3">
-                    <span className="text-green-600 font-bold text-2xl">✓</span>
-                    <p className="text-gray-700 text-lg">{item}</p>
-                  </div>
-                ))}
+        <div className="space-y-6 mb-12">
+          {/* What it is */}
+          <motion.div className="p-8 rounded-3xl shadow-xl bg-white" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
+            <div className="flex items-start gap-4">
+              <div className="w-16 h-16 rounded-2xl bg-blue-500 flex items-center justify-center shadow-lg flex-shrink-0">
+                <span className="text-3xl">💡</span>
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold text-gray-800 mb-3">What It Is</h3>
+                <p className="text-gray-700 text-lg leading-relaxed">
+                  The 50/30/20 rule is a budgeting guideline popularized by Senator <span className="font-semibold">Elizabeth Warren</span>.
+                  It divides your after-tax income into three categories: <span className="font-bold text-green-600">50% for needs</span>,
+                  <span className="font-bold text-blue-600"> 30% for wants</span>, and <span className="font-bold text-purple-600"> 20% for savings</span>.
+                </p>
               </div>
             </div>
-          </div>
-        </motion.div>
-      </div>
+          </motion.div>
 
-      {/* Navigation */}
-      <div className="flex justify-center pb-12">
-        <button onClick={handleNext} className="px-10 py-4 rounded-2xl bg-blue-500 text-white font-bold text-lg shadow-xl hover:bg-blue-600 transition">
-          Continue to Needs →
-        </button>
+          {/* Where it's used */}
+          <motion.div className="p-8 rounded-3xl shadow-xl bg-white" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}>
+            <div className="flex items-start gap-4">
+              <div className="w-16 h-16 rounded-2xl bg-green-500 flex items-center justify-center shadow-lg flex-shrink-0">
+                <span className="text-3xl">🌍</span>
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold text-gray-800 mb-3">Where It's Used</h3>
+                <p className="text-gray-700 text-lg leading-relaxed">
+                  Used <span className="font-semibold">worldwide by millions</span>, from graduates to families to financial advisors.
+                  Taught in personal finance courses and featured in budgeting apps.
+                </p>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Why it's popular */}
+          <motion.div className="p-8 rounded-3xl shadow-xl bg-white" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}>
+            <div className="flex items-start gap-4">
+              <div className="w-16 h-16 rounded-2xl bg-purple-500 flex items-center justify-center shadow-lg flex-shrink-0">
+                <span className="text-3xl">⭐</span>
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold text-gray-800 mb-4">Why It's Popular</h3>
+                <div className="space-y-3">
+                  {[
+                    "Simple to remember: Just three categories",
+                    "Flexible: Works for any income level",
+                    "Balanced: Covers essentials while allowing enjoyment",
+                    "Easy to start: No complex tracking",
+                    "Proven results: Helps build wealth over time"
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-start gap-3">
+                      <span className="text-green-600 font-bold text-2xl">✓</span>
+                      <p className="text-gray-700 text-lg">{item}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Navigation */}
+        <div className="flex justify-center pb-12">
+          <button onClick={handleNext} className="px-10 py-4 rounded-2xl bg-blue-500 text-white font-bold text-lg shadow-xl hover:bg-blue-600 transition">
+            Continue to Needs →
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -320,132 +305,99 @@ const CategoryPage = ({ categoryKey, title, icon, items, description, currentSte
   }, [categoryKey, icon]);
 
   return (
-    <div className="min-h-screen p-6" style={{ background: 'linear-gradient(120deg, #e0f7fa 0%, #e8f5e9 50%, #e3f2fd 100%)' }}>
-      {/* Header - Back to Learning Path */}
-      <button
-        className="fixed top-4 left-4 px-4 py-2 rounded-lg text-blue-600 hover:bg-blue-50/50 font-medium transition z-50"
-        onClick={() => navigate('/game')}
+    <div className="max-w-4xl mx-auto pt-16">
+
+      <motion.h2 className="text-4xl font-bold mb-4 text-center text-gray-800" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+        <span className="text-5xl mr-3">{icon}</span>
+        {title}
+      </motion.h2>
+      <p className="text-center text-gray-600 mb-8 text-lg">{description}</p>
+
+      {/* Pie Chart Section */}
+      <motion.div
+        className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 mb-8 max-w-md mx-auto"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
       >
-        ← Back to Learning Path
-      </button>
-
-      {/* Side Navigation Arrows */}
-      {currentStep > 0 && (
-        <button
-          onClick={handlePrev}
-          className="fixed left-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600 transition flex items-center justify-center z-40"
-          aria-label="Previous"
-        >
-          ←
-        </button>
-      )}
-      {currentStep < totalSteps && (
-        <button
-          onClick={handleNext}
-          className="fixed right-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600 transition flex items-center justify-center z-40"
-          aria-label="Next"
-        >
-          →
-        </button>
-      )}
-
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center justify-center mb-8">
-          <div className="text-gray-600 font-semibold">Step {currentStep + 1} of {totalSteps + 1}</div>
-        </div>
-
-        <motion.h2 className="text-4xl font-bold mb-4 text-center text-gray-800" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-          <span className="text-5xl mr-3">{icon}</span>
-          {title}
-        </motion.h2>
-        <p className="text-center text-gray-600 mb-8 text-lg">{description}</p>
-
-        {/* Pie Chart Section */}
-        <motion.div
-          className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 mb-8 max-w-md mx-auto"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          {PieChart}
-          <div className="flex justify-center gap-4 flex-wrap">
-            {[
-              { label: 'Needs', color: '#10b981', key: '50' },
-              { label: 'Wants', color: '#3b82f6', key: '30' },
-              { label: 'Savings', color: '#8b5cf6', key: '20' }
-            ].map((item) => (
-              <div key={item.key} className={`flex items-center gap-2 ${item.key === categoryKey ? 'opacity-100 font-bold' : 'opacity-50'}`}>
-                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></div>
-                <span className="text-sm text-gray-700">{item.label}</span>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-
-        <div className="grid gap-4 mb-8">
-          {items.map((item, idx) => (
-            <motion.div
-              key={idx}
-              className="p-5 bg-white rounded-xl shadow-md hover:shadow-lg transition cursor-pointer border-l-4"
-              style={{ borderLeftColor: borderColor }}
-              onClick={() => setExpandedIndex(expandedIndex === idx ? null : idx)}
-              layout
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">{item.icon}</span>
-                  <div>
-                    <h4 className="font-bold text-gray-800">{item.name}</h4>
-                    <p className="text-sm text-gray-600">{item.description}</p>
-                  </div>
-                </div>
-                <motion.div
-                  animate={{ rotate: expandedIndex === idx ? 180 : 0 }}
-                  className="text-gray-400"
-                >
-                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </motion.div>
-              </div>
-
-              <AnimatePresence>
-                {expandedIndex === idx && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0, marginTop: 0 }}
-                    animate={{ height: 'auto', opacity: 1, marginTop: 16 }}
-                    exit={{ height: 0, opacity: 0, marginTop: 0 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="pt-4 border-t border-gray-200/50">
-                      <p className="text-gray-700 mb-3 bg-white/50 p-3 rounded-lg text-sm leading-relaxed">
-                        💡 <span className="font-semibold">Tip:</span> {item.details}
-                      </p>
-                      <div className="flex gap-2">
-                        <span className="px-3 py-1 bg-white text-gray-600 border border-gray-200 rounded-full text-xs font-medium shadow-sm">
-                          {categoryKey}% Category
-                        </span>
-                        <span className="px-3 py-1 bg-white text-gray-600 border border-gray-200 rounded-full text-xs font-medium shadow-sm">
-                          Priority
-                        </span>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
+        {PieChart}
+        <div className="flex justify-center gap-4 flex-wrap">
+          {[
+            { label: 'Needs', color: '#10b981', key: '50' },
+            { label: 'Wants', color: '#3b82f6', key: '30' },
+            { label: 'Savings', color: '#8b5cf6', key: '20' }
+          ].map((item) => (
+            <div key={item.key} className={`flex items-center gap-2 ${item.key === categoryKey ? 'opacity-100 font-bold' : 'opacity-50'}`}>
+              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></div>
+              <span className="text-sm text-gray-700">{item.label}</span>
+            </div>
           ))}
         </div>
+      </motion.div>
 
-        <div className="flex justify-center gap-4">
-          <button onClick={handlePrev} className="px-8 py-4 rounded-2xl border-2 border-blue-400 bg-white text-blue-600 font-semibold text-lg shadow-lg hover:bg-blue-50">
-            ← Back
-          </button>
-          <button onClick={handleNext} className="px-8 py-4 rounded-2xl bg-blue-500 text-white font-semibold text-lg shadow-lg hover:bg-blue-600">
-            Next →
-          </button>
-        </div>
+      <div className="grid gap-4 mb-8">
+        {items.map((item, idx) => (
+          <motion.div
+            key={idx}
+            className="p-5 bg-white rounded-xl shadow-md hover:shadow-lg transition cursor-pointer border-l-4"
+            style={{ borderLeftColor: borderColor }}
+            onClick={() => setExpandedIndex(expandedIndex === idx ? null : idx)}
+            layout
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">{item.icon}</span>
+                <div>
+                  <h4 className="font-bold text-gray-800">{item.name}</h4>
+                  <p className="text-sm text-gray-600">{item.description}</p>
+                </div>
+              </div>
+              <motion.div
+                animate={{ rotate: expandedIndex === idx ? 180 : 0 }}
+                className="text-gray-400"
+              >
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </motion.div>
+            </div>
+
+            <AnimatePresence>
+              {expandedIndex === idx && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0, marginTop: 0 }}
+                  animate={{ height: 'auto', opacity: 1, marginTop: 16 }}
+                  exit={{ height: 0, opacity: 0, marginTop: 0 }}
+                  className="overflow-hidden"
+                >
+                  <div className="pt-4 border-t border-gray-200/50">
+                    <p className="text-gray-700 mb-3 bg-white/50 p-3 rounded-lg text-sm leading-relaxed">
+                      💡 <span className="font-semibold">Tip:</span> {item.details}
+                    </p>
+                    <div className="flex gap-2">
+                      <span className="px-3 py-1 bg-white text-gray-600 border border-gray-200 rounded-full text-xs font-medium shadow-sm">
+                        {categoryKey}% Category
+                      </span>
+                      <span className="px-3 py-1 bg-white text-gray-600 border border-gray-200 rounded-full text-xs font-medium shadow-sm">
+                        Priority
+                      </span>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        ))}
+      </div>
+
+      <div className="flex justify-center gap-4">
+        <button onClick={handlePrev} className="px-8 py-4 rounded-2xl border-2 border-blue-400 bg-white text-blue-600 font-semibold text-lg shadow-lg hover:bg-blue-50">
+          ← Back
+        </button>
+        <button onClick={handleNext} className="px-8 py-4 rounded-2xl bg-blue-500 text-white font-semibold text-lg shadow-lg hover:bg-blue-600">
+          Next →
+        </button>
       </div>
     </div>
   );
@@ -453,35 +405,9 @@ const CategoryPage = ({ categoryKey, title, icon, items, description, currentSte
 
 // Step 4: Comparison Page
 const ComparisonPage = ({ currentStep, totalSteps, handlePrev, handleNext, navigate }) => (
-  <div className="min-h-screen p-6" style={{ background: 'linear-gradient(120deg, #e0f7fa 0%, #e8f5e9 50%, #e3f2fd 100%)' }}>
-    {/* Header - Back to Learning Path */}
-    <button
-      className="fixed top-4 left-4 px-4 py-2 rounded-lg text-blue-600 hover:bg-blue-50/50 font-medium transition z-50"
-      onClick={() => navigate('/game')}
-    >
-      ← Back to Learning Path
-    </button>
-
-    {/* Side Navigation Arrows */}
-    <button
-      onClick={handlePrev}
-      className="fixed left-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600 transition flex items-center justify-center z-40"
-      aria-label="Previous"
-    >
-      ←
-    </button>
-    <button
-      onClick={handleNext}
-      className="fixed right-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600 transition flex items-center justify-center z-40"
-      aria-label="Next"
-    >
-      →
-    </button>
+  <div className="min-h-screen pt-20 p-6" style={{ background: 'linear-gradient(120deg, #e0f7fa 0%, #e8f5e9 50%, #e3f2fd 100%)' }}>
 
     <div className="max-w-6xl mx-auto">
-      <div className="flex items-center justify-center mb-8">
-        <div className="text-gray-600 font-semibold">Step {currentStep + 1} of {totalSteps + 1}</div>
-      </div>
 
       <h1 className="text-4xl font-bold mb-8 text-center text-gray-800">Budget Method Comparison</h1>
 
@@ -548,66 +474,48 @@ const ComparisonPage = ({ currentStep, totalSteps, handlePrev, handleNext, navig
 
 // Step 5: Ways to Save
 const WaysToSavePage = ({ currentStep, totalSteps, handlePrev, handleNext, navigate }) => (
-  <div className="min-h-screen p-6" style={{ background: 'linear-gradient(120deg, #e0f7fa 0%, #e8f5e9 50%, #e3f2fd 100%)' }}>
-    {/* Header - Back to Learning Path */}
-    <button
-      className="fixed top-4 left-4 px-4 py-2 rounded-lg text-blue-600 hover:bg-blue-50/50 font-medium transition z-50"
-      onClick={() => navigate('/game')}
-    >
-      ← Back to Learning Path
-    </button>
+  <div className="max-w-6xl mx-auto pt-24 px-6 pb-16">
 
-    {/* Side Navigation Arrows */}
-    <button
-      onClick={handlePrev}
-      className="fixed left-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600 transition flex items-center justify-center z-40"
-      aria-label="Previous"
-    >
-      ←
-    </button>
-    <button
-      onClick={handleNext}
-      className="fixed right-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600 transition flex items-center justify-center z-40"
-      aria-label="Next"
-    >
-      →
-    </button>
+    <h1 className="text-4xl font-bold mb-6 text-center text-gray-800">💰 Ways to Save More per Paycheck</h1>
+    <p className="text-gray-600 mb-10 text-center text-lg max-w-2xl mx-auto">How to hit your savings goal even on a tight budget. Small changes today lead to big results tomorrow.</p>
 
-    <div className="max-w-6xl mx-auto">
-      <div className="flex items-center justify-center mb-8">
-        <div className="text-gray-600 font-semibold">Step {currentStep + 1} of {totalSteps + 1}</div>
-      </div>
-
-      <h1 className="text-4xl font-bold mb-6 text-center text-gray-800">💰 Ways to Save More per Paycheck</h1>
-      <p className="text-gray-600 mb-8 text-center text-lg">How to hit your savings goal even on a tight budget</p>
-
-      <div className="grid md:grid-cols-2 gap-6 mb-8">
-        {[
-          { icon: "📝", title: "Get on a Budget", desc: "A budget is the key to breaking the paycheck-to-paycheck cycle.", color: "from-blue-50 to-blue-100" },
-          { icon: "✂️", title: "Cut Expenses", desc: "Go through your budget line by line. Cancel unused subscriptions, cook at home.", color: "from-green-50 to-green-100" },
-          { icon: "🚫", title: "Ditch Your Debt", desc: "Use the debt snowball method: attack smallest debts first.", color: "from-purple-50 to-purple-100" },
-          { icon: "📈", title: "Increase Income", desc: "Side hustles, part-time jobs—try Uber, DoorDash, or freelancing.", color: "from-yellow-50 to-yellow-100" },
-        ].map((item, i) => (
-          <div key={i} className={`p-6 rounded-xl bg-gradient-to-br ${item.color} shadow-md`}>
-            <div className="flex items-start gap-3">
-              <span className="text-4xl">{item.icon}</span>
-              <div>
-                <h4 className="text-xl font-bold text-gray-800 mb-2">{item.title}</h4>
-                <p className="text-sm text-gray-700">{item.desc}</p>
-              </div>
+    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+      {[
+        { icon: "📝", title: "Get on a Budget", desc: "A budget is the key to breaking the paycheck-to-paycheck cycle. It gives every dollar a job.", color: "from-blue-50 to-blue-100" },
+        { icon: "✂️", title: "Cut Expenses", desc: "Go through your budget line by line. Cancel unused subscriptions and cook at home more often.", color: "from-green-50 to-green-100" },
+        { icon: "🚫", title: "Ditch Your Debt", desc: "Use the debt snowball method: attack smallest debts first for quick psychological wins.", color: "from-purple-50 to-purple-100" },
+        { icon: "🤖", title: "Automate Savings", desc: "Set up an automatic transfer to your savings account on payday so you don't even see the money.", color: "from-indigo-50 to-indigo-100" },
+        { icon: "🛍️", title: "24-Hour Rule", desc: "Wait 24 hours before making any non-essential purchase over $50 to avoid impulse buying.", color: "from-rose-50 to-rose-100" },
+        { icon: "📉", title: "Shop Generic", desc: "Buy store brands for groceries and household items. They usually have the same ingredients for less.", color: "from-teal-50 to-teal-100" },
+        { icon: "📈", title: "Increase Income", desc: "Side hustles, part-time jobs, or selling items you no longer need can accelerate your goals.", color: "from-yellow-50 to-yellow-100" },
+        { icon: "🏠", title: "Lower Housing Costs", desc: "Consider a roommate or downsizing if your rent/mortgage is consistently over 25-30% of your pay.", color: "from-orange-50 to-orange-100" },
+        { icon: "⚡", title: "Audit Energy Use", desc: "A programmable thermostat and LED bulbs can save you hundreds on utilities every year.", color: "from-cyan-50 to-cyan-100" },
+      ].map((item, i) => (
+        <motion.div
+          key={i}
+          className={`p-6 rounded-2xl bg-gradient-to-br ${item.color} shadow-sm border border-white/50 hover:shadow-md transition-shadow`}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: i * 0.1 }}
+        >
+          <div className="flex items-start gap-4">
+            <div className="bg-white p-3 rounded-xl shadow-sm text-3xl">{item.icon}</div>
+            <div>
+              <h4 className="text-xl font-bold text-gray-800 mb-2">{item.title}</h4>
+              <p className="text-sm text-gray-700 leading-relaxed">{item.desc}</p>
             </div>
           </div>
-        ))}
-      </div>
+        </motion.div>
+      ))}
+    </div>
 
-      <div className="flex justify-center gap-4">
-        <button onClick={handlePrev} className="px-8 py-4 rounded-2xl border-2 border-blue-400 bg-white text-blue-600 font-semibold text-lg shadow-lg hover:bg-blue-50">
-          ← Back
-        </button>
-        <button onClick={handleNext} className="px-8 py-4 rounded-2xl bg-blue-500 text-white font-semibold text-lg shadow-lg hover:bg-blue-600">
-          Next →
-        </button>
-      </div>
+    <div className="flex justify-center gap-4">
+      <button onClick={handlePrev} className="px-8 py-4 rounded-2xl border-2 border-blue-400 bg-white text-blue-600 font-semibold text-lg shadow-lg hover:bg-blue-50">
+        ← Back
+      </button>
+      <button onClick={handleNext} className="px-8 py-4 rounded-2xl bg-blue-500 text-white font-semibold text-lg shadow-lg hover:bg-blue-600">
+        Next →
+      </button>
     </div>
   </div>
 );
@@ -628,95 +536,66 @@ const CalculatorPageComponent = ({
   const currentBreakdown = calculatorMethod === '503020' ? BREAKDOWN_503020 : BREAKDOWN_RAMSEY;
 
   return (
-    <div className="min-h-screen p-6" style={{ background: 'linear-gradient(120deg, #e0f7fa 0%, #e8f5e9 50%, #e3f2fd 100%)' }}>
-      {/* Header - Back to Learning Path */}
-      <button
-        className="fixed top-4 left-4 px-4 py-2 rounded-lg text-blue-600 hover:bg-blue-50/50 font-medium transition z-50"
-        onClick={() => navigate('/game')}
-      >
-        ← Back to Learning Path
-      </button>
+    <div className="max-w-4xl mx-auto pt-16">
 
-      {/* Side Navigation Arrows */}
-      <button
-        onClick={handlePrev}
-        className="fixed left-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600 transition flex items-center justify-center z-40"
-        aria-label="Previous"
-      >
-        ←
-      </button>
-      <button
-        onClick={handleNext}
-        className="fixed right-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600 transition flex items-center justify-center z-40"
-        aria-label="Next"
-      >
-        →
-      </button>
+      <h1 className="text-4xl font-bold mb-6 text-center text-gray-800">Budget Calculator</h1>
+      <p className="text-center text-gray-600 mb-8 text-lg">See exactly where your money should go</p>
 
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center justify-center mb-8">
-          <div className="text-gray-600 font-semibold">Step {currentStep + 1} of {totalSteps + 1}</div>
-        </div>
-
-        <h1 className="text-4xl font-bold mb-6 text-center text-gray-800">Budget Calculator</h1>
-        <p className="text-center text-gray-600 mb-8 text-lg">See exactly where your money should go</p>
-
-        <div className="bg-white rounded-3xl shadow-xl p-8 mb-8">
-          {/* Toggle */}
-          <div className="flex justify-center mb-8">
-            <div className="bg-gray-100 p-1 rounded-xl flex">
-              <button
-                onClick={() => setCalculatorMethod('503020')}
-                className={`px-6 py-2 rounded-lg font-bold transition ${calculatorMethod === '503020' ? 'bg-white shadow-md text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
-              >
-                50/30/20 Rule
-              </button>
-              <button
-                onClick={() => setCalculatorMethod('ramsey')}
-                className={`px-6 py-2 rounded-lg font-bold transition ${calculatorMethod === 'ramsey' ? 'bg-white shadow-md text-green-600' : 'text-gray-500 hover:text-gray-700'}`}
-              >
-                Dave Ramsey
-              </button>
-            </div>
+      <div className="bg-white rounded-3xl shadow-xl p-8 mb-8">
+        {/* Toggle */}
+        <div className="flex justify-center mb-8">
+          <div className="bg-gray-100 p-1 rounded-xl flex">
+            <button
+              onClick={() => setCalculatorMethod('503020')}
+              className={`px-6 py-2 rounded-lg font-bold transition ${calculatorMethod === '503020' ? 'bg-white shadow-md text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+            >
+              50/30/20 Rule
+            </button>
+            <button
+              onClick={() => setCalculatorMethod('ramsey')}
+              className={`px-6 py-2 rounded-lg font-bold transition ${calculatorMethod === 'ramsey' ? 'bg-white shadow-md text-green-600' : 'text-gray-500 hover:text-gray-700'}`}
+            >
+              Dave Ramsey
+            </button>
           </div>
-
-          {/* Input */}
-          <CalculatorInput
-            calculatorIncome={calculatorIncome}
-            onIncomeChange={handleIncomeChange}
-          />
-
-          {/* Breakdown */}
-          {income > 0 ? (
-            <div className={`grid gap-4 ${calculatorMethod === 'ramsey' ? 'md:grid-cols-2 lg:grid-cols-3' : 'md:grid-cols-3'}`}>
-              {currentBreakdown.map((item, idx) => (
-                <div
-                  key={`${item.label}-${idx}`}
-                  className={`${item.color} p-5 rounded-2xl flex flex-col items-center text-center`}
-                >
-                  <span className="text-3xl mb-2">{item.icon}</span>
-                  <span className={`font-bold ${item.text}`}>{item.label}</span>
-                  <span className="text-xs text-gray-600 font-semibold mb-1">{(item.percent * 100).toFixed(0)}%</span>
-                  <span className={`text-2xl font-bold ${item.text}`}>${(income * item.percent).toFixed(0)}</span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-10 text-gray-400">
-              <span className="text-5xl block mb-4">⌨️</span>
-              Enter your income above to see the breakdown
-            </div>
-          )}
         </div>
 
-        <div className="flex justify-center gap-4">
-          <button onClick={handlePrev} className="px-8 py-4 rounded-2xl border-2 border-blue-400 bg-white text-blue-600 font-semibold text-lg shadow-lg hover:bg-blue-50">
-            ← Back
-          </button>
-          <button onClick={handleNext} className="px-8 py-4 rounded-2xl bg-blue-500 text-white font-semibold text-lg shadow-lg hover:bg-blue-600">
-            Next →
-          </button>
-        </div>
+        {/* Input */}
+        <CalculatorInput
+          calculatorIncome={calculatorIncome}
+          onIncomeChange={handleIncomeChange}
+        />
+
+        {/* Breakdown */}
+        {income > 0 ? (
+          <div className={`grid gap-4 ${calculatorMethod === 'ramsey' ? 'md:grid-cols-2 lg:grid-cols-3' : 'md:grid-cols-3'}`}>
+            {currentBreakdown.map((item, idx) => (
+              <div
+                key={`${item.label}-${idx}`}
+                className={`${item.color} p-5 rounded-2xl flex flex-col items-center text-center`}
+              >
+                <span className="text-3xl mb-2">{item.icon}</span>
+                <span className={`font-bold ${item.text}`}>{item.label}</span>
+                <span className="text-xs text-gray-600 font-semibold mb-1">{(item.percent * 100).toFixed(0)}%</span>
+                <span className={`text-2xl font-bold ${item.text}`}>${(income * item.percent).toFixed(0)}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-10 text-gray-400">
+            <span className="text-5xl block mb-4">⌨️</span>
+            Enter your income above to see the breakdown
+          </div>
+        )}
+      </div>
+
+      <div className="flex justify-center gap-4">
+        <button onClick={handlePrev} className="px-8 py-4 rounded-2xl border-2 border-blue-400 bg-white text-blue-600 font-semibold text-lg shadow-lg hover:bg-blue-50">
+          ← Back
+        </button>
+        <button onClick={handleNext} className="px-8 py-4 rounded-2xl bg-blue-500 text-white font-semibold text-lg shadow-lg hover:bg-blue-600">
+          Next →
+        </button>
       </div>
     </div>
   );
@@ -724,146 +603,122 @@ const CalculatorPageComponent = ({
 
 // Step 7: Quiz - Redesigned to match Case Study style
 const QuizPage = ({ currentStep, showAnswerResult, currentQuestion, selectedAnswer, score, handleAnswerSelect, handleNextQuestion, resetQuiz, navigate, handlePrev, quizCompleted }) => (
-  <div className="min-h-screen p-6" style={{ background: 'linear-gradient(120deg, #e0f7fa 0%, #e8f5e9 50%, #e3f2fd 100%)' }}>
-    {/* Header - Back to Learning Path */}
-    <button
-      className="fixed top-4 left-4 px-4 py-2 rounded-lg text-blue-600 hover:bg-blue-50/50 font-medium transition z-50"
-      onClick={() => navigate('/game')}
-    >
-      ← Back to Learning Path
-    </button>
-
-    {/* Side Navigation Arrow - Only Previous for Quiz */}
-    {!quizCompleted && currentQuestion === 0 && !showAnswerResult && (
-      <button
-        onClick={handlePrev}
-        className="fixed left-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600 transition flex items-center justify-center z-40"
-        aria-label="Previous"
-      >
-        ←
-      </button>
-    )}
-
-    <div className="max-w-4xl mx-auto">
-      {!quizCompleted ? (
-        <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden flex flex-col min-h-[500px]">
-          <div className="flex-1 p-8 lg:p-16 flex flex-col justify-center">
-            <div className="flex justify-between items-end mb-8 border-b border-gray-100 pb-6">
-              <div>
-                <span className="text-sm font-bold text-blue-600 uppercase tracking-wider block mb-2">Question {currentQuestion + 1} of {quizQuestions.length}</span>
-                <h2 className="text-2xl lg:text-4xl font-bold text-slate-900 leading-tight">
-                  {quizQuestions[currentQuestion].question}
-                </h2>
-              </div>
-              <div className="hidden lg:block text-slate-300">
-                <span className="text-5xl">🎯</span>
-              </div>
+  <div className="max-w-4xl mx-auto pt-16">
+    {!quizCompleted ? (
+      <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden flex flex-col min-h-[500px]">
+        <div className="flex-1 p-8 lg:p-16 flex flex-col justify-center">
+          <div className="flex justify-between items-end mb-8 border-b border-gray-100 pb-6">
+            <div>
+              <span className="text-sm font-bold text-blue-600 uppercase tracking-wider block mb-2">Question {currentQuestion + 1} of {quizQuestions.length}</span>
+              <h2 className="text-2xl lg:text-4xl font-bold text-slate-900 leading-tight">
+                {quizQuestions[currentQuestion].question}
+              </h2>
             </div>
+            <div className="hidden lg:block text-slate-300">
+              <span className="text-5xl">🎯</span>
+            </div>
+          </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {quizQuestions[currentQuestion].options.map((option, idx) => {
-                const isSelected = selectedAnswer === idx;
-                const isCorrect = idx === quizQuestions[currentQuestion].correctIndex;
-                const showCorrectness = showAnswerResult && (isSelected || isCorrect);
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {quizQuestions[currentQuestion].options.map((option, idx) => {
+              const isSelected = selectedAnswer === idx;
+              const isCorrect = idx === quizQuestions[currentQuestion].correctIndex;
+              const showCorrectness = showAnswerResult && (isSelected || isCorrect);
 
-                return (
-                  <button
-                    key={idx}
-                    onClick={() => handleAnswerSelect(idx)}
-                    disabled={showAnswerResult}
-                    className={`p-6 lg:p-8 rounded-2xl text-left border-2 transition-all flex items-start gap-4 ${
-                      showCorrectness
-                        ? isCorrect
-                          ? 'bg-green-50 border-green-500 text-green-900'
-                          : isSelected
-                            ? 'bg-red-50 border-red-500 text-red-900'
-                            : 'bg-white border-slate-100 opacity-50'
-                        : isSelected
-                          ? 'bg-blue-50 border-blue-600 shadow-lg scale-[1.02]'
-                          : 'bg-white border-slate-200 hover:border-blue-400 hover:shadow-md'
+              return (
+                <button
+                  key={idx}
+                  onClick={() => handleAnswerSelect(idx)}
+                  disabled={showAnswerResult}
+                  className={`p-6 lg:p-8 rounded-2xl text-left border-2 transition-all flex items-start gap-4 ${showCorrectness
+                    ? isCorrect
+                      ? 'bg-green-50 border-green-500 text-green-900'
+                      : isSelected
+                        ? 'bg-red-50 border-red-500 text-red-900'
+                        : 'bg-white border-slate-100 opacity-50'
+                    : isSelected
+                      ? 'bg-blue-50 border-blue-600 shadow-lg scale-[1.02]'
+                      : 'bg-white border-slate-200 hover:border-blue-400 hover:shadow-md'
                     }`}
-                  >
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${
-                      showCorrectness && isCorrect ? 'bg-green-500 text-white' :
-                      showCorrectness && isSelected ? 'bg-red-500 text-white' :
+                >
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${showCorrectness && isCorrect ? 'bg-green-500 text-white' :
+                    showCorrectness && isSelected ? 'bg-red-500 text-white' :
                       isSelected ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-500'
                     }`}>
-                      {String.fromCharCode(65 + idx)}
-                    </div>
-                    <span className="text-lg font-medium leading-snug flex-1">{option}</span>
-                    {showCorrectness && isCorrect && <span className="ml-auto text-green-600 shrink-0 text-2xl">✓</span>}
-                    {showCorrectness && isSelected && !isCorrect && <span className="ml-auto text-red-600 shrink-0 text-2xl">✗</span>}
-                  </button>
-                );
-              })}
-            </div>
-
-            {showAnswerResult && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mt-8 bg-slate-900 text-white p-8 rounded-3xl flex flex-col md:flex-row items-center gap-8 shadow-2xl"
-              >
-                <div className="flex-1">
-                  <h4 className="font-bold text-blue-400 uppercase tracking-wider text-sm mb-2">Explanation</h4>
-                  <p className="text-lg leading-relaxed text-slate-200">
-                    {quizQuestions[currentQuestion].explanation}
-                  </p>
-                </div>
-                <button
-                  onClick={handleNextQuestion}
-                  className="w-full md:w-auto px-8 py-4 bg-white text-slate-900 rounded-xl font-bold hover:bg-blue-50 transition-colors whitespace-nowrap"
-                >
-                  {currentQuestion < quizQuestions.length - 1 ? 'Next Question' : 'Complete Quiz'}
+                    {String.fromCharCode(65 + idx)}
+                  </div>
+                  <span className="text-lg font-medium leading-snug flex-1">{option}</span>
+                  {showCorrectness && isCorrect && <span className="ml-auto text-green-600 shrink-0 text-2xl">✓</span>}
+                  {showCorrectness && isSelected && !isCorrect && <span className="ml-auto text-red-600 shrink-0 text-2xl">✗</span>}
                 </button>
-              </motion.div>
-            )}
-          </div>
-        </div>
-      ) : (
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="bg-white rounded-3xl shadow-xl p-12 text-center border border-gray-100"
-        >
-          <div className={`w-32 h-32 mx-auto rounded-full flex items-center justify-center mb-8 shadow-2xl ${
-            score >= 8 ? 'bg-green-500' : 'bg-amber-500'
-          }`}>
-            <span className="text-6xl">{score >= 8 ? '🏆' : '📚'}</span>
+              );
+            })}
           </div>
 
-          <h2 className="text-5xl font-black text-slate-900 mb-4">{score >= 8 ? 'Outstanding!' : 'Keep Learning!'}</h2>
-          <p className="text-2xl text-slate-500 mb-10">You scored <span className="font-bold text-slate-900">{score}/{quizQuestions.length}</span> ({((score / quizQuestions.length) * 100).toFixed(0)}%)</p>
-
-          {score >= 8 ? (
-            <div className="bg-green-50 border-2 border-green-500 rounded-2xl p-8 mb-10">
-              <p className="text-green-800 font-bold text-xl mb-2">🎊 Congratulations! You passed!</p>
-              <p className="text-green-700 text-lg">You've mastered the Budgeting Basics module</p>
-            </div>
-          ) : (
-            <div className="bg-amber-50 border-2 border-amber-500 rounded-2xl p-8 mb-10">
-              <p className="text-amber-800 font-bold text-xl mb-2">You need 80% to pass (8/10 correct)</p>
-              <p className="text-amber-700 text-lg">Review the material and try again - you're getting there!</p>
-            </div>
+          {showAnswerResult && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-8 bg-slate-900 text-white p-8 rounded-3xl flex flex-col md:flex-row items-center gap-8 shadow-2xl"
+            >
+              <div className="flex-1">
+                <h4 className="font-bold text-blue-400 uppercase tracking-wider text-sm mb-2">Explanation</h4>
+                <p className="text-lg leading-relaxed text-slate-200">
+                  {quizQuestions[currentQuestion].explanation}
+                </p>
+              </div>
+              <button
+                onClick={handleNextQuestion}
+                className="w-full md:w-auto px-8 py-4 bg-white text-slate-900 rounded-xl font-bold hover:bg-blue-50 transition-colors whitespace-nowrap"
+              >
+                {currentQuestion < quizQuestions.length - 1 ? 'Next Question' : 'Complete Quiz'}
+              </button>
+            </motion.div>
           )}
+        </div>
+      </div>
+    ) : (
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        className="bg-white rounded-3xl shadow-xl p-12 text-center border border-gray-100"
+      >
+        <div className={`w-32 h-32 mx-auto rounded-full flex items-center justify-center mb-8 shadow-2xl ${score >= 8 ? 'bg-green-500' : 'bg-amber-500'
+          }`}>
+          <span className="text-6xl">{score >= 8 ? '🏆' : '📚'}</span>
+        </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button
-              onClick={resetQuiz}
-              className="px-8 py-4 rounded-xl bg-slate-900 text-white hover:bg-slate-800 font-bold text-lg transition-all shadow-lg"
-            >
-              Retake Quiz
-            </button>
-            <button
-              onClick={() => navigate('/game')}
-              className="px-8 py-4 rounded-xl border-2 border-slate-300 text-slate-700 hover:bg-slate-50 font-bold text-lg transition-all"
-            >
-              Back to Learning Path
-            </button>
+        <h2 className="text-5xl font-black text-slate-900 mb-4">{score >= 8 ? 'Outstanding!' : 'Keep Learning!'}</h2>
+        <p className="text-2xl text-slate-500 mb-10">You scored <span className="font-bold text-slate-900">{score}/{quizQuestions.length}</span> ({((score / quizQuestions.length) * 100).toFixed(0)}%)</p>
+
+        {score >= 8 ? (
+          <div className="bg-green-50 border-2 border-green-500 rounded-2xl p-8 mb-10">
+            <p className="text-green-800 font-bold text-xl mb-2">🎊 Congratulations! You passed!</p>
+            <p className="text-green-700 text-lg">You've mastered the Budgeting Basics module</p>
           </div>
-        </motion.div>
-      )}
-    </div>
+        ) : (
+          <div className="bg-amber-50 border-2 border-amber-500 rounded-2xl p-8 mb-10">
+            <p className="text-amber-800 font-bold text-xl mb-2">You need 80% to pass (8/10 correct)</p>
+            <p className="text-amber-700 text-lg">Review the material and try again - you're getting there!</p>
+          </div>
+        )}
+
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <button
+            onClick={resetQuiz}
+            className="px-8 py-4 rounded-xl bg-slate-900 text-white hover:bg-slate-800 font-bold text-lg transition-all shadow-lg"
+          >
+            Retake Quiz
+          </button>
+          <button
+            onClick={() => navigate('/game')}
+            className="px-8 py-4 rounded-xl border-2 border-slate-300 text-slate-700 hover:bg-slate-50 font-bold text-lg transition-all"
+          >
+            Back to Learning Path
+          </button>
+        </div>
+      </motion.div>
+    )}
   </div>
 );
 
@@ -953,30 +808,88 @@ const BudgetingBasics = () => {
 
   // Render current step
   return (
-    <AnimatePresence mode="wait">
-      <motion.div key={currentStep} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
-        {currentStep === 0 && <IntroPage handleNext={handleNext} navigate={navigate} />}
-        {currentStep === 1 && <CategoryPage {...needsData} categoryKey="50" currentStep={currentStep} totalSteps={totalSteps} handlePrev={handlePrev} handleNext={handleNext} navigate={navigate} />}
-        {currentStep === 2 && <CategoryPage {...wantsData} categoryKey="30" currentStep={currentStep} totalSteps={totalSteps} handlePrev={handlePrev} handleNext={handleNext} navigate={navigate} />}
-        {currentStep === 3 && <CategoryPage {...savingsData} categoryKey="20" currentStep={currentStep} totalSteps={totalSteps} handlePrev={handlePrev} handleNext={handleNext} navigate={navigate} />}
-        {currentStep === 4 && <ComparisonPage currentStep={currentStep} totalSteps={totalSteps} handlePrev={handlePrev} handleNext={handleNext} navigate={navigate} />}
-        {currentStep === 5 && <WaysToSavePage currentStep={currentStep} totalSteps={totalSteps} handlePrev={handlePrev} handleNext={handleNext} navigate={navigate} />}
-        {currentStep === 6 && (
-          <CalculatorPageComponent
-            calculatorIncome={calculatorIncome}
-            handleIncomeChange={handleIncomeChange}
-            calculatorMethod={calculatorMethod}
-            setCalculatorMethod={setCalculatorMethod}
-            currentStep={currentStep}
-            totalSteps={totalSteps}
-            handlePrev={handlePrev}
-            handleNext={handleNext}
-            navigate={navigate}
-          />
-        )}
-        {currentStep === 7 && <QuizPage currentStep={currentStep} showAnswerResult={showAnswerResult} currentQuestion={currentQuestion} selectedAnswer={selectedAnswer} score={score} handleAnswerSelect={handleAnswerSelect} handleNextQuestion={handleNextQuestion} resetQuiz={resetQuiz} navigate={navigate} handlePrev={handlePrev} quizCompleted={quizCompleted} />}
-      </motion.div>
-    </AnimatePresence>
+    <div className="min-h-screen relative overflow-x-hidden" style={{ background: 'linear-gradient(120deg, #e0f7fa 0%, #e8f5e9 50%, #e3f2fd 100%)' }}>
+      {/* Fixed Navigation Elements - Stable across transitions */}
+      <button
+        className="absolute top-4 left-4 px-4 py-2 rounded-lg text-blue-600 hover:bg-white/50 backdrop-blur-sm font-medium transition z-50 shadow-sm border border-blue-100"
+        onClick={() => navigate('/game')}
+      >
+        ← Back to Learning Path
+      </button>
+
+      {/* Global Step Counter */}
+      <div className="absolute top-6 left-1/2 transform -translate-x-1/2 z-50">
+        <div className="bg-white/80 backdrop-blur-md px-4 py-1.5 rounded-full shadow-sm border border-gray-100 text-gray-600 font-semibold text-sm">
+          Step {currentStep + 1} of {totalSteps + 1}
+        </div>
+      </div>
+
+      {/* Side Navigation Arrows */}
+      {(currentStep > 0 || (currentStep === totalSteps && currentQuestion === 0 && !showAnswerResult && !quizCompleted)) && (
+        <button
+          onClick={handlePrev}
+          className="fixed left-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600 transition flex items-center justify-center z-40"
+          aria-label="Previous"
+        >
+          ←
+        </button>
+      )}
+      {currentStep < totalSteps && (
+        <button
+          onClick={handleNext}
+          className="fixed right-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600 transition flex items-center justify-center z-40"
+          aria-label="Next"
+        >
+          →
+        </button>
+      )}
+
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={currentStep}
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          transition={{ duration: 0.3 }}
+          className="w-full"
+        >
+          {currentStep === 0 && <IntroPage handleNext={handleNext} />}
+          {currentStep === 1 && <CategoryPage {...needsData} categoryKey="50" currentStep={currentStep} totalSteps={totalSteps} handlePrev={handlePrev} handleNext={handleNext} navigate={navigate} />}
+          {currentStep === 2 && <CategoryPage {...wantsData} categoryKey="30" currentStep={currentStep} totalSteps={totalSteps} handlePrev={handlePrev} handleNext={handleNext} navigate={navigate} />}
+          {currentStep === 3 && <CategoryPage {...savingsData} categoryKey="20" currentStep={currentStep} totalSteps={totalSteps} handlePrev={handlePrev} handleNext={handleNext} navigate={navigate} />}
+          {currentStep === 4 && <ComparisonPage currentStep={currentStep} totalSteps={totalSteps} handlePrev={handlePrev} handleNext={handleNext} navigate={navigate} />}
+          {currentStep === 5 && <WaysToSavePage currentStep={currentStep} totalSteps={totalSteps} handlePrev={handlePrev} handleNext={handleNext} navigate={navigate} />}
+          {currentStep === 6 && (
+            <CalculatorPageComponent
+              calculatorIncome={calculatorIncome}
+              handleIncomeChange={handleIncomeChange}
+              calculatorMethod={calculatorMethod}
+              setCalculatorMethod={setCalculatorMethod}
+              currentStep={currentStep}
+              totalSteps={totalSteps}
+              handlePrev={handlePrev}
+              handleNext={handleNext}
+              navigate={navigate}
+            />
+          )}
+          {currentStep === 7 && (
+            <QuizPage
+              currentStep={currentStep}
+              showAnswerResult={showAnswerResult}
+              currentQuestion={currentQuestion}
+              selectedAnswer={selectedAnswer}
+              score={score}
+              handleAnswerSelect={handleAnswerSelect}
+              handleNextQuestion={handleNextQuestion}
+              resetQuiz={resetQuiz}
+              navigate={navigate}
+              handlePrev={handlePrev}
+              quizCompleted={quizCompleted}
+            />
+          )}
+        </motion.div>
+      </AnimatePresence>
+    </div>
   );
 };
 
