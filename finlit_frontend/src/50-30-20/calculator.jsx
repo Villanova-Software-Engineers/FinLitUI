@@ -15,23 +15,13 @@ const CalculatorPage = () => {
 
   // Track mount/unmount
   useEffect(() => {
-    console.log('🚀 CalculatorPage MOUNTED');
     return () => {
-      console.log('💀 CalculatorPage UNMOUNTED');
     };
   }, []);
 
   // Debug logging on every render
   useEffect(() => {
     renderCount.current += 1;
-    console.log('═══════════════════════════════════════');
-    console.log(`🔄 RENDER #${renderCount.current}`);
-    console.log('📝 Amount state:', amount);
-    console.log('📊 Calculated - needs:', needs, 'wants:', wants, 'savings:', savings);
-    console.log('🎯 Active element:', document.activeElement?.tagName, document.activeElement?.type);
-    console.log('💡 Input ref:', inputRef.current ? 'EXISTS' : 'NULL');
-    console.log('🔍 Input has focus:', document.activeElement === inputRef.current);
-    console.log('═══════════════════════════════════════');
   });
 
   // Animated background elements
@@ -48,7 +38,6 @@ const CalculatorPage = () => {
 
   // Display calculated budget numbers
   const NumberMotion = ({ value, label, color, icon }) => {
-    console.log('📦 NumberMotion rendered for:', label, 'with value:', value);
     return (
       <div className="relative">
         <div
@@ -167,17 +156,13 @@ const CalculatorPage = () => {
               pattern="[0-9]*"
               value={amount}
               onFocus={() => {
-                console.log('✅ Input focused');
+
               }}
               onBlur={() => {
-                console.log('❌ Input blurred! Active element is now:', document.activeElement?.tagName);
               }}
               onChange={(e) => {
-                console.log('⌨️  onChange triggered. Value:', e.target.value);
                 const value = e.target.value.replace(/[^0-9.]/g, '');
-                console.log('✏️  Setting amount to:', value);
                 setAmount(value);
-                console.log('🔍 Focus after setState:', document.activeElement === e.target ? 'MAINTAINED' : 'LOST');
               }}
               placeholder="$0.00"
               className="w-full px-6 py-4 rounded-2xl border-2 border-gray-300 bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-colors text-2xl font-semibold text-center shadow-lg hover:border-blue-300"
