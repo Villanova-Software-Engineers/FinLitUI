@@ -768,7 +768,7 @@ const BudgetingBasics = () => {
     setShowAnswerResult(true); // Show explanation immediately
   };
 
-  const handleNextQuestion = () => {
+  const handleNextQuestion = async () => {
     // Record the answer
     const newAnswers = [...answers, selectedAnswer];
     setAnswers(newAnswers);
@@ -791,8 +791,16 @@ const BudgetingBasics = () => {
 
       // Save to Firebase - need 80% (8 out of 10)
       const percentage = (finalScore / quizQuestions.length) * 100;
-      if (percentage >= 80) {
-        saveScore(MODULES.BUDGETING_50_30_20.id, percentage);
+
+      try {
+        // Firebase requires score === maxScore to mark as passed
+        // If student passed the threshold (80%), save it as 100 to mark as passed
+        const scoreToSave = percentage >= 80 ? 100 : percentage;
+        const result = await saveScore(MODULES.BUDGETING_50_30_20.id, scoreToSave, 100);
+        setSaveResult(result);
+
+      } catch (err) {
+        console.error('Error saving score:', err);
       }
     }
   };
