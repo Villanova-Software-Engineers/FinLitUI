@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useModuleScore, MODULES } from '../hooks/useModuleScore';
+import ModuleCompletedScreen from '../components/ModuleCompletedScreen';
 
 // Budget breakdown configurations - defined outside to prevent recreation
 const BREAKDOWN_503020 = [
@@ -725,6 +726,7 @@ const QuizPage = ({ currentStep, showAnswerResult, currentQuestion, selectedAnsw
 const BudgetingBasics = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
+  const [isReviewMode, setIsReviewMode] = useState(false);
   const { saveScore, isModulePassed, refreshProgress } = useModuleScore();
 
   // Quiz state
@@ -768,7 +770,7 @@ const BudgetingBasics = () => {
     setShowAnswerResult(true); // Show explanation immediately
   };
 
-  const handleNextQuestion = async () => {
+  const handleNextQuestion = () => {
     // Record the answer
     const newAnswers = [...answers, selectedAnswer];
     setAnswers(newAnswers);
@@ -791,16 +793,8 @@ const BudgetingBasics = () => {
 
       // Save to Firebase - need 80% (8 out of 10)
       const percentage = (finalScore / quizQuestions.length) * 100;
-
-      try {
-        // Firebase requires score === maxScore to mark as passed
-        // If student passed the threshold (80%), save it as 100 to mark as passed
-        const scoreToSave = percentage >= 80 ? 100 : percentage;
-        const result = await saveScore(MODULES.BUDGETING_50_30_20.id, scoreToSave, 100);
-        setSaveResult(result);
-
-      } catch (err) {
-        console.error('Error saving score:', err);
+      if (percentage >= 80) {
+        saveScore(MODULES.BUDGETING_50_30_20.id, percentage);
       }
     }
   };
@@ -813,6 +807,19 @@ const BudgetingBasics = () => {
     setQuizCompleted(false);
     setAnswers([]);
   };
+
+  // Show completion screen if module is already passed and not in review mode
+  if (modulePassed && !isReviewMode) {
+    return (
+      <ModuleCompletedScreen
+        emoji="💰"
+        moduleName="Budgeting Basics"
+        description="You've already passed the Budgeting Basics module. Great job mastering the 50/30/20 rule!"
+        gradientClasses="from-green-50 via-emerald-100 to-teal-200"
+        onReviewClick={() => setIsReviewMode(true)}
+      />
+    );
+  }
 
   // Render current step
   return (

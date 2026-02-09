@@ -873,6 +873,98 @@ const SavedCalculationsPanel: React.FC<{
   );
 };
 
+// Compact Saved Calculations Sidebar for calculator pages
+interface SavedCalculationsSidebarProps {
+  calculations: SavedCalculation[];
+  loading: boolean;
+  toolType?: ToolId;
+  onDelete: (id: string) => Promise<boolean>;
+  onLoad: (calc: SavedCalculation) => void;
+}
+
+const SavedCalculationsSidebar: React.FC<SavedCalculationsSidebarProps> = ({
+  calculations,
+  loading,
+  toolType,
+  onDelete,
+  onLoad,
+}) => {
+  const [deleting, setDeleting] = useState<string | null>(null);
+  const filtered = toolType ? calculations.filter(c => c.type === toolType) : calculations;
+
+  const handleDelete = async (id: string) => {
+    setDeleting(id);
+    await onDelete(id);
+    setDeleting(null);
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: 0.2 }}
+      className="bg-white rounded-2xl shadow-lg p-4 sticky top-28 h-fit"
+    >
+      <div className="flex items-center gap-2 mb-4">
+        <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+          <FolderOpen className="w-4 h-4 text-blue-600" />
+        </div>
+        <div>
+          <h3 className="font-bold text-gray-900 text-sm">Saved</h3>
+          <p className="text-gray-500 text-xs">{filtered.length}</p>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="flex items-center justify-center py-6">
+          <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="text-center py-6 text-gray-400">
+          <p className="font-medium text-xs">No saved yet</p>
+        </div>
+      ) : (
+        <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+          {filtered.map((calc) => (
+            <motion.div
+              key={calc.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="p-2.5 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-gray-50 transition-all cursor-pointer"
+              onClick={() => onLoad(calc)}
+            >
+              <div className="flex items-start justify-between gap-1">
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-semibold text-gray-900 truncate text-xs">{calc.name}</h4>
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <span className="text-xs font-medium px-1.5 py-0 rounded bg-blue-100 text-blue-700">
+                      {TOOL_NAMES[calc.type]}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(calc.id);
+                  }}
+                  disabled={deleting === calc.id}
+                  className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-all flex-shrink-0"
+                >
+                  {deleting === calc.id ? (
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                  ) : (
+                    <Trash2 className="w-3 h-3" />
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
+    </motion.div>
+  );
+};
+
 interface Tool {
   id: ToolId;
   title: string;
@@ -890,7 +982,7 @@ const FINANCIAL_TOOLS: Tool[] = [
     title: 'Budget Planner',
     subtitle: '50/30/20 Rule',
     description: 'Smart allocation for needs, wants, and savings',
-    icon: <Calculator className="w-6 h-6" />,
+    icon: <img src="https://cdn-icons-png.flaticon.com/512/2830/2830284.png" alt="Budget" className="w-8 h-8 object-contain" />,
     gradient: 'from-blue-100 via-indigo-50 to-blue-50',
     iconBg: 'bg-gradient-to-br from-blue-500 to-indigo-600',
     hoverBorder: 'hover:border-blue-400'
@@ -900,7 +992,7 @@ const FINANCIAL_TOOLS: Tool[] = [
     title: 'Savings Goals',
     subtitle: 'Goal Tracker',
     description: 'Track progress toward your financial goals',
-    icon: <PiggyBank className="w-6 h-6" />,
+    icon: <img src="https://cdn-icons-png.flaticon.com/512/2529/2529395.png" alt="Savings" className="w-8 h-8 object-contain" />,
     gradient: 'from-emerald-100 via-teal-50 to-emerald-50',
     iconBg: 'bg-gradient-to-br from-emerald-500 to-teal-600',
     hoverBorder: 'hover:border-emerald-400'
@@ -910,7 +1002,7 @@ const FINANCIAL_TOOLS: Tool[] = [
     title: 'Loan Calculator',
     subtitle: 'Payment Estimator',
     description: 'Calculate payments and total interest',
-    icon: <CreditCard className="w-6 h-6" />,
+    icon: <img src="https://cdn-icons-png.flaticon.com/512/2830/2830305.png" alt="Loan" className="w-8 h-8 object-contain" />,
     gradient: 'from-violet-100 via-purple-50 to-violet-50',
     iconBg: 'bg-gradient-to-br from-violet-500 to-purple-600',
     hoverBorder: 'hover:border-violet-400'
@@ -920,7 +1012,7 @@ const FINANCIAL_TOOLS: Tool[] = [
     title: 'Net Worth',
     subtitle: 'Financial Snapshot',
     description: 'Track assets minus liabilities',
-    icon: <BarChart3 className="w-6 h-6" />,
+    icon: <img src="https://cdn-icons-png.flaticon.com/512/3135/3135706.png" alt="Net Worth" className="w-8 h-8 object-contain" />,
     gradient: 'from-amber-100 via-orange-50 to-amber-50',
     iconBg: 'bg-gradient-to-br from-amber-500 to-orange-600',
     hoverBorder: 'hover:border-amber-400'
@@ -930,7 +1022,7 @@ const FINANCIAL_TOOLS: Tool[] = [
     title: 'Compound Interest',
     subtitle: 'Growth Calculator',
     description: 'See how investments grow over time',
-    icon: <TrendingUp className="w-6 h-6" />,
+    icon: <img src="https://cdn-icons-png.flaticon.com/512/2936/2936690.png" alt="Compound Interest" className="w-8 h-8 object-contain" />,
     gradient: 'from-cyan-100 via-teal-50 to-cyan-50',
     iconBg: 'bg-gradient-to-br from-teal-500 to-cyan-600',
     hoverBorder: 'hover:border-teal-400'
@@ -940,7 +1032,7 @@ const FINANCIAL_TOOLS: Tool[] = [
     title: 'Debt Payoff',
     subtitle: 'Freedom Planner',
     description: 'Plan your journey to debt freedom',
-    icon: <Target className="w-6 h-6" />,
+    icon: <img src="https://cdn-icons-png.flaticon.com/512/2920/2920276.png" alt="Debt Payoff" className="w-8 h-8 object-contain" />,
     gradient: 'from-rose-100 via-pink-50 to-rose-50',
     iconBg: 'bg-gradient-to-br from-rose-500 to-pink-600',
     hoverBorder: 'hover:border-rose-400'
@@ -950,7 +1042,7 @@ const FINANCIAL_TOOLS: Tool[] = [
     title: 'Emergency Fund',
     subtitle: 'Safety Net Calculator',
     description: 'Calculate your ideal emergency fund size',
-    icon: <Shield className="w-6 h-6" />,
+    icon: <img src="https://cdn-icons-png.flaticon.com/512/2830/2830312.png" alt="Emergency Fund" className="w-8 h-8 object-contain" />,
     gradient: 'from-orange-100 via-red-50 to-orange-50',
     iconBg: 'bg-gradient-to-br from-orange-500 to-red-600',
     hoverBorder: 'hover:border-orange-400'
@@ -2438,7 +2530,7 @@ const FinancialTools: React.FC = () => {
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
         <AnimatePresence mode="wait">
           {selectedTool ? (
             <motion.div
