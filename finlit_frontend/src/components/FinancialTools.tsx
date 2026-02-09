@@ -2540,23 +2540,7 @@ const FinancialTools: React.FC = () => {
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.2 }}
             >
-              <div className="grid lg:grid-cols-4 gap-6">
-                {/* Calculator - Takes 3 columns */}
-                <div className="lg:col-span-3">
-                  {renderTool()}
-                </div>
-                
-                {/* Saved Calculations Sidebar - Compact */}
-                <div className="lg:col-span-1">
-                  <SavedCalculationsSidebar
-                    calculations={calculations}
-                    loading={calcsLoading}
-                    toolType={selectedTool}
-                    onDelete={deleteCalculation}
-                    onLoad={handleViewCalculation}
-                  />
-                </div>
-              </div>
+              {renderTool()}
             </motion.div>
           ) : (
             <motion.div
