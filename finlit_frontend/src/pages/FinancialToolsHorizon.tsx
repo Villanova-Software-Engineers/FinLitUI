@@ -196,7 +196,6 @@ const BudgetCalculatorPage = ({
   const [loadingSaved, setLoadingSaved] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [loadedBudget, setLoadedBudget] = useState<SavedBudget | null>(null);
-  const [showSavedDropdown, setShowSavedDropdown] = useState(false);
 
   const income = parseFloat(calculatorIncome) || 0;
   const currentBreakdown = calculatorMethod === '503020' ? BREAKDOWN_503020 : BREAKDOWN_RAMSEY;
@@ -367,9 +366,9 @@ const BudgetCalculatorPage = ({
           </motion.div>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Main Calculator - Takes 2 columns */}
-          <div className="lg:col-span-2">
+        <div className="grid lg:grid-cols-1 gap-6 items-start">
+          {/* Main Calculator - Full width */}
+          <div className="w-full">
             {/* Calculator Card */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -613,91 +612,89 @@ const BudgetCalculatorPage = ({
               </div>
             </motion.div>
           </div>
-
-          {/* Saved Budgets Sidebar */}
-          <div className="lg:col-span-1">
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
-              className="bg-white rounded-3xl shadow-xl p-6 sticky top-28"
-            >
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
-                  <FolderOpen className="w-5 h-5 text-blue-600" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-gray-900 text-lg">Saved Budgets</h3>
-                  <p className="text-gray-500 text-sm">{savedBudgets.length} saved</p>
-                </div>
-              </div>
-
-              {loadingSaved ? (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
-                </div>
-              ) : savedBudgets.length === 0 ? (
-                <div className="text-center py-12 text-gray-400">
-                  <Save className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                  <p className="font-medium">No saved budgets yet</p>
-                  <p className="text-sm mt-1">Save a calculation to see it here</p>
-                </div>
-              ) : (
-                <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
-                  {savedBudgets.map((budget) => (
-                    <motion.div
-                      key={budget.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className={`p-4 rounded-xl border-2 transition-all cursor-pointer ${
-                        loadedBudget?.id === budget.id
-                          ? 'border-blue-500 bg-blue-50'
-                          : 'border-gray-100 hover:border-blue-300 hover:bg-gray-50'
-                      }`}
-                      onClick={() => handleLoadBudget(budget)}
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold text-gray-900 truncate">{budget.name}</h4>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                              budget.data.method === '503020'
-                                ? 'bg-blue-100 text-blue-700'
-                                : 'bg-green-100 text-green-700'
-                            }`}>
-                              {budget.data.method === '503020' ? '50/30/20' : 'Ramsey'}
-                            </span>
-                            <span className="text-gray-500 text-xs">
-                              ${budget.data.monthlyIncome.toLocaleString()}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-1 mt-2 text-gray-400 text-xs">
-                            <Clock className="w-3 h-3" />
-                            <span>{formatDate(budget.savedAt)}</span>
-                          </div>
-                        </div>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDelete(budget.id);
-                          }}
-                          disabled={deletingId === budget.id}
-                          className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-                        >
-                          {deletingId === budget.id ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="w-4 h-4" />
-                          )}
-                        </button>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              )}
-            </motion.div>
-          </div>
         </div>
+
+        {/* Saved Budgets Section - Below Calculator */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="bg-white rounded-2xl shadow-lg p-6 mt-8"
+        >
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+              <FolderOpen className="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-900">Saved Budgets</h3>
+              <p className="text-gray-500 text-sm">{savedBudgets.length} saved</p>
+            </div>
+          </div>
+
+          {loadingSaved ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+            </div>
+          ) : savedBudgets.length === 0 ? (
+            <div className="text-center py-12 text-gray-400">
+              <Save className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <p className="font-medium">No saved budgets yet</p>
+              <p className="text-sm mt-1">Save a calculation to see it here</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {savedBudgets.map((budget) => (
+                <motion.div
+                  key={budget.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`p-4 rounded-xl border-2 transition-all cursor-pointer ${
+                    loadedBudget?.id === budget.id
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
+                  }`}
+                  onClick={() => handleLoadBudget(budget)}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-semibold text-gray-900 truncate">{budget.name}</h4>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                          budget.data.method === '503020'
+                            ? 'bg-blue-100 text-blue-700'
+                            : 'bg-green-100 text-green-700'
+                        }`}>
+                          {budget.data.method === '503020' ? '50/30/20' : 'Ramsey'}
+                        </span>
+                        <span className="text-gray-500 text-xs">
+                          ${budget.data.monthlyIncome.toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1 mt-2 text-gray-400 text-xs">
+                        <Clock className="w-3 h-3" />
+                        <span>{formatDate(budget.savedAt)}</span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(budget.id);
+                      }}
+                      disabled={deletingId === budget.id}
+                      className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                    >
+                      {deletingId === budget.id ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </motion.div>
       </div>
     </div>
   );
