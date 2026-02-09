@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useModuleScore, MODULES } from '../hooks/useModuleScore';
+import ModuleCompletedScreen from '../components/ModuleCompletedScreen';
 
 // Budget breakdown configurations - defined outside to prevent recreation
 const BREAKDOWN_503020 = [
@@ -725,6 +726,7 @@ const QuizPage = ({ currentStep, showAnswerResult, currentQuestion, selectedAnsw
 const BudgetingBasics = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
+  const [isReviewMode, setIsReviewMode] = useState(false);
   const { saveScore, isModulePassed, refreshProgress } = useModuleScore();
 
   // Quiz state
@@ -813,6 +815,19 @@ const BudgetingBasics = () => {
     setQuizCompleted(false);
     setAnswers([]);
   };
+
+  // Show completion screen if module is already passed and not in review mode
+  if (modulePassed && !isReviewMode) {
+    return (
+      <ModuleCompletedScreen
+        emoji="💰"
+        moduleName="Budgeting Basics"
+        description="You've already passed the Budgeting Basics module. Great job mastering the 50/30/20 rule!"
+        gradientClasses="from-green-50 via-emerald-100 to-teal-200"
+        onReviewClick={() => setIsReviewMode(true)}
+      />
+    );
+  }
 
   // Render current step
   return (
