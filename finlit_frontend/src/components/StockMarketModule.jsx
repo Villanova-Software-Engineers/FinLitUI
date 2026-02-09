@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Star, Trophy, CheckCircle, XCircle, Heart, Zap, TrendingUp, Coins, Gamepad2, Rocket, Target, DollarSign, BarChart3, Activity, BookOpen, GraduationCap, Play, RefreshCw, Loader2 } from 'lucide-react';
+import { ArrowLeft, Star, Trophy, CheckCircle, XCircle, Heart, Zap, TrendingUp, Coins, Gamepad2, Rocket, Target, DollarSign, BarChart3, Activity, RefreshCw, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useModuleScore, MODULES } from '../hooks/useModuleScore';
 
@@ -100,37 +100,107 @@ const StockMarketModule = () => {
     }
   ];
 
-  // Test Questions
+  // Test Questions - 10 questions with case study format
   const testQuestions = [
     {
       question: "What happens to a stock's price when more people want to BUY than SELL?",
-      options: ["Price goes DOWN", "Price goes UP", "Price stays the same", "The stock disappears"],
-      correct: 1,
+      options: [
+        { id: 'A', text: "Price goes DOWN", correct: false },
+        { id: 'B', text: "Price goes UP", correct: true },
+        { id: 'C', text: "Price stays the same", correct: false },
+        { id: 'D', text: "The stock disappears", correct: false }
+      ],
       explanation: "When demand (buyers) exceeds supply (sellers), prices increase!"
     },
     {
       question: "What is the golden rule of investing?",
-      options: ["Buy high, sell low", "Buy low, sell high", "Never sell anything", "Only buy expensive stocks"],
-      correct: 1,
+      options: [
+        { id: 'A', text: "Buy high, sell low", correct: false },
+        { id: 'B', text: "Buy low, sell high", correct: true },
+        { id: 'C', text: "Never sell anything", correct: false },
+        { id: 'D', text: "Only buy expensive stocks", correct: false }
+      ],
       explanation: "Buy low, sell high - this is how you make profit!"
     },
     {
       question: "Why is diversification important?",
-      options: ["It makes trading more fun", "It reduces risk by spreading investments", "It guarantees profits", "It's not important"],
-      correct: 1,
+      options: [
+        { id: 'A', text: "It makes trading more fun", correct: false },
+        { id: 'B', text: "It reduces risk by spreading investments", correct: true },
+        { id: 'C', text: "It guarantees profits", correct: false },
+        { id: 'D', text: "It's not important", correct: false }
+      ],
       explanation: "Diversification protects you - if one stock drops, others might rise!"
     },
     {
       question: "If you buy 5 shares at $20 each and sell them at $30 each, what's your profit?",
-      options: ["$20", "$50", "$100", "$150"],
-      correct: 1,
+      options: [
+        { id: 'A', text: "$20", correct: false },
+        { id: 'B', text: "$50", correct: true },
+        { id: 'C', text: "$100", correct: false },
+        { id: 'D', text: "$150", correct: false }
+      ],
       explanation: "5 shares x ($30 - $20) = 5 x $10 = $50 profit!"
     },
     {
       question: "What typically happens to stock prices when a company announces bad news?",
-      options: ["Prices go up", "Prices go down", "Nothing happens", "Trading stops"],
-      correct: 1,
+      options: [
+        { id: 'A', text: "Prices go up", correct: false },
+        { id: 'B', text: "Prices go down", correct: true },
+        { id: 'C', text: "Nothing happens", correct: false },
+        { id: 'D', text: "Trading stops", correct: false }
+      ],
       explanation: "Bad news causes more people to sell, which drives prices down."
+    },
+    {
+      question: "What is a stock?",
+      options: [
+        { id: 'A', text: "A type of bond issued by the government", correct: false },
+        { id: 'B', text: "A share of ownership in a company", correct: true },
+        { id: 'C', text: "A savings account at a bank", correct: false },
+        { id: 'D', text: "A loan to a corporation", correct: false }
+      ],
+      explanation: "A stock represents a share of ownership in a company. When you buy stock, you become a part-owner."
+    },
+    {
+      question: "What does it mean when a stock is 'volatile'?",
+      options: [
+        { id: 'A', text: "The stock is about to be removed from the market", correct: false },
+        { id: 'B', text: "The stock price changes frequently and significantly", correct: true },
+        { id: 'C', text: "The stock always goes up in price", correct: false },
+        { id: 'D', text: "The stock is from a technology company", correct: false }
+      ],
+      explanation: "A volatile stock has large price swings - it can change significantly in short periods of time."
+    },
+    {
+      question: "If you invest $1,000 and it grows to $1,200, what is your return percentage?",
+      options: [
+        { id: 'A', text: "12%", correct: false },
+        { id: 'B', text: "20%", correct: true },
+        { id: 'C', text: "25%", correct: false },
+        { id: 'D', text: "200%", correct: false }
+      ],
+      explanation: "Return = (New Value - Original Value) / Original Value = ($1,200 - $1,000) / $1,000 = $200 / $1,000 = 20%"
+    },
+    {
+      question: "What is a 'blue-chip' stock?",
+      options: [
+        { id: 'A', text: "A stock that has recently gone down in price", correct: false },
+        { id: 'B', text: "A stock from a large, well-established, financially stable company", correct: true },
+        { id: 'C', text: "A stock that is brand new to the market", correct: false },
+        { id: 'D', text: "A stock that only experts can buy", correct: false }
+      ],
+      explanation: "Blue-chip stocks are from large, reputable companies with a history of reliable performance, like Apple or Microsoft."
+    },
+    {
+      question: "What is the PRIMARY risk of putting all your money in one stock?",
+      options: [
+        { id: 'A', text: "You might make too much profit", correct: false },
+        { id: 'B', text: "If that stock fails, you could lose everything", correct: true },
+        { id: 'C', text: "It takes too long to sell", correct: false },
+        { id: 'D', text: "You will pay more taxes", correct: false }
+      ],
+      explanation: "Lack of diversification means if that one stock performs poorly or the company fails, you could lose your entire investment."
     }
   ];
 
@@ -721,12 +791,13 @@ const StockMarketModule = () => {
     }
   }, [gameTime, tradingActive]);
 
-  // Handle test answer
-  const handleTestAnswer = (answerIndex) => {
+  // Handle test answer - using case study format
+  const handleTestAnswer = (optionId) => {
     const currentQ = testQuestions[testQuestion];
-    const isCorrect = answerIndex === currentQ.correct;
+    const selectedOption = currentQ.options.find(opt => opt.id === optionId);
+    const isCorrect = selectedOption.correct;
 
-    setTestAnswers(prev => [...prev, { question: testQuestion, answer: answerIndex, correct: isCorrect }]);
+    setTestAnswers(prev => [...prev, { question: testQuestion, answer: optionId, correct: isCorrect }]);
 
     if (isCorrect) {
       setTestScore(prev => prev + 1);
@@ -738,11 +809,12 @@ const StockMarketModule = () => {
     if (testQuestion < testQuestions.length - 1) {
       setTestQuestion(prev => prev + 1);
     } else {
+      // Check if passed (80% = 8 out of 10)
       const finalScore = testScore;
-      if (finalScore >= 3) {
+      if (finalScore >= 8) {
         setCurrentPhase('trading-sim');
         setTradingActive(true);
-        addNotification('success', 'Test Passed!', 'You\'re ready to start trading!');
+        addNotification('success', 'Test Passed!', 'You scored 80% or higher! Ready to start trading!');
       }
     }
   };
@@ -997,37 +1069,6 @@ const StockMarketModule = () => {
         )}
       </AnimatePresence>
 
-      {/* Phase Progress Indicator */}
-      <div className="max-w-4xl mx-auto mb-8">
-        <div className="flex items-center justify-center gap-4">
-          {[
-            { phase: 'teaching', label: 'Learn', icon: BookOpen },
-            { phase: 'test', label: 'Test', icon: GraduationCap },
-            { phase: 'trading-sim', label: 'Trade', icon: TrendingUp }
-          ].map((step, index) => (
-            <React.Fragment key={step.phase}>
-              <div className={`flex items-center gap-2 px-5 py-3 rounded-xl font-bold transition-all ${
-                currentPhase === step.phase
-                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg scale-110'
-                  : currentPhase === 'trading-sim' || (currentPhase === 'test' && step.phase === 'teaching')
-                  ? 'bg-emerald-100 text-emerald-700'
-                  : 'bg-gray-100 text-gray-400'
-              }`} style={{ fontFamily: "'Inter', 'SF Pro Display', -apple-system, sans-serif" }}>
-                <step.icon className="w-5 h-5" />
-                {step.label}
-              </div>
-              {index < 2 && (
-                <div className={`w-12 h-1 rounded-full ${
-                  (currentPhase === 'test' && index === 0) || currentPhase === 'trading-sim'
-                    ? 'bg-emerald-400'
-                    : 'bg-gray-200'
-                }`} />
-              )}
-            </React.Fragment>
-          ))}
-        </div>
-      </div>
-
       {/* TEACHING PHASE */}
       {currentPhase === 'teaching' && (
         <motion.div
@@ -1134,153 +1175,254 @@ const StockMarketModule = () => {
       {/* TEST PHASE */}
       {currentPhase === 'test' && (
         <motion.div
-          className="max-w-3xl mx-auto"
+          className="max-w-4xl mx-auto"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
         >
           {testQuestion < testQuestions.length ? (
             <motion.div
               key={testQuestion}
-              className="bg-white rounded-3xl p-8 shadow-xl border border-gray-100"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              style={{ fontFamily: "'Inter', 'SF Pro Display', -apple-system, sans-serif" }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
             >
-              {/* Progress */}
-              <div className="flex justify-between items-center mb-6">
-                <span className="text-sm font-bold text-gray-500">Question {testQuestion + 1}/{testQuestions.length}</span>
-                <span className="px-4 py-2 bg-emerald-100 text-emerald-700 rounded-full font-bold">
-                  Score: {testScore}/{testQuestion}
-                </span>
+              {/* Progress Bar */}
+              <div className="mb-6">
+                <div className="flex justify-between mb-2">
+                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Progress</span>
+                  <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">{testQuestion + 1} / {testQuestions.length}</span>
+                </div>
+                <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
+                  <motion.div
+                    className="h-full bg-blue-600 rounded-full"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${((testQuestion + 1) / testQuestions.length) * 100}%` }}
+                    transition={{ duration: 0.5 }}
+                  />
+                </div>
               </div>
 
-              <div className="w-full bg-gray-200 rounded-full h-2 mb-8">
-                <div
-                  className="bg-gradient-to-r from-blue-500 to-indigo-500 h-2 rounded-full transition-all"
-                  style={{ width: `${((testQuestion) / testQuestions.length) * 100}%` }}
-                />
-              </div>
-
-              {/* Question */}
-              <h3 className="text-2xl font-black text-gray-900 mb-8 leading-tight tracking-tight">
-                {testQuestions[testQuestion].question}
-              </h3>
-
-              {/* Options */}
-              <div className="space-y-4">
-                {testQuestions[testQuestion].options.map((option, index) => {
-                  const answered = testAnswers.find(a => a.question === testQuestion);
-                  const isSelected = answered?.answer === index;
-                  const isCorrect = index === testQuestions[testQuestion].correct;
-
-                  return (
-                    <motion.button
-                      key={index}
-                      onClick={() => !answered && handleTestAnswer(index)}
-                      disabled={!!answered}
-                      className={`w-full p-5 rounded-2xl text-left font-semibold text-lg transition-all border-2 ${
-                        answered
-                          ? isCorrect
-                            ? 'bg-emerald-100 border-emerald-500 text-emerald-800'
-                            : isSelected
-                            ? 'bg-rose-100 border-rose-500 text-rose-800'
-                            : 'bg-gray-50 border-gray-200 text-gray-500'
-                          : 'bg-gray-50 border-gray-200 hover:border-blue-400 hover:bg-blue-50 text-gray-800'
-                      }`}
-                      whileHover={!answered ? { scale: 1.02 } : {}}
-                      whileTap={!answered ? { scale: 0.98 } : {}}
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg ${
-                          answered
-                            ? isCorrect
-                              ? 'bg-emerald-500 text-white'
-                              : isSelected
-                              ? 'bg-rose-500 text-white'
-                              : 'bg-gray-300 text-gray-600'
-                            : 'bg-gray-200 text-gray-600'
-                        }`}>
-                          {answered && isCorrect ? '✓' : answered && isSelected && !isCorrect ? '✗' : String.fromCharCode(65 + index)}
-                        </div>
-                        <span>{option}</span>
-                      </div>
-                    </motion.button>
-                  );
-                })}
-              </div>
-
-              {/* Explanation */}
-              {testAnswers.find(a => a.question === testQuestion) && (
-                <motion.div
-                  className="mt-6 space-y-4"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                >
-                  <div className="p-5 bg-blue-50 rounded-2xl border-l-4 border-blue-500">
-                    <div className="font-bold text-blue-800 mb-1">Explanation:</div>
-                    <p className="text-blue-700 font-medium">{testQuestions[testQuestion].explanation}</p>
+              {/* Question Card - Case Study Style */}
+              <motion.div
+                className="bg-white rounded-xl sm:rounded-3xl shadow-xl border border-gray-100 overflow-hidden"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+              >
+                <div className="p-4 sm:p-8 lg:p-12">
+                  {/* Question Header */}
+                  <div className="flex justify-between items-end mb-6 sm:mb-10 border-b border-gray-100 pb-4 sm:pb-6">
+                    <div>
+                      <span className="text-xs sm:text-sm font-bold text-blue-600 uppercase tracking-wider block mb-2">
+                        Question {testQuestion + 1} of {testQuestions.length}
+                      </span>
+                      <h2 className="text-lg sm:text-2xl lg:text-3xl font-bold text-slate-900 leading-tight">
+                        {testQuestions[testQuestion].question}
+                      </h2>
+                    </div>
+                    <div className="hidden lg:block text-slate-200">
+                      <Trophy size={48} />
+                    </div>
                   </div>
-                  <button
-                    onClick={handleNextQuestion}
-                    className="w-full py-4 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white rounded-2xl font-bold text-lg shadow-lg transition transform hover:scale-105"
-                  >
-                    {testQuestion < testQuestions.length - 1 ? 'Next Question' : 'See Results'}
-                  </button>
-                </motion.div>
-              )}
+
+                  {/* Options Grid - Case Study Style */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                    {testQuestions[testQuestion].options.map((option) => {
+                      const answered = testAnswers.find(a => a.question === testQuestion);
+                      const isSelected = answered?.answer === option.id;
+                      const showCorrectness = answered && (isSelected || option.correct);
+
+                      return (
+                        <button
+                          key={option.id}
+                          onClick={() => !answered && handleTestAnswer(option.id)}
+                          disabled={!!answered}
+                          className={`p-4 sm:p-6 rounded-xl sm:rounded-2xl text-left border-2 transition-all flex items-start gap-3 sm:gap-4 ${
+                            showCorrectness
+                              ? option.correct
+                                ? 'bg-green-50 border-green-500 text-green-900'
+                                : isSelected
+                                  ? 'bg-red-50 border-red-500 text-red-900'
+                                  : 'bg-white border-slate-100 opacity-50'
+                              : isSelected
+                                ? 'bg-blue-50 border-blue-600 shadow-lg scale-[1.02]'
+                                : 'bg-white border-slate-200 hover:border-blue-400 hover:shadow-md'
+                          } ${!!answered ? 'cursor-default' : 'cursor-pointer'}`}
+                        >
+                          <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${
+                            showCorrectness && option.correct ? 'bg-green-500 text-white' :
+                            showCorrectness && isSelected ? 'bg-red-500 text-white' :
+                            isSelected ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-500'
+                          }`}>
+                            {showCorrectness && option.correct ? (
+                              <CheckCircle size={20} />
+                            ) : showCorrectness && isSelected && !option.correct ? (
+                              <XCircle size={20} />
+                            ) : (
+                              option.id
+                            )}
+                          </div>
+                          <span className="text-sm sm:text-lg font-medium leading-snug flex-1">{option.text}</span>
+                          {showCorrectness && option.correct && <CheckCircle className="ml-auto text-green-600 shrink-0 w-5 h-5 sm:w-6 sm:h-6" />}
+                          {showCorrectness && isSelected && !option.correct && <XCircle className="ml-auto text-red-600 shrink-0 w-5 h-5 sm:w-6 sm:h-6" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Teaching Point - Dark Box (Case Study Style) */}
+                  <AnimatePresence>
+                    {testAnswers.find(a => a.question === testQuestion) && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 20 }}
+                        className="mt-6 sm:mt-8 bg-slate-900 text-white p-4 sm:p-8 rounded-xl sm:rounded-2xl flex flex-col md:flex-row items-center gap-4 sm:gap-8 shadow-2xl"
+                      >
+                        <div className="flex-1">
+                          <h4 className="font-bold text-blue-400 uppercase tracking-wider text-xs sm:text-sm mb-2">Explanation</h4>
+                          <p className="text-sm sm:text-lg leading-relaxed text-slate-200">
+                            {testQuestions[testQuestion].explanation}
+                          </p>
+                        </div>
+                        <button
+                          onClick={handleNextQuestion}
+                          className="w-full md:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-white text-slate-900 rounded-lg sm:rounded-xl font-bold hover:bg-blue-50 transition-colors whitespace-nowrap text-sm sm:text-base"
+                        >
+                          {testQuestion === testQuestions.length - 1 ? 'Finish Quiz' : 'Next Question'}
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </motion.div>
+
+              {/* Navigation Buttons */}
+              <div className="flex justify-between mt-6">
+                <button
+                  onClick={() => testQuestion > 0 && setTestQuestion(testQuestion - 1)}
+                  disabled={testQuestion === 0}
+                  className={`px-6 py-3 rounded-xl font-medium transition ${
+                    testQuestion === 0
+                      ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                      : 'bg-gray-300 hover:bg-gray-400 text-gray-700'
+                  }`}
+                >
+                  Previous
+                </button>
+
+                {!testAnswers.find(a => a.question === testQuestion) && (
+                  <div className="px-6 py-3 bg-gray-200 text-gray-400 rounded-xl font-medium cursor-not-allowed">
+                    Select an answer
+                  </div>
+                )}
+              </div>
             </motion.div>
           ) : (
             /* Test Results */
             <motion.div
-              className="bg-white rounded-3xl p-8 shadow-xl text-center"
-              initial={{ opacity: 0, scale: 0.9 }}
+              className="max-w-2xl mx-auto text-center"
+              initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              style={{ fontFamily: "'Inter', 'SF Pro Display', -apple-system, sans-serif" }}
+              transition={{ duration: 0.5 }}
             >
-              <motion.div
-                className="text-8xl mb-6"
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 0.5 }}
-              >
-                {testScore >= 3 ? '🎉' : '📚'}
-              </motion.div>
+              {/* Results Card */}
+              <div className="bg-white rounded-2xl p-8 shadow-lg">
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+                >
+                  <Trophy className="w-20 h-20 mx-auto text-yellow-500 mb-6" />
+                </motion.div>
 
-              <h2 className="text-4xl font-black text-gray-900 mb-4 tracking-tight">
-                {testScore >= 3 ? 'Congratulations!' : 'Keep Learning!'}
-              </h2>
+                <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-4">Stock Market Quiz Complete! 🎉</h2>
+                <p className="text-xl text-gray-600 mb-6">
+                  {testScore >= 8 ? "Excellent! You passed the quiz! 🎉" : "Keep studying - you need 80% to pass! 📚"}
+                </p>
 
-              <p className="text-xl text-gray-600 mb-6 font-medium">
-                You scored {testScore} out of {testQuestions.length}
-              </p>
+                {/* Final Stats */}
+                <div className="flex justify-center mb-8">
+                  <div className={`${testScore >= 8 ? 'bg-green-50' : 'bg-orange-50'} rounded-lg p-6 text-center`}>
+                    <div className={`text-3xl sm:text-4xl font-bold ${testScore >= 8 ? 'text-green-600' : 'text-orange-600'}`}>
+                      {testScore}/{testQuestions.length}
+                    </div>
+                    <div className="text-sm text-gray-600">Correct Answers ({Math.round((testScore / testQuestions.length) * 100)}%)</div>
+                    <div className="text-xs text-gray-500 mt-1">80% required to pass</div>
+                  </div>
+                </div>
 
-              <div className="w-full max-w-md mx-auto bg-gray-100 rounded-full h-4 mb-8">
-                <div
-                  className={`h-4 rounded-full transition-all ${testScore >= 3 ? 'bg-gradient-to-r from-emerald-500 to-green-500' : 'bg-gradient-to-r from-amber-500 to-orange-500'}`}
-                  style={{ width: `${(testScore / testQuestions.length) * 100}%` }}
-                />
+                {/* Answer Review */}
+                <div className="text-left mb-6">
+                  <h3 className="text-lg font-bold text-gray-800 mb-4">Review Your Answers:</h3>
+                  {testQuestions.map((question, index) => {
+                    const answered = testAnswers.find(a => a.question === index);
+                    const correctOption = question.options.find(opt => opt.correct);
+                    const isCorrect = answered?.correct;
+
+                    return (
+                      <div key={index} className="mb-4 p-4 rounded-lg border border-gray-200">
+                        <div className="flex items-start gap-2 mb-2">
+                          {isCorrect ? (
+                            <CheckCircle className="w-5 h-5 text-green-500 mt-1 flex-shrink-0" />
+                          ) : (
+                            <XCircle className="w-5 h-5 text-red-500 mt-1 flex-shrink-0" />
+                          )}
+                          <div>
+                            <p className="font-medium text-gray-800">{question.question}</p>
+                            <p className={`text-sm ${isCorrect ? 'text-green-600' : 'text-red-600'}`}>
+                              Your answer: {question.options.find(opt => opt.id === answered?.answer)?.text}
+                            </p>
+                            {!isCorrect && (
+                              <p className="text-sm text-green-600">
+                                Correct answer: {correctOption?.text}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-4 justify-center flex-wrap">
+                  {testScore >= 8 ? (
+                    <button
+                      onClick={startTradingSimulation}
+                      className="px-8 py-4 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white rounded-xl font-bold text-lg shadow-lg transition transform hover:scale-105"
+                    >
+                      Start Trading Simulation
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => {
+                          setCurrentPhase('teaching');
+                          setTeachingStep(0);
+                          setTestQuestion(0);
+                          setTestScore(0);
+                          setTestAnswers([]);
+                        }}
+                        className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-medium transition"
+                      >
+                        Review Lessons
+                      </button>
+                      <button
+                        onClick={() => {
+                          setTestQuestion(0);
+                          setTestScore(0);
+                          setTestAnswers([]);
+                        }}
+                        className="px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-medium transition flex items-center gap-2"
+                      >
+                        <RefreshCw size={18} />
+                        Retake Quiz
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
-
-              {testScore >= 3 ? (
-                <button
-                  onClick={startTradingSimulation}
-                  className="px-10 py-4 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white rounded-2xl font-bold text-xl shadow-xl transition transform hover:scale-105"
-                >
-                  Start Trading Simulation
-                </button>
-              ) : (
-                <button
-                  onClick={() => {
-                    setCurrentPhase('teaching');
-                    setTeachingStep(0);
-                    setTestQuestion(0);
-                    setTestScore(0);
-                    setTestAnswers([]);
-                  }}
-                  className="px-10 py-4 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white rounded-2xl font-bold text-xl shadow-xl transition transform hover:scale-105"
-                >
-                  Review Lessons
-                </button>
-              )}
             </motion.div>
           )}
         </motion.div>
@@ -1339,29 +1481,29 @@ const StockMarketModule = () => {
               <div className="text-3xl font-black">
                 ${((playerStats.coins + getPortfolioValue())).toLocaleString()}
               </div>
-              <div className="text-sm opacity-80 font-medium">Target: $11,000</div>
+              <div className="text-sm opacity-80 font-medium">Target: $10,500</div>
             </div>
           </div>
 
           {/* Goal Progress Bar */}
           <div className="mb-8 p-5 bg-white rounded-2xl shadow-lg border border-gray-100">
             <div className="flex justify-between items-center mb-3">
-              <span className="font-bold text-gray-800 text-lg">Challenge: Turn $10,000 into $11,000</span>
+              <span className="font-bold text-gray-800 text-lg">Challenge: Turn $10,000 into $10,500</span>
               <span className="font-black text-2xl text-gray-900">
-                {Math.round(((playerStats.coins + getPortfolioValue()) / 11000) * 100)}%
+                {Math.round(((playerStats.coins + getPortfolioValue()) / 10500) * 100)}%
               </span>
             </div>
             <div className="bg-gray-200 rounded-full h-5">
               <motion.div
                 className={`h-5 rounded-full transition-all duration-500 ${
-                  (playerStats.coins + getPortfolioValue()) >= 11000
+                  (playerStats.coins + getPortfolioValue()) >= 10500
                     ? 'bg-gradient-to-r from-emerald-500 to-green-500'
                     : 'bg-gradient-to-r from-blue-500 to-indigo-500'
                 }`}
-                style={{ width: `${Math.min(((playerStats.coins + getPortfolioValue()) / 11000) * 100, 100)}%` }}
+                style={{ width: `${Math.min(((playerStats.coins + getPortfolioValue()) / 10500) * 100, 100)}%` }}
               />
             </div>
-            {(playerStats.coins + getPortfolioValue()) >= 11000 && (
+            {(playerStats.coins + getPortfolioValue()) >= 10500 && (
               <motion.div
                 className="mt-4"
                 initial={{ opacity: 0 }}
