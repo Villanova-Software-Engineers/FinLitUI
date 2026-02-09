@@ -4,15 +4,9 @@ import { motion } from 'framer-motion';
 import {
   ArrowLeft,
   Calculator,
-  PiggyBank,
-  TrendingUp,
-  CreditCard,
-  Wallet,
-  Shield,
-  TrendingDown,
   DollarSign,
-  Sparkles,
-  ChevronRight
+  ChevronRight,
+  Sparkles
 } from 'lucide-react';
 
 const FinancialToolsHorizon = () => {
@@ -23,11 +17,10 @@ const FinancialToolsHorizon = () => {
       id: 'budget',
       title: 'Budget Planner',
       subtitle: 'Track & Plan Your Money',
-      icon: Calculator,
-      bgGradient: 'from-blue-500 to-indigo-500',
-      iconBg: 'bg-blue-50',
-      iconColor: 'text-blue-600',
-      categoryBg: 'bg-blue-50',
+      iconImage: 'https://cdn-icons-png.flaticon.com/512/2830/2830284.png',
+      cardBg: 'bg-gradient-to-br from-blue-50 to-indigo-100',
+      visualBg: 'bg-gradient-to-br from-blue-100/60 to-indigo-200/60',
+      categoryBg: 'bg-blue-100',
       categoryText: 'text-blue-700',
       category: 'Planning'
     },
@@ -35,11 +28,10 @@ const FinancialToolsHorizon = () => {
       id: 'savings',
       title: 'Savings Goals',
       subtitle: 'Build Your Wealth',
-      icon: PiggyBank,
-      bgGradient: 'from-emerald-500 to-teal-500',
-      iconBg: 'bg-emerald-50',
-      iconColor: 'text-emerald-600',
-      categoryBg: 'bg-emerald-50',
+      iconImage: 'https://cdn-icons-png.flaticon.com/512/2529/2529395.png',
+      cardBg: 'bg-gradient-to-br from-emerald-50 to-teal-100',
+      visualBg: 'bg-gradient-to-br from-emerald-100/60 to-teal-200/60',
+      categoryBg: 'bg-emerald-100',
       categoryText: 'text-emerald-700',
       category: 'Savings'
     },
@@ -47,11 +39,10 @@ const FinancialToolsHorizon = () => {
       id: 'compound',
       title: 'Compound Interest',
       subtitle: 'Investment Growth Calculator',
-      icon: TrendingUp,
-      bgGradient: 'from-violet-500 to-purple-500',
-      iconBg: 'bg-violet-50',
-      iconColor: 'text-violet-600',
-      categoryBg: 'bg-violet-50',
+      iconImage: 'https://cdn-icons-png.flaticon.com/512/2936/2936690.png',
+      cardBg: 'bg-gradient-to-br from-violet-50 to-purple-100',
+      visualBg: 'bg-gradient-to-br from-violet-100/60 to-purple-200/60',
+      categoryBg: 'bg-violet-100',
       categoryText: 'text-violet-700',
       category: 'Investment'
     },
@@ -59,11 +50,10 @@ const FinancialToolsHorizon = () => {
       id: 'loan',
       title: 'Loan Calculator',
       subtitle: 'Manage Your Borrowing',
-      icon: CreditCard,
-      bgGradient: 'from-orange-500 to-amber-500',
-      iconBg: 'bg-orange-50',
-      iconColor: 'text-orange-600',
-      categoryBg: 'bg-orange-50',
+      iconImage: 'https://cdn-icons-png.flaticon.com/512/2830/2830305.png',
+      cardBg: 'bg-gradient-to-br from-amber-50 to-orange-100',
+      visualBg: 'bg-gradient-to-br from-amber-100/60 to-orange-200/60',
+      categoryBg: 'bg-orange-100',
       categoryText: 'text-orange-700',
       category: 'Borrowing'
     },
@@ -71,11 +61,10 @@ const FinancialToolsHorizon = () => {
       id: 'networth',
       title: 'Net Worth Tracker',
       subtitle: 'Track Your Total Wealth',
-      icon: Wallet,
-      bgGradient: 'from-cyan-500 to-blue-500',
-      iconBg: 'bg-cyan-50',
-      iconColor: 'text-cyan-600',
-      categoryBg: 'bg-cyan-50',
+      iconImage: 'https://cdn-icons-png.flaticon.com/512/3135/3135706.png',
+      cardBg: 'bg-gradient-to-br from-cyan-50 to-sky-100',
+      visualBg: 'bg-gradient-to-br from-cyan-100/60 to-sky-200/60',
+      categoryBg: 'bg-cyan-100',
       categoryText: 'text-cyan-700',
       category: 'Tracking'
     },
@@ -83,11 +72,10 @@ const FinancialToolsHorizon = () => {
       id: 'debt-payoff',
       title: 'Debt Payoff Planner',
       subtitle: 'Become Debt-Free',
-      icon: TrendingDown,
-      bgGradient: 'from-rose-500 to-pink-500',
-      iconBg: 'bg-rose-50',
-      iconColor: 'text-rose-600',
-      categoryBg: 'bg-rose-50',
+      iconImage: 'https://cdn-icons-png.flaticon.com/512/2920/2920276.png',
+      cardBg: 'bg-gradient-to-br from-rose-50 to-pink-100',
+      visualBg: 'bg-gradient-to-br from-rose-100/60 to-pink-200/60',
+      categoryBg: 'bg-rose-100',
       categoryText: 'text-rose-700',
       category: 'Debt'
     },
@@ -95,11 +83,10 @@ const FinancialToolsHorizon = () => {
       id: 'emergency-fund',
       title: 'Emergency Fund',
       subtitle: 'Build Your Safety Net',
-      icon: Shield,
-      bgGradient: 'from-green-500 to-emerald-500',
-      iconBg: 'bg-green-50',
-      iconColor: 'text-green-600',
-      categoryBg: 'bg-green-50',
+      iconImage: 'https://cdn-icons-png.flaticon.com/512/2830/2830312.png',
+      cardBg: 'bg-gradient-to-br from-lime-50 to-green-100',
+      visualBg: 'bg-gradient-to-br from-lime-100/60 to-green-200/60',
+      categoryBg: 'bg-green-100',
       categoryText: 'text-green-700',
       category: 'Protection'
     }
@@ -117,38 +104,11 @@ const FinancialToolsHorizon = () => {
       transition={{ delay: index * 0.05 }}
       whileHover={{ y: -8 }}
       onClick={() => handleToolClick(tool)}
-      className="bg-white rounded-3xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer border border-gray-100"
+      className={`${tool.cardBg} rounded-3xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer border border-white/50`}
     >
-      {/* Icon and Menu */}
-      <div className="flex items-start justify-between mb-4">
-        <div className={`w-14 h-14 ${tool.iconBg} rounded-2xl flex items-center justify-center shadow-sm`}>
-          <tool.icon className={`w-7 h-7 ${tool.iconColor}`} strokeWidth={2} />
-        </div>
-        <div className="flex gap-1">
-          <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
-          <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
-          <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
-        </div>
-      </div>
-
-      {/* Visual Area */}
-      <div className={`w-full h-40 bg-gradient-to-br ${tool.bgGradient} rounded-2xl mb-4 relative overflow-hidden`}>
-        <div className="absolute inset-0 bg-white/10 backdrop-blur-sm flex items-center justify-center">
-          {/* Decorative elements - Money visualization */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <tool.icon className="w-20 h-20 text-white/20" strokeWidth={1.5} />
-          </div>
-          {/* Floating dollar signs or coins */}
-          <div className="absolute top-4 left-4">
-            <DollarSign className="w-8 h-8 text-white/30" />
-          </div>
-          <div className="absolute bottom-4 right-4">
-            <DollarSign className="w-6 h-6 text-white/20" />
-          </div>
-          <div className="absolute top-1/2 right-8">
-            <DollarSign className="w-5 h-5 text-white/25" />
-          </div>
-        </div>
+      {/* Visual Area with Main Image */}
+      <div className={`w-full h-44 ${tool.visualBg} rounded-2xl mb-4 relative overflow-hidden flex items-center justify-center backdrop-blur-sm`}>
+        <img src={tool.iconImage} alt={tool.title} className="w-28 h-28 object-contain drop-shadow-lg hover:scale-110 transition-transform duration-300" />
       </div>
 
       {/* Title */}
