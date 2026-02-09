@@ -45,7 +45,6 @@ export default function NeedsWants() {
   const [items2, setItems2] = useState([]);
   const [showQuiz, setShowQuiz] = useState(false);
   const [quizIndex, setQuizIndex] = useState(0);
-  const [quizFeedback, setQuizFeedback] = useState("");
   const [showGray, setShowGray] = useState(false);
   const [finished, setFinished] = useState(false);
   const [swipeDirection, setSwipeDirection] = useState(null);
@@ -188,43 +187,80 @@ export default function NeedsWants() {
     }
   };
 
-  // Reduced quiz data
+  // Quiz data with teaching points (matching CaseStudy format)
   const quiz = [
     {
-      q: "Which expense is a need?",
-      options: [
-        { text: "Concert tickets", correct: false },
-        { text: "Rent", correct: true },
-        { text: "Designer shoes", correct: false },
-        { text: "Streaming service", correct: false },
-      ],
+      question: "Which expense is a NEED?",
+      options: ["Concert tickets", "Rent", "Designer shoes", "Streaming service"],
+      answer: "Rent",
+      teaching_point: "Rent is a need because shelter is essential for survival. Without a place to live, you can't function in society, stay safe, or maintain your health."
     },
     {
-      q: "Which expense can you most easily cut if money is tight?",
-      options: [
-        { text: "Rent", correct: false },
-        { text: "Car insurance", correct: false },
-        { text: "Streaming subscription", correct: true },
-        { text: "Electricity", correct: false },
-      ],
+      question: "Which expense can you most easily cut if money is tight?",
+      options: ["Rent", "Car insurance", "Streaming subscription", "Electricity"],
+      answer: "Streaming subscription",
+      teaching_point: "Streaming services are wants - entertainment that enhances life but isn't essential. When budgeting, cutting wants first protects your ability to meet basic needs."
     },
     {
-      q: "What makes something a 'need' versus a 'want'?",
-      options: [
-        { text: "How much it costs", correct: false },
-        { text: "How trendy it is", correct: false},
-        { text: "If it's essential for survival", correct: true},
-        { text: "If your friends have it", correct: false}
-      ]
+      question: "What makes something a 'need' versus a 'want'?",
+      options: ["How much it costs", "How trendy it is", "If it's essential for survival or basic functioning", "If your friends have it"],
+      answer: "If it's essential for survival or basic functioning",
+      teaching_point: "Needs are things required for basic survival and functioning: food, shelter, clothing, healthcare, and transportation to work. Everything else is a want."
+    },
+    {
+      question: "A basic phone for work calls is a _____, while the latest iPhone is a _____.",
+      options: ["Want, Need", "Need, Want", "Need, Need", "Want, Want"],
+      answer: "Need, Want",
+      teaching_point: "Context matters! A basic phone for work communication is a need in today's world. However, upgrading to the newest, most expensive model is a want."
+    },
+    {
+      question: "Which of these is typically a WANT?",
+      options: ["Groceries for home cooking", "Basic work clothes", "Name-brand athletic shoes", "Monthly bus pass for commuting"],
+      answer: "Name-brand athletic shoes",
+      teaching_point: "While shoes are a need, expensive name-brand athletic shoes are a want. Generic or affordable shoes serve the same practical purpose."
+    },
+    {
+      question: "Why is it important to distinguish between needs and wants?",
+      options: ["To impress others with financial knowledge", "To make better budgeting decisions", "To avoid buying anything fun", "To spend more money"],
+      answer: "To make better budgeting decisions",
+      teaching_point: "Understanding needs vs wants helps you prioritize spending, build savings, and avoid financial stress. It's the foundation of smart money management."
+    },
+    {
+      question: "Which statement about needs and wants is TRUE?",
+      options: ["Wants are always bad purchases", "Needs are always cheap", "The same item can be a need or want depending on circumstances", "You should never spend money on wants"],
+      answer: "The same item can be a need or want depending on circumstances",
+      teaching_point: "A car might be a need for someone in a rural area with no public transit, but a want for someone living in a city with excellent public transportation."
+    },
+    {
+      question: "What percentage of your budget should typically go to needs first?",
+      options: ["100%", "About 50%", "About 20%", "About 10%"],
+      answer: "About 50%",
+      teaching_point: "The popular 50/30/20 budget rule suggests 50% for needs, 30% for wants, and 20% for savings. Covering needs first ensures financial stability."
+    },
+    {
+      question: "Which of these is a NEED for most people?",
+      options: ["Gym membership", "Health insurance", "Restaurant meals", "Video games"],
+      answer: "Health insurance",
+      teaching_point: "Health insurance protects you from catastrophic medical expenses. One emergency without insurance could lead to bankruptcy, making it a critical need."
+    },
+    {
+      question: "Internet service at home is considered a _____ in modern society.",
+      options: ["Luxury only", "Always a want", "Often a need for work and education", "Never necessary"],
+      answer: "Often a need for work and education",
+      teaching_point: "In today's digital world, internet access is often required for work, school, job searching, and essential services. Context determines if it's a need."
     }
   ];
+
+  // State for tracking selected answer and showing result
+  const [selectedAnswer, setSelectedAnswer] = useState(null);
+  const [showResult, setShowResult] = useState(false);
 
   // Initialize shuffled quiz when quiz is shown
   useEffect(() => {
     if (showQuiz && shuffledQuiz.length === 0) {
       const shuffled = quiz.map(q => ({
         ...q,
-        options: shuffleArray(q.options)
+        options: shuffleArray([...q.options])
       }));
       setShuffledQuiz(shuffled);
     }
@@ -236,32 +272,33 @@ export default function NeedsWants() {
   // Track if quiz is complete (all questions answered)
   const [quizComplete, setQuizComplete] = useState(false);
 
-  function handleQuizAnswer(correct) {
-    let newQuizCorrect = quizCorrect;
-    if (correct) {
-      newQuizCorrect = quizCorrect + 1;
-      setQuizCorrect(newQuizCorrect);
-    }
-    setQuizFeedback(correct ? "✅ Correct!" : "❌ Incorrect");
+  function handleQuizAnswerSelect(answer) {
+    if (showResult) return; // Prevent changing answer after selection
 
+    setSelectedAnswer(answer);
+    setShowResult(true);
+
+    const isCorrect = answer === currentQuizQuestion.answer;
+    if (isCorrect) {
+      setQuizCorrect(prev => prev + 1);
+    }
+  }
+
+  function handleNextQuestion() {
     if (quizIndex < quiz.length - 1) {
-      // Not the last question - move to next after feedback
-      setTimeout(() => {
-        setQuizFeedback("");
-        setQuizIndex(quizIndex + 1);
-      }, 2000);
+      setQuizIndex(quizIndex + 1);
+      setSelectedAnswer(null);
+      setShowResult(false);
     } else {
-      // Last question - save score and show "Next" button
-      setTimeout(() => {
-        handleSaveScore(newQuizCorrect);
-        setQuizComplete(true);
-      }, 100);
+      // Last question - save score
+      const finalQuizCorrect = quizCorrect;
+      handleSaveScore(finalQuizCorrect);
+      setQuizComplete(true);
     }
   }
 
   // Handle clicking "Next" after quiz is complete
   function handleQuizNext() {
-    setQuizFeedback("");
     setShowGray(true);
     setShowQuiz(false);
   }
@@ -372,27 +409,24 @@ export default function NeedsWants() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-blue-100 p-6">
       {/* Header */}
       <motion.div
-        className="flex items-center justify-between mb-8 bg-white rounded-xl p-4 shadow-lg max-w-4xl mx-auto"
+        className="mb-8 bg-white rounded-xl p-4 shadow-lg max-w-4xl mx-auto"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <button
-          onClick={() => navigate('/game')}
-          className="flex items-center gap-2 px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          Back to Roadmap
-        </button>
-        
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-800">Needs vs Wants</h1>
-          <p className="text-sm text-gray-600">Financial Decision Making</p>
-        </div>
+        <div className="flex items-center">
+          <button
+            onClick={() => navigate('/game')}
+            className="flex items-center gap-2 px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            Back to Roadmap
+          </button>
 
-        <div className="flex items-center gap-2 text-purple-600">
-          <Zap className="w-5 h-5" />
-          <span className="font-semibold">60 XP</span>
+          <div className="flex-1 text-center pr-[140px]">
+            <h1 className="text-2xl font-bold text-gray-800">Needs vs Wants</h1>
+            <p className="text-sm text-gray-600">Financial Decision Making</p>
+          </div>
         </div>
       </motion.div>
 
@@ -725,9 +759,9 @@ export default function NeedsWants() {
             </div>
           )}
 
-          {/* ENHANCED QUIZ */}
+          {/* ENHANCED QUIZ - CaseStudy Style */}
           {showQuiz && !showGray && (
-            <div className="p-8">
+            <div className="p-4 sm:p-8">
               {/* Review Mode Banner in Quiz */}
               {isReviewMode && (
                 <motion.div
@@ -735,130 +769,172 @@ export default function NeedsWants() {
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                 >
-                  <span className="font-semibold">Review Mode:</span> Correct answers are highlighted. You cannot change answers.
+                  <span className="font-semibold">Review Mode:</span> Correct answers are highlighted.
                 </motion.div>
               )}
 
-              <div className="text-center mb-8">
-                <motion.h1
-                  className="text-3xl font-bold text-gray-800 mb-4"
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                >
-                  🧠 Quick Quiz
-                </motion.h1>
-                <div className="text-sm text-gray-500 mb-4">
-                  Question {quizIndex + 1} of {quiz.length}
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2 mb-6">
-                  <motion.div
-                    className="bg-purple-500 h-2 rounded-full"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${Math.min(100, ((quizIndex + 1) / quiz.length) * 100)}%` }}
-                    transition={{ duration: 0.5 }}
-                  />
-                </div>
-              </div>
-
-              <motion.div
-                key={quizIndex}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5 }}
-                className="mb-8"
-              >
-                <h2 className="text-xl font-bold text-gray-800 mb-6 text-center">
-                  {currentQuizQuestion.q}
-                </h2>
-
-                <div className="space-y-3 max-w-md mx-auto">
-                  {currentQuizQuestion.options.map((opt, i) => {
-                    const isCorrectOption = opt.correct;
-                    const showAsCorrect = isReviewMode && isCorrectOption;
-
-                    return (
-                      <motion.button
-                        key={i}
-                        className={`w-full p-4 font-semibold rounded-xl border-2 transition-all text-left ${
-                          isReviewMode
-                            ? showAsCorrect
-                              ? 'bg-green-100 border-green-500 text-green-800'
-                              : 'bg-gray-100 border-gray-200 text-gray-500 opacity-60'
-                            : 'bg-gray-100 hover:bg-gray-200 text-gray-800 border-transparent hover:border-purple-300'
-                        }`}
-                        whileHover={!isReviewMode ? { scale: 1.02, y: -2 } : {}}
-                        whileTap={!isReviewMode ? { scale: 0.98 } : {}}
-                        onClick={() => !isReviewMode && handleQuizAnswer(opt.correct)}
-                        disabled={isReviewMode}
-                      >
-                        <div className="flex items-center gap-2">
-                          {isReviewMode && showAsCorrect && <span>✓</span>}
-                          {opt.text}
-                        </div>
-                      </motion.button>
-                    );
-                  })}
-                </div>
-              </motion.div>
-
-              <AnimatePresence>
-                {quizFeedback && !isReviewMode && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    className="text-center"
-                  >
-                    <div className={`inline-block px-6 py-3 rounded-xl font-bold text-white ${
-                      quizFeedback.includes('Correct') ? 'bg-green-500' : 'bg-orange-500'
-                    }`}>
-                      {quizFeedback}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Review Mode Navigation */}
-              {isReviewMode && (
+              {quizComplete && !isReviewMode ? (
+                // Quiz Complete Screen
                 <motion.div
-                  className="mt-8 text-center"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="max-w-xl w-full text-center mx-auto py-8"
                 >
+                  <div className={`w-24 h-24 sm:w-32 sm:h-32 mx-auto rounded-full flex items-center justify-center mb-6 shadow-2xl ${
+                    Math.round((quizCorrect / quiz.length) * 100) >= 80 ? 'bg-green-500' : 'bg-amber-500'
+                  }`}>
+                    <span className="text-4xl sm:text-5xl">
+                      {Math.round((quizCorrect / quiz.length) * 100) >= 80 ? '🎉' : '📚'}
+                    </span>
+                  </div>
+                  <h2 className="text-2xl sm:text-4xl font-black text-gray-900 mb-2">
+                    {Math.round((quizCorrect / quiz.length) * 100) >= 80 ? 'Great Job!' : 'Keep Learning!'}
+                  </h2>
+                  <p className="text-lg sm:text-xl text-gray-500 mb-8">
+                    You scored <span className="font-bold text-gray-900">{quizCorrect} out of {quiz.length}</span> on the quiz.
+                  </p>
                   <motion.button
-                    className="px-8 py-4 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl shadow-lg transition-colors text-lg"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => {
-                      if (quizIndex < quiz.length - 1) {
-                        setQuizIndex(quizIndex + 1);
-                      } else {
-                        navigate('/game');
-                      }
-                    }}
-                  >
-                    {quizIndex < quiz.length - 1 ? 'Next Question →' : 'Finish Review'}
-                  </motion.button>
-                </motion.div>
-              )}
-
-              {/* Show Next button after quiz is complete (normal mode) */}
-              {quizComplete && !isReviewMode && (
-                <motion.div
-                  className="mt-8 text-center"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5 }}
-                >
-                  <motion.button
-                    className="px-8 py-4 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl shadow-lg transition-colors text-lg"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    className="w-full max-w-sm py-4 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold text-lg transition-colors shadow-lg"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={handleQuizNext}
                   >
-                    See Results →
+                    See Final Results →
                   </motion.button>
                 </motion.div>
+              ) : (
+                // Quiz Questions
+                <div className="max-w-4xl w-full mx-auto">
+                  {/* Question Header */}
+                  <div className="flex justify-between items-end mb-6 border-b border-gray-100 pb-4">
+                    <div>
+                      <span className="text-xs sm:text-sm font-bold text-purple-600 uppercase tracking-wider block mb-2">
+                        Question {quizIndex + 1} of {quiz.length}
+                      </span>
+                      <h2 className="text-lg sm:text-2xl lg:text-3xl font-bold text-gray-900 leading-tight">
+                        {currentQuizQuestion.question}
+                      </h2>
+                    </div>
+                    <div className="hidden sm:block text-purple-200">
+                      <Zap size={40} />
+                    </div>
+                  </div>
+
+                  {/* Progress Bar */}
+                  <div className="w-full bg-gray-100 h-2 rounded-full mb-8">
+                    <motion.div
+                      className="bg-purple-500 h-2 rounded-full"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${((quizIndex + 1) / quiz.length) * 100}%` }}
+                      transition={{ duration: 0.5 }}
+                    />
+                  </div>
+
+                  {/* Answer Options - CaseStudy Style */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                    {currentQuizQuestion.options.map((option, idx) => {
+                      const isSelected = selectedAnswer === option;
+                      const isCorrect = option === currentQuizQuestion.answer;
+                      const showCorrectness = showResult && (isSelected || isCorrect);
+                      const isReviewCorrect = isReviewMode && isCorrect;
+
+                      return (
+                        <motion.button
+                          key={idx}
+                          onClick={() => !isReviewMode && handleQuizAnswerSelect(option)}
+                          disabled={showResult || isReviewMode}
+                          className={`p-4 sm:p-6 rounded-xl text-left border-2 transition-all flex items-start gap-3 sm:gap-4 ${
+                            isReviewCorrect
+                              ? 'bg-green-50 border-green-500 text-green-900'
+                              : isReviewMode
+                              ? 'bg-gray-50 border-gray-200 text-gray-400 opacity-60'
+                              : showCorrectness
+                              ? isCorrect
+                                ? 'bg-green-50 border-green-500 text-green-900'
+                                : isSelected
+                                ? 'bg-red-50 border-red-500 text-red-900'
+                                : 'bg-white border-gray-100 opacity-50'
+                              : isSelected
+                              ? 'bg-purple-50 border-purple-600 shadow-lg scale-[1.02]'
+                              : 'bg-white border-gray-200 hover:border-purple-400 hover:shadow-md'
+                          }`}
+                          whileHover={!showResult && !isReviewMode ? { scale: 1.02 } : {}}
+                          whileTap={!showResult && !isReviewMode ? { scale: 0.98 } : {}}
+                        >
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${
+                            isReviewCorrect ? 'bg-green-500 text-white' :
+                            showCorrectness && isCorrect ? 'bg-green-500 text-white' :
+                            showCorrectness && isSelected ? 'bg-red-500 text-white' :
+                            isSelected ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-500'
+                          }`}>
+                            {String.fromCharCode(65 + idx)}
+                          </div>
+                          <span className="text-sm sm:text-lg font-medium leading-snug flex-1">{option}</span>
+                          {(showCorrectness && isCorrect) || isReviewCorrect ? (
+                            <span className="ml-auto text-green-600 shrink-0">✓</span>
+                          ) : null}
+                          {showCorrectness && isSelected && !isCorrect && (
+                            <span className="ml-auto text-red-600 shrink-0">✗</span>
+                          )}
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Teaching Point - Shows after answer selection */}
+                  {showResult && !isReviewMode && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mt-6 bg-gray-900 text-white p-4 sm:p-6 rounded-2xl flex flex-col md:flex-row items-center gap-4 sm:gap-6 shadow-xl"
+                    >
+                      <div className="flex-1">
+                        <h4 className="font-bold text-purple-400 uppercase tracking-wider text-xs sm:text-sm mb-2">
+                          {selectedAnswer === currentQuizQuestion.answer ? '✓ Correct!' : '✗ Not quite...'}
+                        </h4>
+                        <p className="text-sm sm:text-base leading-relaxed text-gray-200">
+                          {currentQuizQuestion.teaching_point}
+                        </p>
+                      </div>
+                      <motion.button
+                        onClick={handleNextQuestion}
+                        className="w-full md:w-auto px-6 py-3 bg-white text-gray-900 rounded-xl font-bold hover:bg-purple-50 transition-colors whitespace-nowrap"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        {quizIndex < quiz.length - 1 ? 'Next Question' : 'See Results'}
+                      </motion.button>
+                    </motion.div>
+                  )}
+
+                  {/* Review Mode Navigation */}
+                  {isReviewMode && (
+                    <motion.div
+                      className="mt-8 text-center"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                    >
+                      <div className="bg-blue-50 p-4 rounded-xl mb-4 text-left">
+                        <h4 className="font-bold text-blue-800 text-sm mb-1">Teaching Point:</h4>
+                        <p className="text-blue-700 text-sm">{currentQuizQuestion.teaching_point}</p>
+                      </div>
+                      <motion.button
+                        className="px-8 py-4 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl shadow-lg transition-colors text-lg"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => {
+                          if (quizIndex < quiz.length - 1) {
+                            setQuizIndex(quizIndex + 1);
+                          } else {
+                            navigate('/game');
+                          }
+                        }}
+                      >
+                        {quizIndex < quiz.length - 1 ? 'Next Question →' : 'Finish Review'}
+                      </motion.button>
+                    </motion.div>
+                  )}
+                </div>
               )}
             </div>
           )}
@@ -878,7 +954,7 @@ export default function NeedsWants() {
                       const totalQuestions = items2.length + quiz.length;
                       const totalCorrect = swipeCorrect + quizCorrect;
                       const percentage = Math.round((totalCorrect / totalQuestions) * 100);
-                      return percentage === 100 ? '🎉' : percentage >= 70 ? '👍' : '📚';
+                      return percentage === 100 ? '🎉' : percentage >= 80 ? '👍' : '📚';
                     })()}
                   </div>
                   <div className="text-4xl font-bold text-blue-600 mb-1">
@@ -943,8 +1019,9 @@ export default function NeedsWants() {
                           setFinished(false);
                           setQuizIndex(0);
                           setQuizComplete(false);
-                          setQuizFeedback("");
                           setFeedback("");
+                          setSelectedAnswer(null);
+                          setShowResult(false);
                           setSwipeDirection(null);
                           setDragOffset({ x: 0, y: 0 });
                           setSwipeCorrect(0);

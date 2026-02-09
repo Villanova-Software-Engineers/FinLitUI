@@ -590,7 +590,6 @@ const EmergencyFundModule = () => {
 
         <div className="flex items-center gap-2 text-emerald-600">
           <Calculator className="w-5 h-5" />
-          <span className="font-semibold">75 XP</span>
         </div>
       </motion.div>
 
@@ -1250,17 +1249,30 @@ const EmergencyFundModule = () => {
                     key={scenario.id}
                     className={`p-6 rounded-lg border-2 cursor-pointer transition-all ${
                       selectedScenario === scenario.id
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 hover:border-gray-300'
-                    } ${scenario.color}`}
+                        ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-500 ring-offset-2'
+                        : `border-gray-200 hover:border-gray-300 ${scenario.color}`
+                    }`}
                     onClick={() => setSelectedScenario(scenario.id)}
                     whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.99 }}
                   >
                     <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="text-lg font-bold mb-2">{scenario.title}</h3>
-                        <p className="text-sm">{scenario.description}</p>
+                      <div className="flex items-center gap-3">
+                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                          selectedScenario === scenario.id
+                            ? 'border-blue-500 bg-blue-500'
+                            : 'border-gray-400'
+                        }`}>
+                          {selectedScenario === scenario.id && (
+                            <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          )}
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-bold mb-2">{scenario.title}</h3>
+                          <p className="text-sm">{scenario.description}</p>
+                        </div>
                       </div>
                       <div className="text-right">
                         <div className="text-2xl font-bold">
