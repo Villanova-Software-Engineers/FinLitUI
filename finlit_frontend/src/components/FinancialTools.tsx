@@ -873,6 +873,98 @@ const SavedCalculationsPanel: React.FC<{
   );
 };
 
+// Compact Saved Calculations Sidebar for calculator pages
+interface SavedCalculationsSidebarProps {
+  calculations: SavedCalculation[];
+  loading: boolean;
+  toolType?: ToolId;
+  onDelete: (id: string) => Promise<boolean>;
+  onLoad: (calc: SavedCalculation) => void;
+}
+
+const SavedCalculationsSidebar: React.FC<SavedCalculationsSidebarProps> = ({
+  calculations,
+  loading,
+  toolType,
+  onDelete,
+  onLoad,
+}) => {
+  const [deleting, setDeleting] = useState<string | null>(null);
+  const filtered = toolType ? calculations.filter(c => c.type === toolType) : calculations;
+
+  const handleDelete = async (id: string) => {
+    setDeleting(id);
+    await onDelete(id);
+    setDeleting(null);
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: 0.2 }}
+      className="bg-white rounded-2xl shadow-lg p-4 sticky top-28 h-fit"
+    >
+      <div className="flex items-center gap-2 mb-4">
+        <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+          <FolderOpen className="w-4 h-4 text-blue-600" />
+        </div>
+        <div>
+          <h3 className="font-bold text-gray-900 text-sm">Saved</h3>
+          <p className="text-gray-500 text-xs">{filtered.length}</p>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="flex items-center justify-center py-6">
+          <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="text-center py-6 text-gray-400">
+          <p className="font-medium text-xs">No saved yet</p>
+        </div>
+      ) : (
+        <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+          {filtered.map((calc) => (
+            <motion.div
+              key={calc.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="p-2.5 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-gray-50 transition-all cursor-pointer"
+              onClick={() => onLoad(calc)}
+            >
+              <div className="flex items-start justify-between gap-1">
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-semibold text-gray-900 truncate text-xs">{calc.name}</h4>
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <span className="text-xs font-medium px-1.5 py-0 rounded bg-blue-100 text-blue-700">
+                      {TOOL_NAMES[calc.type]}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(calc.id);
+                  }}
+                  disabled={deleting === calc.id}
+                  className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-all flex-shrink-0"
+                >
+                  {deleting === calc.id ? (
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                  ) : (
+                    <Trash2 className="w-3 h-3" />
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
+    </motion.div>
+  );
+};
+
 interface Tool {
   id: ToolId;
   title: string;
@@ -2438,7 +2530,7 @@ const FinancialTools: React.FC = () => {
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
         <AnimatePresence mode="wait">
           {selectedTool ? (
             <motion.div
@@ -2448,7 +2540,23 @@ const FinancialTools: React.FC = () => {
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.2 }}
             >
-              {renderTool()}
+              <div className="grid lg:grid-cols-4 gap-6">
+                {/* Calculator - Takes 3 columns */}
+                <div className="lg:col-span-3">
+                  {renderTool()}
+                </div>
+                
+                {/* Saved Calculations Sidebar - Compact */}
+                <div className="lg:col-span-1">
+                  <SavedCalculationsSidebar
+                    calculations={calculations}
+                    loading={calcsLoading}
+                    toolType={selectedTool}
+                    onDelete={deleteCalculation}
+                    onLoad={handleViewCalculation}
+                  />
+                </div>
+              </div>
             </motion.div>
           ) : (
             <motion.div
