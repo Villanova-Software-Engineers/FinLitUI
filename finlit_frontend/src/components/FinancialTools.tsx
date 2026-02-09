@@ -890,7 +890,7 @@ const FINANCIAL_TOOLS: Tool[] = [
     title: 'Budget Planner',
     subtitle: '50/30/20 Rule',
     description: 'Smart allocation for needs, wants, and savings',
-    icon: <Calculator className="w-6 h-6" />,
+    icon: <img src="https://cdn-icons-png.flaticon.com/512/2830/2830284.png" alt="Budget" className="w-8 h-8 object-contain" />,
     gradient: 'from-blue-100 via-indigo-50 to-blue-50',
     iconBg: 'bg-gradient-to-br from-blue-500 to-indigo-600',
     hoverBorder: 'hover:border-blue-400'
@@ -900,7 +900,7 @@ const FINANCIAL_TOOLS: Tool[] = [
     title: 'Savings Goals',
     subtitle: 'Goal Tracker',
     description: 'Track progress toward your financial goals',
-    icon: <PiggyBank className="w-6 h-6" />,
+    icon: <img src="https://cdn-icons-png.flaticon.com/512/2529/2529395.png" alt="Savings" className="w-8 h-8 object-contain" />,
     gradient: 'from-emerald-100 via-teal-50 to-emerald-50',
     iconBg: 'bg-gradient-to-br from-emerald-500 to-teal-600',
     hoverBorder: 'hover:border-emerald-400'
@@ -910,7 +910,7 @@ const FINANCIAL_TOOLS: Tool[] = [
     title: 'Loan Calculator',
     subtitle: 'Payment Estimator',
     description: 'Calculate payments and total interest',
-    icon: <CreditCard className="w-6 h-6" />,
+    icon: <img src="https://cdn-icons-png.flaticon.com/512/2830/2830305.png" alt="Loan" className="w-8 h-8 object-contain" />,
     gradient: 'from-violet-100 via-purple-50 to-violet-50',
     iconBg: 'bg-gradient-to-br from-violet-500 to-purple-600',
     hoverBorder: 'hover:border-violet-400'
@@ -920,7 +920,7 @@ const FINANCIAL_TOOLS: Tool[] = [
     title: 'Net Worth',
     subtitle: 'Financial Snapshot',
     description: 'Track assets minus liabilities',
-    icon: <BarChart3 className="w-6 h-6" />,
+    icon: <img src="https://cdn-icons-png.flaticon.com/512/3135/3135706.png" alt="Net Worth" className="w-8 h-8 object-contain" />,
     gradient: 'from-amber-100 via-orange-50 to-amber-50',
     iconBg: 'bg-gradient-to-br from-amber-500 to-orange-600',
     hoverBorder: 'hover:border-amber-400'
@@ -930,7 +930,7 @@ const FINANCIAL_TOOLS: Tool[] = [
     title: 'Compound Interest',
     subtitle: 'Growth Calculator',
     description: 'See how investments grow over time',
-    icon: <TrendingUp className="w-6 h-6" />,
+    icon: <img src="https://cdn-icons-png.flaticon.com/512/2936/2936690.png" alt="Compound Interest" className="w-8 h-8 object-contain" />,
     gradient: 'from-cyan-100 via-teal-50 to-cyan-50',
     iconBg: 'bg-gradient-to-br from-teal-500 to-cyan-600',
     hoverBorder: 'hover:border-teal-400'
@@ -940,7 +940,7 @@ const FINANCIAL_TOOLS: Tool[] = [
     title: 'Debt Payoff',
     subtitle: 'Freedom Planner',
     description: 'Plan your journey to debt freedom',
-    icon: <Target className="w-6 h-6" />,
+    icon: <img src="https://cdn-icons-png.flaticon.com/512/2920/2920276.png" alt="Debt Payoff" className="w-8 h-8 object-contain" />,
     gradient: 'from-rose-100 via-pink-50 to-rose-50',
     iconBg: 'bg-gradient-to-br from-rose-500 to-pink-600',
     hoverBorder: 'hover:border-rose-400'
@@ -950,7 +950,7 @@ const FINANCIAL_TOOLS: Tool[] = [
     title: 'Emergency Fund',
     subtitle: 'Safety Net Calculator',
     description: 'Calculate your ideal emergency fund size',
-    icon: <Shield className="w-6 h-6" />,
+    icon: <img src="https://cdn-icons-png.flaticon.com/512/2830/2830312.png" alt="Emergency Fund" className="w-8 h-8 object-contain" />,
     gradient: 'from-orange-100 via-red-50 to-orange-50',
     iconBg: 'bg-gradient-to-br from-orange-500 to-red-600',
     hoverBorder: 'hover:border-orange-400'
