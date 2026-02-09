@@ -731,17 +731,19 @@ const StockMarketModule = () => {
     if (isCorrect) {
       setTestScore(prev => prev + 1);
     }
+  };
 
+  // Handle moving to next question
+  const handleNextQuestion = () => {
     if (testQuestion < testQuestions.length - 1) {
-      setTimeout(() => setTestQuestion(prev => prev + 1), 1500);
+      setTestQuestion(prev => prev + 1);
     } else {
-      setTimeout(() => {
-        if (testScore + (isCorrect ? 1 : 0) >= 3) {
-          setCurrentPhase('trading-sim');
-          setTradingActive(true);
-          addNotification('success', 'Test Passed!', 'You\'re ready to start trading!');
-        }
-      }, 2000);
+      const finalScore = testScore;
+      if (finalScore >= 3) {
+        setCurrentPhase('trading-sim');
+        setTradingActive(true);
+        addNotification('success', 'Test Passed!', 'You\'re ready to start trading!');
+      }
     }
   };
 
@@ -1210,12 +1212,20 @@ const StockMarketModule = () => {
               {/* Explanation */}
               {testAnswers.find(a => a.question === testQuestion) && (
                 <motion.div
-                  className="mt-6 p-5 bg-blue-50 rounded-2xl border-l-4 border-blue-500"
+                  className="mt-6 space-y-4"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                 >
-                  <div className="font-bold text-blue-800 mb-1">Explanation:</div>
-                  <p className="text-blue-700 font-medium">{testQuestions[testQuestion].explanation}</p>
+                  <div className="p-5 bg-blue-50 rounded-2xl border-l-4 border-blue-500">
+                    <div className="font-bold text-blue-800 mb-1">Explanation:</div>
+                    <p className="text-blue-700 font-medium">{testQuestions[testQuestion].explanation}</p>
+                  </div>
+                  <button
+                    onClick={handleNextQuestion}
+                    className="w-full py-4 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white rounded-2xl font-bold text-lg shadow-lg transition transform hover:scale-105"
+                  >
+                    {testQuestion < testQuestions.length - 1 ? 'Next Question' : 'See Results'}
+                  </button>
                 </motion.div>
               )}
             </motion.div>

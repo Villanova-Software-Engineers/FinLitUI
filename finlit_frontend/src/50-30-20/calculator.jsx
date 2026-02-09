@@ -1,15 +1,28 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useRef, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 
 const CalculatorPage = () => {
   const [amount, setAmount] = useState('');
+  const inputRef = useRef(null);
+  const renderCount = useRef(0);
 
   const num = parseFloat(amount) || 0;
   const needs = num * 0.5;
   const wants = num * 0.3;
   const savings = num * 0.2;
   const navigate = useNavigate();
+
+  // Track mount/unmount
+  useEffect(() => {
+    return () => {
+    };
+  }, []);
+
+  // Debug logging on every render
+  useEffect(() => {
+    renderCount.current += 1;
+  });
 
   // Animated background elements
   const bgElements = [
@@ -23,39 +36,29 @@ const CalculatorPage = () => {
     { emoji: "📝", size: "text-lg", delay: 14 },
   ];
 
-  // Animate numbers when amount changes
-  const NumberMotion = ({ value, label, color, icon, delay }) => (
-    <motion.div
-      className="relative"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay }}
-      whileHover={{ scale: 1.05 }}
-    >
-      <div 
-        className="p-6 rounded-2xl shadow-lg border border-gray-200 overflow-hidden"
-        style={{ 
-          background: 'rgba(255, 255, 255, 0.9)',
-        }}
-      >
-        <div className="flex items-center justify-between mb-3">
-          <div className={`p-3 rounded-full ${color}`}>
-            <span className="text-2xl">{icon}</span>
+  // Display calculated budget numbers
+  const NumberMotion = ({ value, label, color, icon }) => {
+    return (
+      <div className="relative">
+        <div
+          className="p-6 rounded-2xl shadow-lg border border-gray-200 overflow-hidden transition-transform hover:scale-105"
+          style={{
+            background: 'rgba(255, 255, 255, 0.9)',
+          }}
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div className={`p-3 rounded-full ${color}`}>
+              <span className="text-2xl">{icon}</span>
+            </div>
+            <div className="text-2xl font-bold text-gray-800 transition-all">
+              ${value.toFixed(2)}
+            </div>
           </div>
-          <motion.div
-            key={value}
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.3 }}
-            className="text-2xl font-bold text-gray-800"
-          >
-            ${value.toFixed(2)}
-          </motion.div>
+          <p className="text-sm font-medium text-gray-600">{label}</p>
         </div>
-        <p className="text-sm font-medium text-gray-600">{label}</p>
       </div>
-    </motion.div>
-  );
+    );
+  };
 
   return (
     <div
@@ -141,71 +144,61 @@ const CalculatorPage = () => {
         </motion.h2>
 
         {/* Input */}
-        <motion.div 
-          className="mb-12"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-        >
+        <div className="mb-12">
           <label className="block text-lg font-medium text-gray-700 mb-2 ml-1">
             Enter your monthly income
           </label>
-          <motion.div
-            whileHover={{ scale: 1.02 }}
-            whileFocus={{ scale: 1.02 }}
-          >
+          <div>
             <input
-              type="number"
+              ref={inputRef}
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
               value={amount}
-              onChange={(e) => setAmount(e.target.value)}
+              onFocus={() => {
+
+              }}
+              onBlur={() => {
+              }}
+              onChange={(e) => {
+                const value = e.target.value.replace(/[^0-9.]/g, '');
+                setAmount(value);
+              }}
               placeholder="$0.00"
-              className="w-full px-6 py-4 rounded-2xl border-2 border-gray-300 bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition text-2xl font-semibold text-center shadow-lg"
+              className="w-full px-6 py-4 rounded-2xl border-2 border-gray-300 bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-colors text-2xl font-semibold text-center shadow-lg hover:border-blue-300"
             />
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
 
         {/* Amount Breakdown Cards */}
-        <AnimatePresence>
-          {num > 0 && (
-            <motion.div
-              className="space-y-4 mb-12"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              <NumberMotion 
-                value={needs} 
-                label="Needs (50%) - Essentials like rent, food, utilities" 
-                color="bg-green-100"
-                icon="🏠"
-                delay={0.5}
-              />
-              <NumberMotion 
-                value={wants} 
-                label="Wants (30%) - Entertainment, dining out, hobbies" 
-                color="bg-blue-100"
-                icon="🎯"
-                delay={0.6}
-              />
-              <NumberMotion 
-                value={savings} 
-                label="Savings & Debt (20%) - Emergency fund, investments, debt repayment" 
-                color="bg-purple-100"
-                icon="💰"
-                delay={0.7}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {num > 0 && (
+          <div className="space-y-4 mb-12">
+            <NumberMotion
+              value={needs}
+              label="Needs (50%) - Essentials like rent, food, utilities"
+              color="bg-green-100"
+              icon="🏠"
+            />
+            <NumberMotion
+              value={wants}
+              label="Wants (30%) - Entertainment, dining out, hobbies"
+              color="bg-blue-100"
+              icon="🎯"
+            />
+            <NumberMotion
+              value={savings}
+              label="Savings & Debt (20%) - Emergency fund, investments, debt repayment"
+              color="bg-purple-100"
+              icon="💰"
+            />
+          </div>
+        )}
 
         {/* Info card */}
         {num === 0 && (
-          <motion.div
+          <div
             className="p-6 rounded-2xl shadow-lg border border-gray-200 mb-12"
             style={{ background: 'rgba(255, 255, 255, 0.9)' }}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.5 }}
           >
             <div className="flex items-start">
               <span className="text-3xl mr-4">📋</span>
@@ -221,7 +214,7 @@ const CalculatorPage = () => {
                 </ul>
               </div>
             </div>
-          </motion.div>
+          </div>
         )}
 
         {/* Action Buttons */}

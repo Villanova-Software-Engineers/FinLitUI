@@ -23,24 +23,50 @@ import type {
 } from '../types/auth.types';
 
 export class AuthService {
+  // Helper function to translate Firebase auth errors to user-friendly messages
+  private static getAuthErrorMessage(error: any): string {
+    const errorCode = error?.code || '';
+
+    switch (errorCode) {
+      case 'auth/invalid-credential':
+      case 'auth/wrong-password':
+      case 'auth/user-not-found':
+        return 'Invalid email or password. Please check your credentials and try again.';
+      case 'auth/invalid-email':
+        return 'Please enter a valid email address.';
+      case 'auth/user-disabled':
+        return 'This account has been disabled. Please contact support.';
+      case 'auth/too-many-requests':
+        return 'Too many failed login attempts. Please try again later.';
+      case 'auth/network-request-failed':
+        return 'Network error. Please check your internet connection.';
+      default:
+        return 'An error occurred during sign in. Please try again.';
+    }
+  }
+
   // Sign in with email and password
   static async signIn(credentials: SignInRequest): Promise<AuthResponse> {
     const { email, password } = credentials;
 
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    const firebaseUser = userCredential.user;
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const firebaseUser = userCredential.user;
 
-    // Get user profile from Firestore
-    const userProfile = await getUserProfile(firebaseUser.uid);
+      // Get user profile from Firestore
+      const userProfile = await getUserProfile(firebaseUser.uid);
 
-    if (!userProfile) {
-      throw new Error('User profile not found. Please contact support.');
+      if (!userProfile) {
+        throw new Error('User profile not found. Please contact support.');
+      }
+
+      return {
+        success: true,
+        user: userProfile,
+      };
+    } catch (error) {
+      throw new Error(this.getAuthErrorMessage(error));
     }
-
-    return {
-      success: true,
-      user: userProfile,
-    };
   }
 
   // Sign up as a student with class code
