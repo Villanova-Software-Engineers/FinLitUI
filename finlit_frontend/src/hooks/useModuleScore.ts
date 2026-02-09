@@ -35,8 +35,8 @@ export const MODULES = {
 
 export type ModuleId = typeof MODULES[keyof typeof MODULES]['id'];
 
-// Pass requirement: 100%
-export const PASS_THRESHOLD = 100;
+// Pass requirement: 80%
+export const PASS_THRESHOLD = 80;
 
 interface SaveScoreResult {
   passed: boolean;
