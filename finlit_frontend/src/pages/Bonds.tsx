@@ -695,10 +695,10 @@ const BondsPage: React.FC = () => {
                           {passed ? `You passed! (${PASS_THRESHOLD}% required)` : `You need ${PASS_THRESHOLD}% to pass. Review and try again!`}
                         </p>
                         <button
-                          onClick={() => navigate('/dashboard')}
-                          className="px-8 py-4 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl font-bold text-lg hover:shadow-lg transition-all"
+                          onClick={() => navigate('/game')}
+                          className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-medium transition"
                         >
-                          {passed ? '✨ Complete & Return Home' : '← Return to Dashboard'}
+                          Back to Roadmap
                         </button>
                       </motion.div>
                     ) : (

@@ -611,18 +611,57 @@ const RetirementAccountsModule = () => {
     return (
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={`min-h-screen ${section.bgColor}`}>
         {/* Header */}
-        <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-gray-200 px-4 py-3">
-          <div className="flex items-center justify-between max-w-2xl mx-auto">
-            <button
-              onClick={() => learnStep > 0 ? setLearnStep(prev => prev - 1) : setCurrentPhase('intro')}
-              className="p-2 -ml-2 hover:bg-gray-100 rounded-full transition-colors"
-            >
-              <ArrowLeft size={24} className="text-gray-600" />
-            </button>
-            <span className="font-bold text-gray-800">Lesson {learnStep + 1} of {learningSections.length}</span>
-            <div className="w-10"></div>
+        <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-sm border-b border-teal-100 py-3 px-6">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => navigate('/game')}
+                className="flex items-center gap-2 text-gray-600 hover:text-teal-600 transition-colors font-medium group"
+              >
+                <div className="p-2 rounded-lg bg-teal-50 group-hover:bg-teal-100 transition-colors">
+                  <ArrowLeft size={18} />
+                </div>
+                <span className="hidden sm:inline">Learning Path</span>
+              </button>
+              {learnStep > 0 && (
+                <>
+                  <div className="h-6 w-px bg-gray-300"></div>
+                  <button
+                    onClick={() => setLearnStep(prev => prev - 1)}
+                    className="flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors text-sm font-medium"
+                  >
+                    <ArrowLeft size={14} />
+                    <span>Previous Lesson</span>
+                  </button>
+                </>
+              )}
+            </div>
+
+            <div className="flex-1 max-w-md mx-8">
+              <div className="flex justify-between mb-1">
+                <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Progress</span>
+                <span className="text-xs font-bold text-teal-600 uppercase tracking-wider">
+                  {learnStep + 1} / {learningSections.length}
+                </span>
+              </div>
+              <div className="w-full bg-teal-100 h-1.5 rounded-full overflow-hidden">
+                <motion.div
+                  className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full"
+                  initial={{ width: `${(learnStep / learningSections.length) * 100}%` }}
+                  animate={{ width: `${((learnStep + 1) / learningSections.length) * 100}%` }}
+                  transition={{ duration: 0.5 }}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <span className="text-right">
+                <span className="block text-xs font-bold text-gray-900 leading-tight">Retirement Accounts</span>
+                <span className="block text-[10px] font-semibold text-gray-500 uppercase">Module</span>
+              </span>
+            </div>
           </div>
-        </div>
+        </header>
 
         <div className="max-w-2xl mx-auto px-4 py-3">
           <TimelineProgress current={learnStep + 1} total={learningSections.length} />
@@ -743,13 +782,29 @@ const RetirementAccountsModule = () => {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <button
-            onClick={() => currentQuestion === 0 ? setCurrentPhase('learn') : setCurrentQuestion(prev => prev - 1)}
-            className="flex items-center gap-2 px-3 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            <span className="hidden sm:inline">Back</span>
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate('/game')}
+              className="flex items-center gap-2 text-gray-600 hover:text-teal-600 transition-colors font-medium group"
+            >
+              <div className="p-2 rounded-lg bg-teal-50 group-hover:bg-teal-100 transition-colors">
+                <ArrowLeft size={18} />
+              </div>
+              <span className="hidden sm:inline">Learning Path</span>
+            </button>
+            {currentQuestion > 0 && (
+              <>
+                <div className="h-6 w-px bg-gray-300"></div>
+                <button
+                  onClick={() => setCurrentQuestion(prev => prev - 1)}
+                  className="flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors text-sm font-medium"
+                >
+                  <ArrowLeft size={14} />
+                  <span>Previous</span>
+                </button>
+              </>
+            )}
+          </div>
           <div className="text-center">
             <h1 className="text-lg sm:text-xl font-bold text-gray-800">Knowledge Check</h1>
             <p className="text-xs sm:text-sm text-gray-600">Question {currentQuestion + 1} of {quizQuestions.length}</p>
@@ -1008,7 +1063,7 @@ const RetirementAccountsModule = () => {
               onClick={() => navigate('/game')}
               className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-medium transition"
             >
-              Back to Roadmap
+              Back to Learning Path
             </button>
             <button
               onClick={resetModule}
