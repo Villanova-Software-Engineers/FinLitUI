@@ -202,13 +202,15 @@ export async function getBugReportStats(): Promise<{
       else if (data.status === 'wont-fix') stats.wontFix++;
 
       // Count by severity
-      if (data.severity in stats.bySeverity) {
-        stats.bySeverity[data.severity]++;
+      const severity = data.severity as keyof typeof stats.bySeverity;
+      if (severity in stats.bySeverity) {
+        stats.bySeverity[severity]++;
       }
 
       // Count by category
-      if (data.category in stats.byCategory) {
-        stats.byCategory[data.category]++;
+      const category = data.category as keyof typeof stats.byCategory;
+      if (category in stats.byCategory) {
+        stats.byCategory[category]++;
       }
     });
 
