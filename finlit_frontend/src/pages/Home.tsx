@@ -90,7 +90,7 @@ const GUIDE_STEPS = [
   {
     icon: Zap,
     title: "Play Daily Quiz",
-    description: "Answer daily challenges to earn XP and maintain your streak",
+    description: "Answer daily challenges to earn XP",
     color: "from-amber-500 to-orange-600",
     bgColor: "bg-amber-50",
     route: null // scroll to daily challenge
@@ -165,6 +165,7 @@ const FinLitApp: React.FC = () => {
   const [isCorrect, setIsCorrect] = useState(false);
   const [showStreakAnimation, setShowStreakAnimation] = useState(false);
   const [showCertTooltip, setShowCertTooltip] = useState(false);
+  const [showStreakTooltip, setShowStreakTooltip] = useState(false);
   const [streakChecked, setStreakChecked] = useState(false);
   const [dailyChallengeCompleted, setDailyChallengeCompleted] = useState(false);
   const [xpAwarded, setXpAwarded] = useState(false);
@@ -679,6 +680,25 @@ const FinLitApp: React.FC = () => {
             )}
           </div>
 
+          {/* Streak Display */}
+          <div
+            className="flex items-center gap-1 text-base sm:text-lg relative cursor-pointer"
+            onMouseEnter={() => setShowStreakTooltip(true)}
+            onMouseLeave={() => setShowStreakTooltip(false)}
+            onClick={() => setShowStreakTooltip(!showStreakTooltip)}
+          >
+            <Flame className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500" />
+            <span className="font-bold text-orange-600">{streak}</span>
+            {showStreakTooltip && (
+              <div className="absolute top-10 -left-12 sm:-left-16 bg-white p-3 rounded-lg shadow-lg text-sm w-40 sm:w-48 z-10 border">
+                <p className="font-bold text-orange-600">Daily Login Streak</p>
+                <p className="text-gray-600 mt-1">
+                  {streak === 0 ? 'Start your streak today!' : `${streak} day${streak !== 1 ? 's' : ''} in a row!`}
+                </p>
+              </div>
+            )}
+          </div>
+
           {/* XP Display */}
           <div className="text-base sm:text-lg">
             <span className="font-bold">{totalXP}</span>
@@ -940,13 +960,8 @@ const FinLitApp: React.FC = () => {
                   <div className="relative flex items-center">
                     {showStreakAnimation && (
                       <div className="absolute -top-8 right-0 animate-bounce text-amber-500 font-bold flex items-center text-sm sm:text-base">
-                        <Flame size={16} className="sm:w-5 sm:h-5 mr-1" />+1
                       </div>
                     )}
-                    <Flame className="text-amber-500 mr-1" size={18} />
-                    <div className="bg-amber-500 rounded-full h-7 w-7 sm:h-8 sm:w-8 flex items-center justify-center text-white font-bold text-base sm:text-lg">
-                      {streak}
-                    </div>
                   </div>
                 </div>
 
@@ -1284,7 +1299,7 @@ const FinLitApp: React.FC = () => {
                 </div>
               )}
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
                 <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm border text-center">
                   <p className="text-2xl sm:text-3xl font-bold text-amber-600">{totalXP}</p>
                   <p className="text-gray-500 text-sm sm:text-lg">Total XP</p>
@@ -1292,10 +1307,6 @@ const FinLitApp: React.FC = () => {
                 <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm border text-center">
                   <p className="text-2xl sm:text-3xl font-bold text-emerald-600">{completedModules}</p>
                   <p className="text-gray-500 text-sm sm:text-lg">Modules Done</p>
-                </div>
-                <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm border text-center">
-                  <p className="text-2xl sm:text-3xl font-bold text-orange-500">{streak}</p>
-                  <p className="text-gray-500 text-sm sm:text-lg">Day Streak</p>
                 </div>
                 <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm border text-center">
                   <p className="text-2xl sm:text-3xl font-bold text-blue-600">{Math.round((completedModules / totalModules) * 100)}%</p>
