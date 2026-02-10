@@ -32,6 +32,7 @@ import {
   Moon,
   Sun,
   Bell,
+  Bug,
 } from 'lucide-react';
 import { useAuthContext } from '../auth/context/AuthContext';
 import {
@@ -322,6 +323,19 @@ const AdminDashboard: React.FC = () => {
             <Flame size={20} />
             Daily Challenges
           </button>
+
+          {user?.role === 'owner' && (
+            <button
+              onClick={() => {
+                navigate('/admin/bug-reports');
+                setMobileMenuOpen(false);
+              }}
+              className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${textSecondaryClass} hover:bg-gray-100 ${darkMode ? 'hover:bg-white/10' : ''}`}
+            >
+              <Bug size={20} />
+              Bug Reports
+            </button>
+          )}
 
           <button
             onClick={() => {

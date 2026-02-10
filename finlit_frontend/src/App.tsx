@@ -36,6 +36,8 @@ import BigMoneyDecisions from "./pages/BigMoneyDecisions";
 import HomeImmersion from "./pages/big-money/HomeImmersion";
 import CarImmersion from "./pages/big-money/CarImmersion";
 import CollegeImmersion from "./pages/big-money/CollegeImmersion";
+import BugReportForm from "./components/BugReportForm";
+import BugReportAdmin from "./components/BugReportAdmin";
 import { MODULES } from "./hooks/useModuleScore";
 
 // Smart Auth component that redirects authenticated users appropriately
@@ -267,6 +269,22 @@ function App() {
             element={
               <ProtectedRoute>
                 <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/bug-reports"
+            element={
+              <ProtectedRoute requiredRole="owner">
+                <BugReportAdmin />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/bug-report"
+            element={
+              <ProtectedRoute>
+                <BugReportForm />
               </ProtectedRoute>
             }
           />

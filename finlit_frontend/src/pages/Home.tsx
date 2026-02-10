@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Star, BookOpen, Home, Target, User, Check, Flame, GraduationCap, Loader2, Lock, Play, Zap, Lightbulb, TrendingUp, PiggyBank, Shield, CreditCard, Wallet, RefreshCw, Settings, Menu, X, Calculator, ChevronRight, Trophy, Gamepad2, Brain, Award, HelpCircle, LogOut, DollarSign } from 'lucide-react';
+import { Star, BookOpen, Home, Target, User, Check, Flame, GraduationCap, Loader2, Lock, Play, Zap, Lightbulb, TrendingUp, PiggyBank, Shield, CreditCard, Wallet, RefreshCw, Settings, Menu, X, Calculator, ChevronRight, Trophy, Gamepad2, Brain, Award, HelpCircle, LogOut, DollarSign, Bug } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuthContext } from '../auth/context/AuthContext';
@@ -855,6 +855,18 @@ const FinLitApp: React.FC = () => {
               <span className="font-medium">Admin Panel</span>
             </button>
           )}
+
+          {/* Bug Report Link - For all authenticated users */}
+          <button
+            onClick={() => {
+              navigate('/bug-report');
+              setMobileMenuOpen(false);
+            }}
+            className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 hover:bg-blue-500 rounded-lg text-sm sm:text-base lg:text-lg"
+          >
+            <Bug size={20} className="sm:w-6 sm:h-6" />
+            <span className="font-medium">Report Bug</span>
+          </button>
 
           {/* Logout Button - Mobile sidebar */}
           <button
