@@ -397,7 +397,7 @@ const AdminSetup: React.FC = () => {
                         ? 'bg-navy-700 border-navy-600 text-white placeholder:text-gray-500'
                         : 'bg-gray-50 border-gray-200 text-navy-700 hover:bg-white'
                     }`}
-                    placeholder="admin@stanford.edu"
+                    placeholder="admin@villanova.edu"
                     required
                   />
                 </div>
