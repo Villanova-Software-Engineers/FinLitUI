@@ -28,7 +28,7 @@ export const SignInForm: React.FC<SignInFormProps> = ({
   const [showPassword, setShowPassword] = useState(false);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
-  const { validateEmail, validatePassword } = useFormValidation();
+  const { validateEmail } = useFormValidation();
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -46,7 +46,8 @@ export const SignInForm: React.FC<SignInFormProps> = ({
       }
       
       if (field === 'password') {
-        const passwordError = validatePassword(value as string);
+        const password = value as string;
+        const passwordError = !password ? 'Password is required' : password.length < 8 ? 'Password must be at least 8 characters' : '';
         if (passwordError) {
           errors.password = passwordError;
         } else {
@@ -73,7 +74,7 @@ export const SignInForm: React.FC<SignInFormProps> = ({
     }
     
     if (field === 'password') {
-      const passwordError = validatePassword(formData.password);
+      const passwordError = !formData.password ? 'Password is required' : formData.password.length < 8 ? 'Password must be at least 8 characters' : '';
       if (passwordError) {
         errors.password = passwordError;
       } else {
@@ -91,8 +92,8 @@ export const SignInForm: React.FC<SignInFormProps> = ({
     
     const emailError = validateEmail(formData.email);
     if (emailError) errors.email = emailError;
-    
-    const passwordError = validatePassword(formData.password);
+
+    const passwordError = !formData.password ? 'Password is required' : formData.password.length < 8 ? 'Password must be at least 8 characters' : '';
     if (passwordError) errors.password = passwordError;
     
     setFieldErrors(errors);
