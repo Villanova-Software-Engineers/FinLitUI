@@ -15,6 +15,7 @@ import InvestmentBankingModule from "./components/InvestmentBankingModule";
 import CryptoModule from "./components/CryptoModule";
 import RetirementAccountsModule from "./components/RetirementAccountsModule";
 import BondsPage from "./pages/Bonds";
+import TaxBasics from "./components/TaxBasics";
 import AdminSetup from "./components/AdminSetup";
 import AdminDashboard from "./components/AdminDashboard";
 import QuizQuestionsAdmin from "./components/QuizQuestionsAdmin";
@@ -226,6 +227,16 @@ function App() {
               <ProtectedRoute>
                 <ModuleAccessControl moduleId={MODULES.CRYPTO.id} moduleName="Cryptocurrency">
                   <CryptoModule />
+                </ModuleAccessControl>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tax-basics"
+            element={
+              <ProtectedRoute>
+                <ModuleAccessControl moduleId={MODULES.TAX_BASICS.id} moduleName="Tax Basics">
+                  <TaxBasics />
                 </ModuleAccessControl>
               </ProtectedRoute>
             }
