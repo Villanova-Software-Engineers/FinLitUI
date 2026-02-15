@@ -28,15 +28,16 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 0.7], [0, 1]);
   const moduleOrder = [
     MODULES.BUDGETING_50_30_20.id,    // 1. Budgeting Basics
     MODULES.NEEDS_WANTS.id,            // 2. Needs vs Wants
-    MODULES.CREDIT_SCORE.id,           // 3. Credit Score
-    MODULES.EMERGENCY_FUND.id,         // 4. Emergency Fund
-    MODULES.BONDS.id,                  // 5. Bonds
-    MODULES.STOCK_MARKET.id,           // 6. Stock Market
-    MODULES.INSURANCE.id,              // 7. Insurance
-    MODULES.DEBT_MANAGEMENT.id,        // 8. Debt Management
-    MODULES.RETIREMENT_ACCOUNTS.id,    // 9. Retirement Accounts
-    MODULES.CRYPTO.id,                 // 10. Cryptocurrency
-    MODULES.INVESTMENT_BANKING.id,     // 11. Investment Banking
+    MODULES.TAX_BASICS.id,             // 3. Tax Basics
+    MODULES.CREDIT_SCORE.id,           // 4. Credit Score
+    MODULES.EMERGENCY_FUND.id,         // 5. Emergency Fund
+    MODULES.BONDS.id,                  // 6. Bonds
+    MODULES.STOCK_MARKET.id,           // 7. Stock Market
+    MODULES.INSURANCE.id,              // 8. Insurance
+    MODULES.DEBT_MANAGEMENT.id,        // 9. Debt Management
+    MODULES.RETIREMENT_ACCOUNTS.id,    // 10. Retirement Accounts
+    MODULES.CRYPTO.id,                 // 11. Cryptocurrency
+    MODULES.INVESTMENT_BANKING.id,     // 12. Investment Banking
   ];
 
   // Check if a module is accessible (previous module passed or is first module)
@@ -84,119 +85,131 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 0.7], [0, 1]);
       description: "Learn to distinguish between essential needs and desired wants.",
       quizType: "swipe-categorize"
     },
-    
     {
       id: 3,
+      moduleId: MODULES.TAX_BASICS.id,
+      title: "Tax Basics",
+      subtitle: "Understanding Taxes",
+      icon: "🧾",
+      color: "#ede7f6",
+      position: "left",
+      route: "/tax-basics",
+      component: "tax-basics",
+      description: "Learn how taxes work, tax brackets, deductions, and legal ways to reduce your tax burden.",
+      quizType: "mcq"
+    },
+    {
+      id: 4,
       moduleId: MODULES.CREDIT_SCORE.id,
       title: "Credit Score Mastery",
       subtitle: "Credit Management",
       icon: "📊",
       color: "#e8f5e9",
-      position: "left",
+      position: "right",
       route: "/credit-score",
       component: "credit-module",
       description: "Understand credit scores, factors that affect them, and improvement strategies.",
       quizType: "mcq"
     },
     {
-      id: 4,
+      id: 5,
       moduleId: MODULES.EMERGENCY_FUND.id,
       title: "Emergency Fund",
       subtitle: "Financial Safety",
       icon: "🆘",
       color: "#e3f2fd",
-      position: "right",
+      position: "left",
       route: "/emergency-fund",
       component: "emergency-module",
       description: "Build a robust emergency fund to protect against unexpected expenses.",
       quizType: "calculation"
     },
     {
-      id: 5,
+      id: 6,
       moduleId: MODULES.BONDS.id,
       title: "Bonds",
       subtitle: "Fixed-Income Securities",
       icon: "📜",
       color: "#e8f5e9",
-      position: "left",
+      position: "right",
       route: "/bonds",
       component: "bonds-module",
       description: "Learn about bonds, fixed-income investing, and steady returns.",
       quizType: "mcq"
     },
     {
-      id: 6,
+      id: 7,
       moduleId: MODULES.STOCK_MARKET.id,
       title: "Stock Market Basics",
       subtitle: "Investment Fundamentals",
       icon: "📈",
       color: "#f5f5f5",
-      position: "right",
+      position: "left",
       route: "/stock-market",
       component: "stock-module",
       description: "Learn the fundamentals of stock market investing and portfolio building.",
       quizType: "matching"
     },
     {
-      id: 7,
+      id: 8,
       moduleId: MODULES.INSURANCE.id,
       title: "Insurance Protection",
       subtitle: "Risk Management",
       icon: "🛡️",
       color: "#f5f5f5",
-      position: "left",
+      position: "right",
       route: "/insurance",
       component: "insurance-module",
       description: "Understand different types of insurance and how to protect your assets.",
       quizType: "drag-drop"
     },
     {
-      id: 8,
+      id: 9,
       moduleId: MODULES.DEBT_MANAGEMENT.id,
       title: "Debt Management",
       subtitle: "Debt Freedom",
       icon: "🔓",
       color: "#f5f5f5",
-      position: "right",
+      position: "left",
       route: "/debt-management",
       component: "debt-module",
       description: "Strategies for managing and eliminating debt effectively.",
       quizType: "scenario"
     },
     {
-      id: 9,
+      id: 10,
       moduleId: MODULES.RETIREMENT_ACCOUNTS.id,
       title: "Retirement Accounts",
       subtitle: "401(k) & Roth IRA",
       icon: "🏛️",
       color: "#e8f5e9",
-      position: "left",
+      position: "right",
       route: "/retirement-accounts",
       component: "retirement-module",
       description: "Master retirement savings with 401(k)s, Roth IRAs, and tax-advantaged investing.",
       quizType: "mcq"
     },
     {
-      id: 10,
+      id: 11,
       moduleId: MODULES.CRYPTO.id,
       title: "Cryptocurrency Fundamentals",
       subtitle: "Digital Assets",
       icon: "🪙",
       color: "#f5f5f5",
-      position: "right",
+      position: "left",
       route: "/crypto",
       component: "crypto-module",
       description: "Learn the fundamentals of cryptocurrency and blockchain technology.",
       quizType: "mcq"
     },
     {
-      id: 11,
+      id: 12,
       moduleId: MODULES.INVESTMENT_BANKING.id,
       title: "Investment Banking",
       subtitle: "IPO Knowledge",
       icon: "🏦",
       color: "#e3f2fd",
-      position: "left",
+      position: "right",
       route: "/investment-quiz",
       component: "truefalse",
       description: "Test your knowledge about Initial Public Offerings and investment banking.",
@@ -375,7 +388,7 @@ height={svgHeight}
   preserveAspectRatio="none"
 >
   <motion.path
-    d="M50,0 Q60,30 40,60 Q20,90 60,120 Q100,150 50,180 Q0,210 50,240 Q100,270 50,300 Q0,330 50,360 Q100,390 50,420 Q0,450 50,480 Q100,510 50,540 Q0,570 50,600 Q100,630 50,640"
+    d="M50,0 Q60,30 40,60 Q20,90 60,120 Q100,150 50,180 Q0,210 50,240 Q100,270 50,300 Q0,330 50,360 Q100,390 50,420 Q0,450 50,480 Q100,510 50,540 Q0,570 50,600 Q100,630 50,660 Q0,690 50,720 Q100,750 50,780 C60,800 55,820 50,840"
     stroke="#3182ce"
     strokeWidth="4"
     strokeLinecap="round"

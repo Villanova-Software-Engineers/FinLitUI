@@ -31,6 +31,7 @@ export const MODULES = {
   BONDS: { id: 'bonds', name: 'Bonds', maxScore: 100 },
   RETIREMENT_ACCOUNTS: { id: 'retirement-accounts', name: 'Retirement Accounts', maxScore: 100 },
   CRYPTO: { id: 'crypto', name: 'Cryptocurrency Basics', maxScore: 100 },
+  TAX_BASICS: { id: 'tax-basics', name: 'Tax Basics', maxScore: 100 },
 } as const;
 
 export type ModuleId = typeof MODULES[keyof typeof MODULES]['id'];

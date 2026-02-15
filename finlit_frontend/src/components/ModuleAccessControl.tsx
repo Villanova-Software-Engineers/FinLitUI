@@ -14,6 +14,7 @@ interface ModuleAccessControlProps {
 const MODULE_ORDER: ModuleId[] = [
   MODULES.BUDGETING_50_30_20.id,
   MODULES.NEEDS_WANTS.id,
+  MODULES.TAX_BASICS.id,
   MODULES.CREDIT_SCORE.id,
   MODULES.EMERGENCY_FUND.id,
   MODULES.BONDS.id,
