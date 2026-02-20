@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Reorder } from 'framer-motion';
 import { ArrowLeft, Star, Trophy, CheckCircle, XCircle, Heart, Zap, RefreshCw, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useModuleScore, MODULES } from '../hooks/useModuleScore';
@@ -35,7 +35,6 @@ const CreditScoreModule = () => {
   // Game states
   const [gameScore, setGameScore] = useState(0);
   const [currentGameType, setCurrentGameType] = useState('');
-  const [draggedItem, setDraggedItem] = useState(null);
   const [gameCompleted, setGameCompleted] = useState(false);
   const [matchedPairs, setMatchedPairs] = useState([]);
   const [selectedTerm, setSelectedTerm] = useState(null);
@@ -420,7 +419,7 @@ const CreditScoreModule = () => {
     setSelectedTerm(null);
     setSelectedDefinition(null);
     setSliderValue(miniGames[gameStep + 1]?.scenarios?.[0]?.currentBalance || 0);
-    setTimelineOrder(miniGames[gameStep + 1]?.steps?.map((_, index) => index) || []);
+    setTimelineOrder(miniGames[gameStep + 1]?.steps ? [...miniGames[gameStep + 1].steps] : []);
     setShowWrongAnswer(false);
   };
 
@@ -491,27 +490,10 @@ const CreditScoreModule = () => {
     }
   };
 
-  const handleTimelineDragStart = (e, index) => {
-    setDraggedItem(index);
-  };
-
-  const handleTimelineDrop = (e, dropIndex) => {
-    e.preventDefault();
-    if (draggedItem === null || draggedItem === dropIndex) return;
-
-    // Swap the two items instead of inserting
-    const newOrder = [...timelineOrder];
-    const temp = newOrder[draggedItem];
-    newOrder[draggedItem] = newOrder[dropIndex];
-    newOrder[dropIndex] = temp;
-
-    setTimelineOrder(newOrder);
-    setDraggedItem(null);
-  };
-
   // Submit handler for timeline game
   const handleTimelineSubmit = () => {
-    const isCorrect = timelineOrder.every((item, index) => item === index);
+    // Check if steps are in correct order by comparing positions
+    const isCorrect = timelineOrder.every((step, index) => step.position === index + 1);
     if (isCorrect) {
       setShowWrongAnswer(false);
       setGameCompleted(true);
@@ -540,13 +522,13 @@ const CreditScoreModule = () => {
     if (currentStep === 'game') {
       setSliderValue(miniGames[gameStep]?.scenarios?.[0]?.currentBalance || 0);
 
-      // For timeline game, shuffle the order so it's not already in correct order
+      // For timeline game, shuffle the steps so it's not already in correct order
       if (miniGames[gameStep]?.type === 'timeline') {
-        const indices = miniGames[gameStep].steps.map((_, index) => index);
-        let shuffled = shuffleArray(indices);
+        const steps = [...miniGames[gameStep].steps];
+        let shuffled = shuffleArray(steps);
         // Make sure the shuffled array is not already in correct order
-        while (shuffled.every((val, idx) => val === idx)) {
-          shuffled = shuffleArray(indices);
+        while (shuffled.every((step, idx) => step.position === idx + 1)) {
+          shuffled = shuffleArray(steps);
         }
         setTimelineOrder(shuffled);
       }
@@ -1140,31 +1122,39 @@ const CreditScoreModule = () => {
                   <h3 className="text-lg font-bold text-gray-800 mb-4 text-center">
                     Drag to Arrange the Steps in Order! 🎯
                   </h3>
-                  <div className="space-y-3">
-                    {timelineOrder.map((stepIndex, displayIndex) => {
-                      const step = miniGames[gameStep].steps[stepIndex];
-                      return (
-                        <motion.div
-                          key={step.id}
-                          className="p-4 rounded-lg border-2 cursor-grab active:cursor-grabbing hover:shadow-md transition bg-gradient-to-r from-blue-100 to-purple-100 border-gray-200 hover:border-purple-300"
-                          draggable={!gameCompleted}
-                          onDragStart={(e) => handleTimelineDragStart(e, displayIndex)}
-                          onDragOver={(e) => e.preventDefault()}
-                          onDrop={(e) => handleTimelineDrop(e, displayIndex)}
-                          whileHover={{ scale: gameCompleted ? 1 : 1.02 }}
-                          whileDrag={{ scale: 1.05 }}
-                        >
-                          <div className="flex items-center gap-3">
-                            <span className="text-2xl">{step.emoji}</span>
-                            <span className="font-medium flex-1">{step.text}</span>
-                            <span className="px-3 py-1 rounded-full text-sm font-bold bg-white text-purple-600">
-                              Step {displayIndex + 1}
-                            </span>
-                          </div>
-                        </motion.div>
-                      );
-                    })}
-                  </div>
+                  <p className="text-center text-gray-500 text-sm mb-4">Drag items to reorder them</p>
+                  <Reorder.Group
+                    axis="y"
+                    values={timelineOrder}
+                    onReorder={gameCompleted ? () => {} : setTimelineOrder}
+                    className="space-y-3"
+                    layoutScroll
+                  >
+                    {timelineOrder.map((step, displayIndex) => (
+                      <Reorder.Item
+                        key={step.id}
+                        value={step}
+                        className={`p-4 rounded-lg border-2 bg-gradient-to-r from-blue-100 to-purple-100 border-gray-200 ${
+                          gameCompleted ? 'cursor-default' : 'cursor-grab active:cursor-grabbing'
+                        }`}
+                        style={{ touchAction: 'none' }}
+                        whileDrag={{
+                          scale: 1.02,
+                          boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
+                          zIndex: 50
+                        }}
+                        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                      >
+                        <div className="flex items-center gap-3 pointer-events-none">
+                          <span className="text-2xl">{step.emoji}</span>
+                          <span className="font-medium flex-1">{step.text}</span>
+                          <span className="px-3 py-1 rounded-full text-sm font-bold bg-white text-purple-600">
+                            Step {displayIndex + 1}
+                          </span>
+                        </div>
+                      </Reorder.Item>
+                    ))}
+                  </Reorder.Group>
 
                   {/* Wrong Answer Feedback */}
                   <AnimatePresence>
@@ -1657,7 +1647,7 @@ const CreditScoreModule = () => {
                   setSelectedTerm(null);
                   setSelectedDefinition(null);
                   setSliderValue(miniGames[0]?.scenarios?.[0]?.currentBalance || 0);
-                  setTimelineOrder([0, 1, 2, 3, 4]);
+                  setTimelineOrder([...miniGames[2].steps]);
                   setSaveResult(null);
                 }}
                 className="px-6 py-3 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-xl font-medium transition"
