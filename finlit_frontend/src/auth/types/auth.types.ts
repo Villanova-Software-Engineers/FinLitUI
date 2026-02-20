@@ -102,6 +102,16 @@ export interface DailyChallengeQuestion {
   createdBy: string;
 }
 
+// Saved Financial Tool Calculation
+export interface SavedCalculation {
+  id: string;
+  type: 'budget' | 'savings' | 'loan' | 'networth' | 'compound' | 'debt-payoff' | 'emergency-fund';
+  name: string;
+  data: Record<string, any>;
+  results: Record<string, any>;
+  savedAt: Date;
+}
+
 // Student progress document in Firestore
 export interface StudentProgress {
   id: string;
@@ -119,6 +129,8 @@ export interface StudentProgress {
   crosswordProgress?: CrosswordProgress; // Crossword answers and progress
   quickQuizProgress?: QuickQuizProgress; // Quick Quiz answers and progress
   moneyPersonality?: MoneyPersonalityResult; // Money personality quiz result
+  caseStudyProgress?: CaseStudyProgress[]; // Case study completion history
+  savedCalculations?: SavedCalculation[]; // Financial tools saved calculations
 }
 
 export interface SignInRequest {
