@@ -40,6 +40,7 @@ import type {
   CaseStudyContent,
   CaseStudyProgress,
   MoneyPersonalityResult,
+  SavedCalculation,
 } from '../auth/types/auth.types';
 
 // Type helper for Firestore documents with serverTimestamp
@@ -343,12 +344,51 @@ export async function getStudentProgress(userId: string): Promise<StudentProgres
   }
 
   const data = snapshot.data();
+
+  // Fetch saved calculations from subcollection
+  const savedCalculationsRef = collection(db, USERS, userId, 'savedCalculations');
+  const calcSnapshot = await getDocs(savedCalculationsRef);
+  const savedCalculations = calcSnapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data(),
+    savedAt: (doc.data().savedAt as Timestamp)?.toDate() || new Date(),
+  }));
+
+  // Parse crosswordProgress if it exists
+  const crosswordProgress = data.crosswordProgress ? {
+    ...data.crosswordProgress,
+    lastUpdated: (data.crosswordProgress.lastUpdated as Timestamp)?.toDate() || new Date(),
+  } : undefined;
+
+  // Parse quickQuizProgress if it exists
+  const quickQuizProgress = data.quickQuizProgress ? {
+    ...data.quickQuizProgress,
+    lastUpdated: (data.quickQuizProgress.lastUpdated as Timestamp)?.toDate() || new Date(),
+  } : undefined;
+
+  // Parse moneyPersonality if it exists
+  const moneyPersonality = data.moneyPersonality ? {
+    ...data.moneyPersonality,
+    completedAt: (data.moneyPersonality.completedAt as Timestamp)?.toDate() || new Date(),
+  } : undefined;
+
+  // Parse caseStudyProgress if it exists
+  const caseStudyProgress = data.caseStudyProgress?.map((cs: any) => ({
+    ...cs,
+    completedAt: cs.completedAt ? (cs.completedAt as Timestamp)?.toDate() : undefined,
+  })) || undefined;
+
   return {
     id: snapshot.id,
     ...data,
     lastActivityAt: (data.lastActivityAt as Timestamp)?.toDate() || new Date(),
     lastStreakDate: data.lastStreakDate || undefined,
     lastDailyChallengeDate: data.lastDailyChallengeDate || undefined,
+    crosswordProgress,
+    quickQuizProgress,
+    moneyPersonality,
+    caseStudyProgress,
+    savedCalculations,
     moduleScores: data.moduleScores?.map((score: ModuleScore & { attemptHistory?: ModuleAttempt[] }) => ({
       ...score,
       completedAt: (score.completedAt as unknown as Timestamp)?.toDate() || new Date(),

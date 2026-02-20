@@ -33,6 +33,13 @@ import {
   Sun,
   Bell,
   Bug,
+  Brain,
+  Puzzle,
+  FileText,
+  Calculator,
+  Calendar,
+  Trophy,
+  Target,
 } from 'lucide-react';
 import { useAuthContext } from '../auth/context/AuthContext';
 import {
@@ -81,6 +88,7 @@ const AdminDashboard: React.FC = () => {
   const [loadingOrgs, setLoadingOrgs] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
+  const [currentView, setCurrentView] = useState<'students' | 'analytics'>('students');
 
   useEffect(() => {
     if (user?.role !== 'admin' && user?.role !== 'owner') {
@@ -203,10 +211,44 @@ const AdminDashboard: React.FC = () => {
         'Total Modules': allSystemModules,
         'Registered': student.registeredAt.toLocaleDateString(),
       };
+
+      // Module scores
       student.progress?.moduleScores?.forEach(module => {
         baseData[`${getModuleName(module.moduleId)} Score`] = `${module.score}/${module.maxScore}`;
         baseData[`${getModuleName(module.moduleId)} Passed`] = module.passed ? 'Yes' : 'No';
       });
+
+      // Daily Challenge
+      baseData['Last Daily Challenge'] = student.progress?.lastDailyChallengeDate
+        ? new Date(student.progress.lastDailyChallengeDate).toLocaleDateString()
+        : 'Not completed';
+
+      // Crossword Progress
+      baseData['Crossword Words Solved'] = student.progress?.crosswordProgress?.correctWords.length ?? 0;
+      baseData['Crossword Week ID'] = student.progress?.crosswordProgress?.weekId ?? 'N/A';
+
+      // Quick Quiz
+      const quizAnswered = Object.keys(student.progress?.quickQuizProgress?.answeredQuestions ?? {}).length;
+      const quizCorrect = student.progress?.quickQuizProgress?.correctAnswers.length ?? 0;
+      baseData['Quiz Questions Answered'] = quizAnswered;
+      baseData['Quiz Correct Answers'] = quizCorrect;
+      baseData['Quiz Accuracy %'] = quizAnswered > 0 ? Math.round((quizCorrect / quizAnswered) * 100) : 0;
+
+      // Case Studies
+      const caseStudiesCompleted = student.progress?.caseStudyProgress?.length ?? 0;
+      const avgCaseStudyScore = caseStudiesCompleted > 0
+        ? Math.round((student.progress?.caseStudyProgress?.reduce((sum, cs) => sum + (cs.score ?? 0), 0) ?? 0) / caseStudiesCompleted)
+        : 0;
+      baseData['Case Studies Completed'] = caseStudiesCompleted;
+      baseData['Avg Case Study Score %'] = avgCaseStudyScore;
+
+      // Money Personality
+      baseData['Money Personality (Primary)'] = student.progress?.moneyPersonality?.primaryPersonalityId.replace('-', ' ') ?? 'Not taken';
+      baseData['Money Personality (Secondary)'] = student.progress?.moneyPersonality?.secondaryPersonalityId?.replace('-', ' ') ?? 'N/A';
+
+      // Financial Tools
+      baseData['Saved Calculations'] = student.progress?.savedCalculations?.length ?? 0;
+
       return baseData;
     });
     const wb = XLSX.utils.book_new();
@@ -295,9 +337,28 @@ const AdminDashboard: React.FC = () => {
             </button>
           )}
 
-          <button className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-white bg-gradient-to-br from-brand-400 to-brand-500 shadow-lg shadow-brand-500/40 rounded-xl">
+          <button
+            onClick={() => setCurrentView('students')}
+            className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-bold rounded-xl transition-all duration-200 ${
+              currentView === 'students'
+                ? 'text-white bg-gradient-to-br from-brand-400 to-brand-500 shadow-lg shadow-brand-500/40'
+                : `${textSecondaryClass} hover:bg-gray-100 ${darkMode ? 'hover:bg-white/10' : ''}`
+            }`}
+          >
             <Users size={20} />
             Students
+          </button>
+
+          <button
+            onClick={() => setCurrentView('analytics')}
+            className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-bold rounded-xl transition-all duration-200 ${
+              currentView === 'analytics'
+                ? 'text-white bg-gradient-to-br from-brand-400 to-brand-500 shadow-lg shadow-brand-500/40'
+                : `${textSecondaryClass} hover:bg-gray-100 ${darkMode ? 'hover:bg-white/10' : ''}`
+            }`}
+          >
+            <BarChart3 size={20} />
+            Class Analytics
           </button>
 
           {user?.role === 'owner' && (
@@ -476,8 +537,300 @@ const AdminDashboard: React.FC = () => {
             </div>
           )}
 
+          {/* Analytics View */}
+          {currentView === 'analytics' && (user.role === 'admin' || selectedOrg) ? (
+            <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+              {/* Class Codes Panel for Analytics */}
+              <div className="xl:col-span-3">
+                <div className={`${cardClass} rounded-2xl shadow-xl border overflow-hidden`}>
+                  <div className={`px-5 py-4 border-b ${darkMode ? 'border-navy-700' : 'border-gray-100'} flex items-center justify-between`}>
+                    <h2 className={`text-lg font-bold ${textClass} flex items-center gap-2`}>
+                      <Users size={18} className="text-brand-500" />
+                      Classes
+                    </h2>
+                    <button
+                      onClick={() => setShowCreateModal(true)}
+                      className="p-2 hover:bg-brand-500/10 rounded-xl transition-all duration-200 group"
+                    >
+                      <Plus size={18} className="text-brand-500" />
+                    </button>
+                  </div>
+
+                  {loadingCodes ? (
+                    <div className="p-6 text-center">
+                      <Loader2 className="animate-spin mx-auto text-brand-500" size={28} />
+                      <p className={`text-sm ${textSecondaryClass} mt-3`}>Loading classes...</p>
+                    </div>
+                  ) : classCodes.length === 0 ? (
+                    <div className={`p-6 text-center text-sm ${textSecondaryClass}`}>
+                      No classes yet. Create one to get started.
+                    </div>
+                  ) : (
+                    <div className={`divide-y ${darkMode ? 'divide-navy-700' : 'divide-gray-100'} max-h-[500px] overflow-y-auto`}>
+                      {classCodes.map((code) => (
+                        <button
+                          key={code.id}
+                          onClick={() => loadStudents(code)}
+                          className={`w-full px-5 py-4 text-left transition-all duration-200 ${
+                            selectedCode?.id === code.id
+                              ? `${darkMode ? 'bg-brand-500/20' : 'bg-brand-50'} border-l-4 border-brand-500`
+                              : `hover:${darkMode ? 'bg-navy-700' : 'bg-gray-50'}`
+                          }`}
+                        >
+                          <p className={`text-sm font-semibold ${textClass}`}>{code.name}</p>
+                          <p className={`text-xs font-mono mt-1 px-2 py-1 rounded-lg inline-block ${
+                            darkMode ? 'bg-navy-700 text-gray-300' : 'bg-gray-100 text-gray-600'
+                          }`}>{code.code}</p>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Analytics Content */}
+              <div className="xl:col-span-9">
+                <div className={`${cardClass} rounded-2xl shadow-xl border p-6`}>
+                  <div className="mb-6">
+                    <h2 className={`text-2xl font-bold ${textClass} mb-2`}>Class Analytics</h2>
+                    <p className={textSecondaryClass}>Aggregate statistics across all activities</p>
+                  </div>
+
+                  {!selectedCode ? (
+                    <div className="text-center py-12">
+                      <div className={`w-24 h-24 ${darkMode ? 'bg-navy-700' : 'bg-gray-100'} rounded-full flex items-center justify-center mx-auto mb-6`}>
+                        <BarChart3 className={textSecondaryClass} size={48} />
+                      </div>
+                      <h3 className={`text-xl font-bold ${textClass} mb-2`}>Select a class to view analytics</h3>
+                      <p className={textSecondaryClass}>Choose a class from the sidebar to see aggregate statistics</p>
+                    </div>
+                  ) : students.length === 0 ? (
+                    <div className="text-center py-12">
+                      <div className={`w-24 h-24 ${darkMode ? 'bg-navy-700' : 'bg-gray-100'} rounded-full flex items-center justify-center mx-auto mb-4`}>
+                        <Users className={textSecondaryClass} size={48} />
+                      </div>
+                      <h3 className={`text-lg font-bold ${textClass} mb-2`}>No students registered</h3>
+                      <p className={textSecondaryClass}>
+                        Share code <span className={`font-mono font-bold px-2 py-1 rounded ${darkMode ? 'bg-navy-700 text-brand-300' : 'bg-brand-50 text-brand-600'}`}>{selectedCode.code}</span> with students
+                      </p>
+                    </div>
+                  ) : (
+                <div className="space-y-6">
+                  {/* Daily Challenge Stats */}
+                  <div className={`${darkMode ? 'bg-navy-700' : 'bg-gradient-to-br from-orange-50 to-red-50'} rounded-xl p-6 border ${darkMode ? 'border-navy-600' : 'border-orange-200'}`}>
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-red-500 rounded-xl flex items-center justify-center">
+                        <Flame className="text-white" size={24} />
+                      </div>
+                      <h3 className={`text-lg font-bold ${textClass}`}>Daily Challenge</h3>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <p className={`text-xs font-semibold ${textSecondaryClass} uppercase tracking-wide mb-1`}>Participation</p>
+                        <p className={`text-3xl font-bold ${textClass}`}>
+                          {students.filter(s => s.progress?.lastDailyChallengeDate).length}/{students.length}
+                        </p>
+                        <p className={`text-sm ${textSecondaryClass} mt-1`}>
+                          {Math.round((students.filter(s => s.progress?.lastDailyChallengeDate).length / students.length) * 100)}% completed
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Crossword Stats */}
+                  <div className={`${darkMode ? 'bg-navy-700' : 'bg-gradient-to-br from-purple-50 to-pink-50'} rounded-xl p-6 border ${darkMode ? 'border-navy-600' : 'border-purple-200'}`}>
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-500 rounded-xl flex items-center justify-center">
+                        <Puzzle className="text-white" size={24} />
+                      </div>
+                      <h3 className={`text-lg font-bold ${textClass}`}>Crossword Puzzle</h3>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <p className={`text-xs font-semibold ${textSecondaryClass} uppercase tracking-wide mb-1`}>Participation</p>
+                        <p className={`text-3xl font-bold ${textClass}`}>
+                          {students.filter(s => s.progress?.crosswordProgress).length}/{students.length}
+                        </p>
+                        <p className={`text-sm ${textSecondaryClass} mt-1`}>
+                          {Math.round((students.filter(s => s.progress?.crosswordProgress).length / students.length) * 100)}% started
+                        </p>
+                      </div>
+                      <div>
+                        <p className={`text-xs font-semibold ${textSecondaryClass} uppercase tracking-wide mb-1`}>Avg Words Solved</p>
+                        <p className={`text-3xl font-bold ${textClass}`}>
+                          {students.length > 0
+                            ? Math.round(students.reduce((sum, s) => sum + (s.progress?.crosswordProgress?.correctWords.length ?? 0), 0) / students.length)
+                            : 0}
+                        </p>
+                      </div>
+                      <div>
+                        <p className={`text-xs font-semibold ${textSecondaryClass} uppercase tracking-wide mb-1`}>Total Words Solved</p>
+                        <p className={`text-3xl font-bold ${textClass}`}>
+                          {students.reduce((sum, s) => sum + (s.progress?.crosswordProgress?.correctWords.length ?? 0), 0)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Quick Quiz Stats */}
+                  <div className={`${darkMode ? 'bg-navy-700' : 'bg-gradient-to-br from-blue-50 to-cyan-50'} rounded-xl p-6 border ${darkMode ? 'border-navy-600' : 'border-blue-200'}`}>
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-xl flex items-center justify-center">
+                        <HelpCircle className="text-white" size={24} />
+                      </div>
+                      <h3 className={`text-lg font-bold ${textClass}`}>Quick Quiz</h3>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <p className={`text-xs font-semibold ${textSecondaryClass} uppercase tracking-wide mb-1`}>Participation</p>
+                        <p className={`text-3xl font-bold ${textClass}`}>
+                          {students.filter(s => s.progress?.quickQuizProgress && Object.keys(s.progress.quickQuizProgress.answeredQuestions).length > 0).length}/{students.length}
+                        </p>
+                        <p className={`text-sm ${textSecondaryClass} mt-1`}>
+                          {Math.round((students.filter(s => s.progress?.quickQuizProgress && Object.keys(s.progress.quickQuizProgress.answeredQuestions).length > 0).length / students.length) * 100)}% participated
+                        </p>
+                      </div>
+                      <div>
+                        <p className={`text-xs font-semibold ${textSecondaryClass} uppercase tracking-wide mb-1`}>Avg Questions Answered</p>
+                        <p className={`text-3xl font-bold ${textClass}`}>
+                          {students.length > 0
+                            ? Math.round(students.reduce((sum, s) => sum + (Object.keys(s.progress?.quickQuizProgress?.answeredQuestions ?? {}).length), 0) / students.length)
+                            : 0}
+                        </p>
+                      </div>
+                      <div>
+                        <p className={`text-xs font-semibold ${textSecondaryClass} uppercase tracking-wide mb-1`}>Class Accuracy</p>
+                        <p className={`text-3xl font-bold text-green-500`}>
+                          {(() => {
+                            const totalAnswered = students.reduce((sum, s) => sum + (Object.keys(s.progress?.quickQuizProgress?.answeredQuestions ?? {}).length), 0);
+                            const totalCorrect = students.reduce((sum, s) => sum + (s.progress?.quickQuizProgress?.correctAnswers.length ?? 0), 0);
+                            return totalAnswered > 0 ? Math.round((totalCorrect / totalAnswered) * 100) : 0;
+                          })()}%
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Case Study Stats */}
+                  <div className={`${darkMode ? 'bg-navy-700' : 'bg-gradient-to-br from-indigo-50 to-purple-50'} rounded-xl p-6 border ${darkMode ? 'border-navy-600' : 'border-indigo-200'}`}>
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-12 h-12 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-xl flex items-center justify-center">
+                        <FileText className="text-white" size={24} />
+                      </div>
+                      <h3 className={`text-lg font-bold ${textClass}`}>Case Studies</h3>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <p className={`text-xs font-semibold ${textSecondaryClass} uppercase tracking-wide mb-1`}>Participation</p>
+                        <p className={`text-3xl font-bold ${textClass}`}>
+                          {students.filter(s => s.progress?.caseStudyProgress && s.progress.caseStudyProgress.length > 0).length}/{students.length}
+                        </p>
+                        <p className={`text-sm ${textSecondaryClass} mt-1`}>
+                          {Math.round((students.filter(s => s.progress?.caseStudyProgress && s.progress.caseStudyProgress.length > 0).length / students.length) * 100)}% completed at least one
+                        </p>
+                      </div>
+                      <div>
+                        <p className={`text-xs font-semibold ${textSecondaryClass} uppercase tracking-wide mb-1`}>Total Completions</p>
+                        <p className={`text-3xl font-bold ${textClass}`}>
+                          {students.reduce((sum, s) => sum + (s.progress?.caseStudyProgress?.length ?? 0), 0)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className={`text-xs font-semibold ${textSecondaryClass} uppercase tracking-wide mb-1`}>Class Avg Score</p>
+                        <p className={`text-3xl font-bold ${textClass}`}>
+                          {(() => {
+                            const allScores = students.flatMap(s => s.progress?.caseStudyProgress?.map(cs => cs.score ?? 0) ?? []);
+                            return allScores.length > 0 ? Math.round(allScores.reduce((sum, score) => sum + score, 0) / allScores.length) : 0;
+                          })()}%
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Money Personality Stats */}
+                  <div className={`${darkMode ? 'bg-navy-700' : 'bg-gradient-to-br from-pink-50 to-rose-50'} rounded-xl p-6 border ${darkMode ? 'border-navy-600' : 'border-pink-200'}`}>
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-12 h-12 bg-gradient-to-br from-pink-400 to-rose-500 rounded-xl flex items-center justify-center">
+                        <Brain className="text-white" size={24} />
+                      </div>
+                      <h3 className={`text-lg font-bold ${textClass}`}>Money Personality</h3>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <p className={`text-xs font-semibold ${textSecondaryClass} uppercase tracking-wide mb-1`}>Participation</p>
+                        <p className={`text-3xl font-bold ${textClass}`}>
+                          {students.filter(s => s.progress?.moneyPersonality).length}/{students.length}
+                        </p>
+                        <p className={`text-sm ${textSecondaryClass} mt-1`}>
+                          {Math.round((students.filter(s => s.progress?.moneyPersonality).length / students.length) * 100)}% completed
+                        </p>
+                      </div>
+                      <div>
+                        <p className={`text-xs font-semibold ${textSecondaryClass} uppercase tracking-wide mb-2`}>Personality Distribution</p>
+                        <div className="space-y-1 text-sm">
+                          {(() => {
+                            const distribution: Record<string, number> = {};
+                            students.forEach(s => {
+                              const personality = s.progress?.moneyPersonality?.primaryPersonalityId;
+                              if (personality) {
+                                distribution[personality] = (distribution[personality] || 0) + 1;
+                              }
+                            });
+                            return Object.entries(distribution).map(([type, count]) => (
+                              <div key={type} className="flex justify-between items-center">
+                                <span className={`capitalize ${textSecondaryClass}`}>{type.replace('-', ' ')}</span>
+                                <span className={`font-semibold ${textClass}`}>{count}</span>
+                              </div>
+                            ));
+                          })()}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Financial Tools Stats */}
+                  <div className={`${darkMode ? 'bg-navy-700' : 'bg-gradient-to-br from-teal-50 to-green-50'} rounded-xl p-6 border ${darkMode ? 'border-navy-600' : 'border-teal-200'}`}>
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-12 h-12 bg-gradient-to-br from-teal-400 to-green-500 rounded-xl flex items-center justify-center">
+                        <Calculator className="text-white" size={24} />
+                      </div>
+                      <h3 className={`text-lg font-bold ${textClass}`}>Financial Tools</h3>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <p className={`text-xs font-semibold ${textSecondaryClass} uppercase tracking-wide mb-1`}>Participation</p>
+                        <p className={`text-3xl font-bold ${textClass}`}>
+                          {students.filter(s => s.progress?.savedCalculations && s.progress.savedCalculations.length > 0).length}/{students.length}
+                        </p>
+                        <p className={`text-sm ${textSecondaryClass} mt-1`}>
+                          {Math.round((students.filter(s => s.progress?.savedCalculations && s.progress.savedCalculations.length > 0).length / students.length) * 100)}% used tools
+                        </p>
+                      </div>
+                      <div>
+                        <p className={`text-xs font-semibold ${textSecondaryClass} uppercase tracking-wide mb-1`}>Total Saved</p>
+                        <p className={`text-3xl font-bold ${textClass}`}>
+                          {students.reduce((sum, s) => sum + (s.progress?.savedCalculations?.length ?? 0), 0)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className={`text-xs font-semibold ${textSecondaryClass} uppercase tracking-wide mb-1`}>Avg per Student</p>
+                        <p className={`text-3xl font-bold ${textClass}`}>
+                          {students.length > 0
+                            ? Math.round(students.reduce((sum, s) => sum + (s.progress?.savedCalculations?.length ?? 0), 0) / students.length)
+                            : 0}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+                </div>
+              </div>
+            </div>
+          ) : null}
+
           {/* Main Grid */}
-          {(user.role === 'admin' || selectedOrg) ? (
+          {currentView === 'students' && (user.role === 'admin' || selectedOrg) ? (
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
               {/* Class Codes Panel */}
               <div className="xl:col-span-3">
@@ -683,6 +1036,222 @@ const AdminDashboard: React.FC = () => {
                         ) : (
                           <p className={`text-sm ${textSecondaryClass}`}>No module progress yet</p>
                         )}
+
+                        {/* Daily Challenge Section */}
+                        <div className={`mt-10 pt-8 border-t ${darkMode ? 'border-navy-700' : 'border-gray-200'}`}>
+                          <h4 className={`text-lg font-bold ${textClass} mb-4 flex items-center gap-2`}>
+                            <Flame className="text-orange-500" size={20} />
+                            Daily Challenge
+                          </h4>
+                          {selectedStudent.progress?.lastDailyChallengeDate ? (
+                            <div className={`${darkMode ? 'bg-navy-700' : 'bg-gray-50'} rounded-xl p-4`}>
+                              <div className="flex items-center gap-3">
+                                <Calendar className="text-brand-500" size={18} />
+                                <div>
+                                  <p className={`text-sm font-semibold ${textClass}`}>Last Completed</p>
+                                  <p className={`text-xs ${textSecondaryClass} mt-1`}>
+                                    {new Date(selectedStudent.progress.lastDailyChallengeDate).toLocaleDateString()}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <p className={`text-sm ${textSecondaryClass}`}>No daily challenge completed yet</p>
+                          )}
+                        </div>
+
+                        {/* Crossword Progress Section */}
+                        <div className={`mt-10 pt-8 border-t ${darkMode ? 'border-navy-700' : 'border-gray-200'}`}>
+                          <h4 className={`text-lg font-bold ${textClass} mb-4 flex items-center gap-2`}>
+                            <Puzzle className="text-purple-500" size={20} />
+                            Crossword Puzzle
+                          </h4>
+                          {selectedStudent.progress?.crosswordProgress ? (
+                            <div className={`${darkMode ? 'bg-navy-700' : 'bg-gray-50'} rounded-xl p-4`}>
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                  <p className={`text-xs font-semibold ${textSecondaryClass} uppercase tracking-wide mb-1`}>Words Solved</p>
+                                  <p className={`text-2xl font-bold ${textClass}`}>
+                                    {selectedStudent.progress.crosswordProgress.correctWords.length}
+                                  </p>
+                                </div>
+                                <div>
+                                  <p className={`text-xs font-semibold ${textSecondaryClass} uppercase tracking-wide mb-1`}>Week ID</p>
+                                  <p className={`text-sm font-mono ${textClass}`}>
+                                    {selectedStudent.progress.crosswordProgress.weekId}
+                                  </p>
+                                </div>
+                                <div>
+                                  <p className={`text-xs font-semibold ${textSecondaryClass} uppercase tracking-wide mb-1`}>Last Updated</p>
+                                  <p className={`text-xs ${textSecondaryClass}`}>
+                                    {selectedStudent.progress.crosswordProgress.lastUpdated.toLocaleDateString()}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <p className={`text-sm ${textSecondaryClass}`}>No crossword progress yet</p>
+                          )}
+                        </div>
+
+                        {/* Quick Quiz Section */}
+                        <div className={`mt-10 pt-8 border-t ${darkMode ? 'border-navy-700' : 'border-gray-200'}`}>
+                          <h4 className={`text-lg font-bold ${textClass} mb-4 flex items-center gap-2`}>
+                            <HelpCircle className="text-blue-500" size={20} />
+                            Quick Quiz
+                          </h4>
+                          {selectedStudent.progress?.quickQuizProgress ? (
+                            <div className={`${darkMode ? 'bg-navy-700' : 'bg-gray-50'} rounded-xl p-4`}>
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                  <p className={`text-xs font-semibold ${textSecondaryClass} uppercase tracking-wide mb-1`}>Answered</p>
+                                  <p className={`text-2xl font-bold ${textClass}`}>
+                                    {Object.keys(selectedStudent.progress.quickQuizProgress.answeredQuestions).length}
+                                  </p>
+                                </div>
+                                <div>
+                                  <p className={`text-xs font-semibold ${textSecondaryClass} uppercase tracking-wide mb-1`}>Correct</p>
+                                  <p className={`text-2xl font-bold text-green-500`}>
+                                    {selectedStudent.progress.quickQuizProgress.correctAnswers.length}
+                                  </p>
+                                </div>
+                                <div>
+                                  <p className={`text-xs font-semibold ${textSecondaryClass} uppercase tracking-wide mb-1`}>Accuracy</p>
+                                  <p className={`text-2xl font-bold ${textClass}`}>
+                                    {Object.keys(selectedStudent.progress.quickQuizProgress.answeredQuestions).length > 0
+                                      ? Math.round((selectedStudent.progress.quickQuizProgress.correctAnswers.length / Object.keys(selectedStudent.progress.quickQuizProgress.answeredQuestions).length) * 100)
+                                      : 0}%
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <p className={`text-sm ${textSecondaryClass}`}>No quiz progress yet</p>
+                          )}
+                        </div>
+
+                        {/* Case Study Section */}
+                        <div className={`mt-10 pt-8 border-t ${darkMode ? 'border-navy-700' : 'border-gray-200'}`}>
+                          <h4 className={`text-lg font-bold ${textClass} mb-4 flex items-center gap-2`}>
+                            <FileText className="text-indigo-500" size={20} />
+                            Case Studies
+                          </h4>
+                          {selectedStudent.progress?.caseStudyProgress && selectedStudent.progress.caseStudyProgress.length > 0 ? (
+                            <div className="space-y-3">
+                              {selectedStudent.progress.caseStudyProgress.map((caseStudy, index) => (
+                                <div key={index} className={`${darkMode ? 'bg-navy-700' : 'bg-gray-50'} rounded-xl p-4`}>
+                                  <div className="flex items-center justify-between mb-3">
+                                    <div>
+                                      <p className={`text-sm font-semibold ${textClass}`}>Week {caseStudy.week}</p>
+                                      <p className={`text-xs ${textSecondaryClass} mt-1`}>
+                                        {caseStudy.completedAt ? formatDateTime(caseStudy.completedAt) : 'In Progress'}
+                                      </p>
+                                    </div>
+                                    {caseStudy.score !== undefined && (
+                                      <div className={`px-4 py-2 rounded-lg ${
+                                        caseStudy.score >= 80
+                                          ? 'bg-green-500/10 text-green-500'
+                                          : caseStudy.score >= 60
+                                          ? 'bg-yellow-500/10 text-yellow-500'
+                                          : 'bg-red-500/10 text-red-500'
+                                      }`}>
+                                        <p className="text-lg font-bold">{caseStudy.score}%</p>
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-3 text-xs">
+                                    <div>
+                                      <span className={textSecondaryClass}>Correct Answers: </span>
+                                      <span className={`font-semibold ${textClass}`}>{caseStudy.correctAnswers.length}/{Object.keys(caseStudy.quizAnswers).length}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className={`text-sm ${textSecondaryClass}`}>No case studies completed yet</p>
+                          )}
+                        </div>
+
+                        {/* Money Personality Section */}
+                        <div className={`mt-10 pt-8 border-t ${darkMode ? 'border-navy-700' : 'border-gray-200'}`}>
+                          <h4 className={`text-lg font-bold ${textClass} mb-4 flex items-center gap-2`}>
+                            <Brain className="text-pink-500" size={20} />
+                            Money Personality
+                          </h4>
+                          {selectedStudent.progress?.moneyPersonality ? (
+                            <div className={`${darkMode ? 'bg-navy-700' : 'bg-gray-50'} rounded-xl p-4`}>
+                              <div className="space-y-4">
+                                <div>
+                                  <p className={`text-xs font-semibold ${textSecondaryClass} uppercase tracking-wide mb-2`}>Primary Personality</p>
+                                  <div className="flex items-center gap-2">
+                                    <Target className="text-brand-500" size={18} />
+                                    <p className={`text-lg font-bold ${textClass} capitalize`}>
+                                      {selectedStudent.progress.moneyPersonality.primaryPersonalityId.replace('-', ' ')}
+                                    </p>
+                                  </div>
+                                </div>
+                                {selectedStudent.progress.moneyPersonality.secondaryPersonalityId && (
+                                  <div>
+                                    <p className={`text-xs font-semibold ${textSecondaryClass} uppercase tracking-wide mb-2`}>Secondary Personality</p>
+                                    <p className={`text-sm ${textClass} capitalize`}>
+                                      {selectedStudent.progress.moneyPersonality.secondaryPersonalityId.replace('-', ' ')}
+                                    </p>
+                                  </div>
+                                )}
+                                <div>
+                                  <p className={`text-xs font-semibold ${textSecondaryClass} uppercase tracking-wide mb-2`}>Completed</p>
+                                  <p className={`text-xs ${textSecondaryClass}`}>
+                                    {selectedStudent.progress.moneyPersonality.completedAt.toLocaleDateString()}
+                                  </p>
+                                </div>
+                                <div>
+                                  <p className={`text-xs font-semibold ${textSecondaryClass} uppercase tracking-wide mb-2`}>All Scores</p>
+                                  <div className="grid grid-cols-2 gap-2 text-xs">
+                                    {Object.entries(selectedStudent.progress.moneyPersonality.scores).map(([id, score]) => (
+                                      <div key={id} className="flex justify-between">
+                                        <span className={`capitalize ${textSecondaryClass}`}>{id.replace('-', ' ')}:</span>
+                                        <span className={`font-semibold ${textClass}`}>{score}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <p className={`text-sm ${textSecondaryClass}`}>Money personality quiz not taken yet</p>
+                          )}
+                        </div>
+
+                        {/* Financial Tools Section */}
+                        <div className={`mt-10 pt-8 border-t ${darkMode ? 'border-navy-700' : 'border-gray-200'}`}>
+                          <h4 className={`text-lg font-bold ${textClass} mb-4 flex items-center gap-2`}>
+                            <Calculator className="text-teal-500" size={20} />
+                            Financial Tools
+                          </h4>
+                          {selectedStudent.progress?.savedCalculations && selectedStudent.progress.savedCalculations.length > 0 ? (
+                            <div className="space-y-3">
+                              {selectedStudent.progress.savedCalculations.map((calc) => (
+                                <div key={calc.id} className={`${darkMode ? 'bg-navy-700' : 'bg-gray-50'} rounded-xl p-4`}>
+                                  <div className="flex items-center justify-between mb-2">
+                                    <div className="flex items-center gap-2">
+                                      <Trophy className="text-brand-500" size={16} />
+                                      <p className={`text-sm font-semibold ${textClass}`}>{calc.name}</p>
+                                    </div>
+                                    <span className={`text-xs px-3 py-1 rounded-full font-semibold ${darkMode ? 'bg-navy-600 text-gray-300' : 'bg-white text-gray-600'} capitalize`}>
+                                      {calc.type.replace('-', ' ')}
+                                    </span>
+                                  </div>
+                                  <p className={`text-xs ${textSecondaryClass}`}>
+                                    Saved on {calc.savedAt.toLocaleDateString()}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className={`text-sm ${textSecondaryClass}`}>No saved calculations yet</p>
+                          )}
+                        </div>
                       </div>
                     ) : (
                       /* Student Table */
