@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Shield, Trophy, RotateCcw, CheckCircle, XCircle, BookOpen, Loader2, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -15,6 +15,7 @@ const InsuranceModule = () => {
   const [lessonStep, setLessonStep] = useState(0);
   const [gameState, setGameState] = useState('playing');
   const [draggedItem, setDraggedItem] = useState(null);
+  const [touchedItem, setTouchedItem] = useState(null); // For tap-to-select on touch devices
   const [assignments, setAssignments] = useState({});
   const [score, setScore] = useState(0);
   const [attempts, setAttempts] = useState(0);
@@ -371,11 +372,45 @@ const InsuranceModule = () => {
     setDraggedItem(null);
 
     // Check if all scenarios are completed
-    const newAssignments = {...assignments, [scenario.id]: { insuranceId: draggedItem.id, correct: isCorrect }};
+    const newAssignments = { ...assignments, [scenario.id]: { insuranceId: draggedItem.id, correct: isCorrect } };
     if (Object.keys(newAssignments).length === scenarios.length) {
       setTimeout(() => {
         setGameState('completed');
       }, 1000);
+    }
+  };
+
+  // Touch: tap insurance type to select it, then tap a scenario to assign
+  const handleInsuranceTap = (insurance) => {
+    if (touchedItem && touchedItem.id === insurance.id) {
+      // Deselect if tapping the same item
+      setTouchedItem(null);
+    } else {
+      setTouchedItem(insurance);
+    }
+  };
+
+  const handleScenarioTap = (scenario) => {
+    if (!touchedItem || assignments[scenario.id]) return;
+
+    setAttempts(prev => prev + 1);
+    const isCorrect = touchedItem.id === scenario.correctInsurance;
+
+    const newAssignments = {
+      ...assignments,
+      [scenario.id]: {
+        insuranceId: touchedItem.id,
+        insuranceName: touchedItem.name,
+        correct: isCorrect
+      }
+    };
+
+    setAssignments(newAssignments);
+    if (isCorrect) setScore(prev => prev + 1);
+    setTouchedItem(null);
+
+    if (Object.keys(newAssignments).length === scenarios.length) {
+      setTimeout(() => setGameState('completed'), 1000);
     }
   };
 
@@ -385,6 +420,7 @@ const InsuranceModule = () => {
     setAttempts(0);
     setGameState('playing');
     setDraggedItem(null);
+    setTouchedItem(null);
   };
 
   const getAccuracy = () => {
@@ -561,8 +597,8 @@ const InsuranceModule = () => {
           <h1 className="text-2xl font-bold text-gray-800">Insurance Protection</h1>
           <p className="text-sm text-gray-600">
             {currentPhase === 'learning' ? 'Learn About Insurance Types' :
-             currentPhase === 'game' ? 'Match Insurance to Scenarios' :
-             currentPhase === 'quiz' ? 'Final Quiz' : 'Results'}
+              currentPhase === 'game' ? 'Match Insurance to Scenarios' :
+                currentPhase === 'quiz' ? 'Final Quiz' : 'Results'}
           </p>
         </div>
 
@@ -641,11 +677,10 @@ const InsuranceModule = () => {
             <button
               onClick={() => setLessonStep(prev => prev - 1)}
               disabled={lessonStep === 0}
-              className={`px-6 py-3 rounded-xl font-medium transition ${
-                lessonStep === 0
-                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                  : 'bg-gray-300 hover:bg-gray-400 text-gray-700'
-              }`}
+              className={`px-6 py-3 rounded-xl font-medium transition ${lessonStep === 0
+                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                : 'bg-gray-300 hover:bg-gray-400 text-gray-700'
+                }`}
             >
               Previous
             </button>
@@ -654,10 +689,9 @@ const InsuranceModule = () => {
               {lessons.map((_, idx) => (
                 <div
                   key={idx}
-                  className={`w-3 h-3 rounded-full transition-colors ${
-                    idx === lessonStep ? 'bg-blue-500' :
+                  className={`w-3 h-3 rounded-full transition-colors ${idx === lessonStep ? 'bg-blue-500' :
                     idx < lessonStep ? 'bg-green-500' : 'bg-gray-300'
-                  }`}
+                    }`}
                 />
               ))}
             </div>
@@ -714,11 +748,28 @@ const InsuranceModule = () => {
             <div className="text-center">
               <h3 className="font-bold text-gray-800 mb-2">How to Play</h3>
               <p className="text-sm text-gray-600">
-                Drag the insurance types to the scenarios where they would apply.
+                <span className="font-semibold">Tap</span> an insurance type to select it (it will highlight),
+                then <span className="font-semibold">tap</span> a scenario to assign it.
                 Match all 10 scenarios to continue to the quiz!
               </p>
             </div>
           </motion.div>
+
+          {/* Touch: show selected item banner */}
+          {touchedItem && (
+            <motion.div
+              className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 bg-blue-600 text-white px-6 py-3 rounded-full shadow-xl flex items-center gap-3 md:hidden"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <Shield className="w-5 h-5" />
+              <span className="font-semibold text-sm">{touchedItem.name} selected — tap a scenario</span>
+              <button
+                onClick={() => setTouchedItem(null)}
+                className="ml-2 text-white/70 hover:text-white text-lg leading-none"
+              >✕</button>
+            </motion.div>
+          )}
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
             {/* Insurance Types */}
@@ -728,21 +779,29 @@ const InsuranceModule = () => {
             >
               <h3 className="text-xl font-bold text-gray-800 mb-4 text-center">Insurance Types</h3>
               <div className="space-y-4">
-                {insuranceTypes.map((insurance) => (
-                  <motion.div
-                    key={insurance.id}
-                    className={`p-4 rounded-lg border-2 cursor-move transition-all ${insurance.color} hover:shadow-md hover:scale-[1.02]`}
-                    draggable
-                    onDragStart={(e) => handleDragStart(e, insurance)}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <div className="flex items-center gap-3">
-                      <Shield className="w-6 h-6 text-gray-600" />
-                      <span className="font-semibold text-gray-800">{insurance.name}</span>
-                    </div>
-                  </motion.div>
-                ))}
+                {insuranceTypes.map((insurance) => {
+                  const isTouchSelected = touchedItem && touchedItem.id === insurance.id;
+                  return (
+                    <motion.div
+                      key={insurance.id}
+                      className={`p-4 rounded-lg border-2 transition-all ${insurance.color}
+                        hover:shadow-md hover:scale-[1.02]
+                        ${isTouchSelected ? 'ring-4 ring-blue-400 ring-offset-2 scale-[1.03] shadow-lg' : ''}
+                        md:cursor-move cursor-pointer`}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, insurance)}
+                      onClick={() => handleInsuranceTap(insurance)}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <Shield className={`w-6 h-6 ${isTouchSelected ? 'text-blue-600' : 'text-gray-600'}`} />
+                        <span className={`font-semibold ${isTouchSelected ? 'text-blue-800' : 'text-gray-800'}`}>{insurance.name}</span>
+                        {isTouchSelected && <span className="ml-auto text-xs bg-blue-600 text-white px-2 py-0.5 rounded-full">Selected</span>}
+                      </div>
+                    </motion.div>
+                  );
+                })}
               </div>
             </motion.div>
 
@@ -755,19 +814,25 @@ const InsuranceModule = () => {
               <div className="space-y-3 max-h-[600px] overflow-y-auto">
                 {scenarios.map((scenario) => {
                   const assignment = assignments[scenario.id];
+                  const isTouchTarget = touchedItem && !assignment;
                   return (
                     <motion.div
                       key={scenario.id}
-                      className={`p-4 rounded-lg border-2 border-dashed min-h-[80px] transition-all ${
-                        assignment
-                          ? assignment.correct
-                            ? 'bg-green-50 border-green-400'
-                            : 'bg-red-50 border-red-400'
+                      className={`p-4 rounded-lg border-2 border-dashed min-h-[80px] transition-all ${assignment
+                        ? assignment.correct
+                          ? 'bg-green-50 border-green-400'
+                          : 'bg-red-50 border-red-400'
+                        : isTouchTarget
+                          ? 'border-blue-400 bg-blue-50 cursor-pointer'
                           : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
-                      }`}
+                        }`}
                       onDragOver={handleDragOver}
                       onDrop={(e) => handleDrop(e, scenario)}
+                      onClick={() => handleScenarioTap(scenario)}
                     >
+                      {isTouchTarget && (
+                        <p className="text-xs text-blue-500 font-medium mb-1">Tap to assign here</p>
+                      )}
                       <p className="text-gray-700 text-sm leading-relaxed mb-2">
                         {scenario.text}
                       </p>
@@ -784,9 +849,8 @@ const InsuranceModule = () => {
                             ) : (
                               <XCircle className="w-5 h-5 text-red-500" />
                             )}
-                            <span className={`text-sm font-medium ${
-                              assignment.correct ? 'text-green-700' : 'text-red-700'
-                            }`}>
+                            <span className={`text-sm font-medium ${assignment.correct ? 'text-green-700' : 'text-red-700'
+                              }`}>
                               {assignment.insuranceName}
                             </span>
                           </div>
@@ -920,23 +984,21 @@ const InsuranceModule = () => {
                       key={option.id}
                       onClick={() => !isReviewMode && !selectedAnswers[quizIndex] && handleAnswerSelect(quizIndex, option.id)}
                       disabled={!!selectedAnswers[quizIndex] || isReviewMode}
-                      className={`p-4 sm:p-6 rounded-xl sm:rounded-2xl text-left border-2 transition-all flex items-start gap-3 sm:gap-4 ${
-                        showCorrectness
-                          ? option.correct
-                            ? 'bg-green-50 border-green-500 text-green-900'
-                            : isSelected
-                              ? 'bg-red-50 border-red-500 text-red-900'
-                              : 'bg-white border-slate-100 opacity-50'
+                      className={`p-4 sm:p-6 rounded-xl sm:rounded-2xl text-left border-2 transition-all flex items-start gap-3 sm:gap-4 ${showCorrectness
+                        ? option.correct
+                          ? 'bg-green-50 border-green-500 text-green-900'
                           : isSelected
-                            ? 'bg-blue-50 border-blue-600 shadow-lg scale-[1.02]'
-                            : 'bg-white border-slate-200 hover:border-blue-400 hover:shadow-md'
-                      } ${(!!selectedAnswers[quizIndex] || isReviewMode) ? 'cursor-default' : 'cursor-pointer'}`}
+                            ? 'bg-red-50 border-red-500 text-red-900'
+                            : 'bg-white border-slate-100 opacity-50'
+                        : isSelected
+                          ? 'bg-blue-50 border-blue-600 shadow-lg scale-[1.02]'
+                          : 'bg-white border-slate-200 hover:border-blue-400 hover:shadow-md'
+                        } ${(!!selectedAnswers[quizIndex] || isReviewMode) ? 'cursor-default' : 'cursor-pointer'}`}
                     >
-                      <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${
-                        showCorrectness && option.correct ? 'bg-green-500 text-white' :
+                      <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${showCorrectness && option.correct ? 'bg-green-500 text-white' :
                         showCorrectness && isSelected ? 'bg-red-500 text-white' :
-                        isSelected ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-500'
-                      }`}>
+                          isSelected ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-500'
+                        }`}>
                         {showAsCorrect ? (
                           <CheckCircle size={20} />
                         ) : showAsIncorrect ? (
@@ -993,11 +1055,10 @@ const InsuranceModule = () => {
             <button
               onClick={handlePreviousQuestion}
               disabled={quizIndex === 0}
-              className={`px-6 py-3 rounded-xl font-medium transition ${
-                quizIndex === 0
-                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                  : 'bg-gray-300 hover:bg-gray-400 text-gray-700'
-              }`}
+              className={`px-6 py-3 rounded-xl font-medium transition ${quizIndex === 0
+                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                : 'bg-gray-300 hover:bg-gray-400 text-gray-700'
+                }`}
             >
               Previous
             </button>
@@ -1048,9 +1109,9 @@ const InsuranceModule = () => {
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-4">Insurance Protection Complete! 🎉</h2>
             <p className="text-xl text-gray-600 mb-6">
               {quizScore === quizQuestions.length ? "Perfect! You're an insurance expert! 🏆" :
-               quizScore >= Math.ceil(quizQuestions.length * 0.8) ? "Excellent! You have strong insurance knowledge! ⭐" :
-               quizScore >= Math.ceil(quizQuestions.length * 0.6) ? "Good job! Keep learning about insurance! 👍" :
-               "Keep studying insurance basics - you'll get there! 📚"}
+                quizScore >= Math.ceil(quizQuestions.length * 0.8) ? "Excellent! You have strong insurance knowledge! ⭐" :
+                  quizScore >= Math.ceil(quizQuestions.length * 0.6) ? "Good job! Keep learning about insurance! 👍" :
+                    "Keep studying insurance basics - you'll get there! 📚"}
             </p>
 
             {/* Final Stats */}
@@ -1097,11 +1158,10 @@ const InsuranceModule = () => {
             {/* Pass/Fail Status Banner */}
             {saveResult && (
               <motion.div
-                className={`mb-6 p-4 rounded-xl border-2 ${
-                  saveResult.passed
-                    ? 'bg-green-50 border-green-300'
-                    : 'bg-orange-50 border-orange-300'
-                }`}
+                className={`mb-6 p-4 rounded-xl border-2 ${saveResult.passed
+                  ? 'bg-green-50 border-green-300'
+                  : 'bg-orange-50 border-orange-300'
+                  }`}
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
               >
