@@ -100,7 +100,7 @@ const RetirementAccountsModule = () => {
       bgColor: "bg-amber-50",
       borderColor: "border-amber-200",
       icon: Calculator,
-      intro: "The big question: Pay taxes now or later? Your answer depends on your situation.",
+      intro: "The big question: Pay taxes now or later? Your answer depends on your situation. Both 401(k)s and IRAs (Individual Retirement Accounts) come in Traditional and Roth varieties.",
       points: [
         {
           emoji: "📜",
@@ -131,7 +131,7 @@ const RetirementAccountsModule = () => {
       bgColor: "bg-emerald-50",
       borderColor: "border-emerald-200",
       icon: PiggyBank,
-      intro: "The Roth IRA is incredibly powerful - tax-free growth AND tax-free withdrawals!",
+      intro: "The Roth IRA (Individual Retirement Account) is incredibly powerful - tax-free growth AND tax-free withdrawals!",
       points: [
         {
           emoji: "💵",

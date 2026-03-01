@@ -82,7 +82,7 @@ const quizQuestions = [
       "Paying taxes quarterly"
     ],
     correctIndex: 2,
-    explanation: "A tax exemption excludes certain income from taxation. The standard deduction is a common exemption that allows you to earn a certain amount ($13,850 for single filers in 2023) before any income tax is owed on that amount."
+    explanation: "A tax exemption excludes certain income from taxation. The standard deduction is a common exemption that allows you to earn a certain amount ($16,100 for single filers in 2026) before any income tax is owed on that amount."
   },
   {
     question: "What is FICA tax used for?",
@@ -190,7 +190,7 @@ const taxTypesData = [
     color: 'from-green-50 to-green-100',
     borderColor: 'border-green-400',
     description: 'Social Security (6.2%) + Medicare (1.45%) = 7.65%',
-    details: 'Automatically withheld from paychecks. Your employer matches your contribution. Self-employed pay both portions (15.3%). Social Security tax capped at $160,200 income (2023).',
+    details: 'Automatically withheld from paychecks. Your employer matches your contribution. Self-employed pay both portions (15.3%). Social Security tax capped at $184,500 income (2026).',
     example: 'On a $60,000 salary, you pay $4,590 in FICA tax ($3,720 Social Security + $870 Medicare).'
   },
   {
@@ -245,7 +245,7 @@ const CaseStudyPage = ({ handlePrev, handleNext }: { handlePrev: () => void; han
             <div>
               <p className="mb-2"><strong className="text-white">401(k) Contribution:</strong> $6,000/year</p>
               <p className="mb-2"><strong className="text-white">Student Loan Interest:</strong> $1,200/year</p>
-              <p className="mb-2"><strong className="text-white">Standard Deduction:</strong> $13,850</p>
+              <p className="mb-2"><strong className="text-white">Standard Deduction:</strong> $16,100</p>
             </div>
           </div>
         </div>
@@ -257,7 +257,7 @@ const CaseStudyPage = ({ handlePrev, handleNext }: { handlePrev: () => void; han
             <p className="font-semibold text-gray-800 mb-4">Think through these steps:</p>
             <ol className="space-y-2 text-gray-700">
               <li className="flex gap-3"><span className="font-bold text-blue-600">1.</span> Calculate her taxable income after deductions</li>
-              <li className="flex gap-3"><span className="font-bold text-blue-600">2.</span> Apply the 2023 federal tax brackets</li>
+              <li className="flex gap-3"><span className="font-bold text-blue-600">2.</span> Apply the 2026 federal tax brackets</li>
               <li className="flex gap-3"><span className="font-bold text-blue-600">3.</span> Don't forget about FICA taxes!</li>
               <li className="flex gap-3"><span className="font-bold text-blue-600">4.</span> Calculate her total tax burden and take-home pay</li>
             </ol>
@@ -286,18 +286,18 @@ const CaseStudyPage = ({ handlePrev, handleNext }: { handlePrev: () => void; han
                       <p>- 401(k) Contribution: <span className="text-red-400">-$6,000</span></p>
                       <p>- Student Loan Interest: <span className="text-red-400">-$1,200</span></p>
                       <p>= Adjusted Gross Income (AGI): <span className="text-white font-bold">$67,800</span></p>
-                      <p>- Standard Deduction: <span className="text-red-400">-$13,850</span></p>
-                      <p className="text-lg border-t border-gray-700 pt-2 mt-2">= Taxable Income: <span className="text-green-400 font-bold text-xl">$53,950</span></p>
+                      <p>- Standard Deduction: <span className="text-red-400">-$16,100</span></p>
+                      <p className="text-lg border-t border-gray-700 pt-2 mt-2">= Taxable Income: <span className="text-green-400 font-bold text-xl">$51,700</span></p>
                     </div>
                   </div>
 
                   <div>
-                    <h5 className="text-blue-400 font-bold uppercase text-sm mb-3">Step 2: Apply Tax Brackets (2023, Single)</h5>
+                    <h5 className="text-blue-400 font-bold uppercase text-sm mb-3">Step 2: Apply Tax Brackets (2026, Single)</h5>
                     <div className="space-y-2 text-gray-300 text-sm">
-                      <p>10% on first $11,000: <span className="text-white">$11,000 × 10% = $1,100</span></p>
-                      <p>12% on $11,001-$44,725: <span className="text-white">$33,725 × 12% = $4,047</span></p>
-                      <p>22% on $44,726-$53,950: <span className="text-white">$9,225 × 22% = $2,030</span></p>
-                      <p className="text-lg border-t border-gray-700 pt-2 mt-2">Federal Income Tax: <span className="text-green-400 font-bold text-xl">$7,177</span></p>
+                      <p>10% on first $12,400: <span className="text-white">$12,400 × 10% = $1,240</span></p>
+                      <p>12% on $12,401-$50,400: <span className="text-white">$38,000 × 12% = $4,560</span></p>
+                      <p>22% on $50,401-$51,700: <span className="text-white">$1,300 × 22% = $286</span></p>
+                      <p className="text-lg border-t border-gray-700 pt-2 mt-2">Federal Income Tax: <span className="text-green-400 font-bold text-xl">$6,086</span></p>
                     </div>
                   </div>
 
@@ -319,7 +319,7 @@ const CaseStudyPage = ({ handlePrev, handleNext }: { handlePrev: () => void; han
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-300">Federal Income Tax:</span>
-                        <span className="text-red-400">-$7,177</span>
+                        <span className="text-red-400">-$6,086</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-300">FICA Taxes:</span>
@@ -327,18 +327,18 @@ const CaseStudyPage = ({ handlePrev, handleNext }: { handlePrev: () => void; han
                       </div>
                       <div className="flex justify-between border-t-2 border-white/20 pt-3">
                         <span className="text-green-400 font-bold">Take-Home Pay:</span>
-                        <span className="text-green-400 font-bold text-2xl">$62,085</span>
+                        <span className="text-green-400 font-bold text-2xl">$63,176</span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-400">Effective Tax Rate:</span>
-                        <span className="text-yellow-400 font-semibold">17.2%</span>
+                        <span className="text-yellow-400 font-semibold">15.8%</span>
                       </div>
                     </div>
                   </div>
 
                   <div className="bg-blue-500/20 border-2 border-blue-400 rounded-xl p-4">
                     <p className="text-blue-300 text-sm">
-                      <strong className="text-blue-200">💡 Key Insight:</strong> Even though Sarah is in the 22% tax bracket, her effective rate is only 17.2% because of progressive taxation and deductions. Her first dollars are taxed much less than her last dollars!
+                      <strong className="text-blue-200">💡 Key Insight:</strong> Even though Sarah is in the 22% tax bracket, her effective rate is only 15.8% because of progressive taxation and deductions. Her first dollars are taxed much less than her last dollars!
                     </p>
                   </div>
                 </div>
@@ -367,29 +367,29 @@ const TaxCalculator = ({ handlePrev, handleNext }: { handlePrev: () => void; han
   const [deductions, setDeductions] = useState<string>('');
   const [fourOhOneK, setFourOhOneK] = useState<string>('');
 
-  // 2023 Federal Tax Brackets
+  // 2026 Federal Tax Brackets
   const taxBrackets = {
     single: [
-      { limit: 11000, rate: 0.10 },
-      { limit: 44725, rate: 0.12 },
-      { limit: 95375, rate: 0.22 },
-      { limit: 182100, rate: 0.24 },
-      { limit: 231250, rate: 0.32 },
-      { limit: 578125, rate: 0.35 },
+      { limit: 12400, rate: 0.10 },
+      { limit: 50400, rate: 0.12 },
+      { limit: 105700, rate: 0.22 },
+      { limit: 201775, rate: 0.24 },
+      { limit: 256225, rate: 0.32 },
+      { limit: 640600, rate: 0.35 },
       { limit: Infinity, rate: 0.37 }
     ],
     married: [
-      { limit: 22000, rate: 0.10 },
-      { limit: 89050, rate: 0.12 },
-      { limit: 190750, rate: 0.22 },
-      { limit: 364200, rate: 0.24 },
-      { limit: 462500, rate: 0.32 },
-      { limit: 693750, rate: 0.35 },
+      { limit: 24800, rate: 0.10 },
+      { limit: 100800, rate: 0.12 },
+      { limit: 211400, rate: 0.22 },
+      { limit: 403550, rate: 0.24 },
+      { limit: 512450, rate: 0.32 },
+      { limit: 768700, rate: 0.35 },
       { limit: Infinity, rate: 0.37 }
     ]
   };
 
-  const standardDeduction = filingStatus === 'single' ? 13850 : 27700;
+  const standardDeduction = filingStatus === 'single' ? 16100 : 32200;
 
   const grossIncome = parseFloat(income) || 0;
   const k401Contribution = parseFloat(fourOhOneK) || 0;
@@ -418,7 +418,7 @@ const TaxCalculator = ({ handlePrev, handleNext }: { handlePrev: () => void; han
   };
 
   const federalTax = calculateTax();
-  const socialSecurityTax = Math.min(grossIncome, 160200) * 0.062;
+  const socialSecurityTax = Math.min(grossIncome, 184500) * 0.062;
   const medicareTax = grossIncome * 0.0145;
   const ficaTax = socialSecurityTax + medicareTax;
   const totalTax = federalTax + ficaTax;
@@ -443,7 +443,7 @@ const TaxCalculator = ({ handlePrev, handleNext }: { handlePrev: () => void; han
           <Calculator className="text-blue-600" size={40} />
           Federal Tax Calculator
         </h2>
-        <p className="text-gray-600 text-lg">Estimate your 2023 federal tax burden</p>
+        <p className="text-gray-600 text-lg">Estimate your 2026 federal tax burden</p>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8 mb-8">
@@ -1023,7 +1023,7 @@ const TaxBasics = () => {
                   Where Does the Money Go?
                 </h3>
                 <p className="text-green-50 text-lg leading-relaxed mb-4">
-                  In 2023, the federal government collected approximately <strong>$4.9 trillion</strong> in taxes. Social Security, Medicare, and defense make up over 60% of federal spending. The rest funds everything from education to environmental protection to scientific research.
+                  In 2025, the federal government collected approximately <strong>$5.0 trillion</strong> in taxes. Social Security, Medicare, and defense make up over 60% of federal spending. The rest funds everything from education to environmental protection to scientific research.
                 </p>
                 <p className="text-green-100">
                   Without taxes, there would be no public schools, no police or fire departments, no national parks, no federal highways, and no safety net for the elderly or disabled.
@@ -1094,16 +1094,16 @@ const TaxBasics = () => {
               </p>
 
               <div className="bg-white rounded-3xl shadow-2xl p-8 mb-8 border-2 border-blue-100">
-                <h3 className="text-2xl font-bold text-gray-800 mb-6">2023 Federal Tax Brackets (Single Filers)</h3>
+                <h3 className="text-2xl font-bold text-gray-800 mb-6">2026 Federal Tax Brackets (Single Filers)</h3>
                 <div className="space-y-3">
                   {[
-                    { bracket: '10%', range: '$0 - $11,000', amount: 'First $11,000' },
-                    { bracket: '12%', range: '$11,001 - $44,725', amount: 'Next $33,725' },
-                    { bracket: '22%', range: '$44,726 - $95,375', amount: 'Next $50,650' },
-                    { bracket: '24%', range: '$95,376 - $182,100', amount: 'Next $86,725' },
-                    { bracket: '32%', range: '$182,101 - $231,250', amount: 'Next $49,150' },
-                    { bracket: '35%', range: '$231,251 - $578,125', amount: 'Next $346,875' },
-                    { bracket: '37%', range: '$578,126+', amount: 'Everything above' }
+                    { bracket: '10%', range: '$0 - $12,400', amount: 'First $12,400' },
+                    { bracket: '12%', range: '$12,401 - $50,400', amount: 'Next $38,000' },
+                    { bracket: '22%', range: '$50,401 - $105,700', amount: 'Next $55,300' },
+                    { bracket: '24%', range: '$105,701 - $201,775', amount: 'Next $96,075' },
+                    { bracket: '32%', range: '$201,776 - $256,225', amount: 'Next $54,450' },
+                    { bracket: '35%', range: '$256,226 - $640,600', amount: 'Next $384,375' },
+                    { bracket: '37%', range: '$640,601+', amount: 'Everything above' }
                   ].map((item, idx) => (
                     <div key={idx} className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
                       <div className="flex items-center gap-4">
@@ -1130,23 +1130,23 @@ const TaxBasics = () => {
                 </p>
                 <div className="space-y-3 bg-white/10 rounded-xl p-6 backdrop-blur">
                   <div className="flex justify-between text-lg">
-                    <span>First $11,000 × 10%</span>
-                    <span className="font-bold">= $1,100</span>
+                    <span>First $12,400 × 10%</span>
+                    <span className="font-bold">= $1,240</span>
                   </div>
                   <div className="flex justify-between text-lg">
-                    <span>Next $33,725 × 12%</span>
-                    <span className="font-bold">= $4,047</span>
+                    <span>Next $38,000 × 12%</span>
+                    <span className="font-bold">= $4,560</span>
                   </div>
                   <div className="flex justify-between text-lg">
-                    <span>Remaining $15,275 × 22%</span>
-                    <span className="font-bold">= $3,361</span>
+                    <span>Remaining $9,600 × 22%</span>
+                    <span className="font-bold">= $2,112</span>
                   </div>
                   <div className="flex justify-between text-xl border-t-2 border-white/30 pt-3 mt-3">
                     <span className="font-bold">Total Federal Tax:</span>
-                    <span className="font-bold text-2xl">$8,508</span>
+                    <span className="font-bold text-2xl">$7,912</span>
                   </div>
                   <div className="text-center text-purple-200 text-sm mt-4">
-                    Effective Rate: 14.2% (not 22%!)
+                    Effective Rate: 13.2% (not 22%!)
                   </div>
                 </div>
               </div>
