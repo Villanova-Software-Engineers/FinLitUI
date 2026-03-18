@@ -32,6 +32,15 @@ export const MODULES = {
   RETIREMENT_ACCOUNTS: { id: 'retirement-accounts', name: 'Retirement Accounts', maxScore: 100 },
   CRYPTO: { id: 'crypto', name: 'Cryptocurrency Basics', maxScore: 100 },
   TAX_BASICS: { id: 'tax-basics', name: 'Tax Basics', maxScore: 100 },
+  // New modules
+  BANKING: { id: 'banking', name: 'Banking Basics', maxScore: 100 },
+  INTEREST_RATES: { id: 'interest-rates', name: 'Interest Rates', maxScore: 100 },
+  COMPOUNDING: { id: 'compounding', name: 'Power of Compounding', maxScore: 100 },
+  FINANCIAL_SAFETY: { id: 'financial-safety', name: 'Financial Safety', maxScore: 100 },
+  INVESTMENT_VEHICLES: { id: 'investment-vehicles', name: 'Investment Vehicles', maxScore: 100 },
+  RISK_TAKING: { id: 'risk-taking', name: 'Risk Management', maxScore: 100 },
+  GIVING: { id: 'giving', name: 'Giving Back', maxScore: 100 },
+  CONSUMER_TRAPS: { id: 'consumer-traps', name: 'Consumer Traps', maxScore: 100 },
 } as const;
 
 export type ModuleId = typeof MODULES[keyof typeof MODULES]['id'];

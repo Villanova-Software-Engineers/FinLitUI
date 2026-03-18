@@ -1,0 +1,102 @@
+{
+  "newUser": {
+    "email": "cypress-test-{{timestamp}}@finlit.test",
+    "password": "CypressTest123!",
+    "displayName": "Cypress Test User",
+    "classCode": "TESTCODE"
+  },
+  "existingUser": {
+    "email": "@gmail.com",
+    "password": "!",
+    "displayName": "Existing Test User",
+    "classCode": "xxx"
+  },
+  "moduleOrder": [
+    "50-30-20",
+    "needs-wants",
+    "credit-score",
+    "stock-market",
+    "insurance",
+    "debt-management",
+    "emergency-fund",
+    "retirement-accounts",
+    "crypto",
+    "tax-basics",
+    "bonds",
+    "investment-banking"
+  ],
+  "modules": {
+    "budgeting": {
+      "id": "50-30-20",
+      "name": "Budgeting 50/30/20",
+      "route": "/50-30-20",
+      "passThreshold": 80
+    },
+    "needsWants": {
+      "id": "needs-wants",
+      "name": "Needs vs Wants",
+      "route": "/needs-wants",
+      "passThreshold": 80
+    },
+    "creditScore": {
+      "id": "credit-score",
+      "name": "Credit Score",
+      "route": "/credit-score",
+      "passThreshold": 80
+    },
+    "stockMarket": {
+      "id": "stock-market",
+      "name": "Stock Market",
+      "route": "/stock-market",
+      "passThreshold": 80
+    },
+    "insurance": {
+      "id": "insurance",
+      "name": "Insurance",
+      "route": "/insurance",
+      "passThreshold": 80
+    },
+    "debtManagement": {
+      "id": "debt-management",
+      "name": "Debt Management",
+      "route": "/debt-management",
+      "passThreshold": 80
+    },
+    "emergencyFund": {
+      "id": "emergency-fund",
+      "name": "Emergency Fund",
+      "route": "/emergency-fund",
+      "passThreshold": 80
+    },
+    "retirementAccounts": {
+      "id": "retirement-accounts",
+      "name": "Retirement Accounts",
+      "route": "/retirement-accounts",
+      "passThreshold": 80
+    },
+    "crypto": {
+      "id": "crypto",
+      "name": "Cryptocurrency Basics",
+      "route": "/crypto",
+      "passThreshold": 80
+    },
+    "taxBasics": {
+      "id": "tax-basics",
+      "name": "Tax Basics",
+      "route": "/tax-basics",
+      "passThreshold": 80
+    },
+    "bonds": {
+      "id": "bonds",
+      "name": "Bonds",
+      "route": "/bonds",
+      "passThreshold": 80
+    },
+    "investmentBanking": {
+      "id": "investment-banking",
+      "name": "Investment Banking",
+      "route": "/investment-quiz",
+      "passThreshold": 80
+    }
+  }
+}

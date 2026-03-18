@@ -16,6 +16,14 @@ import CryptoModule from "./components/CryptoModule";
 import RetirementAccountsModule from "./components/RetirementAccountsModule";
 import BondsPage from "./pages/Bonds";
 import TaxBasics from "./components/TaxBasics";
+import BankingModule from "./components/BankingModule";
+import InterestRatesModule from "./components/InterestRatesModule";
+import CompoundingModule from "./components/CompoundingModule";
+import FinancialSafetyModule from "./components/FinancialSafetyModule";
+import InvestmentVehiclesModule from "./components/InvestmentVehiclesModule";
+import RiskTakingModule from "./components/RiskTakingModule";
+import GivingModule from "./components/GivingModule";
+import ConsumerTrapsModule from "./components/ConsumerTrapsModule";
 import AdminSetup from "./components/AdminSetup";
 import AdminDashboard from "./components/AdminDashboard";
 import QuizQuestionsAdmin from "./components/QuizQuestionsAdmin";
@@ -237,6 +245,86 @@ function App() {
               <ProtectedRoute>
                 <ModuleAccessControl moduleId={MODULES.TAX_BASICS.id} moduleName="Tax Basics">
                   <TaxBasics />
+                </ModuleAccessControl>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/banking"
+            element={
+              <ProtectedRoute>
+                <ModuleAccessControl moduleId={MODULES.BANKING.id} moduleName="Banking Basics">
+                  <BankingModule />
+                </ModuleAccessControl>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/interest-rates"
+            element={
+              <ProtectedRoute>
+                <ModuleAccessControl moduleId={MODULES.INTEREST_RATES.id} moduleName="Interest Rates">
+                  <InterestRatesModule />
+                </ModuleAccessControl>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/compounding"
+            element={
+              <ProtectedRoute>
+                <ModuleAccessControl moduleId={MODULES.COMPOUNDING.id} moduleName="Power of Compounding">
+                  <CompoundingModule />
+                </ModuleAccessControl>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/financial-safety"
+            element={
+              <ProtectedRoute>
+                <ModuleAccessControl moduleId={MODULES.FINANCIAL_SAFETY.id} moduleName="Financial Safety">
+                  <FinancialSafetyModule />
+                </ModuleAccessControl>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/investment-vehicles"
+            element={
+              <ProtectedRoute>
+                <ModuleAccessControl moduleId={MODULES.INVESTMENT_VEHICLES.id} moduleName="Investment Vehicles">
+                  <InvestmentVehiclesModule />
+                </ModuleAccessControl>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/risk-taking"
+            element={
+              <ProtectedRoute>
+                <ModuleAccessControl moduleId={MODULES.RISK_TAKING.id} moduleName="Risk Management">
+                  <RiskTakingModule />
+                </ModuleAccessControl>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/giving"
+            element={
+              <ProtectedRoute>
+                <ModuleAccessControl moduleId={MODULES.GIVING.id} moduleName="Giving Back">
+                  <GivingModule />
+                </ModuleAccessControl>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/consumer-traps"
+            element={
+              <ProtectedRoute>
+                <ModuleAccessControl moduleId={MODULES.CONSUMER_TRAPS.id} moduleName="Consumer Traps">
+                  <ConsumerTrapsModule />
                 </ModuleAccessControl>
               </ProtectedRoute>
             }

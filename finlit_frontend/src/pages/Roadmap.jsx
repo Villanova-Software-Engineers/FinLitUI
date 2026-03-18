@@ -31,13 +31,21 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 0.7], [0, 1]);
     MODULES.TAX_BASICS.id,             // 3. Tax Basics
     MODULES.CREDIT_SCORE.id,           // 4. Credit Score
     MODULES.EMERGENCY_FUND.id,         // 5. Emergency Fund
-    MODULES.BONDS.id,                  // 6. Bonds
-    MODULES.STOCK_MARKET.id,           // 7. Stock Market
-    MODULES.INSURANCE.id,              // 8. Insurance
-    MODULES.DEBT_MANAGEMENT.id,        // 9. Debt Management
-    MODULES.RETIREMENT_ACCOUNTS.id,    // 10. Retirement Accounts
-    MODULES.CRYPTO.id,                 // 11. Cryptocurrency
-    MODULES.INVESTMENT_BANKING.id,     // 12. Investment Banking
+    MODULES.BANKING.id,                // 6. Banking Basics
+    MODULES.INTEREST_RATES.id,         // 7. Interest Rates
+    MODULES.COMPOUNDING.id,            // 8. Power of Compounding
+    MODULES.BONDS.id,                  // 9. Bonds
+    MODULES.STOCK_MARKET.id,           // 10. Stock Market
+    MODULES.INVESTMENT_VEHICLES.id,    // 11. Investment Vehicles
+    MODULES.INSURANCE.id,              // 12. Insurance
+    MODULES.DEBT_MANAGEMENT.id,        // 13. Debt Management
+    MODULES.FINANCIAL_SAFETY.id,       // 14. Financial Safety
+    MODULES.RISK_TAKING.id,            // 15. Risk Management
+    MODULES.RETIREMENT_ACCOUNTS.id,    // 16. Retirement Accounts
+    MODULES.CRYPTO.id,                 // 17. Cryptocurrency
+    MODULES.GIVING.id,                 // 18. Giving Back
+    MODULES.CONSUMER_TRAPS.id,         // 19. Consumer Traps
+    MODULES.INVESTMENT_BANKING.id,     // 20. Investment Banking
   ];
 
   // Check if a module is accessible (previous module passed or is first module)
@@ -126,32 +134,84 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 0.7], [0, 1]);
     },
     {
       id: 6,
+      moduleId: MODULES.BANKING.id,
+      title: "Banking Basics",
+      subtitle: "Accounts & Cards",
+      icon: "🏧",
+      color: "#e8f5e9",
+      position: "right",
+      route: "/banking",
+      component: "banking-module",
+      description: "Learn about bank accounts, fees, debit vs credit cards, and checking vs savings.",
+      quizType: "swipe-categorize"
+    },
+    {
+      id: 7,
+      moduleId: MODULES.INTEREST_RATES.id,
+      title: "Interest Rates",
+      subtitle: "Borrowing & Lending",
+      icon: "📊",
+      color: "#f5f5f5",
+      position: "left",
+      route: "/interest-rates",
+      component: "interest-rates-module",
+      description: "Understand how interest rates work, who controls them, and their impact on your finances.",
+      quizType: "simulation"
+    },
+    {
+      id: 8,
+      moduleId: MODULES.COMPOUNDING.id,
+      title: "Power of Compounding",
+      subtitle: "Wealth Building",
+      icon: "📈",
+      color: "#e3f2fd",
+      position: "right",
+      route: "/compounding",
+      component: "compounding-module",
+      description: "Discover the magic of compound interest and how time grows your money exponentially.",
+      quizType: "calculator"
+    },
+    {
+      id: 9,
       moduleId: MODULES.BONDS.id,
       title: "Bonds",
       subtitle: "Fixed-Income Securities",
       icon: "📜",
       color: "#e8f5e9",
-      position: "right",
+      position: "left",
       route: "/bonds",
       component: "bonds-module",
       description: "Learn about bonds, fixed-income investing, and steady returns.",
       quizType: "mcq"
     },
     {
-      id: 7,
+      id: 10,
       moduleId: MODULES.STOCK_MARKET.id,
       title: "Stock Market Basics",
       subtitle: "Investment Fundamentals",
-      icon: "📈",
+      icon: "📉",
       color: "#f5f5f5",
-      position: "left",
+      position: "right",
       route: "/stock-market",
       component: "stock-module",
       description: "Learn the fundamentals of stock market investing and portfolio building.",
       quizType: "matching"
     },
     {
-      id: 8,
+      id: 11,
+      moduleId: MODULES.INVESTMENT_VEHICLES.id,
+      title: "Investment Vehicles",
+      subtitle: "ETFs & Mutual Funds",
+      icon: "🚗",
+      color: "#e3f2fd",
+      position: "left",
+      route: "/investment-vehicles",
+      component: "investment-vehicles-module",
+      description: "Compare ETFs, mutual funds, value vs growth investing strategies.",
+      quizType: "matching"
+    },
+    {
+      id: 12,
       moduleId: MODULES.INSURANCE.id,
       title: "Insurance Protection",
       subtitle: "Risk Management",
@@ -164,12 +224,12 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 0.7], [0, 1]);
       quizType: "drag-drop"
     },
     {
-      id: 9,
+      id: 13,
       moduleId: MODULES.DEBT_MANAGEMENT.id,
       title: "Debt Management",
       subtitle: "Debt Freedom",
       icon: "🔓",
-      color: "#f5f5f5",
+      color: "#e8f5e9",
       position: "left",
       route: "/debt-management",
       component: "debt-module",
@@ -177,7 +237,33 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 0.7], [0, 1]);
       quizType: "scenario"
     },
     {
-      id: 10,
+      id: 14,
+      moduleId: MODULES.FINANCIAL_SAFETY.id,
+      title: "Financial Safety",
+      subtitle: "Fraud Prevention",
+      icon: "🔒",
+      color: "#f5f5f5",
+      position: "right",
+      route: "/financial-safety",
+      component: "financial-safety-module",
+      description: "Recognize red flags, avoid scams, and protect your financial identity.",
+      quizType: "scenario"
+    },
+    {
+      id: 15,
+      moduleId: MODULES.RISK_TAKING.id,
+      title: "Risk Management",
+      subtitle: "Smart Risk Taking",
+      icon: "⚖️",
+      color: "#e3f2fd",
+      position: "left",
+      route: "/risk-taking",
+      component: "risk-taking-module",
+      description: "Learn how to assess and manage financial risk responsibly.",
+      quizType: "simulation"
+    },
+    {
+      id: 16,
       moduleId: MODULES.RETIREMENT_ACCOUNTS.id,
       title: "Retirement Accounts",
       subtitle: "401(k) & Roth IRA",
@@ -190,7 +276,7 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 0.7], [0, 1]);
       quizType: "mcq"
     },
     {
-      id: 11,
+      id: 17,
       moduleId: MODULES.CRYPTO.id,
       title: "Cryptocurrency Fundamentals",
       subtitle: "Digital Assets",
@@ -203,7 +289,33 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 0.7], [0, 1]);
       quizType: "mcq"
     },
     {
-      id: 12,
+      id: 18,
+      moduleId: MODULES.GIVING.id,
+      title: "Giving Back",
+      subtitle: "Charitable Giving",
+      icon: "❤️",
+      color: "#fce4ec",
+      position: "right",
+      route: "/giving",
+      component: "giving-module",
+      description: "Understand the importance of giving back and how to allocate for charitable causes.",
+      quizType: "mcq"
+    },
+    {
+      id: 19,
+      moduleId: MODULES.CONSUMER_TRAPS.id,
+      title: "Consumer Traps",
+      subtitle: "Spending Pitfalls",
+      icon: "🪤",
+      color: "#fff3e0",
+      position: "left",
+      route: "/consumer-traps",
+      component: "consumer-traps-module",
+      description: "Recognize and avoid common consumer traps, marketing tricks, and spending pitfalls.",
+      quizType: "scenario"
+    },
+    {
+      id: 20,
       moduleId: MODULES.INVESTMENT_BANKING.id,
       title: "Investment Banking",
       subtitle: "IPO Knowledge",
@@ -225,6 +337,38 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 0.7], [0, 1]);
     }));
   }, [progress]);
 
+  // Split modules into two parts
+  const part1Modules = allModules.slice(0, 10);
+  const part2Modules = allModules.slice(10, 20);
+
+  // Check if Part 1 is complete (all 10 modules passed)
+  const isPart1Complete = part1Modules.every(m => m.status === 'Completed');
+
+  // Auto-determine which part to show based on completion
+  const getInitialPart = () => {
+    if (!isPart1Complete) return 1;
+    // If part 1 is complete, automatically show part 2
+    return 2;
+  };
+
+  const [currentPart, setCurrentPart] = useState(getInitialPart);
+  const [manualNavigation, setManualNavigation] = useState(false);
+
+  // Auto-switch to Part 2 when Part 1 becomes complete (only if user hasn't manually navigated)
+  useEffect(() => {
+    if (isPart1Complete && currentPart === 1 && !manualNavigation) {
+      setCurrentPart(2);
+    }
+  }, [isPart1Complete, currentPart, manualNavigation]);
+
+  // Get current part's modules
+  const currentModules = currentPart === 1 ? part1Modules : part2Modules;
+
+  // Reset visible modules when part changes
+  useEffect(() => {
+    setVisibleModules(3);
+  }, [currentPart]);
+
   // Reveal modules based on path draw progress
   // Modules should appear slightly ahead of path reaching them
   useEffect(() => {
@@ -232,12 +376,12 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 0.7], [0, 1]);
       setPathProgress(progress);
       // Multiply progress to reveal modules faster than path draws
       // This makes modules appear just as path approaches their position
-      const modulesToShow = Math.max(3, Math.floor(progress * allModules.length * 1.5) + 3);
-      setVisibleModules(Math.min(modulesToShow, allModules.length));
+      const modulesToShow = Math.max(3, Math.floor(progress * currentModules.length * 1.5) + 3);
+      setVisibleModules(Math.min(modulesToShow, currentModules.length));
     });
 
     return () => unsubscribe();
-  }, [pathDrawProgress, allModules.length]);
+  }, [pathDrawProgress, currentModules.length]);
 
   const [activeModule, setActiveModule] = useState(null);
 
@@ -276,11 +420,11 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 0.7], [0, 1]);
     { emoji: "🏠", size: "text-2xl", delay: 12 },
     { emoji: "📝", size: "text-lg", delay: 14 },
   ];
-    const svgHeight = allModules.length * 380; // rough estimate px per module + spacing
+    const svgHeight = currentModules.length * 380; // rough estimate px per module + spacing
 
 
   return (
-    <div 
+    <div
       className="min-h-screen p-6 font-sans relative overflow-hidden"
       style={{
         background: "linear-gradient(120deg, #e0f7fa 0%, #e8f5e9 50%, #e3f2fd 100%)",
@@ -368,17 +512,26 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 0.7], [0, 1]);
       </div>
 
       {/* Title */}
-      <motion.h2 
-        className="text-3xl font-bold mb-12 text-center text-gray-800 relative z-10"
+      <motion.h2
+        className="text-3xl font-bold mb-8 text-center text-gray-800 relative z-10"
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.3 }}
       >
         Financial Education Journey
       </motion.h2>
-      
+
+      {/* Progress indicator */}
+      <div className="flex justify-center mb-8 relative z-10">
+        <div className="bg-white px-6 py-2 rounded-full shadow-sm border border-gray-200">
+          <span className="text-gray-600 font-medium">
+            {allModules.filter(m => m.status === 'Completed').length} / {allModules.length} modules completed
+          </span>
+        </div>
+      </div>
+
       {/* Road Map with Curved Path */}
-      <div className="max-w-4xl mx-auto relative mb-16 pb-20" style={{ minHeight: pathProgress >= 0.55 ? 'auto' : `${allModules.length * 500}px` }}>
+      <div key={currentPart} className="max-w-4xl mx-auto relative mb-16 pb-20" style={{ minHeight: pathProgress >= 0.55 ? 'auto' : `${currentModules.length * 500}px` }}>
 
         {/* Path visual - Creating a curved, winding path */}
 <svg
@@ -400,7 +553,7 @@ height={svgHeight}
 
         {/* Modules */}
         <div className="relative z-10">
-          {allModules.slice(0, visibleModules).map((module, index) => (
+          {currentModules.slice(0, visibleModules).map((module, index) => (
             <motion.div 
               key={module.id} 
               className={`flex ${module.position === 'left' ? 'justify-start pr-8 ml-6' : 'justify-end pl-8 mr-6'} mb-24 relative`}
@@ -529,7 +682,7 @@ height={svgHeight}
       </div>
 
       {/* Scroll indicator if more modules can be revealed */}
-      {visibleModules < allModules.length && (
+      {visibleModules < currentModules.length && (
         <motion.div
           className="fixed bottom-10 left-1/2 transform -translate-x-1/2 z-20 flex flex-col items-center"
           animate={{ y: [0, 10, 0] }}
@@ -542,17 +695,44 @@ height={svgHeight}
         </motion.div>
       )}
 
-      {/* Completion indicator when all modules visible */}
-      {visibleModules >= allModules.length && (
+      {/* End of path navigation */}
+      {visibleModules >= currentModules.length && (
         <motion.div
           className="text-center mt-10 mb-10 relative z-20"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <div className="inline-block bg-green-100 text-green-800 px-4 py-2 rounded-full font-medium">
-            🎉 You've reached the end of your financial journey map!
-          </div>
+          {currentPart === 1 ? (
+            <button
+              onClick={() => {
+                setManualNavigation(true);
+                setCurrentPart(2);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="px-8 py-3 bg-blue-500 text-white rounded-xl font-bold hover:bg-blue-600 transition-all shadow-lg"
+            >
+              Continue to Chapter 2 →
+            </button>
+          ) : (
+            <div className="flex flex-col items-center gap-4">
+              <button
+                onClick={() => {
+                  setManualNavigation(true);
+                  setCurrentPart(1);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className="px-6 py-2 bg-white text-gray-600 rounded-xl font-medium hover:bg-gray-50 transition-all shadow-sm border border-gray-200"
+              >
+                ← Back to Chapter 1
+              </button>
+              {part2Modules.every(m => m.status === 'Completed') && (
+                <div className="inline-block bg-green-100 text-green-800 px-4 py-2 rounded-full font-medium">
+                  🏆 Congratulations! You've completed all modules!
+                </div>
+              )}
+            </div>
+          )}
         </motion.div>
       )}
 
