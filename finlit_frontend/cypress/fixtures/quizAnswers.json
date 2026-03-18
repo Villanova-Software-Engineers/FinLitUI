@@ -1,0 +1,77 @@
+{
+  "credit-score": {
+    "description": "Credit Score Module Quiz Answers",
+    "questions": [
+      {
+        "id": 1,
+        "question": "What is the most important factor affecting your credit score?",
+        "correctAnswer": "B",
+        "correctText": "Payment history"
+      },
+      {
+        "id": 2,
+        "question": "What percentage of your available credit should you ideally use?",
+        "correctAnswer": "A",
+        "correctText": "Less than 30%"
+      },
+      {
+        "id": 3,
+        "question": "How long do most negative items stay on your credit report?",
+        "correctAnswer": "C",
+        "correctText": "7 years"
+      },
+      {
+        "id": 4,
+        "question": "Which action will NOT help improve your credit score?",
+        "correctAnswer": "D",
+        "correctText": "Closing old credit cards"
+      },
+      {
+        "id": 5,
+        "question": "What is a good credit score range?",
+        "correctAnswer": "B",
+        "correctText": "670-739"
+      }
+    ]
+  },
+  "50-30-20": {
+    "description": "Budgeting 50/30/20 Module Quiz Answers",
+    "questions": [
+      {
+        "id": 1,
+        "question": "What percentage should go to needs?",
+        "correctAnswer": "B",
+        "correctText": "50%"
+      },
+      {
+        "id": 2,
+        "question": "What percentage should go to wants?",
+        "correctAnswer": "C",
+        "correctText": "30%"
+      },
+      {
+        "id": 3,
+        "question": "What percentage should go to savings?",
+        "correctAnswer": "A",
+        "correctText": "20%"
+      }
+    ]
+  },
+  "needs-wants": {
+    "description": "Needs vs Wants Module Quiz Answers",
+    "questions": [
+      {
+        "id": 1,
+        "question": "Which is a need?",
+        "correctAnswer": "A",
+        "correctText": "Housing/Rent"
+      },
+      {
+        "id": 2,
+        "question": "Which is a want?",
+        "correctAnswer": "D",
+        "correctText": "Streaming services"
+      }
+    ]
+  }
+}
