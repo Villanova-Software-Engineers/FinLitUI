@@ -1,8 +1,9 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useModuleScore, MODULES } from '../hooks/useModuleScore';
 import ModuleCompletedScreen from './ModuleCompletedScreen';
+import { shuffleQuizOptions } from '../utils/shuffleQuizOptions';
 
 // Quiz questions
 const quizQuestions = [
@@ -548,7 +549,7 @@ const GamePage = ({ onNext, onPrev }) => {
   );
 };
 
-const QuizPage = ({ currentQuestion, selectedAnswer, showAnswer, score, onAnswer, onNext, quizComplete, onRetake, navigate }) => {
+const QuizPage = ({ currentQuestion, selectedAnswer, showAnswer, score, onAnswer, onNext, quizComplete, onRetake, navigate, questions }) => {
   if (quizComplete) {
     const passed = score >= 8;
     return (
@@ -564,7 +565,7 @@ const QuizPage = ({ currentQuestion, selectedAnswer, showAnswer, score, onAnswer
 
           <h2 className="text-4xl font-bold text-gray-800 mb-4">{passed ? 'Outstanding!' : 'Keep Learning!'}</h2>
           <p className="text-2xl text-gray-600 mb-8">
-            You scored <span className="font-bold text-blue-600">{score}/{quizQuestions.length}</span> ({(score/quizQuestions.length*100).toFixed(0)}%)
+            You scored <span className="font-bold text-blue-600">{score}/{questions.length}</span> ({(score/questions.length*100).toFixed(0)}%)
           </p>
 
           {passed ? (
@@ -592,7 +593,7 @@ const QuizPage = ({ currentQuestion, selectedAnswer, showAnswer, score, onAnswer
     );
   }
 
-  const q = quizQuestions[currentQuestion];
+  const q = questions[currentQuestion];
 
   return (
     <div className="min-h-screen p-6 pt-20" style={{ background: 'linear-gradient(135deg, #e0f2fe 0%, #dbeafe 50%, #e0e7ff 100%)' }}>
@@ -601,7 +602,7 @@ const QuizPage = ({ currentQuestion, selectedAnswer, showAnswer, score, onAnswer
           <div className="p-8 lg:p-12">
             <div className="flex justify-between items-center mb-8 pb-6 border-b border-gray-100">
               <div>
-                <span className="text-sm font-bold text-blue-600 uppercase tracking-wider">Question {currentQuestion + 1} of {quizQuestions.length}</span>
+                <span className="text-sm font-bold text-blue-600 uppercase tracking-wider">Question {currentQuestion + 1} of {questions.length}</span>
                 <h2 className="text-2xl lg:text-3xl font-bold text-gray-800 mt-2">{q.question}</h2>
               </div>
               <span className="text-5xl hidden lg:block">🏦</span>
@@ -654,7 +655,7 @@ const QuizPage = ({ currentQuestion, selectedAnswer, showAnswer, score, onAnswer
                 <h4 className="font-bold text-blue-400 uppercase tracking-wider text-sm mb-2">Explanation</h4>
                 <p className="text-lg text-gray-200 mb-6">{q.explanation}</p>
                 <button onClick={onNext} className="px-8 py-3 bg-white text-gray-800 rounded-xl font-bold hover:bg-blue-50">
-                  {currentQuestion < quizQuestions.length - 1 ? 'Next Question' : 'Complete Quiz'}
+                  {currentQuestion < questions.length - 1 ? 'Next Question' : 'Complete Quiz'}
                 </button>
               </motion.div>
             )}
@@ -679,6 +680,9 @@ const BankingModule = () => {
   const [score, setScore] = useState(0);
   const [quizComplete, setQuizComplete] = useState(false);
   const [answers, setAnswers] = useState([]);
+  const [shuffleKey, setShuffleKey] = useState(0);
+
+  const shuffledQuestions = useMemo(() => shuffleQuizOptions(quizQuestions), [shuffleKey]);
 
   const modulePassed = isModulePassed(MODULES.BANKING.id);
   const totalSteps = 5;
@@ -706,20 +710,20 @@ const BankingModule = () => {
     const newAnswers = [...answers, selectedAnswer];
     setAnswers(newAnswers);
 
-    if (currentQuestion < quizQuestions.length - 1) {
+    if (currentQuestion < shuffledQuestions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
       setSelectedAnswer(null);
       setShowAnswer(false);
     } else {
       let finalScore = 0;
       newAnswers.forEach((answer, idx) => {
-        if (answer === quizQuestions[idx].correctIndex) finalScore++;
+        if (answer === shuffledQuestions[idx].correctIndex) finalScore++;
       });
       setScore(finalScore);
       setQuizComplete(true);
 
-      if ((finalScore / quizQuestions.length) * 100 >= 80) {
-        saveScore(MODULES.BANKING.id, (finalScore / quizQuestions.length) * 100);
+      if ((finalScore / shuffledQuestions.length) * 100 >= 80) {
+        saveScore(MODULES.BANKING.id, (finalScore / shuffledQuestions.length) * 100);
       }
     }
   };
@@ -731,6 +735,7 @@ const BankingModule = () => {
     setScore(0);
     setQuizComplete(false);
     setAnswers([]);
+    setShuffleKey(k => k + 1);
   };
 
   if (modulePassed && !isReviewMode) {
@@ -792,6 +797,7 @@ const BankingModule = () => {
               quizComplete={quizComplete}
               onRetake={handleRetake}
               navigate={navigate}
+              questions={shuffledQuestions}
             />
           )}
         </motion.div>

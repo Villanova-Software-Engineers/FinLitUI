@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useModuleScore, MODULES } from '../hooks/useModuleScore';
 import ModuleCompletedScreen from './ModuleCompletedScreen';
+import { shuffleQuizOptions } from '../utils/shuffleQuizOptions';
 
 // Quiz questions
 const quizQuestions = [
@@ -656,7 +657,7 @@ const MatchingGamePage = ({ onNext }) => {
 };
 
 // Quiz Page
-const QuizPage = ({ currentQuestion, selectedAnswer, showAnswer, score, onAnswer, onNext, quizComplete, onRetake, navigate }) => {
+const QuizPage = ({ currentQuestion, selectedAnswer, showAnswer, score, onAnswer, onNext, quizComplete, onRetake, navigate, questions }) => {
   if (quizComplete) {
     const passed = score >= 8;
     return (
@@ -672,7 +673,7 @@ const QuizPage = ({ currentQuestion, selectedAnswer, showAnswer, score, onAnswer
 
           <h2 className="text-3xl font-bold text-gray-800 mb-3">{passed ? 'Investment Expert!' : 'Keep Learning!'}</h2>
           <p className="text-xl text-gray-600 mb-6">
-            You scored <span className="font-bold text-indigo-600">{score}/{quizQuestions.length}</span> ({(score/quizQuestions.length*100).toFixed(0)}%)
+            You scored <span className="font-bold text-indigo-600">{score}/{questions.length}</span> ({(score/questions.length*100).toFixed(0)}%)
           </p>
 
           {passed ? (
@@ -700,14 +701,14 @@ const QuizPage = ({ currentQuestion, selectedAnswer, showAnswer, score, onAnswer
     );
   }
 
-  const q = quizQuestions[currentQuestion];
+  const q = questions[currentQuestion];
 
   return (
     <div className="min-h-screen p-6 pt-20 bg-gradient-to-br from-indigo-50 to-purple-100">
       <div className="max-w-3xl mx-auto">
         {/* Progress */}
         <div className="flex justify-center gap-1.5 mb-6">
-          {quizQuestions.map((_, idx) => (
+          {questions.map((_, idx) => (
             <div
               key={idx}
               className={`h-2 rounded-full transition-all ${
@@ -726,7 +727,7 @@ const QuizPage = ({ currentQuestion, selectedAnswer, showAnswer, score, onAnswer
           <div className="p-6 md:p-8">
             <div className="mb-6">
               <span className="text-sm font-bold text-indigo-600 uppercase tracking-wider">
-                Question {currentQuestion + 1} of {quizQuestions.length}
+                Question {currentQuestion + 1} of {questions.length}
               </span>
               <h2 className="text-xl md:text-2xl font-bold text-gray-800 mt-2">{q.question}</h2>
             </div>
@@ -778,7 +779,7 @@ const QuizPage = ({ currentQuestion, selectedAnswer, showAnswer, score, onAnswer
                 <h4 className="font-bold text-indigo-600 uppercase tracking-wider text-sm mb-2">Explanation</h4>
                 <p className="text-gray-700 mb-4">{q.explanation}</p>
                 <button onClick={onNext} className="w-full py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg font-bold hover:shadow-lg transition-shadow">
-                  {currentQuestion < quizQuestions.length - 1 ? 'Next Question' : 'Complete Quiz'}
+                  {currentQuestion < questions.length - 1 ? 'Next Question' : 'Complete Quiz'}
                 </button>
               </motion.div>
             )}
@@ -803,6 +804,9 @@ const InvestmentVehiclesModule = () => {
   const [score, setScore] = useState(0);
   const [quizComplete, setQuizComplete] = useState(false);
   const [answers, setAnswers] = useState([]);
+  const [shuffleKey, setShuffleKey] = useState(0);
+
+  const shuffledQuestions = useMemo(() => shuffleQuizOptions(quizQuestions), [shuffleKey]);
 
   const modulePassed = isModulePassed(MODULES.INVESTMENT_VEHICLES?.id);
   const totalSteps = 4;
@@ -830,20 +834,20 @@ const InvestmentVehiclesModule = () => {
     const newAnswers = [...answers, selectedAnswer];
     setAnswers(newAnswers);
 
-    if (currentQuestion < quizQuestions.length - 1) {
+    if (currentQuestion < shuffledQuestions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
       setSelectedAnswer(null);
       setShowAnswer(false);
     } else {
       let finalScore = 0;
       newAnswers.forEach((answer, idx) => {
-        if (answer === quizQuestions[idx].correctIndex) finalScore++;
+        if (answer === shuffledQuestions[idx].correctIndex) finalScore++;
       });
       setScore(finalScore);
       setQuizComplete(true);
 
-      if ((finalScore / quizQuestions.length) * 100 >= 80) {
-        saveScore(MODULES.INVESTMENT_VEHICLES.id, (finalScore / quizQuestions.length) * 100);
+      if ((finalScore / shuffledQuestions.length) * 100 >= 80) {
+        saveScore(MODULES.INVESTMENT_VEHICLES.id, (finalScore / shuffledQuestions.length) * 100);
       }
     }
   };
@@ -855,6 +859,7 @@ const InvestmentVehiclesModule = () => {
     setScore(0);
     setQuizComplete(false);
     setAnswers([]);
+    setShuffleKey(k => k + 1);
   };
 
   if (modulePassed && !isReviewMode) {
@@ -907,6 +912,7 @@ const InvestmentVehiclesModule = () => {
               quizComplete={quizComplete}
               onRetake={handleRetake}
               navigate={navigate}
+              questions={shuffledQuestions}
             />
           )}
         </motion.div>
