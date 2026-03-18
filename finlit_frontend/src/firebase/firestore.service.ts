@@ -419,7 +419,7 @@ export async function updateModuleScore(
     s => s.moduleId === moduleScore.moduleId
   );
 
-  const isPassed = moduleScore.score === moduleScore.maxScore; // 100% to pass
+  const isPassed = (moduleScore.score / moduleScore.maxScore) * 100 >= 80; // 80% to pass
   const now = new Date();
 
   // Create the new attempt record
