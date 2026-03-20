@@ -24,6 +24,8 @@ import InvestmentVehiclesModule from "./components/InvestmentVehiclesModule";
 import RiskTakingModule from "./components/RiskTakingModule";
 import GivingModule from "./components/GivingModule";
 import ConsumerTrapsModule from "./components/ConsumerTrapsModule";
+import WhatIsMoneyModule from "./components/WhatIsMoneyModule";
+import RealEstateModule from "./components/RealEstateModule";
 import AdminSetup from "./components/AdminSetup";
 import AdminDashboard from "./components/AdminDashboard";
 import QuizQuestionsAdmin from "./components/QuizQuestionsAdmin";
@@ -325,6 +327,26 @@ function App() {
               <ProtectedRoute>
                 <ModuleAccessControl moduleId={MODULES.CONSUMER_TRAPS.id} moduleName="Consumer Traps">
                   <ConsumerTrapsModule />
+                </ModuleAccessControl>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/what-is-money"
+            element={
+              <ProtectedRoute>
+                <ModuleAccessControl moduleId={MODULES.WHAT_IS_MONEY.id} moduleName="What is Money">
+                  <WhatIsMoneyModule />
+                </ModuleAccessControl>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/real-estate"
+            element={
+              <ProtectedRoute>
+                <ModuleAccessControl moduleId={MODULES.REAL_ESTATE.id} moduleName="Real Estate">
+                  <RealEstateModule />
                 </ModuleAccessControl>
               </ProtectedRoute>
             }

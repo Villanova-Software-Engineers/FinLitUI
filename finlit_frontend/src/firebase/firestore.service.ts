@@ -389,6 +389,8 @@ export async function getStudentProgress(userId: string): Promise<StudentProgres
     moneyPersonality,
     caseStudyProgress,
     savedCalculations,
+    dailyChallengesCompleted: data.dailyChallengesCompleted || 0,
+    quickQuizzesCompleted: data.quickQuizzesCompleted || 0,
     moduleScores: data.moduleScores?.map((score: ModuleScore & { attemptHistory?: ModuleAttempt[] }) => ({
       ...score,
       completedAt: (score.completedAt as unknown as Timestamp)?.toDate() || new Date(),
@@ -598,11 +600,13 @@ export async function completeDailyChallenge(userId: string, xpReward: number = 
   const currentXP = data.totalXP || 0;
   const newTotalXP = currentXP + xpReward;
   const xpLevel = Math.floor(newTotalXP / 100) + 1;
+  const currentChallengesCompleted = data.dailyChallengesCompleted || 0;
 
   await updateDoc(progressRef, {
     totalXP: newTotalXP,
     xpLevel,
     lastDailyChallengeDate: today,
+    dailyChallengesCompleted: currentChallengesCompleted + 1,
     lastActivityAt: serverTimestamp(),
   });
 
@@ -1007,6 +1011,25 @@ export async function getQuickQuizProgress(
 export async function getCurrentQuizVersion(): Promise<string> {
   const questions = await getQuizQuestions();
   return generateQuizVersion(questions);
+}
+
+/**
+ * Increment the quickQuizzesCompleted counter
+ * Called when a user finishes answering all questions in a quick quiz
+ */
+export async function incrementQuickQuizCompleted(userId: string): Promise<void> {
+  const progressRef = doc(db, STUDENT_PROGRESS, userId);
+  const snapshot = await getDoc(progressRef);
+
+  if (!snapshot.exists()) return;
+
+  const data = snapshot.data();
+  const currentCount = data.quickQuizzesCompleted || 0;
+
+  await updateDoc(progressRef, {
+    quickQuizzesCompleted: currentCount + 1,
+    lastActivityAt: serverTimestamp(),
+  });
 }
 
 // ============== Daily Challenge Functions ==============

@@ -59,7 +59,7 @@ const DEFAULT_QUESTIONS: Omit<QuizQuestion, 'id' | 'createdAt' | 'createdBy'>[] 
 
 const EconomicNewsQuiz: React.FC = () => {
   const navigate = useNavigate();
-  const { loadQuizQuestions, saveQuizAnswer, loadQuizProgress, getQuizVersion } = useModuleScore();
+  const { loadQuizQuestions, saveQuizAnswer, loadQuizProgress, getQuizVersion, markQuizCompleted } = useModuleScore();
 
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [quizVersion, setQuizVersion] = useState<string>('');
@@ -192,6 +192,8 @@ const EconomicNewsQuiz: React.FC = () => {
       // End of quiz - exit review mode to show completion screen
       setIsReviewMode(false);
       setCurrentQuestion(questions.length); // Trigger completion view
+      // Increment cumulative quiz completion counter
+      markQuizCompleted();
     }
   };
 

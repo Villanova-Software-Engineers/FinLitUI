@@ -131,6 +131,8 @@ export interface StudentProgress {
   moneyPersonality?: MoneyPersonalityResult; // Money personality quiz result
   caseStudyProgress?: CaseStudyProgress[]; // Case study completion history
   savedCalculations?: SavedCalculation[]; // Financial tools saved calculations
+  dailyChallengesCompleted?: number; // Total daily challenges completed (for certificate)
+  quickQuizzesCompleted?: number; // Total quick quiz sets completed (for certificate)
 }
 
 export interface SignInRequest {

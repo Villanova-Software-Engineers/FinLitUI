@@ -5,7 +5,8 @@ import { motion } from 'framer-motion';
 import { useAuthContext } from '../auth/context/AuthContext';
 import { useModuleScore, MODULES } from '../hooks/useModuleScore';
 import HowToPlayModal from '../components/HowToPlayModal';
-import { getActiveDailyChallengeQuestion } from '../firebase/firestore.service';
+import { getActiveDailyChallengeQuestion, getActiveCaseStudy } from '../firebase/firestore.service';
+import type { CaseStudy } from '../auth/types/auth.types';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
@@ -174,7 +175,12 @@ const FinLitApp: React.FC = () => {
   const [showHowToPlay, setShowHowToPlay] = useState(false);
   const [previousChallengeId, setPreviousChallengeId] = useState<string | null>(null);
   const [showChallengeUpdateNotification, setShowChallengeUpdateNotification] = useState(false);
+  const [activeCaseStudy, setActiveCaseStudy] = useState<CaseStudy | null>(null);
 
+  // Fetch active case study
+  useEffect(() => {
+    getActiveCaseStudy().then(cs => setActiveCaseStudy(cs)).catch(console.error);
+  }, []);
   // Listen for real-time changes to active daily challenge
   useEffect(() => {
     if (!user) return;
@@ -946,7 +952,7 @@ const FinLitApp: React.FC = () => {
 
               {/* Challenge Update Notification */}
               {showChallengeUpdateNotification && (
-                <div className="lg:col-span-2 mb-4">
+                <div className="lg:col-span-2">
                   <motion.div
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -966,6 +972,7 @@ const FinLitApp: React.FC = () => {
                 </div>
               )}
 
+              {/* Row 1: Daily Challenge + Learning Path */}
               {/* Daily Challenge */}
               <div className="bg-amber-50 rounded-lg p-4 sm:p-6 shadow-sm border border-amber-100">
                 <div className="flex justify-between items-center mb-3 sm:mb-4">
@@ -1054,9 +1061,7 @@ const FinLitApp: React.FC = () => {
                 </div>
               </div>
 
-
-
-              {/* XP and Learning Path */}
+              {/* Learning Path */}
               <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm border border-gray-100">
                 <div className="mb-4 sm:mb-6">
                   <h3 className="text-lg sm:text-xl font-bold mb-2">Level {xpLevel}</h3>
@@ -1079,7 +1084,6 @@ const FinLitApp: React.FC = () => {
 
                   <div className="space-y-2">
                     {(() => {
-                      // Get next available modules (not completed) up to 4
                       const availableModules = LEARNING_MODULES
                         .map((mod, idx) => ({ ...mod, originalIndex: idx }))
                         .filter((mod) => {
@@ -1115,6 +1119,186 @@ const FinLitApp: React.FC = () => {
                     })()}
                   </div>
                 </div>
+              </div>
+
+              {/* Weekly Case Study - White card with real data */}
+              <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm border border-gray-100 flex flex-col">
+                <div className="flex justify-between items-center mb-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                      <BookOpen className="text-blue-600" size={16} />
+                    </div>
+                    <h3 className="text-lg sm:text-xl font-bold text-slate-800">Case Study</h3>
+                  </div>
+                  <span className="text-xs text-slate-400 flex items-center gap-1">
+                    <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                    For Certificate
+                  </span>
+                </div>
+
+                {activeCaseStudy ? (
+                  <div className="flex flex-col flex-1">
+                    <div className="flex gap-3 items-start mb-3">
+                      <img
+                        src={activeCaseStudy.personImageUrl}
+                        alt={activeCaseStudy.case_study.who_is_this.title}
+                        className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl object-cover border-2 border-gray-100 flex-shrink-0"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = '';
+                          (e.target as HTMLImageElement).className = 'w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-blue-100 flex-shrink-0';
+                        }}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-sm sm:text-base font-bold text-slate-800 leading-snug">
+                          {activeCaseStudy.case_study.who_is_this.title}
+                        </h4>
+                        <div className="flex flex-wrap gap-1.5 mt-1">
+                          <span className="px-2 py-0.5 bg-blue-50 text-blue-700 text-xs font-semibold rounded-full">
+                            Week {activeCaseStudy.case_study.week}
+                          </span>
+                          <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 text-xs font-semibold rounded-full">
+                            {activeCaseStudy.case_study.topic}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <p className="text-xs sm:text-sm text-slate-500 leading-relaxed mb-3 flex-1" style={{ display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                      {activeCaseStudy.case_study.what_happened.content}
+                    </p>
+                    <div className="bg-slate-50 rounded-lg p-2.5 mb-3">
+                      <p className="text-xs text-slate-600">
+                        <span className="font-semibold">Subject:</span> {activeCaseStudy.case_study.subject}
+                      </p>
+                      <p className="text-xs text-slate-600 mt-0.5">
+                        <span className="font-semibold">Concept:</span> {activeCaseStudy.case_study.money_idea.title}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => navigate('/case-study')}
+                      className="w-full px-4 py-2.5 bg-blue-600 text-white font-semibold text-sm rounded-lg hover:bg-blue-700 transition-all hover:shadow-md mt-auto"
+                    >
+                      Start Case Study →
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center flex-1 py-4">
+                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-3">
+                      <BookOpen className="text-blue-500" size={24} />
+                    </div>
+                    <p className="text-sm text-slate-500 mb-3">No case study available this week.</p>
+                    <button
+                      onClick={() => navigate('/case-study')}
+                      className="px-4 py-2 bg-blue-600 text-white font-semibold text-sm rounded-lg hover:bg-blue-700 transition-all mt-auto"
+                    >
+                      Check Case Studies
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Certificate Requirements Tracker */}
+              <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm border border-gray-100 flex flex-col">
+                <div className="flex justify-between items-center gap-3 mb-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center">
+                      <GraduationCap className="text-white" size={16} />
+                    </div>
+                    <h3 className="text-lg sm:text-xl font-bold text-slate-800">Certificate</h3>
+                  </div>
+                  {(() => {
+                    const caseStudiesDone = (progress?.caseStudyProgress || []).filter(cs => cs.completedAt).length;
+                    const dailyDone = progress?.dailyChallengesCompleted ?? 0;
+                    const quizDone = progress?.quickQuizzesCompleted ?? 0;
+                    const personalityDone = progress?.moneyPersonality?.completedAt ? true : false;
+                    const reqsMet = [
+                      completedModules === totalModules,
+                      caseStudiesDone >= 1,
+                      dailyDone >= 4,
+                      quizDone >= 2,
+                      personalityDone,
+                    ].filter(Boolean).length;
+                    return (
+                      <span className={`px-2 py-1 rounded-full text-xs font-bold ${reqsMet === 5 ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}>
+                        {reqsMet}/5
+                      </span>
+                    );
+                  })()}
+                </div>
+
+                {(() => {
+                  const caseStudiesDone = (progress?.caseStudyProgress || []).filter(cs => cs.completedAt).length;
+                  const dailyDone = progress?.dailyChallengesCompleted ?? 0;
+                  const quizDone = progress?.quickQuizzesCompleted ?? 0;
+                  const personalityDone = !!progress?.moneyPersonality?.completedAt;
+
+                  const reqs = [
+                    { label: `All ${totalModules} Modules`, met: completedModules === totalModules, progress: `${completedModules}/${totalModules}`, icon: Target, route: '/game' },
+                    { label: '1 Case Study', met: caseStudiesDone >= 1, progress: `${Math.min(caseStudiesDone, 1)}/1`, icon: BookOpen, route: '/case-study' },
+                    { label: '4 Daily Challenges', met: dailyDone >= 4, progress: `${Math.min(dailyDone, 4)}/4`, icon: Zap, route: null as string | null },
+                    { label: '2 Quick Quizzes', met: quizDone >= 2, progress: `${Math.min(quizDone, 2)}/2`, icon: Zap, route: '/economic-quiz' },
+                    { label: '1 Personality Test', met: personalityDone, progress: personalityDone ? '1/1' : '0/1', icon: Brain, route: '/money-personality' },
+                  ];
+
+                  return (
+                    <div className="space-y-2">
+                      {reqs.map((req, idx) => {
+                        const IconComp = req.icon;
+                        return (
+                          <button
+                            key={idx}
+                            onClick={() => req.route && navigate(req.route)}
+                            className={`w-full flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg text-left ${
+                              req.met
+                                ? 'bg-emerald-50 border-2 border-emerald-300'
+                                : req.route
+                                  ? 'bg-gray-50 hover:bg-blue-50 border-2 border-transparent hover:border-blue-200'
+                                  : 'bg-gray-50 border-2 border-transparent cursor-default'
+                            }`}
+                          >
+                            <div className={`w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 ${
+                              req.met ? 'bg-emerald-500' : 'bg-gray-200'
+                            }`}>
+                              {req.met ? (
+                                <Check className="text-white" size={14} />
+                              ) : (
+                                <IconComp className="text-gray-500" size={14} />
+                              )}
+                            </div>
+                            <span className={`flex-1 text-sm sm:text-base font-medium ${req.met ? 'text-emerald-800' : 'text-slate-700'}`}>
+                              {req.label}
+                            </span>
+                            <span className={`text-xs font-bold ${req.met ? 'text-emerald-600' : 'text-slate-400'}`}>
+                              {req.progress}
+                            </span>
+                          </button>
+                        );
+                      })}
+                      {/* View Certificate button */}
+                      <button
+                        onClick={() => navigate('/certificate')}
+                        className={`w-full flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg text-left ${
+                          completedModules === totalModules && (progress?.caseStudyProgress || []).filter(cs => cs.completedAt).length >= 1 && (progress?.dailyChallengesCompleted ?? 0) >= 4 && (progress?.quickQuizzesCompleted ?? 0) >= 2 && !!progress?.moneyPersonality?.completedAt
+                            ? 'bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-300 hover:shadow-sm'
+                            : 'bg-gray-50 border-2 border-transparent hover:border-gray-200'
+                        }`}
+                      >
+                        <div className={`w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 ${
+                          completedModules === totalModules && (progress?.caseStudyProgress || []).filter(cs => cs.completedAt).length >= 1 && (progress?.dailyChallengesCompleted ?? 0) >= 4 && (progress?.quickQuizzesCompleted ?? 0) >= 2 && !!progress?.moneyPersonality?.completedAt
+                            ? 'bg-gradient-to-r from-emerald-500 to-teal-600'
+                            : 'bg-gray-200'
+                        }`}>
+                          <GraduationCap className="text-white" size={14} />
+                        </div>
+                        <span className="flex-1 text-sm sm:text-base font-medium text-slate-700">View Certificate</span>
+                        <span className="text-xs font-bold text-slate-400">
+                          {completedModules === totalModules && (progress?.caseStudyProgress || []).filter(cs => cs.completedAt).length >= 1 && (progress?.dailyChallengesCompleted ?? 0) >= 4 && (progress?.quickQuizzesCompleted ?? 0) >= 2 && !!progress?.moneyPersonality?.completedAt
+                            ? '🎉 Unlocked'
+                            : '🔒 Locked'}
+                        </span>
+                      </button>
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Financial Crossword */}
