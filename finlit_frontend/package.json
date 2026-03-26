@@ -12,7 +12,14 @@
     "cy:run": "cypress run",
     "cy:run:headed": "cypress run --headed",
     "test:e2e": "start-server-and-test dev http://localhost:5173 cy:run",
-    "test:e2e:open": "start-server-and-test dev http://localhost:5173 cy:open"
+    "test:e2e:open": "start-server-and-test dev http://localhost:5173 cy:open",
+    "test:all-modules": "cypress run --spec 'cypress/e2e/complete-all-modules.cy.ts'",
+    "test:all-modules:headed": "cypress run --spec 'cypress/e2e/complete-all-modules.cy.ts' --headed",
+    "test:comprehensive": "cypress run --spec 'cypress/e2e/all-modules-comprehensive.cy.ts'",
+    "test:new-user": "cypress run --spec 'cypress/e2e/new-user-module-flow.cy.ts'",
+    "test:visual": "cypress run --spec 'cypress/e2e/visual-regression.cy.ts'",
+    "test:quick": "cypress run --spec 'cypress/e2e/new-user-module-flow.cy.ts'",
+    "test:before-commit": "npm run test:all-modules"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.16",
