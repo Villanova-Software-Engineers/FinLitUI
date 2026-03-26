@@ -192,8 +192,8 @@ const EconomicNewsQuiz: React.FC = () => {
       // End of quiz - exit review mode to show completion screen
       setIsReviewMode(false);
       setCurrentQuestion(questions.length); // Trigger completion view
-      // Increment cumulative quiz completion counter
-      markQuizCompleted();
+      // Increment cumulative quiz completion counter (only if not already completed for this version)
+      markQuizCompleted(quizVersion);
     }
   };
 

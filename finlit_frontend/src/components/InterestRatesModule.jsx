@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { CheckCircle, XCircle } from 'lucide-react';
 import { useModuleScore, MODULES } from '../hooks/useModuleScore';
 import ModuleCompletedScreen from './ModuleCompletedScreen';
 import { shuffleQuizOptions } from '../utils/shuffleQuizOptions';
@@ -711,7 +712,7 @@ const ScenarioGame = ({ onNext }) => {
 };
 
 // Quiz Page
-const QuizPage = ({ currentQuestion, selectedAnswer, showAnswer, score, onAnswer, onNext, quizComplete, onRetake, navigate, questions }) => {
+const QuizPage = ({ currentQuestion, selectedAnswer, showAnswer, score, onAnswer, onNext, quizComplete, onRetake, navigate, questions, onReviewAnswers, isReviewMode }) => {
   if (quizComplete) {
     const passed = score >= 8;
     return (
@@ -743,6 +744,11 @@ const QuizPage = ({ currentQuestion, selectedAnswer, showAnswer, score, onAnswer
           )}
 
           <div className="flex flex-col gap-3">
+            {isReviewMode && onReviewAnswers && (
+              <button onClick={onReviewAnswers} className="w-full py-4 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold hover:from-purple-600 hover:to-pink-600">
+                Review Your Answers
+              </button>
+            )}
             <button onClick={onRetake} className="w-full py-4 rounded-xl bg-slate-800 text-white font-bold hover:bg-slate-700">
               Retake Quiz
             </button>
@@ -847,6 +853,127 @@ const QuizPage = ({ currentQuestion, selectedAnswer, showAnswer, score, onAnswer
   );
 };
 
+// Quiz Review Page - Shows user's saved answers
+const QuizReviewPage = ({ answers, questions, onPrev, navigate }) => {
+  return (
+    <div className="min-h-screen p-6 pt-20 bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-100">
+      <div className="max-w-4xl mx-auto">
+        <motion.div
+          className="bg-white rounded-3xl p-8 shadow-xl border border-gray-100"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <h2 className="text-3xl font-black text-gray-900 mb-2 text-center">Quiz Review</h2>
+          <p className="text-gray-600 text-center mb-8">Review your answers from when you completed this module</p>
+
+          {/* All Questions Review */}
+          <div className="space-y-6">
+            {questions.map((question, index) => {
+              const userAnswer = answers[index];
+              const isCorrect = userAnswer === question.correctIndex;
+
+              return (
+                <div key={index} className="border-2 border-gray-200 rounded-2xl p-6 bg-gray-50">
+                  {/* Question Header */}
+                  <div className="flex items-start justify-between mb-4 pb-4 border-b border-gray-200">
+                    <div className="flex-1">
+                      <span className="text-sm font-bold text-emerald-600 uppercase tracking-wider block mb-2">
+                        Question {index + 1} of {questions.length}
+                      </span>
+                      <h3 className="text-xl font-bold text-gray-900">
+                        {question.question}
+                      </h3>
+                    </div>
+                    {isCorrect ? (
+                      <CheckCircle className="w-8 h-8 text-green-500 flex-shrink-0 ml-4" />
+                    ) : (
+                      <XCircle className="w-8 h-8 text-red-500 flex-shrink-0 ml-4" />
+                    )}
+                  </div>
+
+                  {/* Options */}
+                  <div className="space-y-3 mb-4">
+                    {question.options.map((option, optIndex) => {
+                      const isSelectedOption = userAnswer === optIndex;
+                      const isCorrectOption = question.correctIndex === optIndex;
+
+                      return (
+                        <div
+                          key={optIndex}
+                          className={`p-4 rounded-xl border-2 ${
+                            isCorrectOption
+                              ? 'bg-green-50 border-green-500'
+                              : isSelectedOption && !isCorrectOption
+                                ? 'bg-red-50 border-red-500'
+                                : 'bg-white border-gray-200 opacity-60'
+                          }`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 ${
+                              isCorrectOption ? 'bg-green-500 text-white' :
+                              isSelectedOption ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-500'
+                            }`}>
+                              {isCorrectOption ? (
+                                <CheckCircle size={20} />
+                              ) : isSelectedOption && !isCorrectOption ? (
+                                <XCircle size={20} />
+                              ) : (
+                                String.fromCharCode(65 + optIndex)
+                              )}
+                            </div>
+                            <div className="flex-1">
+                              <span className={`text-base font-medium ${
+                                isCorrectOption ? 'text-green-900' :
+                                isSelectedOption ? 'text-red-900' : 'text-gray-600'
+                              }`}>
+                                {option}
+                              </span>
+                              {isSelectedOption && (
+                                <div className="text-xs font-bold mt-1 text-gray-500">
+                                  Your answer
+                                </div>
+                              )}
+                            </div>
+                            {isCorrectOption && <CheckCircle className="text-green-600 flex-shrink-0" />}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Explanation */}
+                  <div className="bg-slate-900 text-white p-4 rounded-xl">
+                    <h4 className="font-bold text-emerald-400 uppercase tracking-wider text-xs mb-2">Explanation</h4>
+                    <p className="text-sm leading-relaxed text-slate-200">
+                      {question.explanation}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Navigation */}
+          <div className="flex gap-4 justify-center mt-8 pt-6 border-t border-gray-200">
+            <button
+              onClick={onPrev}
+              className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-xl font-bold shadow-lg transition transform hover:scale-105"
+            >
+              Review Lessons Again
+            </button>
+            <button
+              onClick={() => navigate('/game')}
+              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white rounded-xl font-bold shadow-lg transition transform hover:scale-105"
+            >
+              Back to Learning Path
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    </div>
+  );
+};
+
 // Main Component
 const InterestRatesModule = () => {
   const navigate = useNavigate();
@@ -866,7 +993,7 @@ const InterestRatesModule = () => {
   const shuffledQuestions = useMemo(() => shuffleQuizOptions(quizQuestions), [shuffleKey]);
 
   const modulePassed = isModulePassed(MODULES.INTEREST_RATES.id);
-  const totalSteps = 4;
+  const totalSteps = isReviewMode && modulePassed ? 5 : 4; // Add quiz review step in review mode
 
   const handleNext = () => {
     if (currentStep < totalSteps) {
@@ -970,6 +1097,16 @@ const InterestRatesModule = () => {
               onRetake={handleRetake}
               navigate={navigate}
               questions={shuffledQuestions}
+              isReviewMode={isReviewMode && modulePassed}
+              onReviewAnswers={() => setCurrentStep(5)}
+            />
+          )}
+          {currentStep === 5 && isReviewMode && modulePassed && (
+            <QuizReviewPage
+              answers={answers}
+              questions={shuffledQuestions}
+              onPrev={() => setCurrentStep(0)}
+              navigate={navigate}
             />
           )}
         </motion.div>

@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
 import {
-  ArrowLeft,
   ArrowRight,
   RefreshCw,
   CheckCircle2,
@@ -18,6 +16,8 @@ import {
   Info
 } from 'lucide-react';
 import { useAuthContext } from '../auth/context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import DashboardLayout from './DashboardLayout';
 import {
   MONEY_PERSONALITIES,
   PERSONALITY_QUESTIONS,
@@ -463,7 +463,6 @@ const ResultsView: React.FC<{
 // --- Main Page ---
 
 const MoneyPersonality: React.FC = () => {
-  const navigate = useNavigate();
   const { user } = useAuthContext();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -627,38 +626,17 @@ const MoneyPersonality: React.FC = () => {
 
   // --- Quiz or Result Container ---
   return (
-    <div className="min-h-screen bg-lightPrimary font-dm">
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-30">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <button
-            onClick={() => {
-              if (showQuiz) {
-                if (window.confirm('Quit quiz? Progress will be lost.')) setShowQuiz(false);
-              } else {
-                navigate('/dashboard');
-              }
-            }}
-            className="group flex items-center gap-2 text-gray-500 hover:text-navy-700 transition-colors"
-          >
-            <div className="p-2 rounded-full group-hover:bg-gray-100 transition-colors">
-              <ArrowLeft className="w-5 h-5" />
-            </div>
-            <span className="hidden sm:inline font-medium">
-              {showQuiz ? 'Exit Quiz' : 'Back to Dashboard'}
-            </span>
-          </button>
-
-          <div className="font-bold text-navy-700 text-lg flex items-center gap-2">
-            {!showQuiz && <span className="text-xl">🧠</span>}
+    <DashboardLayout>
+      <div className="max-w-6xl mx-auto font-dm">
+        <div className="mb-6">
+          <div className="font-bold text-navy-700 text-2xl flex items-center gap-2">
+            {!showQuiz && <span className="text-2xl">🧠</span>}
             Money Personality
           </div>
 
-          <div className="w-10"></div>
         </div>
-      </header>
 
-      <main className="max-w-6xl mx-auto px-4 py-8">
+        {/* Main Content */}
         {saving ? (
           <div className="flex flex-col items-center justify-center h-[60vh] text-center">
             <div className="w-20 h-20 bg-white rounded-3xl shadow-xl flex items-center justify-center mb-6 relative overflow-hidden">
@@ -707,8 +685,8 @@ const MoneyPersonality: React.FC = () => {
             />
           </>
         ) : null}
-      </main>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 };
 
