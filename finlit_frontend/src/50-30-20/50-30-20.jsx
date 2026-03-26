@@ -3,6 +3,7 @@ import React, { useRef, useEffect, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useModuleScore, MODULES } from '../hooks/useModuleScore';
+import { shuffleQuizOptions } from '../utils/shuffleQuizOptions';
 
 const categories = {
   '50': {
@@ -103,9 +104,12 @@ const BudgetRuleChartStep = ({ activeCategoryKey = '50' }) => {
   const [showFeedback, setShowFeedback] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [shuffledQuestions, setShuffledQuestions] = useState([]); // Shuffled questions with shuffled answers
+  const [shuffleKey, setShuffleKey] = useState(0);
   // Review mode - initialized from navigation state to persist across route changes
   const [isReviewMode, setIsReviewMode] = useState(location.state?.isReviewMode || false);
+
+  // Shuffle quiz options for randomization
+  const shuffledQuestions = useMemo(() => shuffleQuizOptions(quizQuestions), [shuffleKey]);
 
   // Update review mode when location state changes (for route navigation)
   useEffect(() => {
@@ -118,38 +122,6 @@ const BudgetRuleChartStep = ({ activeCategoryKey = '50' }) => {
 
   // Check if module is already passed
   const modulePassed = isModulePassed(MODULES.BUDGETING_50_30_20.id);
-
-  // Shuffle array helper function
-  const shuffleArray = (array) => {
-    const shuffled = [...array];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    return shuffled;
-  };
-
-  // Initialize shuffled questions when quiz starts
-  useEffect(() => {
-    if (showQuiz && shuffledQuestions.length === 0) {
-      const shuffled = quizQuestions.map(q => {
-        // Create shuffled options with tracked correct index
-        const optionsWithIndex = q.options.map((opt, idx) => ({
-          text: opt,
-          isCorrect: idx === q.correctIndex
-        }));
-        const shuffledOptions = shuffleArray(optionsWithIndex);
-        const newCorrectIndex = shuffledOptions.findIndex(opt => opt.isCorrect);
-
-        return {
-          ...q,
-          options: shuffledOptions.map(opt => opt.text),
-          correctIndex: newCorrectIndex
-        };
-      });
-      setShuffledQuestions(shuffled);
-    }
-  }, [showQuiz]);
 
   // Animated background elements
   const bgElements = [
@@ -237,7 +209,7 @@ const BudgetRuleChartStep = ({ activeCategoryKey = '50' }) => {
     setShowResult(false);
     setQuizCompleted(false);
     setShowFeedback(false);
-    setShuffledQuestions([]); // Reset to re-shuffle on next attempt
+    setShuffleKey(prev => prev + 1); // Trigger re-shuffle
   };
 
   const handleBackToLearning = () => {
@@ -249,7 +221,7 @@ const BudgetRuleChartStep = ({ activeCategoryKey = '50' }) => {
     setShowResult(false);
     setQuizCompleted(false);
     setShowFeedback(false);
-    setShuffledQuestions([]); // Reset to re-shuffle on next attempt
+    setShuffleKey(prev => prev + 1); // Trigger re-shuffle
   };
 
   // Simple pie chart using CSS - Memoized to prevent re-renders

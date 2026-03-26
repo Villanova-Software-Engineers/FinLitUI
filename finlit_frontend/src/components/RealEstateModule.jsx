@@ -1,8 +1,9 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useModuleScore, MODULES } from '../hooks/useModuleScore';
 import ModuleCompletedScreen from './ModuleCompletedScreen';
+import { shuffleQuizOptions } from '../utils/shuffleQuizOptions';
 
 // 10 Quiz Questions
 const quizQuestions = [
@@ -504,16 +505,16 @@ const InvestmentStrategiesPage = ({ handlePrev, handleNext }) => {
 };
 
 // Quiz Page (same style as WhatIsMoney)
-const QuizPage = ({ currentQuestion, selectedAnswer, showAnswerResult, score, handleAnswerSelect, handleNextQuestion, handlePrev, quizCompleted, resetQuiz, navigate }) => (
+const QuizPage = ({ currentQuestion, selectedAnswer, showAnswerResult, score, handleAnswerSelect, handleNextQuestion, handlePrev, quizCompleted, resetQuiz, navigate, shuffledQuestions }) => (
   <div className="max-w-4xl mx-auto pt-16">
     {!quizCompleted ? (
       <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden flex flex-col min-h-[500px]">
         <div className="flex-1 p-8 lg:p-16 flex flex-col justify-center">
           <div className="flex justify-between items-end mb-8 border-b border-gray-100 pb-6">
             <div>
-              <span className="text-sm font-bold text-blue-600 uppercase tracking-wider block mb-2">Question {currentQuestion + 1} of {quizQuestions.length}</span>
+              <span className="text-sm font-bold text-blue-600 uppercase tracking-wider block mb-2">Question {currentQuestion + 1} of {shuffledQuestions.length}</span>
               <h2 className="text-2xl lg:text-4xl font-bold text-slate-900 leading-tight">
-                {quizQuestions[currentQuestion].question}
+                {shuffledQuestions[currentQuestion].question}
               </h2>
             </div>
             <div className="hidden lg:block text-slate-300">
@@ -522,9 +523,9 @@ const QuizPage = ({ currentQuestion, selectedAnswer, showAnswerResult, score, ha
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {quizQuestions[currentQuestion].options.map((option, idx) => {
+            {shuffledQuestions[currentQuestion].options.map((option, idx) => {
               const isSelected = selectedAnswer === idx;
-              const isCorrect = idx === quizQuestions[currentQuestion].correctIndex;
+              const isCorrect = idx === shuffledQuestions[currentQuestion].correctIndex;
               const showCorrectness = showAnswerResult && (isSelected || isCorrect);
 
               return (
@@ -566,14 +567,14 @@ const QuizPage = ({ currentQuestion, selectedAnswer, showAnswerResult, score, ha
               <div className="flex-1">
                 <h4 className="font-bold text-blue-400 uppercase tracking-wider text-sm mb-2">Explanation</h4>
                 <p className="text-lg leading-relaxed text-slate-200">
-                  {quizQuestions[currentQuestion].explanation}
+                  {shuffledQuestions[currentQuestion].explanation}
                 </p>
               </div>
               <button
                 onClick={handleNextQuestion}
                 className="w-full md:w-auto px-8 py-4 bg-white text-slate-900 rounded-xl font-bold hover:bg-blue-50 transition-colors whitespace-nowrap"
               >
-                {currentQuestion < quizQuestions.length - 1 ? 'Next Question' : 'Complete Quiz'}
+                {currentQuestion < shuffledQuestions.length - 1 ? 'Next Question' : 'Complete Quiz'}
               </button>
             </motion.div>
           )}
@@ -591,7 +592,7 @@ const QuizPage = ({ currentQuestion, selectedAnswer, showAnswerResult, score, ha
         </div>
 
         <h2 className="text-5xl font-black text-slate-900 mb-4">{score >= 8 ? 'Outstanding!' : 'Keep Learning!'}</h2>
-        <p className="text-2xl text-slate-500 mb-10">You scored <span className="font-bold text-slate-900">{score}/{quizQuestions.length}</span> ({((score / quizQuestions.length) * 100).toFixed(0)}%)</p>
+        <p className="text-2xl text-slate-500 mb-10">You scored <span className="font-bold text-slate-900">{score}/{shuffledQuestions.length}</span> ({((score / shuffledQuestions.length) * 100).toFixed(0)}%)</p>
 
         {score >= 8 ? (
           <div className="bg-green-50 border-2 border-green-500 rounded-2xl p-8 mb-10">
@@ -638,6 +639,10 @@ const RealEstateModule = () => {
   const [showAnswerResult, setShowAnswerResult] = useState(false);
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [answers, setAnswers] = useState([]);
+  const [shuffleKey, setShuffleKey] = useState(0);
+
+  // Shuffle quiz options for randomization
+  const shuffledQuestions = useMemo(() => shuffleQuizOptions(quizQuestions), [shuffleKey]);
 
   const modulePassed = isModulePassed(MODULES.REAL_ESTATE.id);
   const totalSteps = 5; // 0:intro, 1:homeownership, 2:calculator, 3:strategies, 4:quiz
@@ -666,21 +671,21 @@ const RealEstateModule = () => {
     const newAnswers = [...answers, selectedAnswer];
     setAnswers(newAnswers);
 
-    if (currentQuestion < quizQuestions.length - 1) {
+    if (currentQuestion < shuffledQuestions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
       setSelectedAnswer(null);
       setShowAnswerResult(false);
     } else {
       let finalScore = 0;
       newAnswers.forEach((answer, idx) => {
-        if (answer === quizQuestions[idx].correctIndex) {
+        if (answer === shuffledQuestions[idx].correctIndex) {
           finalScore++;
         }
       });
       setScore(finalScore);
       setQuizCompleted(true);
 
-      const percentage = (finalScore / quizQuestions.length) * 100;
+      const percentage = (finalScore / shuffledQuestions.length) * 100;
       if (percentage >= 80) {
         saveScore(MODULES.REAL_ESTATE.id, percentage);
       }
@@ -694,6 +699,7 @@ const RealEstateModule = () => {
     setShowAnswerResult(false);
     setQuizCompleted(false);
     setAnswers([]);
+    setShuffleKey(prev => prev + 1); // Trigger re-shuffle
   };
 
   if (modulePassed && !isReviewMode) {
@@ -767,6 +773,7 @@ const RealEstateModule = () => {
               quizCompleted={quizCompleted}
               resetQuiz={resetQuiz}
               navigate={navigate}
+              shuffledQuestions={shuffledQuestions}
             />
           )}
         </motion.div>
