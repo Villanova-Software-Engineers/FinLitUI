@@ -1016,20 +1016,31 @@ export async function getCurrentQuizVersion(): Promise<string> {
 /**
  * Increment the quickQuizzesCompleted counter
  * Called when a user finishes answering all questions in a quick quiz
+ * Only increments if this quiz version hasn't been completed before
  */
-export async function incrementQuickQuizCompleted(userId: string): Promise<void> {
+export async function incrementQuickQuizCompleted(userId: string, quizVersion: string): Promise<{ incremented: boolean }> {
   const progressRef = doc(db, STUDENT_PROGRESS, userId);
   const snapshot = await getDoc(progressRef);
 
-  if (!snapshot.exists()) return;
+  if (!snapshot.exists()) return { incremented: false };
 
   const data = snapshot.data();
   const currentCount = data.quickQuizzesCompleted || 0;
+  const completedQuizVersions: string[] = data.completedQuizVersions || [];
 
+  // Check if this version was already completed
+  if (completedQuizVersions.includes(quizVersion)) {
+    return { incremented: false };
+  }
+
+  // Mark this version as completed and increment counter
   await updateDoc(progressRef, {
     quickQuizzesCompleted: currentCount + 1,
+    completedQuizVersions: [...completedQuizVersions, quizVersion],
     lastActivityAt: serverTimestamp(),
   });
+
+  return { incremented: true };
 }
 
 // ============== Daily Challenge Functions ==============
