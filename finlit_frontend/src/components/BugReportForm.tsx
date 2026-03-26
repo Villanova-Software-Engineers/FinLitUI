@@ -5,10 +5,10 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bug, Upload, X, CheckCircle, AlertCircle, Loader2, Plus, Trash2, ArrowLeft } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Bug, Upload, X, CheckCircle, AlertCircle, Loader2, Plus, Trash2 } from 'lucide-react';
 import { useAuthContext } from '../auth/context/AuthContext';
 import { submitBugReport } from '../firebase/bugReport.service';
+import DashboardLayout from './DashboardLayout';
 
 interface BugReport {
   title: string;
@@ -29,7 +29,6 @@ interface BugReportEntry {
 
 const BugReportForm: React.FC = () => {
   const { user } = useAuthContext();
-  const navigate = useNavigate();
 
   // Form state
   const [bugReports, setBugReports] = useState<BugReportEntry[]>([{
@@ -203,22 +202,12 @@ const BugReportForm: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 py-12 px-4 font-dm">
+    <DashboardLayout>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="max-w-4xl mx-auto"
       >
-        {/* Back Button */}
-        <motion.button
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          onClick={() => navigate('/dashboard')}
-          className="flex items-center gap-2 text-gray-600 hover:text-navy-700 mb-6 transition-colors"
-        >
-          <ArrowLeft size={20} />
-          <span className="font-semibold">Back to Dashboard</span>
-        </motion.button>
 
         {/* Header */}
         <div className="text-center mb-12">
@@ -512,7 +501,7 @@ const BugReportForm: React.FC = () => {
           </motion.button>
         </form>
       </motion.div>
-    </div>
+    </DashboardLayout>
   );
 };
 
