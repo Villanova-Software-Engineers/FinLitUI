@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, ArrowRight, Landmark, TrendingUp, CheckCircle, AlertCircle, Play, Sparkles, Clock, DollarSign, PiggyBank, Building2, Briefcase, Heart, Calculator, Gift, Shield, Percent } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useModuleScore, MODULES } from '../hooks/useModuleScore';
+import { shuffleQuizOptions } from '../utils/shuffleQuizOptions';
 
 const RetirementAccountsModule = () => {
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ const RetirementAccountsModule = () => {
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [showResults, setShowResults] = useState(false);
   const [score, setScore] = useState(0);
+  const [showAnswerResult, setShowAnswerResult] = useState(false);
 
   // Module score saving state
   const [isSaving, setIsSaving] = useState(false);
@@ -236,135 +238,121 @@ const RetirementAccountsModule = () => {
     { id: 6, term: "Target-Date Fund", definition: "Investment that automatically adjusts risk as you near retirement", emoji: "🎯" }
   ];
 
+  // Shuffle definitions for matching game - memoized so it stays consistent during the game
+  const shuffledDefinitions = useMemo(() => {
+    const shuffled = [...matchingGameData];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  }, []);
+
   // ==========================================
   // QUIZ QUESTIONS
   // ==========================================
-  const quizQuestions = [
+  const quizQuestionsBase = [
     {
       id: 1,
       question: "What is the 2024 contribution limit for a 401(k) if you're under 50?",
-      options: [
-        { id: 'a', text: "$6,500", correct: false },
-        { id: 'b', text: "$23,000", correct: true },
-        { id: 'c', text: "$19,500", correct: false },
-        { id: 'd', text: "$30,500", correct: false }
-      ],
+      options: ["$6,500", "$23,000", "$19,500", "$30,500"],
+      correctIndex: 1,
       explanation: "The 2024 401(k) contribution limit is $23,000 for those under 50. The $30,500 limit is for those 50+ (includes catch-up contributions)."
     },
     {
       id: 2,
       question: "What's the key benefit of a Roth IRA compared to a Traditional IRA?",
-      options: [
-        { id: 'a', text: "Higher contribution limits", correct: false },
-        { id: 'b', text: "Immediate tax deduction", correct: false },
-        { id: 'c', text: "Tax-free withdrawals in retirement", correct: true },
-        { id: 'd', text: "No income limits", correct: false }
-      ],
+      options: ["Higher contribution limits", "Immediate tax deduction", "Tax-free withdrawals in retirement", "No income limits"],
+      correctIndex: 2,
       explanation: "Roth IRA contributions are made with after-tax money, but all qualified withdrawals in retirement are completely tax-free!"
     },
     {
       id: 3,
       question: "Your employer offers a 50% match on 401(k) contributions up to 6% of your salary. If you earn $60,000 and contribute 6%, how much FREE money do you get from your employer annually?",
-      options: [
-        { id: 'a', text: "$1,800", correct: true },
-        { id: 'b', text: "$3,600", correct: false },
-        { id: 'c', text: "$900", correct: false },
-        { id: 'd', text: "$6,000", correct: false }
-      ],
+      options: ["$1,800", "$3,600", "$900", "$6,000"],
+      correctIndex: 0,
       explanation: "6% of $60,000 = $3,600. Employer matches 50% of that = $1,800 FREE per year! Always get the full match."
     },
     {
       id: 4,
       question: "What happens if you withdraw from a Traditional 401(k) before age 59½?",
-      options: [
-        { id: 'a', text: "No penalty, just taxes", correct: false },
-        { id: 'b', text: "10% penalty plus income taxes", correct: true },
-        { id: 'c', text: "Only 5% penalty", correct: false },
-        { id: 'd', text: "Tax-free if for emergency", correct: false }
-      ],
+      options: ["No penalty, just taxes", "10% penalty plus income taxes", "Only 5% penalty", "Tax-free if for emergency"],
+      correctIndex: 1,
       explanation: "Early withdrawals typically face a 10% penalty PLUS regular income taxes. A $10K withdrawal could cost you $3,500+ in penalties and taxes!"
     },
     {
       id: 5,
       question: "Which retirement strategy is generally recommended for young people in lower tax brackets?",
-      options: [
-        { id: 'a', text: "Only Traditional accounts", correct: false },
-        { id: 'b', text: "Roth accounts (pay taxes now)", correct: true },
-        { id: 'c', text: "No retirement savings until 40", correct: false },
-        { id: 'd', text: "Keep cash in savings account", correct: false }
-      ],
+      options: ["Only Traditional accounts", "Roth accounts (pay taxes now)", "No retirement savings until 40", "Keep cash in savings account"],
+      correctIndex: 1,
       explanation: "Young people often benefit more from Roth accounts - pay taxes at today's lower rate and enjoy tax-free growth for decades!"
     },
     {
       id: 6,
       question: "What is a target-date fund?",
-      options: [
-        { id: 'a', text: "A fund that only invests in bonds", correct: false },
-        { id: 'b', text: "A fund that automatically adjusts risk as you approach retirement", correct: true },
-        { id: 'c', text: "A fund with a guaranteed return by a specific date", correct: false },
-        { id: 'd', text: "A short-term investment option", correct: false }
-      ],
+      options: ["A fund that only invests in bonds", "A fund that automatically adjusts risk as you approach retirement", "A fund with a guaranteed return by a specific date", "A short-term investment option"],
+      correctIndex: 1,
       explanation: "Target-date funds automatically become more conservative (less risky) as you get closer to retirement. Perfect for hands-off investors!"
     },
     {
       id: 7,
       question: "What is the 'backdoor Roth' strategy used for?",
-      options: [
-        { id: 'a', text: "Avoiding all taxes on retirement savings", correct: false },
-        { id: 'b', text: "Allowing high earners to contribute to a Roth IRA", correct: true },
-        { id: 'c', text: "Withdrawing early without penalties", correct: false },
-        { id: 'd', text: "Doubling contribution limits", correct: false }
-      ],
+      options: ["Avoiding all taxes on retirement savings", "Allowing high earners to contribute to a Roth IRA", "Withdrawing early without penalties", "Doubling contribution limits"],
+      correctIndex: 1,
       explanation: "High earners who exceed Roth IRA income limits can contribute to a Traditional IRA and then convert it to a Roth - the 'backdoor' method."
     },
     {
       id: 8,
       question: "At what age must you start taking Required Minimum Distributions (RMDs) from a Traditional 401(k)?",
-      options: [
-        { id: 'a', text: "59½", correct: false },
-        { id: 'b', text: "65", correct: false },
-        { id: 'c', text: "73", correct: true },
-        { id: 'd', text: "There are no required distributions", correct: false }
-      ],
+      options: ["59½", "65", "73", "There are no required distributions"],
+      correctIndex: 2,
       explanation: "As of 2024, RMDs from Traditional retirement accounts must begin at age 73. Roth IRAs have NO RMDs!"
     },
     {
       id: 9,
       question: "Why are low-cost index funds often recommended for retirement accounts?",
-      options: [
-        { id: 'a', text: "They guarantee higher returns", correct: false },
-        { id: 'b', text: "They have no risk", correct: false },
-        { id: 'c', text: "Lower fees mean more money stays invested and growing", correct: true },
-        { id: 'd', text: "They are FDIC insured", correct: false }
-      ],
+      options: ["They guarantee higher returns", "They have no risk", "Lower fees mean more money stays invested and growing", "They are FDIC insured"],
+      correctIndex: 2,
       explanation: "A 1% fee difference can cost $200K+ over 40 years! Index funds typically have fees under 0.1% vs 1%+ for actively managed funds."
     },
     {
       id: 10,
       question: "How much can you withdraw penalty-free from a Roth IRA for a first-time home purchase (after 5 years)?",
-      options: [
-        { id: 'a', text: "$5,000", correct: false },
-        { id: 'b', text: "$10,000", correct: true },
-        { id: 'c', text: "$25,000", correct: false },
-        { id: 'd', text: "Unlimited if it's your first home", correct: false }
-      ],
+      options: ["$5,000", "$10,000", "$25,000", "Unlimited if it's your first home"],
+      correctIndex: 1,
       explanation: "Up to $10,000 of earnings can be withdrawn penalty-free for a first-time home purchase, plus you can always withdraw your contributions tax and penalty-free."
     }
   ];
+
+  // Shuffle quiz options
+  const quizQuestions = useMemo(() => shuffleQuizOptions(quizQuestionsBase), []);
 
   const handleAnswerSelect = (questionIndex, answerId) => {
     setSelectedAnswers({
       ...selectedAnswers,
       [questionIndex]: answerId
     });
+    setShowAnswerResult(true);
+  };
+
+  const handleNextQuestion = async () => {
+    if (currentQuestion < quizQuestions.length - 1) {
+      setCurrentQuestion(currentQuestion + 1);
+      setShowAnswerResult(false);
+    } else {
+      // Last question - finish quiz
+      const finalScore = calculateScore();
+      setScore(finalScore);
+      setShowResults(true);
+      await saveModuleScore(finalScore);
+    }
   };
 
   const calculateScore = () => {
     let correct = 0;
     quizQuestions.forEach((q, index) => {
       const selectedAnswer = selectedAnswers[index];
-      const correctOption = q.options.find(opt => opt.correct);
-      if (selectedAnswer === correctOption?.id) {
+      if (selectedAnswer === q.correctIndex) {
         correct++;
       }
     });
@@ -409,6 +397,7 @@ const RetirementAccountsModule = () => {
     setShowResults(false);
     setScore(0);
     setSaveResult(null);
+    setShowAnswerResult(false);
   };
 
   // ==========================================
@@ -458,25 +447,13 @@ const RetirementAccountsModule = () => {
             transition={{ delay: i * 0.15 }}
             className="text-center"
           >
-            <motion.div
-              animate={{ scale: [1, 1.05, 1] }}
-              transition={{ duration: 4, repeat: Infinity, delay: i * 0.3, ease: "easeInOut" }}
-              className="text-2xl mb-1"
-            >
+            <div className="text-2xl mb-1">
               {i === 0 ? '🎓' : i === 4 ? '🏖️' : '💰'}
-            </motion.div>
+            </div>
             <div className="text-white font-bold text-sm">Age {age}</div>
           </motion.div>
         ))}
       </div>
-      {/* Moving coin animation - subtle drift */}
-      <motion.div
-        animate={{ x: [0, 120], opacity: [0.4, 0.6, 0.4] }}
-        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute top-4 left-4 text-2xl"
-      >
-        💵
-      </motion.div>
     </div>
   );
 
@@ -513,13 +490,9 @@ const RetirementAccountsModule = () => {
           className="text-center mb-6"
         >
           <RetirementVisual />
-          <motion.div
-            animate={{ scale: [1, 1.05, 1] }}
-            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-            className="text-6xl sm:text-7xl mb-4"
-          >
+          <div className="text-6xl sm:text-7xl mb-4">
             🏦
-          </motion.div>
+          </div>
           <h1 className="text-2xl sm:text-3xl font-black text-gray-900 mb-2">
             Retirement Accounts Mastery
           </h1>
@@ -693,13 +666,9 @@ const RetirementAccountsModule = () => {
               <div className="absolute right-4 top-4 opacity-20">
                 <Icon size={80} />
               </div>
-              <motion.div
-                animate={{ scale: [1, 1.08, 1] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                className="text-4xl sm:text-5xl mb-3 relative z-10"
-              >
+              <div className="text-4xl sm:text-5xl mb-3 relative z-10">
                 {section.emoji}
-              </motion.div>
+              </div>
               <h2 className="text-xl sm:text-2xl font-black mb-2 relative z-10">{section.title}</h2>
               <p className="text-white/90 text-sm leading-relaxed relative z-10">{section.intro}</p>
             </div>
@@ -715,13 +684,9 @@ const RetirementAccountsModule = () => {
                   className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100"
                 >
                   <div className="flex gap-3 sm:gap-4">
-                    <motion.div
-                      className="text-2xl sm:text-3xl flex-shrink-0"
-                      animate={{ scale: [1, 1.1, 1] }}
-                      transition={{ duration: 3, repeat: Infinity, delay: idx * 0.5, ease: "easeInOut" }}
-                    >
+                    <div className="text-2xl sm:text-3xl flex-shrink-0">
                       {point.emoji}
-                    </motion.div>
+                    </div>
                     <div className="flex-1">
                       <h3 className="font-bold text-gray-900 mb-2">{point.title}</h3>
                       <p className="text-gray-600 text-sm mb-3 leading-relaxed">{point.desc}</p>
@@ -745,13 +710,9 @@ const RetirementAccountsModule = () => {
               className="bg-gradient-to-r from-yellow-100 to-amber-100 rounded-2xl p-4 border border-yellow-200"
             >
               <div className="flex items-start gap-3">
-                <motion.span
-                  className="text-2xl"
-                  animate={{ scale: [1, 1.15, 1] }}
-                  transition={{ duration: 2, repeat: Infinity, repeatDelay: 3, ease: "easeInOut" }}
-                >
+                <span className="text-2xl">
                   🤯
-                </motion.span>
+                </span>
                 <div>
                   <span className="font-bold text-gray-800">Did You Know? </span>
                   <span className="text-gray-700">{section.funFact}</span>
@@ -792,7 +753,8 @@ const RetirementAccountsModule = () => {
   const renderMatchingGame = () => {
     const handleMatch = (termId, definitionId) => {
       const isCorrect = termId === definitionId;
-      const newPairs = { ...matchingPairs, [termId]: definitionId };
+      // Store both the definitionId and whether it's correct
+      const newPairs = { ...matchingPairs, [termId]: { definitionId, isCorrect } };
       setMatchingPairs(newPairs);
 
       if (isCorrect) {
@@ -806,19 +768,47 @@ const RetirementAccountsModule = () => {
     };
 
     const handleTermClick = (termId) => {
-      if (matchingPairs[termId]) return; // Already matched
+      const matchInfo = matchingPairs[termId];
+      // If already matched correctly, don't allow clicking
+      if (matchInfo && matchInfo.isCorrect) return;
+
+      // If matched incorrectly, clear the incorrect match to allow retry
+      if (matchInfo && !matchInfo.isCorrect) {
+        const newPairs = { ...matchingPairs };
+        delete newPairs[termId];
+        setMatchingPairs(newPairs);
+        setSelectedTerm(termId);
+        return;
+      }
+
       setSelectedTerm(selectedTerm === termId ? null : termId);
     };
 
     const handleDefinitionClick = (defId) => {
       if (!selectedTerm) return;
-      if (Object.values(matchingPairs).includes(defId)) return; // Already matched
+
+      // Check if this definition is already matched correctly
+      const matchedTermId = Object.keys(matchingPairs).find(
+        termId => matchingPairs[termId].definitionId === defId
+      );
+      if (matchedTermId && matchingPairs[matchedTermId].isCorrect) return;
+
+      // If matched incorrectly, allow clicking to clear and retry
+      if (matchedTermId && !matchingPairs[matchedTermId].isCorrect) {
+        const newPairs = { ...matchingPairs };
+        delete newPairs[matchedTermId];
+        setMatchingPairs(newPairs);
+        handleMatch(selectedTerm, defId);
+        setSelectedTerm(null);
+        return;
+      }
+
       handleMatch(selectedTerm, defId);
       setSelectedTerm(null);
     };
 
     if (matchingComplete) {
-      const correctMatches = Object.entries(matchingPairs).filter(([k, v]) => parseInt(k) === v).length;
+      const correctMatches = Object.values(matchingPairs).filter(pair => pair.isCorrect).length;
       return (
         <motion.div
           className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 p-6 flex items-center justify-center"
@@ -873,50 +863,75 @@ const RetirementAccountsModule = () => {
             {/* Left Column - Terms */}
             <div className="space-y-4">
               <h3 className="text-xl font-bold text-emerald-700 mb-4 text-center">TERMS</h3>
-              {matchingGameData.map(item => (
-                <motion.button
-                  key={`term-${item.id}`}
-                  onClick={() => handleTermClick(item.id)}
-                  disabled={!!matchingPairs[item.id]}
-                  className={`w-full p-5 rounded-2xl border-3 font-bold text-left transition-all flex items-center gap-3 ${
-                    matchingPairs[item.id]
-                      ? 'bg-green-100 border-green-400 opacity-50 cursor-not-allowed'
-                      : selectedTerm === item.id
-                        ? 'bg-blue-100 border-blue-500 shadow-lg scale-105'
-                        : 'bg-white border-gray-300 hover:border-emerald-400 hover:shadow-md cursor-pointer'
-                  }`}
-                  whileHover={!matchingPairs[item.id] ? { scale: 1.02 } : {}}
-                  whileTap={!matchingPairs[item.id] ? { scale: 0.98 } : {}}
-                >
-                  <span className="text-3xl">{item.emoji}</span>
-                  <span className="text-lg flex-1">{item.term}</span>
-                  {matchingPairs[item.id] && <CheckCircle className="text-green-600" size={24} />}
-                </motion.button>
-              ))}
+              {matchingGameData.map(item => {
+                const matchInfo = matchingPairs[item.id];
+                const isMatched = !!matchInfo;
+                const isCorrectMatch = matchInfo?.isCorrect;
+
+                return (
+                  <motion.button
+                    key={`term-${item.id}`}
+                    onClick={() => handleTermClick(item.id)}
+                    disabled={isMatched && isCorrectMatch}
+                    className={`w-full p-5 rounded-2xl border-3 font-bold text-left transition-all flex items-center gap-3 ${
+                      isMatched
+                        ? isCorrectMatch
+                          ? 'bg-green-100 border-green-400 opacity-50 cursor-not-allowed'
+                          : 'bg-red-100 border-red-400 hover:border-red-500 hover:shadow-md cursor-pointer'
+                        : selectedTerm === item.id
+                          ? 'bg-blue-100 border-blue-500 shadow-lg scale-105'
+                          : 'bg-white border-gray-300 hover:border-emerald-400 hover:shadow-md cursor-pointer'
+                    }`}
+                    whileHover={!(isMatched && isCorrectMatch) ? { scale: 1.02 } : {}}
+                    whileTap={!(isMatched && isCorrectMatch) ? { scale: 0.98 } : {}}
+                  >
+                    <span className="text-3xl">{item.emoji}</span>
+                    <span className="text-lg flex-1">{item.term}</span>
+                    {isMatched && (
+                      isCorrectMatch
+                        ? <CheckCircle className="text-green-600" size={24} />
+                        : <AlertCircle className="text-red-600" size={24} />
+                    )}
+                  </motion.button>
+                );
+              })}
             </div>
 
             {/* Right Column - Definitions */}
             <div className="space-y-4">
               <h3 className="text-xl font-bold text-teal-700 mb-4 text-center">DEFINITIONS</h3>
-              {matchingGameData.map(item => (
-                <motion.button
-                  key={`def-${item.id}`}
-                  onClick={() => handleDefinitionClick(item.id)}
-                  disabled={Object.values(matchingPairs).includes(item.id)}
-                  className={`w-full p-5 rounded-2xl border-3 text-left transition-all ${
-                    Object.values(matchingPairs).includes(item.id)
-                      ? 'bg-green-100 border-green-400 opacity-50 cursor-not-allowed'
-                      : 'bg-white border-gray-300 hover:border-teal-400 hover:shadow-md cursor-pointer'
-                  }`}
-                  whileHover={!Object.values(matchingPairs).includes(item.id) ? { scale: 1.02 } : {}}
-                  whileTap={!Object.values(matchingPairs).includes(item.id) ? { scale: 0.98 } : {}}
-                >
-                  <span className="text-gray-700">{item.definition}</span>
-                  {Object.values(matchingPairs).includes(item.id) && (
-                    <CheckCircle className="text-green-600 mt-2" size={20} />
-                  )}
-                </motion.button>
-              ))}
+              {shuffledDefinitions.map(item => {
+                // Find which term (if any) matched to this definition
+                const matchedTermId = Object.keys(matchingPairs).find(
+                  termId => matchingPairs[termId].definitionId === item.id
+                );
+                const isMatched = !!matchedTermId;
+                const isCorrectMatch = isMatched && matchingPairs[matchedTermId].isCorrect;
+
+                return (
+                  <motion.button
+                    key={`def-${item.id}`}
+                    onClick={() => handleDefinitionClick(item.id)}
+                    disabled={isMatched && isCorrectMatch}
+                    className={`w-full p-5 rounded-2xl border-3 text-left transition-all ${
+                      isMatched
+                        ? isCorrectMatch
+                          ? 'bg-green-100 border-green-400 opacity-50 cursor-not-allowed'
+                          : 'bg-red-100 border-red-400 hover:border-red-500 hover:shadow-md cursor-pointer'
+                        : 'bg-white border-gray-300 hover:border-teal-400 hover:shadow-md cursor-pointer'
+                    }`}
+                    whileHover={!(isMatched && isCorrectMatch) ? { scale: 1.02 } : {}}
+                    whileTap={!(isMatched && isCorrectMatch) ? { scale: 0.98 } : {}}
+                  >
+                    <span className="text-gray-700">{item.definition}</span>
+                    {isMatched && (
+                      isCorrectMatch
+                        ? <CheckCircle className="text-green-600 mt-2" size={20} />
+                        : <AlertCircle className="text-red-600 mt-2" size={20} />
+                    )}
+                  </motion.button>
+                );
+              })}
             </div>
           </div>
 
@@ -946,155 +961,108 @@ const RetirementAccountsModule = () => {
     const question = quizQuestions[currentQuestion];
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 p-4 sm:p-6">
-        {/* Header */}
-        <motion.div
-          className="flex items-center justify-between mb-6 bg-white rounded-xl p-4 shadow-lg max-w-2xl mx-auto"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
+      <div className="max-w-4xl mx-auto pt-16 px-4">
+        {/* Navigation Buttons */}
+        <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate('/game')}
-              className="flex items-center gap-2 text-gray-600 hover:text-teal-600 transition-colors font-medium group"
-            >
-              <div className="p-2 rounded-lg bg-teal-50 group-hover:bg-teal-100 transition-colors">
-                <ArrowLeft size={18} />
-              </div>
-              <span className="hidden sm:inline">Learning Path</span>
-            </button>
-            {currentQuestion > 0 && (
-              <>
-                <div className="h-6 w-px bg-gray-300"></div>
-                <button
-                  onClick={() => setCurrentQuestion(prev => prev - 1)}
-                  className="flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors text-sm font-medium"
-                >
-                  <ArrowLeft size={14} />
-                  <span>Previous</span>
-                </button>
-              </>
+            {(currentQuestion > 0 && !showAnswerResult) && (
+              <button
+                onClick={() => setCurrentQuestion(prev => prev - 1)}
+                className="flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors font-medium"
+              >
+                <ArrowLeft size={20} />
+                <span>Previous Question</span>
+              </button>
             )}
           </div>
-          <div className="text-center">
-            <h1 className="text-lg sm:text-xl font-bold text-gray-800">Knowledge Check</h1>
-            <p className="text-xs sm:text-sm text-gray-600">Question {currentQuestion + 1} of {quizQuestions.length}</p>
-          </div>
-          <div className="flex items-center gap-2 text-emerald-600">
-            <Landmark className="w-5 h-5" />
-            <span className="font-semibold text-sm">200 XP</span>
-          </div>
-        </motion.div>
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors font-medium"
+          >
+            <ArrowLeft size={20} />
+            <span>Back to Dashboard</span>
+          </button>
+        </div>
 
-        <div className="max-w-2xl mx-auto">
-          {/* Progress Dots */}
-          <div className="flex items-center justify-center gap-2 mb-6 flex-wrap">
-            {quizQuestions.map((_, index) => (
-              <motion.div
-                key={index}
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: index * 0.05 }}
-                className={`w-3 h-3 rounded-full transition-all ${
-                  selectedAnswers[index]
-                    ? 'bg-emerald-500'
-                    : index === currentQuestion
-                      ? 'bg-teal-400 ring-4 ring-teal-200'
-                      : 'bg-gray-200'
-                }`}
-              />
-            ))}
-          </div>
-
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentQuestion}
-              className="bg-white rounded-2xl p-5 sm:p-8 shadow-lg"
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -50 }}
-            >
-              {/* Question */}
-              <div className="mb-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-xl flex items-center justify-center text-white font-bold">
-                    {currentQuestion + 1}
-                  </div>
-                  <div className="text-sm text-gray-500">Question</div>
-                </div>
-                <h2 className="text-lg sm:text-xl font-bold text-gray-800 leading-relaxed">
+        <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden flex flex-col min-h-[500px]">
+          <div className="flex-1 p-8 lg:p-16 flex flex-col justify-center">
+            <div className="flex justify-between items-end mb-8 border-b border-gray-100 pb-6">
+              <div>
+                <span className="text-sm font-bold text-emerald-600 uppercase tracking-wider block mb-2">
+                  Question {currentQuestion + 1} of {quizQuestions.length}
+                </span>
+                <h2 className="text-2xl lg:text-4xl font-bold text-slate-900 leading-tight">
                   {question.question}
                 </h2>
               </div>
+              <div className="hidden lg:block text-slate-300">
+                <span className="text-5xl">🏦</span>
+              </div>
+            </div>
 
-              {/* Options */}
-              <div className="space-y-3 mb-6">
-                {question.options.map((option, idx) => (
-                  <motion.button
-                    key={option.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.1 }}
-                    className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
-                      selectedAnswers[currentQuestion] === option.id
-                        ? 'border-teal-500 bg-teal-50 shadow-md'
-                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {question.options.map((option, idx) => {
+                const isSelected = selectedAnswers[currentQuestion] === idx;
+                const isCorrect = idx === question.correctIndex;
+                const showCorrectness = showAnswerResult && (isSelected || isCorrect);
+
+                return (
+                  <button
+                    key={idx}
+                    onClick={() => !showAnswerResult && handleAnswerSelect(currentQuestion, idx)}
+                    disabled={showAnswerResult}
+                    className={`p-6 lg:p-8 rounded-2xl text-left border-2 transition-all flex items-start gap-4 ${
+                      showCorrectness
+                        ? isCorrect
+                          ? 'bg-green-50 border-green-500 text-green-900'
+                          : isSelected
+                            ? 'bg-red-50 border-red-500 text-red-900'
+                            : 'bg-white border-slate-100 opacity-50'
+                        : isSelected
+                          ? 'bg-blue-50 border-blue-600 shadow-lg scale-[1.02]'
+                          : 'bg-white border-slate-200 hover:border-blue-400 hover:shadow-md'
                     }`}
-                    onClick={() => handleAnswerSelect(currentQuestion, option.id)}
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.99 }}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center font-bold text-sm ${
-                        selectedAnswers[currentQuestion] === option.id
-                          ? 'border-teal-500 bg-teal-500 text-white'
-                          : 'border-gray-300 text-gray-500'
-                      }`}>
-                        {option.id.toUpperCase()}
-                      </div>
-                      <span className="text-gray-800 font-medium">{option.text}</span>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${
+                      showCorrectness && isCorrect
+                        ? 'bg-green-500 text-white'
+                        : showCorrectness && isSelected
+                          ? 'bg-red-500 text-white'
+                          : isSelected
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-slate-100 text-slate-500'
+                    }`}>
+                      {String.fromCharCode(65 + idx)}
                     </div>
-                  </motion.button>
-                ))}
-              </div>
+                    <span className="text-lg font-medium leading-snug flex-1">{option}</span>
+                    {showCorrectness && isCorrect && <span className="ml-auto text-green-600 shrink-0 text-2xl">✓</span>}
+                    {showCorrectness && isSelected && !isCorrect && <span className="ml-auto text-red-600 shrink-0 text-2xl">✗</span>}
+                  </button>
+                );
+              })}
+            </div>
 
-              {/* Navigation */}
-              <div className="flex justify-between">
+            {showAnswerResult && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-8 bg-slate-900 text-white p-8 rounded-3xl flex flex-col md:flex-row items-center gap-8 shadow-2xl"
+              >
+                <div className="flex-1">
+                  <h4 className="font-bold text-emerald-400 uppercase tracking-wider text-sm mb-2">Explanation</h4>
+                  <p className="text-lg leading-relaxed text-slate-200">
+                    {question.explanation}
+                  </p>
+                </div>
                 <button
-                  onClick={() => currentQuestion === 0 ? setCurrentPhase('learn') : setCurrentQuestion(prev => prev - 1)}
-                  className="px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-medium bg-gray-200 hover:bg-gray-300 text-gray-700 transition"
+                  onClick={handleNextQuestion}
+                  className="w-full md:w-auto px-8 py-4 bg-white text-slate-900 rounded-xl font-bold hover:bg-blue-50 transition-colors whitespace-nowrap"
                 >
-                  Previous
+                  {currentQuestion < quizQuestions.length - 1 ? 'Next Question' : 'Complete Quiz'}
                 </button>
-
-                {currentQuestion < quizQuestions.length - 1 ? (
-                  <button
-                    onClick={() => setCurrentQuestion(prev => prev + 1)}
-                    disabled={!selectedAnswers[currentQuestion]}
-                    className={`px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-medium transition ${
-                      !selectedAnswers[currentQuestion]
-                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                        : 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-md'
-                    }`}
-                  >
-                    Next Question
-                  </button>
-                ) : (
-                  <button
-                    onClick={handleFinish}
-                    disabled={!selectedAnswers[currentQuestion]}
-                    className={`px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-medium transition ${
-                      !selectedAnswers[currentQuestion]
-                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                        : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-md'
-                    }`}
-                  >
-                    See Results
-                  </button>
-                )}
-              </div>
-            </motion.div>
-          </AnimatePresence>
+              </motion.div>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -1108,139 +1076,49 @@ const RetirementAccountsModule = () => {
     const passed = percentage >= RETIREMENT_PASS_THRESHOLD;
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 p-4 sm:p-6">
+      <div className="max-w-4xl mx-auto pt-16 px-4">
         <motion.div
-          className="max-w-2xl mx-auto"
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="bg-white rounded-3xl shadow-xl p-12 text-center border border-gray-100"
         >
-          {/* Results Card */}
-          <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-lg mb-6">
-            <div className="text-center mb-6">
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: "spring", stiffness: 200 }}
-                className="text-6xl sm:text-7xl mb-4"
-              >
-                {passed ? '🎉' : '📚'}
-              </motion.div>
-              <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">
-                {passed ? 'Retirement Expert!' : 'Keep Learning!'}
-              </h2>
-              <p className="text-lg text-gray-600">
-                You scored {score} out of {quizQuestions.length} ({percentage}%)
-              </p>
-
-              {/* Score Visual */}
-              <div className="mt-6 flex justify-center">
-                <div className="relative w-32 h-32">
-                  <svg className="w-full h-full transform -rotate-90">
-                    <circle
-                      cx="64"
-                      cy="64"
-                      r="56"
-                      fill="none"
-                      stroke="#e5e7eb"
-                      strokeWidth="12"
-                    />
-                    <motion.circle
-                      cx="64"
-                      cy="64"
-                      r="56"
-                      fill="none"
-                      stroke={passed ? "#10b981" : "#f59e0b"}
-                      strokeWidth="12"
-                      strokeLinecap="round"
-                      initial={{ strokeDasharray: "0 352" }}
-                      animate={{ strokeDasharray: `${(percentage / 100) * 352} 352` }}
-                      transition={{ duration: 1, delay: 0.5 }}
-                    />
-                  </svg>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className={`text-2xl font-bold ${passed ? 'text-emerald-600' : 'text-amber-600'}`}>
-                      {percentage}%
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Save Status */}
-              {isSaving && (
-                <div className="mt-4 text-blue-600 flex items-center justify-center gap-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                  <span>Saving your progress...</span>
-                </div>
-              )}
-
-              {!isSaving && saveResult && (
-                <div className={`mt-4 p-3 rounded-lg ${saveResult.passed ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                  {saveResult.passed ? (
-                    <div className="flex items-center justify-center gap-2">
-                      <CheckCircle className="w-5 h-5" />
-                      <span className="font-semibold">Module Completed! 🎉</span>
-                    </div>
-                  ) : (
-                    <div>
-                      <div className="font-semibold">Progress Saved</div>
-                      <div className="text-sm">You need 80% to pass. Review and try again!</div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+          <div className={`w-32 h-32 mx-auto rounded-full flex items-center justify-center mb-8 shadow-2xl ${
+            passed ? 'bg-green-500' : 'bg-amber-500'
+          }`}>
+            <span className="text-6xl">{passed ? '🏆' : '📚'}</span>
           </div>
 
-          {/* Detailed Results */}
-          <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-lg mb-6">
-            <h3 className="font-bold text-gray-800 mb-4">Review Your Answers</h3>
-            <div className="space-y-4 max-h-96 overflow-y-auto">
-              {quizQuestions.map((q, idx) => {
-                const selectedAnswer = selectedAnswers[idx];
-                const correctOption = q.options.find(opt => opt.correct);
-                const isCorrect = selectedAnswer === correctOption?.id;
-                const selectedOption = q.options.find(opt => opt.id === selectedAnswer);
+          <h2 className="text-5xl font-black text-slate-900 mb-4">
+            {passed ? 'Outstanding!' : 'Keep Learning!'}
+          </h2>
+          <p className="text-2xl text-slate-500 mb-10">
+            You scored <span className="font-bold text-slate-900">{score}/{quizQuestions.length}</span> ({percentage}%)
+          </p>
 
-                return (
-                  <div key={q.id} className={`p-4 rounded-xl border-2 ${isCorrect ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
-                    <div className="flex items-start gap-2 mb-2">
-                      {isCorrect ? (
-                        <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-                      ) : (
-                        <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                      )}
-                      <div className="flex-1">
-                        <p className="font-medium text-gray-800 text-sm">{q.question}</p>
-                        <p className="text-xs text-gray-600 mt-1">
-                          Your answer: <span className={isCorrect ? 'text-green-600' : 'text-red-600'}>{selectedOption?.text}</span>
-                        </p>
-                        {!isCorrect && (
-                          <p className="text-xs text-green-600 mt-1">
-                            Correct: {correctOption?.text}
-                          </p>
-                        )}
-                        <p className="text-xs text-gray-500 mt-2 italic">{q.explanation}</p>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+          {passed ? (
+            <div className="bg-green-50 border-2 border-green-500 rounded-2xl p-8 mb-10">
+              <p className="text-green-800 font-bold text-xl mb-2">🎊 Congratulations! You passed!</p>
+              <p className="text-green-700 text-lg">You've mastered the Retirement Accounts module</p>
             </div>
-          </div>
+          ) : (
+            <div className="bg-amber-50 border-2 border-amber-500 rounded-2xl p-8 mb-10">
+              <p className="text-amber-800 font-bold text-xl mb-2">You need 80% to pass ({Math.ceil(quizQuestions.length * 0.8)}/{quizQuestions.length} correct)</p>
+              <p className="text-amber-700 text-lg">Review the material and try again - you're getting there!</p>
+            </div>
+          )}
 
-          {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <button
-              onClick={() => navigate('/game')}
-              className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-medium transition"
-            >
-              Back to Learning Path
-            </button>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
               onClick={resetModule}
-              className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl font-medium transition"
+              className="px-8 py-4 rounded-xl bg-slate-900 text-white hover:bg-slate-800 font-bold text-lg transition-all shadow-lg"
             >
-              Try Again
+              Retake Quiz
+            </button>
+            <button
+              onClick={() => navigate('/roadmap')}
+              className="px-8 py-4 rounded-xl border-2 border-slate-300 text-slate-700 hover:bg-slate-50 font-bold text-lg transition-all"
+            >
+              Back to Roadmap
             </button>
           </div>
         </motion.div>
@@ -1266,13 +1144,9 @@ const RetirementAccountsModule = () => {
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
         >
-          <motion.div
-            className="text-6xl mb-4"
-            animate={{ rotate: [0, -10, 10, -10, 0] }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-          >
+          <div className="text-6xl mb-4">
             🏦
-          </motion.div>
+          </div>
           <h2 className="text-2xl font-bold text-gray-800 mb-2">Module Completed!</h2>
           <p className="text-gray-600 mb-6">
             You've mastered Retirement Accounts! You now understand 401(k)s, IRAs, and how to build wealth for your future.
