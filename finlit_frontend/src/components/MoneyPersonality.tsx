@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
+  ArrowLeft,
   ArrowRight,
   RefreshCw,
   CheckCircle2,
@@ -464,6 +465,7 @@ const ResultsView: React.FC<{
 
 const MoneyPersonality: React.FC = () => {
   const { user } = useAuthContext();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [existingResult, setExistingResult] = useState<{

@@ -20,9 +20,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title }) =>
   const [showCertTooltip, setShowCertTooltip] = useState(false);
 
   const totalModules = 10;
-  const completedModules = progress?.completedModules || 0;
+  const completedModules = progress?.moduleScores?.filter(m => m.passed).length || 0;
   const totalXP = progress?.totalXP || 0;
-  const streak = progress?.dailyStreak || 0;
+  const streak = progress?.streak || 0;
 
   const isActivePath = (path: string) => location.pathname === path;
 
@@ -131,7 +131,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title }) =>
         `}>
           <button
             onClick={() => navigate('/dashboard')}
-            className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg text-sm sm:text-base lg:text-lg ${isActivePath('/dashboard') ? 'bg-blue-500' : 'hover:bg-blue-500'}`}
+            className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg text-sm sm:text-base ${isActivePath('/dashboard') ? 'bg-blue-500' : 'hover:bg-blue-500'}`}
           >
             <Home size={20} className="sm:w-6 sm:h-6" />
             <span className="font-medium">Home</span>
@@ -139,7 +139,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title }) =>
 
           <button
             onClick={() => navigate('/game')}
-            className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg text-sm sm:text-base lg:text-lg ${isActivePath('/game') ? 'bg-blue-500' : 'hover:bg-blue-500'}`}
+            className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg text-sm sm:text-base ${isActivePath('/game') ? 'bg-blue-500' : 'hover:bg-blue-500'}`}
           >
             <Target size={20} className="sm:w-6 sm:h-6" />
             <span className="font-medium">Learning Path</span>
@@ -147,7 +147,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title }) =>
 
           <button
             onClick={() => navigate('/economic-quiz')}
-            className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg text-sm sm:text-base lg:text-lg ${isActivePath('/economic-quiz') ? 'bg-blue-500' : 'hover:bg-blue-500'}`}
+            className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg text-sm sm:text-base ${isActivePath('/economic-quiz') ? 'bg-blue-500' : 'hover:bg-blue-500'}`}
           >
             <Zap size={20} className="sm:w-6 sm:h-6" />
             <span className="font-medium">Quick Quiz</span>
@@ -155,7 +155,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title }) =>
 
           <button
             onClick={() => navigate('/games')}
-            className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg text-sm sm:text-base lg:text-lg ${isActivePath('/games') ? 'bg-blue-500' : 'hover:bg-blue-500'}`}
+            className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg text-sm sm:text-base ${isActivePath('/games') ? 'bg-blue-500' : 'hover:bg-blue-500'}`}
           >
             <Gamepad2 size={20} className="sm:w-6 sm:h-6" />
             <span className="font-medium">Games</span>
@@ -163,7 +163,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title }) =>
 
           <button
             onClick={() => navigate('/case-study')}
-            className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg text-sm sm:text-base lg:text-lg ${isActivePath('/case-study') ? 'bg-blue-500' : 'hover:bg-blue-500'}`}
+            className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg text-sm sm:text-base ${isActivePath('/case-study') ? 'bg-blue-500' : 'hover:bg-blue-500'}`}
           >
             <BookOpen size={20} className="sm:w-6 sm:h-6" />
             <span className="font-medium">Case Study</span>
@@ -171,7 +171,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title }) =>
 
           <button
             onClick={() => navigate('/financial-tools')}
-            className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg text-sm sm:text-base lg:text-lg ${isActivePath('/financial-tools') ? 'bg-blue-500' : 'hover:bg-blue-500'}`}
+            className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg text-sm sm:text-base ${isActivePath('/financial-tools') ? 'bg-blue-500' : 'hover:bg-blue-500'}`}
           >
             <Calculator size={20} className="sm:w-6 sm:h-6" />
             <span className="font-medium">Financial Tools</span>
@@ -179,15 +179,15 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title }) =>
 
           <button
             onClick={() => navigate('/big-money-decisions')}
-            className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg text-sm sm:text-base lg:text-lg ${isActivePath('/big-money-decisions') ? 'bg-blue-500' : 'hover:bg-blue-500'}`}
+            className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg text-sm sm:text-base ${isActivePath('/big-money-decisions') ? 'bg-blue-500' : 'hover:bg-blue-500'}`}
           >
             <DollarSign size={20} className="sm:w-6 sm:h-6" />
-            <span className="font-medium">Big Money Decisions</span>
+            <span className="font-medium">Money Decisions</span>
           </button>
 
           <button
             onClick={() => navigate('/money-personality')}
-            className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg text-sm sm:text-base lg:text-lg ${isActivePath('/money-personality') ? 'bg-blue-500' : 'hover:bg-blue-500'}`}
+            className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg text-sm sm:text-base ${isActivePath('/money-personality') ? 'bg-blue-500' : 'hover:bg-blue-500'}`}
           >
             <Brain size={20} className="sm:w-6 sm:h-6" />
             <span className="font-medium">Money Personality</span>
@@ -195,7 +195,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title }) =>
 
           <button
             onClick={() => navigate('/certificate')}
-            className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg text-sm sm:text-base lg:text-lg ${completedModules === totalModules ? 'bg-emerald-500' : isActivePath('/certificate') ? 'bg-blue-500' : 'hover:bg-blue-500'}`}
+            className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg text-sm sm:text-base ${completedModules === totalModules ? 'bg-emerald-500' : isActivePath('/certificate') ? 'bg-blue-500' : 'hover:bg-blue-500'}`}
           >
             <GraduationCap
               size={20}
@@ -208,7 +208,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title }) =>
           {(user?.role === 'admin' || user?.role === 'owner') && (
             <button
               onClick={() => navigate(user?.role === 'owner' ? '/admin-setup' : '/admin')}
-              className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg text-sm sm:text-base lg:text-lg bg-blue-600/50 border border-white/20 ${isActivePath('/admin') || isActivePath('/admin-setup') ? 'bg-blue-500' : 'hover:bg-blue-500'}`}
+              className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg text-sm sm:text-base bg-blue-600/50 border border-white/20 ${isActivePath('/admin') || isActivePath('/admin-setup') ? 'bg-blue-500' : 'hover:bg-blue-500'}`}
             >
               <Settings size={20} className="sm:w-6 sm:h-6" />
               <span className="font-medium">Admin Panel</span>
@@ -218,7 +218,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title }) =>
           {/* Contact Us Link */}
           <button
             onClick={() => navigate('/contact')}
-            className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg text-sm sm:text-base lg:text-lg ${isActivePath('/contact') ? 'bg-blue-500' : 'hover:bg-blue-500'}`}
+            className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg text-sm sm:text-base ${isActivePath('/contact') ? 'bg-blue-500' : 'hover:bg-blue-500'}`}
           >
             <Mail size={20} className="sm:w-6 sm:h-6" />
             <span className="font-medium">Contact Us</span>
@@ -227,7 +227,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title }) =>
           {/* Bug Report Link */}
           <button
             onClick={() => navigate('/bug-report')}
-            className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg text-sm sm:text-base lg:text-lg ${isActivePath('/bug-report') ? 'bg-blue-500' : 'hover:bg-blue-500'}`}
+            className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg text-sm sm:text-base ${isActivePath('/bug-report') ? 'bg-blue-500' : 'hover:bg-blue-500'}`}
           >
             <Bug size={20} className="sm:w-6 sm:h-6" />
             <span className="font-medium">Report Bug</span>

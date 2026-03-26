@@ -593,7 +593,6 @@ export default function NeedsWants() {
                       animate={{
                         scale: 1,
                         opacity: 1,
-                        rotateY: 0,
                         x: isDragging ? dragOffset.x : 0,
                         rotate: isDragging ? dragOffset.x * 0.1 : 0,
                         rotateY: isDragging ? dragOffset.x * 0.05 : 0

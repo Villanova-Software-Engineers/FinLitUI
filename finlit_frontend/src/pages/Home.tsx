@@ -739,7 +739,7 @@ const FinLitApp: React.FC = () => {
               setActiveSection('home');
               setMobileMenuOpen(false);
             }}
-            className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg text-sm sm:text-base lg:text-lg ${activeSection === 'home' ? 'bg-blue-500' : 'hover:bg-blue-500'}`}
+            className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg text-sm sm:text-base ${activeSection === 'home' ? 'bg-blue-500' : 'hover:bg-blue-500'}`}
           >
             <Home size={20} className="sm:w-6 sm:h-6" />
             <span className="font-medium">Home</span>
@@ -750,7 +750,7 @@ const FinLitApp: React.FC = () => {
               navigate('/game');
               setMobileMenuOpen(false);
             }}
-            className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 hover:bg-blue-500 rounded-lg text-sm sm:text-base lg:text-lg"
+            className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 hover:bg-blue-500 rounded-lg text-sm sm:text-base"
           >
             <Target size={20} className="sm:w-6 sm:h-6" />
             <span className="font-medium">Learning Path</span>
@@ -761,7 +761,7 @@ const FinLitApp: React.FC = () => {
               navigate('/economic-quiz');
               setMobileMenuOpen(false);
             }}
-            className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 hover:bg-blue-500 rounded-lg text-sm sm:text-base lg:text-lg"
+            className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 hover:bg-blue-500 rounded-lg text-sm sm:text-base"
           >
             <Zap size={20} className="sm:w-6 sm:h-6" />
             <span className="font-medium">Quick Quiz</span>
@@ -772,7 +772,7 @@ const FinLitApp: React.FC = () => {
               navigate('/games');
               setMobileMenuOpen(false);
             }}
-            className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 hover:bg-blue-500 rounded-lg text-sm sm:text-base lg:text-lg"
+            className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 hover:bg-blue-500 rounded-lg text-sm sm:text-base"
           >
             <Gamepad2 size={20} className="sm:w-6 sm:h-6" />
             <span className="font-medium">Games</span>
@@ -783,7 +783,7 @@ const FinLitApp: React.FC = () => {
               navigate('/case-study');
               setMobileMenuOpen(false);
             }}
-            className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 hover:bg-blue-500 rounded-lg text-sm sm:text-base lg:text-lg"
+            className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 hover:bg-blue-500 rounded-lg text-sm sm:text-base"
           >
             <BookOpen size={20} className="sm:w-6 sm:h-6" />
             <span className="font-medium">Case Study</span>
@@ -794,7 +794,7 @@ const FinLitApp: React.FC = () => {
               navigate('/financial-tools');
               setMobileMenuOpen(false);
             }}
-            className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 hover:bg-blue-500 rounded-lg text-sm sm:text-base lg:text-lg"
+            className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 hover:bg-blue-500 rounded-lg text-sm sm:text-base"
           >
             <Calculator size={20} className="sm:w-6 sm:h-6" />
             <span className="font-medium">Financial Tools</span>
@@ -805,10 +805,10 @@ const FinLitApp: React.FC = () => {
               navigate('/big-money-decisions');
               setMobileMenuOpen(false);
             }}
-            className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 hover:bg-blue-500 rounded-lg text-sm sm:text-base lg:text-lg"
+            className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 hover:bg-blue-500 rounded-lg text-sm sm:text-base"
           >
             <DollarSign size={20} className="sm:w-6 sm:h-6" />
-            <span className="font-medium">Big Money Decisions</span>
+            <span className="font-medium">Money Decisions</span>
           </button>
 
           <button
@@ -816,7 +816,7 @@ const FinLitApp: React.FC = () => {
               navigate('/money-personality');
               setMobileMenuOpen(false);
             }}
-            className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 hover:bg-blue-500 rounded-lg text-sm sm:text-base lg:text-lg"
+            className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 hover:bg-blue-500 rounded-lg text-sm sm:text-base"
           >
             <Brain size={20} className="sm:w-6 sm:h-6" />
             <span className="font-medium">Money Personality</span>
@@ -827,7 +827,7 @@ const FinLitApp: React.FC = () => {
               setActiveSection('profile');
               setMobileMenuOpen(false);
             }}
-            className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg text-sm sm:text-base lg:text-lg ${activeSection === 'profile' ? 'bg-blue-500' : 'hover:bg-blue-500'}`}
+            className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg text-sm sm:text-base ${activeSection === 'profile' ? 'bg-blue-500' : 'hover:bg-blue-500'}`}
           >
             <User size={20} className="sm:w-6 sm:h-6" />
             <span className="font-medium">Profile</span>
@@ -839,7 +839,7 @@ const FinLitApp: React.FC = () => {
               navigate('/certificate');
               setMobileMenuOpen(false);
             }}
-            className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg text-sm sm:text-base lg:text-lg ${completedModules === totalModules ? 'bg-emerald-500' : 'hover:bg-blue-500'}`}
+            className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg text-sm sm:text-base ${completedModules === totalModules ? 'bg-emerald-500' : 'hover:bg-blue-500'}`}
 
           >
             <GraduationCap
@@ -856,7 +856,7 @@ const FinLitApp: React.FC = () => {
                 navigate(user?.role === 'owner' ? '/admin-setup' : '/admin');
                 setMobileMenuOpen(false);
               }}
-              className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 hover:bg-blue-500 rounded-lg text-sm sm:text-base lg:text-lg bg-blue-600/50 border border-white/20"
+              className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 hover:bg-blue-500 rounded-lg text-sm sm:text-base bg-blue-600/50 border border-white/20"
             >
               <Settings size={20} className="sm:w-6 sm:h-6" />
               <span className="font-medium">Admin Panel</span>
@@ -869,7 +869,7 @@ const FinLitApp: React.FC = () => {
               navigate('/contact');
               setMobileMenuOpen(false);
             }}
-            className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 hover:bg-blue-500 rounded-lg text-sm sm:text-base lg:text-lg"
+            className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 hover:bg-blue-500 rounded-lg text-sm sm:text-base"
           >
             <Mail size={20} className="sm:w-6 sm:h-6" />
             <span className="font-medium">Contact Us</span>
@@ -881,7 +881,7 @@ const FinLitApp: React.FC = () => {
               navigate('/bug-report');
               setMobileMenuOpen(false);
             }}
-            className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 hover:bg-blue-500 rounded-lg text-sm sm:text-base lg:text-lg"
+            className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 hover:bg-blue-500 rounded-lg text-sm sm:text-base"
           >
             <Bug size={20} className="sm:w-6 sm:h-6" />
             <span className="font-medium">Report Bug</span>

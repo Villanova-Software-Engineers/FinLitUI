@@ -1,9 +1,11 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Target, Heart, Lightbulb, Users, GraduationCap, Shield } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../components/DashboardLayout';
 
 const WhoWeAre: React.FC = () => {
+  const navigate = useNavigate();
 
   const values = [
     {
