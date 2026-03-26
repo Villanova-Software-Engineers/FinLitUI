@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Target, Play } from 'lucide-react';
+import { Target, Play } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import DashboardLayout from '../components/DashboardLayout';
 
 const Games = () => {
   const navigate = useNavigate();
@@ -57,23 +58,8 @@ const Games = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      {/* Header */}
-      <div className="bg-white/80 backdrop-blur-xl border-b border-gray-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => navigate('/')}
-              className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors"
-            >
-              <ArrowLeft size={24} />
-              <span className="font-medium">Back to Home</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 py-8">
+    <DashboardLayout>
+      <div className="max-w-7xl mx-auto">
         {/* Page Header */}
         <div className="mb-12 text-center">
           <motion.h1 
@@ -182,7 +168,7 @@ const Games = () => {
           </div>
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 
