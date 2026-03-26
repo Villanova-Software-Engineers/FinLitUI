@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, ArrowRight, Star, Trophy, CheckCircle, XCircle,
@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useModuleScore, MODULES } from '../hooks/useModuleScore';
+import { shuffleQuizOptions } from '../utils/shuffleQuizOptions';
 
 const CryptoModule = () => {
   const navigate = useNavigate();
@@ -141,16 +142,71 @@ const CryptoModule = () => {
   // ==========================================
   // QUIZ DATA
   // ==========================================
-  const quizQuestions = [
-    { q: "What powers most cryptocurrencies?", opts: ["Cloud Computing", "Blockchain", "AI", "Quantum"], correct: 1, emoji: "⛓️", explanation: "Blockchain is the revolutionary technology behind cryptocurrencies. It's a distributed ledger that records all transactions across thousands of computers, making it secure and transparent." },
-    { q: "Who created Bitcoin?", opts: ["Elon Musk", "Satoshi Nakamoto", "Mark Zuckerberg", "Vitalik Buterin"], correct: 1, emoji: "🎭", explanation: "Satoshi Nakamoto is the mysterious pseudonymous creator of Bitcoin who published the Bitcoin whitepaper in 2008. Their true identity remains unknown to this day!" },
-    { q: "What is a 'stablecoin'?", opts: ["Never changes price", "Pegged to $1 USD", "The oldest crypto", "A physical coin"], correct: 1, emoji: "💵", explanation: "Stablecoins like USDC and USDT are designed to maintain a 1:1 value with the US dollar, providing stability in the volatile crypto market." },
-    { q: "What should you NEVER share?", opts: ["Your wallet address", "Transaction history", "Private key", "Portfolio value"], correct: 2, emoji: "🔑", explanation: "Your private key (usually 12-24 words) is the master password to your crypto. Anyone with it can steal everything. Never share it with anyone - not even 'customer support'!" },
-    { q: "What does 'HODL' mean?", opts: ["A crypto exchange", "Hold On for Dear Life", "A trading strategy", "A type of wallet"], correct: 1, emoji: "💎", explanation: "HODL originated from a typo of 'hold' and became crypto slang for holding your investments long-term despite market volatility. It's now a badge of honor for patient investors!" },
-    { q: "Most secure wallet for savings?", opts: ["Hot wallet", "Exchange wallet", "Cold wallet", "Email wallet"], correct: 2, emoji: "🧊", explanation: "Cold wallets (hardware wallets like Ledger or Trezor) are offline devices that keep your crypto completely disconnected from the internet, making them immune to online hacking." },
-    { q: "First rule of crypto investing?", opts: ["Invest everything", "Only risk what you can lose", "Follow influencers", "Buy cheap coins"], correct: 1, emoji: "⚠️", explanation: "Crypto is highly volatile - prices can drop 50% or more in days. Only invest money you can afford to lose completely. Never use rent money or emergency funds!" },
-    { q: "What makes blockchain 'immutable'?", opts: ["It's fast", "Data can't be changed", "Uses AI", "Bank controlled"], correct: 1, emoji: "🔒", explanation: "Once data is written to the blockchain, it cannot be altered or deleted. Each block is cryptographically linked to the previous one, so changing anything would require redoing all subsequent blocks - practically impossible!" },
+  const quizQuestionsBase = [
+    {
+      question: "What powers most cryptocurrencies?",
+      options: ["Cloud Computing", "Blockchain", "AI", "Quantum"],
+      correctIndex: 1,
+      explanation: "Blockchain is the revolutionary technology behind cryptocurrencies. It's a distributed ledger that records all transactions across thousands of computers, making it secure and transparent."
+    },
+    {
+      question: "Who created Bitcoin?",
+      options: ["Elon Musk", "Satoshi Nakamoto", "Mark Zuckerberg", "Vitalik Buterin"],
+      correctIndex: 1,
+      explanation: "Satoshi Nakamoto is the mysterious pseudonymous creator of Bitcoin who published the Bitcoin whitepaper in 2008. Their true identity remains unknown to this day!"
+    },
+    {
+      question: "What is a 'stablecoin'?",
+      options: ["Never changes price", "Pegged to $1 USD", "The oldest crypto", "A physical coin"],
+      correctIndex: 1,
+      explanation: "Stablecoins like USDC and USDT are designed to maintain a 1:1 value with the US dollar, providing stability in the volatile crypto market."
+    },
+    {
+      question: "What should you NEVER share?",
+      options: ["Your wallet address", "Transaction history", "Private key", "Portfolio value"],
+      correctIndex: 2,
+      explanation: "Your private key (usually 12-24 words) is the master password to your crypto. Anyone with it can steal everything. Never share it with anyone - not even 'customer support'!"
+    },
+    {
+      question: "What does 'HODL' mean?",
+      options: ["A crypto exchange", "Hold On for Dear Life", "A trading strategy", "A type of wallet"],
+      correctIndex: 1,
+      explanation: "HODL originated from a typo of 'hold' and became crypto slang for holding your investments long-term despite market volatility. It's now a badge of honor for patient investors!"
+    },
+    {
+      question: "Most secure wallet for savings?",
+      options: ["Hot wallet", "Exchange wallet", "Cold wallet", "Email wallet"],
+      correctIndex: 2,
+      explanation: "Cold wallets (hardware wallets like Ledger or Trezor) are offline devices that keep your crypto completely disconnected from the internet, making them immune to online hacking."
+    },
+    {
+      question: "First rule of crypto investing?",
+      options: ["Invest everything", "Only risk what you can lose", "Follow influencers", "Buy cheap coins"],
+      correctIndex: 1,
+      explanation: "Crypto is highly volatile - prices can drop 50% or more in days. Only invest money you can afford to lose completely. Never use rent money or emergency funds!"
+    },
+    {
+      question: "What makes blockchain 'immutable'?",
+      options: ["It's fast", "Data can't be changed", "Uses AI", "Bank controlled"],
+      correctIndex: 1,
+      explanation: "Once data is written to the blockchain, it cannot be altered or deleted. Each block is cryptographically linked to the previous one, so changing anything would require redoing all subsequent blocks - practically impossible!"
+    },
+    {
+      question: "What is 'gas' in cryptocurrency?",
+      options: ["A type of coin", "Transaction fee", "Mining reward", "Wallet backup"],
+      correctIndex: 1,
+      explanation: "Gas refers to the transaction fees you pay on blockchain networks like Ethereum. These fees go to miners/validators who process and validate your transactions."
+    },
+    {
+      question: "What's the safest way to store your seed phrase?",
+      options: ["Screenshot on phone", "Email to yourself", "Write on paper, store safely", "Cloud storage"],
+      correctIndex: 2,
+      explanation: "Write your seed phrase on paper and store it in a secure location like a safe. Never take screenshots or store it digitally - these can be hacked. Your seed phrase is the backup to recover your entire wallet!"
+    },
   ];
+
+  // Shuffle quiz options
+  const quizQuestions = useMemo(() => shuffleQuizOptions(quizQuestionsBase), []);
 
   // ==========================================
   // HANDLERS
@@ -158,31 +214,33 @@ const CryptoModule = () => {
   const handleQuizAnswer = (idx) => {
     if (showFeedback) return;
     setSelectedAnswer(idx);
-    const isCorrect = idx === quizQuestions[quizQuestion].correct;
-
-    if (isCorrect) {
-      setQuizScore(prev => prev + 1);
-      setShowCelebration(true);
-      setTimeout(() => setShowCelebration(false), 1500);
-    }
-
-    setQuizAnswers([...quizAnswers, { question: quizQuestion, answer: idx, correct: isCorrect }]);
     setShowFeedback(true);
   };
 
   const handleNextQuestion = () => {
+    const isCorrect = selectedAnswer === quizQuestions[quizQuestion].correctIndex;
+
+    // Calculate new score
+    const newScore = quizScore + (isCorrect ? 1 : 0);
+    if (isCorrect) {
+      setQuizScore(newScore);
+    }
+
+    setQuizAnswers([...quizAnswers, { question: quizQuestion, answer: selectedAnswer, correct: isCorrect }]);
+
     setShowFeedback(false);
     setSelectedAnswer(null);
+
     if (quizQuestion < quizQuestions.length - 1) {
       setQuizQuestion(prev => prev + 1);
     } else {
-      handleQuizComplete();
+      handleQuizComplete(newScore);
     }
   };
 
-  const handleQuizComplete = async () => {
+  const handleQuizComplete = async (finalQuizScore) => {
     setCurrentPhase('results');
-    const finalScore = Math.round((quizScore / quizQuestions.length) * 100);
+    const finalScore = Math.round((finalQuizScore / quizQuestions.length) * 100);
     setIsSaving(true);
     try {
       const result = await saveScore(MODULES.CRYPTO.id, finalScore, 100);
@@ -219,47 +277,12 @@ const CryptoModule = () => {
   };
 
   const finalPercentage = Math.round((quizScore / quizQuestions.length) * 100);
-  const passed = finalPercentage === 100;
+  const passed = finalPercentage >= 80;
 
   // ==========================================
-  // CELEBRATION OVERLAY
+  // CELEBRATION OVERLAY - Removed
   // ==========================================
-  const CelebrationOverlay = () => (
-    <AnimatePresence>
-      {showCelebration && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none"
-        >
-          <motion.div
-            initial={{ scale: 0, rotate: -180 }}
-            animate={{ scale: 1, rotate: 0 }}
-            exit={{ scale: 0, rotate: 180 }}
-            className="text-8xl"
-          >
-            🎉
-          </motion.div>
-          {[...Array(12)].map((_, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 1, y: 0, x: 0 }}
-              animate={{
-                opacity: 0,
-                y: (Math.random() - 0.5) * 400,
-                x: (Math.random() - 0.5) * 400,
-              }}
-              transition={{ duration: 1, delay: i * 0.05 }}
-              className="absolute text-4xl"
-            >
-              {['⭐', '✨', '🌟', '💫', '🎊'][i % 5]}
-            </motion.div>
-          ))}
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
+  const CelebrationOverlay = () => null;
 
   // ==========================================
   // HEADER COMPONENT
@@ -304,13 +327,9 @@ const CryptoModule = () => {
           animate={{ y: 0, opacity: 1 }}
           className="text-center mb-8"
         >
-          <motion.div
-            animate={{ scale: [1, 1.08, 1] }}
-            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-            className="text-8xl mb-4"
-          >
+          <div className="text-8xl mb-4">
             🪙
-          </motion.div>
+          </div>
           <h1 className="text-3xl font-black text-gray-900 mb-2">
             Cryptocurrency 101
           </h1>
@@ -508,13 +527,9 @@ const CryptoModule = () => {
           <motion.div key={learnStep} initial={{ x: 50, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="space-y-4">
             {/* Title Card */}
             <div className={`bg-gradient-to-r ${section.color} rounded-3xl p-6 text-white shadow-lg`}>
-              <motion.div
-                animate={{ scale: [1, 1.08, 1] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                className="text-5xl mb-3"
-              >
+              <div className="text-5xl mb-3">
                 {section.emoji}
-              </motion.div>
+              </div>
               <h2 className="text-2xl font-black mb-2">{section.title}</h2>
               {section.intro && (
                 <p className="text-white/90 text-sm leading-relaxed">{section.intro}</p>
@@ -745,129 +760,113 @@ const CryptoModule = () => {
   // RENDER: QUIZ
   // ==========================================
   const renderQuiz = () => {
-    const q = quizQuestions[quizQuestion];
+    const question = quizQuestions[quizQuestion];
 
     return (
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-h-screen bg-white">
-        <CelebrationOverlay />
-
-        {/* Quiz Header */}
-        <div className="sticky top-0 z-30 bg-white border-b border-gray-200">
-          <div className="max-w-2xl mx-auto px-4 py-3">
-            <div className="flex items-center justify-between mb-2">
-              <button onClick={() => navigate('/dashboard')} className="p-2 -ml-2 hover:bg-gray-100 rounded-full">
-                <XCircle size={28} className="text-gray-400" />
+      <div className="max-w-4xl mx-auto pt-16 px-4">
+        {/* Navigation Buttons */}
+        <div className="mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {(quizQuestion > 0 && !showFeedback) && (
+              <button
+                onClick={() => setQuizQuestion(prev => prev - 1)}
+                className="flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors font-medium"
+              >
+                <ArrowLeft size={20} />
+                <span>Previous Question</span>
               </button>
-              <div className="flex-1 mx-4">
-                <ProgressBar current={quizQuestion + 1} total={quizQuestions.length} />
-              </div>
-              <div className="text-sm font-semibold text-gray-600">
-                {quizQuestion + 1}/{quizQuestions.length}
-              </div>
-            </div>
+            )}
           </div>
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors font-medium"
+          >
+            <ArrowLeft size={20} />
+            <span>Back to Dashboard</span>
+          </button>
         </div>
 
-        <div className="max-w-2xl mx-auto px-4 py-6">
-          <motion.div key={quizQuestion} initial={{ x: 50, opacity: 0 }} animate={{ x: 0, opacity: 1 }}>
-            {/* Question */}
-            <div className="text-center mb-8">
-              <motion.div
-                animate={{ scale: [1, 1.05, 1] }}
-                transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-                className="text-6xl mb-4"
-              >
-                {q.emoji}
-              </motion.div>
-              <h2 className="text-xl font-bold text-gray-900">{q.q}</h2>
+        <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden flex flex-col min-h-[500px]">
+          <div className="flex-1 p-8 lg:p-16 flex flex-col justify-center">
+            <div className="flex justify-between items-end mb-8 border-b border-gray-100 pb-6">
+              <div>
+                <span className="text-sm font-bold text-amber-600 uppercase tracking-wider block mb-2">
+                  Question {quizQuestion + 1} of {quizQuestions.length}
+                </span>
+                <h2 className="text-2xl lg:text-4xl font-bold text-slate-900 leading-tight">
+                  {question.question}
+                </h2>
+              </div>
+              <div className="hidden lg:block text-slate-300">
+                <span className="text-5xl">🪙</span>
+              </div>
             </div>
 
-            {/* Options */}
-            <div className="space-y-3">
-              {q.opts.map((opt, idx) => {
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {question.options.map((option, idx) => {
                 const isSelected = selectedAnswer === idx;
-                const isCorrect = idx === q.correct;
-                const showResult = showFeedback && isSelected;
+                const isCorrect = idx === question.correctIndex;
+                const showCorrectness = showFeedback && (isSelected || isCorrect);
 
                 return (
-                  <motion.button
+                  <button
                     key={idx}
-                    onClick={() => handleQuizAnswer(idx)}
+                    onClick={() => !showFeedback && handleQuizAnswer(idx)}
                     disabled={showFeedback}
-                    whileHover={!showFeedback ? { scale: 1.02 } : {}}
-                    whileTap={!showFeedback ? { scale: 0.98 } : {}}
-                    className={`w-full p-4 rounded-2xl text-left border-2 transition-all ${
-                      showResult
+                    className={`p-6 lg:p-8 rounded-2xl text-left border-2 transition-all flex items-start gap-4 ${
+                      showCorrectness
                         ? isCorrect
-                          ? 'bg-green-100 border-green-500 text-green-800'
-                          : 'bg-red-100 border-red-500 text-red-800'
-                        : showFeedback && isCorrect
-                          ? 'bg-green-100 border-green-500 text-green-800'
+                          ? 'bg-green-50 border-green-500 text-green-900'
                           : isSelected
-                            ? 'bg-blue-100 border-blue-500 text-blue-800'
-                            : 'bg-gray-50 border-gray-200 hover:border-gray-400 text-gray-700'
+                            ? 'bg-red-50 border-red-500 text-red-900'
+                            : 'bg-white border-slate-100 opacity-50'
+                        : isSelected
+                          ? 'bg-blue-50 border-blue-600 shadow-lg scale-[1.02]'
+                          : 'bg-white border-slate-200 hover:border-blue-400 hover:shadow-md'
                     }`}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
-                        showResult
-                          ? isCorrect ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
-                          : showFeedback && isCorrect
-                            ? 'bg-green-500 text-white'
-                            : isSelected
-                              ? 'bg-blue-500 text-white'
-                              : 'bg-gray-200 text-gray-600'
-                      }`}>
-                        {showResult ? (isCorrect ? '✓' : '✗') : String.fromCharCode(65 + idx)}
-                      </div>
-                      <span className="font-medium">{opt}</span>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${
+                      showCorrectness && isCorrect
+                        ? 'bg-green-500 text-white'
+                        : showCorrectness && isSelected
+                          ? 'bg-red-500 text-white'
+                          : isSelected
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-slate-100 text-slate-500'
+                    }`}>
+                      {String.fromCharCode(65 + idx)}
                     </div>
-                  </motion.button>
+                    <span className="text-lg font-medium leading-snug flex-1">{option}</span>
+                    {showCorrectness && isCorrect && <span className="ml-auto text-green-600 shrink-0 text-2xl">✓</span>}
+                    {showCorrectness && isSelected && !isCorrect && <span className="ml-auto text-red-600 shrink-0 text-2xl">✗</span>}
+                  </button>
                 );
               })}
             </div>
 
-            {/* Answer Explanation & Continue */}
             {showFeedback && (
               <motion.div
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                className="mt-6 space-y-4"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-8 bg-slate-900 text-white p-8 rounded-3xl flex flex-col md:flex-row items-center gap-8 shadow-2xl"
               >
-                {/* Explanation Box */}
-                <div className={`p-4 rounded-2xl border-2 ${
-                  selectedAnswer === q.correct
-                    ? 'bg-green-50 border-green-200'
-                    : 'bg-amber-50 border-amber-200'
-                }`}>
-                  <div className="flex items-start gap-3">
-                    <span className="text-2xl">{selectedAnswer === q.correct ? '✅' : '💡'}</span>
-                    <div>
-                      <p className={`font-bold mb-1 ${
-                        selectedAnswer === q.correct ? 'text-green-800' : 'text-amber-800'
-                      }`}>
-                        {selectedAnswer === q.correct ? 'Correct!' : 'Not quite!'}
-                      </p>
-                      <p className="text-gray-700 text-sm leading-relaxed">{q.explanation}</p>
-                    </div>
-                  </div>
+                <div className="flex-1">
+                  <h4 className="font-bold text-amber-400 uppercase tracking-wider text-sm mb-2">Explanation</h4>
+                  <p className="text-lg leading-relaxed text-slate-200">
+                    {question.explanation}
+                  </p>
                 </div>
-
                 <button
                   onClick={handleNextQuestion}
-                  className={`w-full py-4 rounded-2xl font-bold text-lg ${
-                    selectedAnswer === q.correct
-                      ? 'bg-green-500 text-white'
-                      : 'bg-amber-500 text-white'
-                  }`}
+                  className="w-full md:w-auto px-8 py-4 bg-white text-slate-900 rounded-xl font-bold hover:bg-blue-50 transition-colors whitespace-nowrap"
                 >
-                  {quizQuestion < quizQuestions.length - 1 ? 'CONTINUE' : 'SEE RESULTS'}
+                  {quizQuestion < quizQuestions.length - 1 ? 'Next Question' : 'Complete Quiz'}
                 </button>
               </motion.div>
             )}
-          </motion.div>
+          </div>
         </div>
-      </motion.div>
+      </div>
     );
   };
 
@@ -918,7 +917,7 @@ const CryptoModule = () => {
           ) : (
             <>
               <h3 className="text-2xl font-bold text-amber-800 mb-2">Almost there!</h3>
-              <p className="text-amber-700">You need 100% to pass. Review and try again!</p>
+              <p className="text-amber-700">You need 80% to pass ({Math.ceil(quizQuestions.length * 0.8)}/{quizQuestions.length} correct). Review and try again!</p>
             </>
           )}
         </motion.div>
@@ -976,13 +975,9 @@ const CryptoModule = () => {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-            className="text-6xl mb-4"
-          >
+          <div className="text-6xl mb-4">
             🪙
-          </motion.div>
+          </div>
           <p className="text-gray-500 font-medium">Loading...</p>
         </div>
       </div>
@@ -1006,13 +1001,9 @@ const CryptoModule = () => {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
         >
-          <motion.div
-            className="text-6xl mb-4"
-            animate={{ scale: [1, 1.1, 1] }}
-            transition={{ duration: 1.5, ease: "easeInOut" }}
-          >
+          <div className="text-6xl mb-4">
             🪙
-          </motion.div>
+          </div>
           <h2 className="text-2xl font-bold text-gray-800 mb-2">Module Completed!</h2>
           <p className="text-gray-600 mb-6">
             You've already passed the Cryptocurrency module. Great job understanding digital currencies and blockchain!

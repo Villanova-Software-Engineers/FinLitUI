@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Star, Trophy, CheckCircle, XCircle, Heart, Zap, TrendingUp, Coins, Gamepad2, Rocket, Target, DollarSign, BarChart3, Activity, RefreshCw, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useModuleScore, MODULES } from '../hooks/useModuleScore';
+import { shuffleQuizOptions } from '../utils/shuffleQuizOptions';
 
 const StockMarketModule = () => {
   const navigate = useNavigate();
@@ -47,6 +48,7 @@ const StockMarketModule = () => {
   const [swipeAnswers, setSwipeAnswers] = useState([]);
   const [swipeDirection, setSwipeDirection] = useState(null);
   const [showSwipeResult, setShowSwipeResult] = useState(false);
+  const [dragX, setDragX] = useState(0);
 
   // Teaching Content - Stock Market Basics
   const teachingContent = [
@@ -108,108 +110,71 @@ const StockMarketModule = () => {
   ];
 
   // Test Questions - 10 questions with case study format
-  const testQuestions = [
+  const testQuestionsBase = [
     {
       question: "What happens to a stock's price when more people want to BUY than SELL?",
-      options: [
-        { id: 'A', text: "Price goes DOWN", correct: false },
-        { id: 'B', text: "Price goes UP", correct: true },
-        { id: 'C', text: "Price stays the same", correct: false },
-        { id: 'D', text: "The stock disappears", correct: false }
-      ],
+      options: ["Price goes DOWN", "Price goes UP", "Price stays the same", "The stock disappears"],
+      correctIndex: 1,
       explanation: "When demand (buyers) exceeds supply (sellers), prices increase!"
     },
     {
       question: "What is the golden rule of investing?",
-      options: [
-        { id: 'A', text: "Buy high, sell low", correct: false },
-        { id: 'B', text: "Buy low, sell high", correct: true },
-        { id: 'C', text: "Never sell anything", correct: false },
-        { id: 'D', text: "Only buy expensive stocks", correct: false }
-      ],
+      options: ["Buy high, sell low", "Buy low, sell high", "Never sell anything", "Only buy expensive stocks"],
+      correctIndex: 1,
       explanation: "Buy low, sell high - this is how you make profit!"
     },
     {
       question: "Why is diversification important?",
-      options: [
-        { id: 'A', text: "It makes trading more fun", correct: false },
-        { id: 'B', text: "It reduces risk by spreading investments", correct: true },
-        { id: 'C', text: "It guarantees profits", correct: false },
-        { id: 'D', text: "It's not important", correct: false }
-      ],
+      options: ["It makes trading more fun", "It reduces risk by spreading investments", "It guarantees profits", "It's not important"],
+      correctIndex: 1,
       explanation: "Diversification protects you - if one stock drops, others might rise!"
     },
     {
       question: "If you buy 5 shares at $20 each and sell them at $30 each, what's your profit?",
-      options: [
-        { id: 'A', text: "$20", correct: false },
-        { id: 'B', text: "$50", correct: true },
-        { id: 'C', text: "$100", correct: false },
-        { id: 'D', text: "$150", correct: false }
-      ],
+      options: ["$20", "$50", "$100", "$150"],
+      correctIndex: 1,
       explanation: "5 shares x ($30 - $20) = 5 x $10 = $50 profit!"
     },
     {
       question: "What typically happens to stock prices when a company announces bad news?",
-      options: [
-        { id: 'A', text: "Prices go up", correct: false },
-        { id: 'B', text: "Prices go down", correct: true },
-        { id: 'C', text: "Nothing happens", correct: false },
-        { id: 'D', text: "Trading stops", correct: false }
-      ],
+      options: ["Prices go up", "Prices go down", "Nothing happens", "Trading stops"],
+      correctIndex: 1,
       explanation: "Bad news causes more people to sell, which drives prices down."
     },
     {
       question: "What is a stock?",
-      options: [
-        { id: 'A', text: "A type of bond issued by the government", correct: false },
-        { id: 'B', text: "A share of ownership in a company", correct: true },
-        { id: 'C', text: "A savings account at a bank", correct: false },
-        { id: 'D', text: "A loan to a corporation", correct: false }
-      ],
+      options: ["A type of bond issued by the government", "A share of ownership in a company", "A savings account at a bank", "A loan to a corporation"],
+      correctIndex: 1,
       explanation: "A stock represents a share of ownership in a company. When you buy stock, you become a part-owner."
     },
     {
       question: "What does it mean when a stock is 'volatile'?",
-      options: [
-        { id: 'A', text: "The stock is about to be removed from the market", correct: false },
-        { id: 'B', text: "The stock price changes frequently and significantly", correct: true },
-        { id: 'C', text: "The stock always goes up in price", correct: false },
-        { id: 'D', text: "The stock is from a technology company", correct: false }
-      ],
+      options: ["The stock is about to be removed from the market", "The stock price changes frequently and significantly", "The stock always goes up in price", "The stock is from a technology company"],
+      correctIndex: 1,
       explanation: "A volatile stock has large price swings - it can change significantly in short periods of time."
     },
     {
       question: "If you invest $1,000 and it grows to $1,200, what is your return percentage?",
-      options: [
-        { id: 'A', text: "12%", correct: false },
-        { id: 'B', text: "20%", correct: true },
-        { id: 'C', text: "25%", correct: false },
-        { id: 'D', text: "200%", correct: false }
-      ],
+      options: ["12%", "20%", "25%", "200%"],
+      correctIndex: 1,
       explanation: "Return = (New Value - Original Value) / Original Value = ($1,200 - $1,000) / $1,000 = $200 / $1,000 = 20%"
     },
     {
       question: "What is a 'blue-chip' stock?",
-      options: [
-        { id: 'A', text: "A stock that has recently gone down in price", correct: false },
-        { id: 'B', text: "A stock from a large, well-established, financially stable company", correct: true },
-        { id: 'C', text: "A stock that is brand new to the market", correct: false },
-        { id: 'D', text: "A stock that only experts can buy", correct: false }
-      ],
+      options: ["A stock that has recently gone down in price", "A stock from a large, well-established, financially stable company", "A stock that is brand new to the market", "A stock that only experts can buy"],
+      correctIndex: 1,
       explanation: "Blue-chip stocks are from large, reputable companies with a history of reliable performance, like Apple or Microsoft."
     },
     {
       question: "What is the PRIMARY risk of putting all your money in one stock?",
-      options: [
-        { id: 'A', text: "You might make too much profit", correct: false },
-        { id: 'B', text: "If that stock fails, you could lose everything", correct: true },
-        { id: 'C', text: "It takes too long to sell", correct: false },
-        { id: 'D', text: "You will pay more taxes", correct: false }
-      ],
+      options: ["You might make too much profit", "If that stock fails, you could lose everything", "It takes too long to sell", "You will pay more taxes"],
+      correctIndex: 1,
       explanation: "Lack of diversification means if that one stock performs poorly or the company fails, you could lose your entire investment."
     }
   ];
+
+  // Shuffle quiz options on component mount
+  const testQuestions = useMemo(() => shuffleQuizOptions(testQuestionsBase), []);
 
   // Swipe Game - Value vs Growth Stock Cards
   const swipeCards = [
@@ -867,12 +832,11 @@ const StockMarketModule = () => {
   }, [gameTime, tradingActive]);
 
   // Handle test answer - using case study format
-  const handleTestAnswer = (optionId) => {
+  const handleTestAnswer = (optionIndex) => {
     const currentQ = testQuestions[testQuestion];
-    const selectedOption = currentQ.options.find(opt => opt.id === optionId);
-    const isCorrect = selectedOption.correct;
+    const isCorrect = optionIndex === currentQ.correctIndex;
 
-    setTestAnswers(prev => [...prev, { question: testQuestion, answer: optionId, correct: isCorrect }]);
+    setTestAnswers(prev => [...prev, { question: testQuestion, answer: optionIndex, correct: isCorrect }]);
 
     if (isCorrect) {
       setTestScore(prev => prev + 1);
@@ -880,16 +844,17 @@ const StockMarketModule = () => {
   };
 
   // Handle moving to next question
-  const handleNextQuestion = () => {
+  const handleNextQuestion = async () => {
     if (testQuestion < testQuestions.length - 1) {
       setTestQuestion(prev => prev + 1);
     } else {
+      // Save the module score
+      const percentageScore = Math.round((testScore / testQuestions.length) * 100);
+      await saveScore(MODULES.STOCK_MARKET.id, percentageScore, 100);
+
       // Check if passed (80% = 8 out of 10)
-      const finalScore = testScore;
-      if (finalScore >= 8) {
-        setCurrentPhase('trading-sim');
-        setTradingActive(true);
-        addNotification('success', 'Test Passed!', 'You scored 80% or higher! Ready to start trading!');
+      if (testScore >= 8) {
+        addNotification('success', 'Module Completed!', `You scored ${percentageScore}% - Great job!`);
       }
     }
   };
@@ -1046,13 +1011,14 @@ const StockMarketModule = () => {
     const userAnswer = direction === 'left' ? 'value' : 'growth';
     const isCorrect = userAnswer === card.type;
 
-    // Update score and answers
+    // Update score and answers - store the full card info for feedback
     if (isCorrect) {
       setSwipeScore(prev => prev + 1);
     }
 
     setSwipeAnswers(prev => [...prev, {
       card: card.company,
+      cardInfo: card, // Store full card info for accurate feedback
       userAnswer,
       correct: isCorrect
     }]);
@@ -1060,12 +1026,12 @@ const StockMarketModule = () => {
     setSwipeDirection(direction);
     setShowSwipeResult(true);
 
-    // Move to next card after a delay
+    // Move to next card after a shorter delay to show feedback
     setTimeout(() => {
       setCurrentCardIndex(prev => prev + 1);
       setSwipeDirection(null);
       setShowSwipeResult(false);
-    }, 1500);
+    }, 2000);
   };
 
   // If module is already passed and not in review mode, show completion screen
@@ -1120,38 +1086,26 @@ const StockMarketModule = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6" style={{ fontFamily: "'Inter', 'SF Pro Display', -apple-system, sans-serif" }}>
-      {/* Premium Header */}
+      {/* Header */}
       <motion.div
-        className="flex items-center justify-between mb-8 bg-gradient-to-r from-slate-800 via-slate-900 to-black rounded-2xl p-5 shadow-2xl"
+        className="relative mb-8"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
         <button
           onClick={() => navigate('/game')}
-          className="flex items-center gap-2 px-5 py-2.5 bg-white/10 hover:bg-white/20 rounded-xl transition backdrop-blur-sm text-white font-semibold"
+          className="absolute left-0 top-1/2 -translate-y-1/2 flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 rounded-lg transition shadow-sm border border-gray-200 text-gray-700 font-medium"
         >
           <ArrowLeft className="w-5 h-5" />
           Back
         </button>
 
-        <div className="text-center text-white">
-          <h1 className="text-2xl font-black tracking-tight">
+        <div className="text-center">
+          <h1 className="text-3xl font-black tracking-tight text-gray-900">
             Stock Market Mastery
           </h1>
-          <p className="text-sm opacity-70 font-medium">Learn. Test. Trade.</p>
-        </div>
-
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 bg-white/10 rounded-xl px-4 py-2.5 backdrop-blur-sm text-white">
-            <DollarSign className="w-5 h-5 text-emerald-400" />
-            <span className="font-bold text-lg">${playerStats.coins.toLocaleString()}</span>
-          </div>
-
-          <div className="flex items-center gap-2 bg-white/10 rounded-xl px-4 py-2.5 backdrop-blur-sm text-white">
-            <Star className="w-5 h-5 text-amber-400" />
-            <span className="font-bold">LVL {playerStats.level}</span>
-          </div>
+          <p className="text-sm text-gray-600 font-medium mt-1">Learn. Test. Trade.</p>
         </div>
       </motion.div>
 
@@ -1297,133 +1251,186 @@ const StockMarketModule = () => {
         >
           {currentCardIndex < swipeCards.length ? (
             <div>
-              {/* Instructions */}
+              {/* Instructions - Compact */}
               <motion.div
-                className="bg-white rounded-2xl p-6 shadow-xl mb-6"
+                className="bg-white rounded-xl p-4 shadow-lg mb-4"
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
               >
-                <h2 className="text-2xl font-bold text-gray-900 mb-3 text-center">Value or Growth Stock?</h2>
-                <p className="text-gray-600 text-center mb-4">
-                  Swipe or tap to categorize each company
-                </p>
-                <div className="grid grid-cols-2 gap-4 text-center">
-                  <div className="bg-blue-50 rounded-xl p-4 border-2 border-blue-300">
-                    <div className="text-3xl mb-2">👈</div>
-                    <div className="font-bold text-blue-800">Value Stock</div>
-                    <div className="text-xs text-blue-600 mt-1">Stable, dividends, mature</div>
-                  </div>
-                  <div className="bg-green-50 rounded-xl p-4 border-2 border-green-300">
-                    <div className="text-3xl mb-2">👉</div>
-                    <div className="font-bold text-green-800">Growth Stock</div>
-                    <div className="text-xs text-green-600 mt-1">Fast-growing, innovative</div>
+                <div className="flex items-center justify-between mb-2">
+                  <h2 className="text-lg font-bold text-gray-900">Value or Growth?</h2>
+                  <div className="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                    {currentCardIndex + 1} / {swipeCards.length}
                   </div>
                 </div>
-                <div className="text-center text-sm text-gray-500 mt-3">
-                  Card {currentCardIndex + 1} of {swipeCards.length}
+                <div className="grid grid-cols-2 gap-2 text-center">
+                  <div className="bg-blue-50 rounded-lg p-2 border border-blue-300">
+                    <div className="text-lg">👈</div>
+                    <div className="font-semibold text-blue-800 text-sm">Value</div>
+                    <div className="text-xs text-blue-600">Stable, dividends</div>
+                  </div>
+                  <div className="bg-green-50 rounded-lg p-2 border border-green-300">
+                    <div className="text-lg">👉</div>
+                    <div className="font-semibold text-green-800 text-sm">Growth</div>
+                    <div className="text-xs text-green-600">Fast-growing</div>
+                  </div>
                 </div>
               </motion.div>
 
-              {/* Swipeable Card */}
+              {/* Swipeable Card - Tinder Style */}
               <AnimatePresence mode="wait">
                 <motion.div
                   key={currentCardIndex}
                   className="relative"
-                  initial={{ scale: 0.8, opacity: 0, rotateY: -90 }}
-                  animate={{ scale: 1, opacity: 1, rotateY: 0 }}
-                  exit={{ scale: 0.8, opacity: 0, x: swipeDirection === 'left' ? -300 : 300, rotate: swipeDirection === 'left' ? -20 : 20 }}
+                  initial={{ scale: 0.95, opacity: 0, y: 50 }}
+                  animate={{ scale: 1, opacity: 1, y: 0 }}
+                  exit={{
+                    x: swipeDirection === 'left' ? -500 : swipeDirection === 'right' ? 500 : 0,
+                    opacity: 0,
+                    rotate: swipeDirection === 'left' ? -30 : swipeDirection === 'right' ? 30 : 0,
+                    transition: { duration: 0.4, ease: 'easeOut' }
+                  }}
                   transition={{ duration: 0.3 }}
                   drag="x"
                   dragConstraints={{ left: 0, right: 0 }}
+                  dragElastic={0.7}
+                  onDrag={(e, info) => {
+                    setDragX(info.offset.x);
+                  }}
                   onDragEnd={(e, info) => {
-                    if (Math.abs(info.offset.x) > 100) {
+                    setDragX(0);
+                    if (Math.abs(info.offset.x) > 150) {
                       const direction = info.offset.x > 0 ? 'right' : 'left';
                       handleSwipe(direction);
                     }
                   }}
+                  style={{
+                    rotate: dragX / 20,
+                    x: dragX,
+                  }}
                 >
-                  <div className="bg-gradient-to-br from-white to-gray-50 rounded-3xl shadow-2xl border-4 border-gray-200 overflow-hidden cursor-grab active:cursor-grabbing">
+                  <div className="relative bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-2xl border-2 border-gray-200 overflow-hidden cursor-grab active:cursor-grabbing">
+                    {/* VALUE Stamp - appears when dragging left */}
+                    <motion.div
+                      className="absolute top-8 left-8 z-10 pointer-events-none"
+                      animate={{
+                        opacity: dragX < -50 ? 1 : 0,
+                        scale: dragX < -50 ? 1 : 0.5,
+                        rotate: -20
+                      }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <div className="border-4 border-blue-500 rounded-xl px-6 py-3 bg-blue-50/90 backdrop-blur-sm">
+                        <span className="text-3xl font-black text-blue-600 tracking-wider">VALUE</span>
+                      </div>
+                    </motion.div>
+
+                    {/* GROWTH Stamp - appears when dragging right */}
+                    <motion.div
+                      className="absolute top-8 right-8 z-10 pointer-events-none"
+                      animate={{
+                        opacity: dragX > 50 ? 1 : 0,
+                        scale: dragX > 50 ? 1 : 0.5,
+                        rotate: 20
+                      }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <div className="border-4 border-green-500 rounded-xl px-6 py-3 bg-green-50/90 backdrop-blur-sm">
+                        <span className="text-3xl font-black text-green-600 tracking-wider">GROWTH</span>
+                      </div>
+                    </motion.div>
+
                     {/* Card Header */}
-                    <div className="bg-gradient-to-r from-slate-800 to-slate-900 p-6 text-white">
-                      <div className="text-6xl mb-3 text-center">{swipeCards[currentCardIndex].emoji}</div>
-                      <h3 className="text-3xl font-black text-center mb-1">
+                    <div className="bg-gradient-to-r from-slate-800 to-slate-900 p-4 text-white">
+                      <div className="text-4xl mb-2 text-center">{swipeCards[currentCardIndex].emoji}</div>
+                      <h3 className="text-2xl font-black text-center mb-1">
                         {swipeCards[currentCardIndex].company}
                       </h3>
-                      <p className="text-center text-blue-300 font-bold text-lg">
+                      <p className="text-center text-blue-300 font-semibold text-base">
                         ${swipeCards[currentCardIndex].ticker}
                       </p>
                     </div>
 
                     {/* Card Body */}
-                    <div className="p-8">
-                      <p className="text-gray-700 text-lg leading-relaxed mb-6 text-center">
+                    <div className="p-4">
+                      <p className="text-gray-700 text-base leading-relaxed mb-4 text-center">
                         {swipeCards[currentCardIndex].description}
                       </p>
 
-                      <div className="bg-blue-50 rounded-xl p-4 border-l-4 border-blue-500 mb-6">
+                      <div className="bg-blue-50 rounded-lg p-3 border-l-4 border-blue-500 mb-4">
                         <div className="flex items-start gap-2">
-                          <span className="text-xl">💡</span>
+                          <span className="text-lg">💡</span>
                           <div>
-                            <div className="font-bold text-blue-800 text-sm mb-1">Hint:</div>
+                            <div className="font-bold text-blue-800 text-xs mb-1">Hint:</div>
                             <p className="text-blue-700 text-sm">{swipeCards[currentCardIndex].hint}</p>
                           </div>
                         </div>
                       </div>
 
                       {/* Swipe indicators */}
-                      <div className="flex justify-between items-center mb-4">
-                        <div className="text-blue-400 font-bold text-sm">← VALUE</div>
-                        <div className="text-gray-400 text-xs">Drag or Tap</div>
-                        <div className="text-green-400 font-bold text-sm">GROWTH →</div>
+                      <div className="flex justify-between items-center mb-3">
+                        <div className="text-blue-400 font-semibold text-xs">← VALUE</div>
+                        <div className="text-gray-400 text-xs">Swipe or Tap</div>
+                        <div className="text-green-400 font-semibold text-xs">GROWTH →</div>
                       </div>
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="grid grid-cols-2 gap-4 p-6 pt-0">
+                    <div className="grid grid-cols-2 gap-3 p-4 pt-0">
                       <button
                         onClick={() => handleSwipe('left')}
-                        className="py-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl font-bold text-lg shadow-lg transition transform hover:scale-105 active:scale-95"
+                        className="py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg font-bold text-base shadow-lg transition-colors active:scale-95"
                       >
-                        👈 Value Stock
+                        👈 Value
                       </button>
                       <button
                         onClick={() => handleSwipe('right')}
-                        className="py-4 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-xl font-bold text-lg shadow-lg transition transform hover:scale-105 active:scale-95"
+                        className="py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg font-bold text-base shadow-lg transition-colors active:scale-95"
                       >
-                        Growth Stock 👉
+                        Growth 👉
                       </button>
                     </div>
                   </div>
                 </motion.div>
               </AnimatePresence>
 
-              {/* Feedback */}
+              {/* Feedback with Reason */}
               <AnimatePresence>
                 {showSwipeResult && (
                   <motion.div
-                    className={`mt-6 rounded-2xl p-6 shadow-xl text-center ${
+                    className={`mt-4 rounded-xl p-4 shadow-lg ${
                       swipeAnswers[swipeAnswers.length - 1]?.correct
                         ? 'bg-green-50 border-2 border-green-400'
                         : 'bg-red-50 border-2 border-red-400'
                     }`}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ duration: 0.2 }}
                   >
-                    <div className="text-4xl mb-2">
-                      {swipeAnswers[swipeAnswers.length - 1]?.correct ? '✅' : '❌'}
+                    <div className="flex items-start gap-3">
+                      <div className="text-3xl">
+                        {swipeAnswers[swipeAnswers.length - 1]?.correct ? '✅' : '❌'}
+                      </div>
+                      <div className="flex-1">
+                        <div className={`font-bold text-lg mb-1 ${
+                          swipeAnswers[swipeAnswers.length - 1]?.correct ? 'text-green-800' : 'text-red-800'
+                        }`}>
+                          {swipeAnswers[swipeAnswers.length - 1]?.correct ? 'Correct!' : 'Not quite!'}
+                        </div>
+                        <p className={`text-sm mb-2 ${
+                          swipeAnswers[swipeAnswers.length - 1]?.correct ? 'text-green-700' : 'text-red-700'
+                        }`}>
+                          <span className="font-semibold">{swipeAnswers[swipeAnswers.length - 1]?.cardInfo?.company}</span> is a{' '}
+                          <span className="font-bold uppercase">{swipeAnswers[swipeAnswers.length - 1]?.cardInfo?.type}</span> stock.
+                        </p>
+                        <p className={`text-sm ${
+                          swipeAnswers[swipeAnswers.length - 1]?.correct ? 'text-green-600' : 'text-red-600'
+                        }`}>
+                          💡 {swipeAnswers[swipeAnswers.length - 1]?.cardInfo?.hint}
+                        </p>
+                      </div>
                     </div>
-                    <div className={`font-bold text-xl mb-2 ${
-                      swipeAnswers[swipeAnswers.length - 1]?.correct ? 'text-green-800' : 'text-red-800'
-                    }`}>
-                      {swipeAnswers[swipeAnswers.length - 1]?.correct ? 'Correct!' : 'Not quite!'}
-                    </div>
-                    <p className={`text-sm ${
-                      swipeAnswers[swipeAnswers.length - 1]?.correct ? 'text-green-700' : 'text-red-700'
-                    }`}>
-                      {swipeCards[currentCardIndex - 1]?.company} is a{' '}
-                      <span className="font-bold">{swipeCards[currentCardIndex - 1]?.type} stock</span>
-                    </p>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -1659,19 +1666,21 @@ const StockMarketModule = () => {
 
                   {/* Options Grid - Case Study Style */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-                    {testQuestions[testQuestion].options.map((option) => {
+                    {testQuestions[testQuestion].options.map((option, optionIndex) => {
                       const answered = testAnswers.find(a => a.question === testQuestion);
-                      const isSelected = answered?.answer === option.id;
-                      const showCorrectness = answered && (isSelected || option.correct);
+                      const isSelected = answered?.answer === optionIndex;
+                      const isCorrect = optionIndex === testQuestions[testQuestion].correctIndex;
+                      const showCorrectness = answered && (isSelected || isCorrect);
+                      const optionLetter = String.fromCharCode(65 + optionIndex); // A, B, C, D
 
                       return (
                         <button
-                          key={option.id}
-                          onClick={() => !answered && handleTestAnswer(option.id)}
+                          key={optionIndex}
+                          onClick={() => !answered && handleTestAnswer(optionIndex)}
                           disabled={!!answered}
                           className={`p-4 sm:p-6 rounded-xl sm:rounded-2xl text-left border-2 transition-all flex items-start gap-3 sm:gap-4 ${
                             showCorrectness
-                              ? option.correct
+                              ? isCorrect
                                 ? 'bg-green-50 border-green-500 text-green-900'
                                 : isSelected
                                   ? 'bg-red-50 border-red-500 text-red-900'
@@ -1682,21 +1691,21 @@ const StockMarketModule = () => {
                           } ${!!answered ? 'cursor-default' : 'cursor-pointer'}`}
                         >
                           <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${
-                            showCorrectness && option.correct ? 'bg-green-500 text-white' :
+                            showCorrectness && isCorrect ? 'bg-green-500 text-white' :
                             showCorrectness && isSelected ? 'bg-red-500 text-white' :
                             isSelected ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-500'
                           }`}>
-                            {showCorrectness && option.correct ? (
+                            {showCorrectness && isCorrect ? (
                               <CheckCircle size={20} />
-                            ) : showCorrectness && isSelected && !option.correct ? (
+                            ) : showCorrectness && isSelected && !isCorrect ? (
                               <XCircle size={20} />
                             ) : (
-                              option.id
+                              optionLetter
                             )}
                           </div>
-                          <span className="text-sm sm:text-lg font-medium leading-snug flex-1">{option.text}</span>
-                          {showCorrectness && option.correct && <CheckCircle className="ml-auto text-green-600 shrink-0 w-5 h-5 sm:w-6 sm:h-6" />}
-                          {showCorrectness && isSelected && !option.correct && <XCircle className="ml-auto text-red-600 shrink-0 w-5 h-5 sm:w-6 sm:h-6" />}
+                          <span className="text-sm sm:text-lg font-medium leading-snug flex-1">{option}</span>
+                          {showCorrectness && isCorrect && <CheckCircle className="ml-auto text-green-600 shrink-0 w-5 h-5 sm:w-6 sm:h-6" />}
+                          {showCorrectness && isSelected && !isCorrect && <XCircle className="ml-auto text-red-600 shrink-0 w-5 h-5 sm:w-6 sm:h-6" />}
                         </button>
                       );
                     })}
@@ -1819,14 +1828,13 @@ const StockMarketModule = () => {
 
                 {/* Action Buttons */}
                 <div className="flex gap-4 justify-center flex-wrap">
-                  {testScore >= 8 ? (
-                    <button
-                      onClick={startTradingSimulation}
-                      className="px-8 py-4 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white rounded-xl font-bold text-lg shadow-lg transition transform hover:scale-105"
-                    >
-                      Start Trading Simulation
-                    </button>
-                  ) : (
+                  <button
+                    onClick={() => navigate('/game')}
+                    className="px-8 py-4 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white rounded-xl font-bold text-lg shadow-lg transition transform hover:scale-105"
+                  >
+                    Back to Roadmap
+                  </button>
+                  {testScore < 8 && (
                     <>
                       <button
                         onClick={() => {

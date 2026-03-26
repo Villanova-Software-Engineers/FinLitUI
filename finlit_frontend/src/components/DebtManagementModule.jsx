@@ -112,14 +112,6 @@ const DebtManagementModule = () => {
       question: "Sarah wants to get out of debt as fast as possible. What's her BEST strategy?",
       strategies: [
         {
-          id: 'avalanche',
-          name: 'Attack Highest Interest First (Avalanche)',
-          description: 'Pay $450 minimums total, then put remaining $750 toward the 25% Mastercard each month',
-          correct: true,
-          explanation: 'CORRECT! The Avalanche method targets the highest interest rate first (25% Mastercard). This saves Sarah the most money because high-interest debt grows fastest. She\'ll pay less interest overall and get debt-free sooner.',
-          mathBreakdown: 'By attacking 25% first instead of 18%, Sarah saves about $2,400 in interest!'
-        },
-        {
           id: 'snowball',
           name: 'Pay Smallest Balance First (Snowball)',
           description: 'Pay minimums, then put extra $750 toward the $4,000 Store Card',
@@ -134,6 +126,14 @@ const DebtManagementModule = () => {
           correct: false,
           explanation: 'Not effective. Spreading money thin means all debts stick around longer, especially the 25% one. Each month that high-interest debt exists costs Sarah money.',
           mathBreakdown: 'This is the slowest approach and costs the most in total interest.'
+        },
+        {
+          id: 'avalanche',
+          name: 'Attack Highest Interest First (Avalanche)',
+          description: 'Pay $450 minimums total, then put remaining $750 toward the 25% Mastercard each month',
+          correct: true,
+          explanation: 'CORRECT! The Avalanche method targets the highest interest rate first (25% Mastercard). This saves Sarah the most money because high-interest debt grows fastest. She\'ll pay less interest overall and get debt-free sooner.',
+          mathBreakdown: 'By attacking 25% first instead of 18%, Sarah saves about $2,400 in interest!'
         },
         {
           id: 'minimum',
@@ -163,20 +163,20 @@ const DebtManagementModule = () => {
       question: "Michael has $2,300/month to put toward loans. Which loan should he prioritize?",
       strategies: [
         {
-          id: 'target-private',
-          name: 'Pay Off Private Loan First',
-          description: 'Pay all minimums ($500), then throw remaining $1,800/month at the 7.2% private loan',
-          correct: true,
-          explanation: 'CORRECT! Private loans are the MOST DANGEROUS type of debt. They have the highest interest rate (7.2%) AND no safety features. Federal loans offer forbearance if you lose your job, income-based repayment, and potential forgiveness. Private loans offer NONE of this. Always kill private loans first!',
-          mathBreakdown: 'At 7.2%, Michael pays $720/year just in interest on that $10K. Paying it off fast saves money AND risk.'
-        },
-        {
           id: 'target-highest-balance',
           name: 'Pay the Biggest Loan First',
           description: 'Target the $20,000 Federal Loan A since it\'s the largest',
           correct: false,
           explanation: 'Not the best move. Yes, Federal Loan A is the biggest, but it has a lower rate (4.5%) than the private loan (7.2%). Plus, federal loans have safety features like payment pause options if you hit hard times. The private loan is more dangerous.',
           mathBreakdown: 'You\'d save about $600 more by targeting the 7.2% private loan instead.'
+        },
+        {
+          id: 'invest-instead',
+          name: 'Pay Minimums, Invest the Rest',
+          description: 'Pay $500 minimums, invest remaining $1,800 in the stock market',
+          correct: false,
+          explanation: 'Too risky! While the stock market averages 10% over decades, that\'s not guaranteed. The 7.2% private loan IS a guaranteed "debt return." Paying off a 7.2% loan is like earning 7.2% risk-free. Stock market is volatile and could lose money. Pay off high-rate debt first!',
+          mathBreakdown: 'Even if stocks average 10%, you\'re risking it all while paying 7.2% guaranteed interest.'
         },
         {
           id: 'split-equally',
@@ -187,12 +187,12 @@ const DebtManagementModule = () => {
           mathBreakdown: 'You\'ll pay about $2,000 more in interest using this approach vs. targeting private first.'
         },
         {
-          id: 'invest-instead',
-          name: 'Pay Minimums, Invest the Rest',
-          description: 'Pay $500 minimums, invest remaining $1,800 in the stock market',
-          correct: false,
-          explanation: 'Too risky! While the stock market averages 10% over decades, that\'s not guaranteed. The 7.2% private loan IS a guaranteed "debt return." Paying off a 7.2% loan is like earning 7.2% risk-free. Stock market is volatile and could lose money. Pay off high-rate debt first!',
-          mathBreakdown: 'Even if stocks average 10%, you\'re risking it all while paying 7.2% guaranteed interest.'
+          id: 'target-private',
+          name: 'Pay Off Private Loan First',
+          description: 'Pay all minimums ($500), then throw remaining $1,800/month at the 7.2% private loan',
+          correct: true,
+          explanation: 'CORRECT! Private loans are the MOST DANGEROUS type of debt. They have the highest interest rate (7.2%) AND no safety features. Federal loans offer forbearance if you lose your job, income-based repayment, and potential forgiveness. Private loans offer NONE of this. Always kill private loans first!',
+          mathBreakdown: 'At 7.2%, Michael pays $720/year just in interest on that $10K. Paying it off fast saves money AND risk.'
         }
       ]
     },
@@ -215,20 +215,20 @@ const DebtManagementModule = () => {
       question: "Lisa's debt payments ($790) plus rent/food ($1,200) = $1,990/month, but she only has $1,400 unemployment income. What should she do FIRST?",
       strategies: [
         {
-          id: 'contact-creditors',
-          name: 'Call Creditors for Help NOW',
-          description: 'Contact all lenders BEFORE missing any payments to ask about hardship programs',
-          correct: true,
-          explanation: 'CORRECT! Most lenders have "hardship programs" for people who lose jobs. They can temporarily reduce or pause payments. The KEY is calling BEFORE you miss payments. Once you\'re late, your options shrink and your credit gets damaged. Lenders would rather help you than send you to collections!',
-          mathBreakdown: 'Example: Credit card companies often reduce minimums from $360 to $100 during hardship. Car lenders can defer 2-3 months of payments. This buys Lisa time to find work.'
-        },
-        {
           id: 'use-emergency',
           name: 'Use Savings to Pay Debts',
           description: 'Drain the $3,000 emergency fund to make debt payments',
           correct: false,
           explanation: 'BAD IDEA! That $3,000 is her SURVIVAL MONEY. If she drains it paying debts, what happens when the car breaks down or she needs medicine? Then she\'ll need to use credit cards for emergencies, creating MORE debt. Emergency fund = keep you alive. Keep at least 1-2 months expenses saved.',
           mathBreakdown: '$3,000 might cover 3 months of debt payments, then she\'s broke with no income. What about month 4?'
+        },
+        {
+          id: 'contact-creditors',
+          name: 'Call Creditors for Help NOW',
+          description: 'Contact all lenders BEFORE missing any payments to ask about hardship programs',
+          correct: true,
+          explanation: 'CORRECT! Most lenders have "hardship programs" for people who lose jobs. They can temporarily reduce or pause payments. The KEY is calling BEFORE you miss payments. Once you\'re late, your options shrink and your credit gets damaged. Lenders would rather help you than send you to collections!',
+          mathBreakdown: 'Example: Credit card companies often reduce minimums from $360 to $100 during hardship. Car lenders can defer 2-3 months of payments. This buys Lisa time to find work.'
         },
         {
           id: 'take-new-loan',
@@ -350,13 +350,9 @@ const DebtManagementModule = () => {
           animate={{ y: 0, opacity: 1 }}
           className="text-center mb-8"
         >
-          <motion.div
-            animate={{ y: [0, -10, 0] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="text-7xl sm:text-8xl mb-4"
-          >
+          <div className="text-7xl sm:text-8xl mb-4">
             💳
-          </motion.div>
+          </div>
           <h1 className="text-2xl sm:text-3xl font-black text-gray-900 mb-2">
             Debt Management Mastery
           </h1>
@@ -452,13 +448,9 @@ const DebtManagementModule = () => {
           <motion.div key={learnStep} initial={{ x: 50, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="space-y-4">
             {/* Title Card */}
             <div className={`bg-gradient-to-r ${section.color} rounded-3xl p-5 sm:p-6 text-white shadow-lg`}>
-              <motion.div
-                animate={{ rotate: [0, 10, -10, 0] }}
-                transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
-                className="text-4xl sm:text-5xl mb-3"
-              >
+              <div className="text-4xl sm:text-5xl mb-3">
                 {section.emoji}
-              </motion.div>
+              </div>
               <h2 className="text-xl sm:text-2xl font-black mb-2">{section.title}</h2>
               {section.intro && (
                 <p className="text-white/90 text-sm leading-relaxed">{section.intro}</p>
