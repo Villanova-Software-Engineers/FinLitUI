@@ -25,27 +25,38 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 0.7], [0, 1]);
   };
 
   // Module order for sequential access enforcement
+  // Phase 1 — Foundations
   const moduleOrder = [
-    MODULES.BUDGETING_50_30_20.id,    // 1. Budgeting Basics
-    MODULES.NEEDS_WANTS.id,            // 2. Needs vs Wants
-    MODULES.TAX_BASICS.id,             // 3. Tax Basics
-    MODULES.CREDIT_SCORE.id,           // 4. Credit Score
+    MODULES.WHAT_IS_MONEY.id,          // 1. What is Money
+    MODULES.BUDGETING_50_30_20.id,     // 2. Budgeting Basics
+    MODULES.NEEDS_WANTS.id,            // 3. Needs vs Wants
+    MODULES.BANKING.id,                // 4. Banking Basics
     MODULES.EMERGENCY_FUND.id,         // 5. Emergency Fund
-    MODULES.BANKING.id,                // 6. Banking Basics
+
+    // Phase 2 — Taxes, Saving & Credit
+    MODULES.TAX_BASICS.id,             // 6. Tax Basics
     MODULES.INTEREST_RATES.id,         // 7. Interest Rates
-    MODULES.COMPOUNDING.id,            // 8. Power of Compounding
-    MODULES.BONDS.id,                  // 9. Bonds
-    MODULES.STOCK_MARKET.id,           // 10. Stock Market
-    MODULES.INVESTMENT_VEHICLES.id,    // 11. Investment Vehicles
-    MODULES.INSURANCE.id,              // 12. Insurance
-    MODULES.DEBT_MANAGEMENT.id,        // 13. Debt Management
-    MODULES.FINANCIAL_SAFETY.id,       // 14. Financial Safety
-    MODULES.RISK_TAKING.id,            // 15. Risk Management
-    MODULES.RETIREMENT_ACCOUNTS.id,    // 16. Retirement Accounts
-    MODULES.CRYPTO.id,                 // 17. Cryptocurrency
-    MODULES.GIVING.id,                 // 18. Giving Back
-    MODULES.CONSUMER_TRAPS.id,         // 19. Consumer Traps
-    MODULES.INVESTMENT_BANKING.id,     // 20. Investment Banking
+    MODULES.CREDIT_SCORE.id,           // 8. Credit Score Mastery
+    MODULES.DEBT_MANAGEMENT.id,        // 9. Debt Management
+    MODULES.CONSUMER_TRAPS.id,         // 10. Consumer Traps
+
+    // Phase 3 — Protection
+    MODULES.RISK_TAKING.id,            // 11. Risk Management
+    MODULES.INSURANCE.id,              // 12. Insurance Protection
+    MODULES.FINANCIAL_SAFETY.id,       // 13. Financial Safety
+
+    // Phase 4 — Investing & Assets
+    MODULES.COMPOUNDING.id,            // 14. Power of Compounding
+    MODULES.BONDS.id,                  // 15. Bonds
+    MODULES.STOCK_MARKET.id,           // 16. Stock Market Basics
+    MODULES.INVESTMENT_VEHICLES.id,    // 17. Investment Vehicles
+    MODULES.REAL_ESTATE.id,            // 18. Real Estate
+    MODULES.RETIREMENT_ACCOUNTS.id,    // 19. Retirement Accounts
+
+    // Phase 5 — Advanced
+    MODULES.CRYPTO.id,                 // 20. Crypto Fundamentals
+    MODULES.INVESTMENT_BANKING.id,     // 21. Investment Banking
+    MODULES.GIVING.id,                 // 22. Giving Back
   ];
 
   // Check if a module is accessible (previous module passed or is first module)
@@ -67,57 +78,58 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 0.7], [0, 1]);
 
   // All modules in one continuous journey - status is now dynamically calculated
   const allModulesBase = [
+    // Phase 1 — Foundations
     {
       id: 1,
+      moduleId: MODULES.WHAT_IS_MONEY.id,
+      title: "What is Money",
+      subtitle: "Money Fundamentals",
+      icon: "💵",
+      color: "#e3f2fd",
+      position: "left",
+      route: "/what-is-money",
+      component: "what-is-money-module",
+      description: "Understand the concept of money, its purpose, and how to set financial goals and plan for the future.",
+      quizType: "mcq"
+    },
+    {
+      id: 2,
       moduleId: MODULES.BUDGETING_50_30_20.id,
       title: "Budgeting Basics",
       subtitle: "50-30-20 Rule",
       icon: "💰",
-      color: "#e3f2fd",
-      position: "left",
+      color: "#e8f5e9",
+      position: "right",
       route: "/50-30-20",
       component: "50-30-20",
       description: "Master the 50-30-20 budgeting rule for effective money management.",
       quizType: "interactive-budget"
     },
     {
-      id: 2,
+      id: 3,
       moduleId: MODULES.NEEDS_WANTS.id,
       title: "Needs vs Wants",
       subtitle: "Financial Priorities",
       icon: "⚖️",
-      color: "#e8f5e9",
-      position: "right",
+      color: "#e3f2fd",
+      position: "left",
       route: "/needs-wants",
       component: "needs-wants",
       description: "Learn to distinguish between essential needs and desired wants.",
       quizType: "swipe-categorize"
     },
     {
-      id: 3,
-      moduleId: MODULES.TAX_BASICS.id,
-      title: "Tax Basics",
-      subtitle: "Understanding Taxes",
-      icon: "🧾",
-      color: "#ede7f6",
-      position: "left",
-      route: "/tax-basics",
-      component: "tax-basics",
-      description: "Learn how taxes work, tax brackets, deductions, and legal ways to reduce your tax burden.",
-      quizType: "mcq"
-    },
-    {
       id: 4,
-      moduleId: MODULES.CREDIT_SCORE.id,
-      title: "Credit Score Mastery",
-      subtitle: "Credit Management",
-      icon: "📊",
+      moduleId: MODULES.BANKING.id,
+      title: "Banking Basics",
+      subtitle: "Accounts & Cards",
+      icon: "🏧",
       color: "#e8f5e9",
       position: "right",
-      route: "/credit-score",
-      component: "credit-module",
-      description: "Understand credit scores, factors that affect them, and improvement strategies.",
-      quizType: "mcq"
+      route: "/banking",
+      component: "banking-module",
+      description: "Learn about bank accounts, fees, debit vs credit cards, and checking vs savings.",
+      quizType: "swipe-categorize"
     },
     {
       id: 5,
@@ -132,18 +144,20 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 0.7], [0, 1]);
       description: "Build a robust emergency fund to protect against unexpected expenses.",
       quizType: "calculation"
     },
+
+    // Phase 2 — Taxes, Saving & Credit
     {
       id: 6,
-      moduleId: MODULES.BANKING.id,
-      title: "Banking Basics",
-      subtitle: "Accounts & Cards",
-      icon: "🏧",
+      moduleId: MODULES.TAX_BASICS.id,
+      title: "Tax Basics",
+      subtitle: "Understanding Taxes",
+      icon: "🧾",
       color: "#e8f5e9",
       position: "right",
-      route: "/banking",
-      component: "banking-module",
-      description: "Learn about bank accounts, fees, debit vs credit cards, and checking vs savings.",
-      quizType: "swipe-categorize"
+      route: "/tax-basics",
+      component: "tax-basics",
+      description: "Learn how taxes work, tax brackets, deductions, and legal ways to reduce your tax burden.",
+      quizType: "mcq"
     },
     {
       id: 7,
@@ -151,7 +165,7 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 0.7], [0, 1]);
       title: "Interest Rates",
       subtitle: "Borrowing & Lending",
       icon: "📊",
-      color: "#f5f5f5",
+      color: "#e3f2fd",
       position: "left",
       route: "/interest-rates",
       component: "interest-rates-module",
@@ -160,76 +174,24 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 0.7], [0, 1]);
     },
     {
       id: 8,
-      moduleId: MODULES.COMPOUNDING.id,
-      title: "Power of Compounding",
-      subtitle: "Wealth Building",
-      icon: "📈",
-      color: "#e3f2fd",
-      position: "right",
-      route: "/compounding",
-      component: "compounding-module",
-      description: "Discover the magic of compound interest and how time grows your money exponentially.",
-      quizType: "calculator"
-    },
-    {
-      id: 9,
-      moduleId: MODULES.BONDS.id,
-      title: "Bonds",
-      subtitle: "Fixed-Income Securities",
-      icon: "📜",
+      moduleId: MODULES.CREDIT_SCORE.id,
+      title: "Credit Score Mastery",
+      subtitle: "Credit Management",
+      icon: "💳",
       color: "#e8f5e9",
-      position: "left",
-      route: "/bonds",
-      component: "bonds-module",
-      description: "Learn about bonds, fixed-income investing, and steady returns.",
+      position: "right",
+      route: "/credit-score",
+      component: "credit-module",
+      description: "Understand credit scores, factors that affect them, and improvement strategies.",
       quizType: "mcq"
     },
     {
-      id: 10,
-      moduleId: MODULES.STOCK_MARKET.id,
-      title: "Stock Market Basics",
-      subtitle: "Investment Fundamentals",
-      icon: "📉",
-      color: "#f5f5f5",
-      position: "right",
-      route: "/stock-market",
-      component: "stock-module",
-      description: "Learn the fundamentals of stock market investing and portfolio building.",
-      quizType: "matching"
-    },
-    {
-      id: 11,
-      moduleId: MODULES.INVESTMENT_VEHICLES.id,
-      title: "Investment Vehicles",
-      subtitle: "ETFs & Mutual Funds",
-      icon: "🚗",
-      color: "#e3f2fd",
-      position: "left",
-      route: "/investment-vehicles",
-      component: "investment-vehicles-module",
-      description: "Compare ETFs, mutual funds, value vs growth investing strategies.",
-      quizType: "matching"
-    },
-    {
-      id: 12,
-      moduleId: MODULES.INSURANCE.id,
-      title: "Insurance Protection",
-      subtitle: "Risk Management",
-      icon: "🛡️",
-      color: "#f5f5f5",
-      position: "right",
-      route: "/insurance",
-      component: "insurance-module",
-      description: "Understand different types of insurance and how to protect your assets.",
-      quizType: "drag-drop"
-    },
-    {
-      id: 13,
+      id: 9,
       moduleId: MODULES.DEBT_MANAGEMENT.id,
       title: "Debt Management",
       subtitle: "Debt Freedom",
       icon: "🔓",
-      color: "#e8f5e9",
+      color: "#e3f2fd",
       position: "left",
       route: "/debt-management",
       component: "debt-module",
@@ -237,20 +199,22 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 0.7], [0, 1]);
       quizType: "scenario"
     },
     {
-      id: 14,
-      moduleId: MODULES.FINANCIAL_SAFETY.id,
-      title: "Financial Safety",
-      subtitle: "Fraud Prevention",
-      icon: "🔒",
-      color: "#f5f5f5",
+      id: 10,
+      moduleId: MODULES.CONSUMER_TRAPS.id,
+      title: "Consumer Traps",
+      subtitle: "Spending Pitfalls",
+      icon: "🪤",
+      color: "#e8f5e9",
       position: "right",
-      route: "/financial-safety",
-      component: "financial-safety-module",
-      description: "Recognize red flags, avoid scams, and protect your financial identity.",
+      route: "/consumer-traps",
+      component: "consumer-traps-module",
+      description: "Recognize and avoid common consumer traps, marketing tricks, and spending pitfalls.",
       quizType: "scenario"
     },
+
+    // Phase 3 — Protection
     {
-      id: 15,
+      id: 11,
       moduleId: MODULES.RISK_TAKING.id,
       title: "Risk Management",
       subtitle: "Smart Risk Taking",
@@ -263,69 +227,151 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 0.7], [0, 1]);
       quizType: "simulation"
     },
     {
+      id: 12,
+      moduleId: MODULES.INSURANCE.id,
+      title: "Insurance Protection",
+      subtitle: "Risk Management",
+      icon: "🛡️",
+      color: "#e8f5e9",
+      position: "right",
+      route: "/insurance",
+      component: "insurance-module",
+      description: "Understand different types of insurance and how to protect your assets.",
+      quizType: "drag-drop"
+    },
+    {
+      id: 13,
+      moduleId: MODULES.FINANCIAL_SAFETY.id,
+      title: "Financial Safety",
+      subtitle: "Fraud Prevention",
+      icon: "🔒",
+      color: "#e3f2fd",
+      position: "left",
+      route: "/financial-safety",
+      component: "financial-safety-module",
+      description: "Recognize red flags, avoid scams, and protect your financial identity.",
+      quizType: "scenario"
+    },
+
+    // Phase 4 — Investing & Assets
+    {
+      id: 14,
+      moduleId: MODULES.COMPOUNDING.id,
+      title: "Power of Compounding",
+      subtitle: "Wealth Building",
+      icon: "📈",
+      color: "#e8f5e9",
+      position: "right",
+      route: "/compounding",
+      component: "compounding-module",
+      description: "Discover the magic of compound interest and how time grows your money exponentially.",
+      quizType: "calculator"
+    },
+    {
+      id: 15,
+      moduleId: MODULES.BONDS.id,
+      title: "Bonds",
+      subtitle: "Fixed-Income Securities",
+      icon: "📜",
+      color: "#e3f2fd",
+      position: "left",
+      route: "/bonds",
+      component: "bonds-module",
+      description: "Learn about bonds, fixed-income investing, and steady returns.",
+      quizType: "mcq"
+    },
+    {
       id: 16,
+      moduleId: MODULES.STOCK_MARKET.id,
+      title: "Stock Market Basics",
+      subtitle: "Investment Fundamentals",
+      icon: "📉",
+      color: "#e8f5e9",
+      position: "right",
+      route: "/stock-market",
+      component: "stock-module",
+      description: "Learn the fundamentals of stock market investing and portfolio building.",
+      quizType: "matching"
+    },
+    {
+      id: 17,
+      moduleId: MODULES.INVESTMENT_VEHICLES.id,
+      title: "Investment Vehicles",
+      subtitle: "ETFs & Mutual Funds",
+      icon: "🚗",
+      color: "#e3f2fd",
+      position: "left",
+      route: "/investment-vehicles",
+      component: "investment-vehicles-module",
+      description: "Compare ETFs, mutual funds, value vs growth investing strategies.",
+      quizType: "matching"
+    },
+    {
+      id: 18,
+      moduleId: MODULES.REAL_ESTATE.id,
+      title: "Real Estate",
+      subtitle: "Property Investment",
+      icon: "🏠",
+      color: "#e8f5e9",
+      position: "right",
+      route: "/real-estate",
+      component: "real-estate-module",
+      description: "Learn about real estate investing, mortgages, and property ownership strategies.",
+      quizType: "mcq"
+    },
+    {
+      id: 19,
       moduleId: MODULES.RETIREMENT_ACCOUNTS.id,
       title: "Retirement Accounts",
       subtitle: "401(k) & Roth IRA",
       icon: "🏛️",
-      color: "#e8f5e9",
-      position: "right",
+      color: "#e3f2fd",
+      position: "left",
       route: "/retirement-accounts",
       component: "retirement-module",
       description: "Master retirement savings with 401(k)s, Roth IRAs, and tax-advantaged investing.",
       quizType: "mcq"
     },
+
+    // Phase 5 — Advanced
     {
-      id: 17,
+      id: 20,
       moduleId: MODULES.CRYPTO.id,
-      title: "Cryptocurrency Fundamentals",
+      title: "Crypto Fundamentals",
       subtitle: "Digital Assets",
       icon: "🪙",
-      color: "#f5f5f5",
-      position: "left",
+      color: "#e8f5e9",
+      position: "right",
       route: "/crypto",
       component: "crypto-module",
       description: "Learn the fundamentals of cryptocurrency and blockchain technology.",
       quizType: "mcq"
     },
     {
-      id: 18,
-      moduleId: MODULES.GIVING.id,
-      title: "Giving Back",
-      subtitle: "Charitable Giving",
-      icon: "❤️",
-      color: "#fce4ec",
-      position: "right",
-      route: "/giving",
-      component: "giving-module",
-      description: "Understand the importance of giving back and how to allocate for charitable causes.",
-      quizType: "mcq"
-    },
-    {
-      id: 19,
-      moduleId: MODULES.CONSUMER_TRAPS.id,
-      title: "Consumer Traps",
-      subtitle: "Spending Pitfalls",
-      icon: "🪤",
-      color: "#fff3e0",
-      position: "left",
-      route: "/consumer-traps",
-      component: "consumer-traps-module",
-      description: "Recognize and avoid common consumer traps, marketing tricks, and spending pitfalls.",
-      quizType: "scenario"
-    },
-    {
-      id: 20,
+      id: 21,
       moduleId: MODULES.INVESTMENT_BANKING.id,
       title: "Investment Banking",
       subtitle: "IPO Knowledge",
       icon: "🏦",
       color: "#e3f2fd",
-      position: "right",
+      position: "left",
       route: "/investment-quiz",
       component: "truefalse",
       description: "Test your knowledge about Initial Public Offerings and investment banking.",
       quizType: "true-false"
+    },
+    {
+      id: 22,
+      moduleId: MODULES.GIVING.id,
+      title: "Giving Back",
+      subtitle: "Charitable Giving",
+      icon: "❤️",
+      color: "#e8f5e9",
+      position: "right",
+      route: "/giving",
+      component: "giving-module",
+      description: "Understand the importance of giving back and how to allocate for charitable causes.",
+      quizType: "mcq"
     },
   ];
 
@@ -337,11 +383,11 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 0.7], [0, 1]);
     }));
   }, [progress]);
 
-  // Split modules into two parts
-  const part1Modules = allModules.slice(0, 10);
-  const part2Modules = allModules.slice(10, 20);
+  // Split modules into two parts (11 modules in part 1, 11 modules in part 2)
+  const part1Modules = allModules.slice(0, 11);
+  const part2Modules = allModules.slice(11, 22);
 
-  // Check if Part 1 is complete (all 10 modules passed)
+  // Check if Part 1 is complete (all 11 modules passed)
   const isPart1Complete = part1Modules.every(m => m.status === 'Completed');
 
   // Auto-determine which part to show based on completion

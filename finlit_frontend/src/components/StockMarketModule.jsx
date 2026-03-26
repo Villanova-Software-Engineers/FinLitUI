@@ -14,7 +14,7 @@ const StockMarketModule = () => {
   // Review mode - allows viewing content without taking tests
   const [isReviewMode, setIsReviewMode] = useState(false);
 
-  const [currentPhase, setCurrentPhase] = useState('teaching'); // 'teaching', 'test', 'trading-sim', 'final-results'
+  const [currentPhase, setCurrentPhase] = useState('teaching'); // 'teaching', 'swipe-game', 'test', 'trading-sim', 'final-results', 'quiz-review'
   const [teachingStep, setTeachingStep] = useState(0);
   const [testQuestion, setTestQuestion] = useState(0);
   const [testScore, setTestScore] = useState(0);
@@ -40,6 +40,13 @@ const StockMarketModule = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [saveResult, setSaveResult] = useState(null);
   const [isResetting, setIsResetting] = useState(false);
+
+  // Swipe game state
+  const [currentCardIndex, setCurrentCardIndex] = useState(0);
+  const [swipeScore, setSwipeScore] = useState(0);
+  const [swipeAnswers, setSwipeAnswers] = useState([]);
+  const [swipeDirection, setSwipeDirection] = useState(null);
+  const [showSwipeResult, setShowSwipeResult] = useState(false);
 
   // Teaching Content - Stock Market Basics
   const teachingContent = [
@@ -201,6 +208,74 @@ const StockMarketModule = () => {
         { id: 'D', text: "You will pay more taxes", correct: false }
       ],
       explanation: "Lack of diversification means if that one stock performs poorly or the company fails, you could lose your entire investment."
+    }
+  ];
+
+  // Swipe Game - Value vs Growth Stock Cards
+  const swipeCards = [
+    {
+      company: "Waste Management",
+      ticker: "WM",
+      description: "Leading trash collection and recycling company. Steady cash flow, pays reliable dividends.",
+      type: "value",
+      emoji: "♻️",
+      hint: "Stable business, people always need trash removed"
+    },
+    {
+      company: "NVIDIA",
+      ticker: "NVDA",
+      description: "AI chip maker experiencing explosive revenue growth. High P/E ratio but massive potential.",
+      type: "growth",
+      emoji: "🚀",
+      hint: "Fast-growing tech, cutting-edge AI"
+    },
+    {
+      company: "Coca-Cola",
+      ticker: "KO",
+      description: "100+ year old beverage company. Consistent profits, strong dividend history.",
+      type: "value",
+      emoji: "🥤",
+      hint: "Established brand, predictable sales"
+    },
+    {
+      company: "Tesla",
+      ticker: "TSLA",
+      description: "Electric vehicle and energy innovation leader. High volatility, reinvests profits for expansion.",
+      type: "growth",
+      emoji: "⚡",
+      hint: "Innovative, high-risk, high-reward"
+    },
+    {
+      company: "Procter & Gamble",
+      ticker: "PG",
+      description: "Consumer goods giant (Tide, Pampers, Gillette). Steady earnings, dividend aristocrat.",
+      type: "value",
+      emoji: "🧴",
+      hint: "Daily essentials, reliable income"
+    },
+    {
+      company: "Shopify",
+      ticker: "SHOP",
+      description: "E-commerce platform growing rapidly. High growth rate, minimal dividends.",
+      type: "growth",
+      emoji: "🛒",
+      hint: "Fast expansion, tech-focused"
+    },
+    {
+      company: "Johnson & Johnson",
+      ticker: "JNJ",
+      description: "Healthcare products and pharmaceuticals. Stable revenue, over 60 years of dividend increases.",
+      type: "value",
+      emoji: "🏥",
+      hint: "Healthcare staple, low volatility"
+    },
+    {
+      company: "Airbnb",
+      ticker: "ABNB",
+      description: "Disrupting travel industry with home-sharing. Rapid user growth, reinvesting for expansion.",
+      type: "growth",
+      emoji: "🏠",
+      hint: "New business model, scaling fast"
     }
   ];
 
@@ -960,6 +1035,39 @@ const StockMarketModule = () => {
     setTeachingStep(0);
   };
 
+  // Switch to quiz review in review mode
+  const viewQuizReview = () => {
+    setCurrentPhase('quiz-review');
+  };
+
+  // Handle swipe game
+  const handleSwipe = (direction) => {
+    const card = swipeCards[currentCardIndex];
+    const userAnswer = direction === 'left' ? 'value' : 'growth';
+    const isCorrect = userAnswer === card.type;
+
+    // Update score and answers
+    if (isCorrect) {
+      setSwipeScore(prev => prev + 1);
+    }
+
+    setSwipeAnswers(prev => [...prev, {
+      card: card.company,
+      userAnswer,
+      correct: isCorrect
+    }]);
+
+    setSwipeDirection(direction);
+    setShowSwipeResult(true);
+
+    // Move to next card after a delay
+    setTimeout(() => {
+      setCurrentCardIndex(prev => prev + 1);
+      setSwipeDirection(null);
+      setShowSwipeResult(false);
+    }, 1500);
+  };
+
   // If module is already passed and not in review mode, show completion screen
   if (modulePassed && !isReviewMode) {
     return (
@@ -1153,22 +1261,346 @@ const StockMarketModule = () => {
                   Next Lesson
                 </button>
               ) : isReviewMode ? (
-                <button
-                  onClick={() => navigate('/game')}
-                  className="px-8 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white rounded-xl font-bold shadow-lg transition transform hover:scale-105"
-                >
-                  Finish Review
-                </button>
+                <div className="flex gap-3">
+                  <button
+                    onClick={viewQuizReview}
+                    className="px-8 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-xl font-bold shadow-lg transition transform hover:scale-105"
+                  >
+                    Review Quiz Answers
+                  </button>
+                  <button
+                    onClick={() => navigate('/game')}
+                    className="px-8 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white rounded-xl font-bold shadow-lg transition transform hover:scale-105"
+                  >
+                    Finish Review
+                  </button>
+                </div>
               ) : (
                 <button
-                  onClick={() => setCurrentPhase('test')}
+                  onClick={() => setCurrentPhase('swipe-game')}
                   className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white rounded-xl font-bold shadow-lg transition transform hover:scale-105"
                 >
-                  Take the Test
+                  Next: Stock Game
                 </button>
               )}
             </div>
           </motion.div>
+        </motion.div>
+      )}
+
+      {/* SWIPE GAME PHASE - Value vs Growth Stocks */}
+      {currentPhase === 'swipe-game' && (
+        <motion.div
+          className="max-w-2xl mx-auto"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
+          {currentCardIndex < swipeCards.length ? (
+            <div>
+              {/* Instructions */}
+              <motion.div
+                className="bg-white rounded-2xl p-6 shadow-xl mb-6"
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <h2 className="text-2xl font-bold text-gray-900 mb-3 text-center">Value or Growth Stock?</h2>
+                <p className="text-gray-600 text-center mb-4">
+                  Swipe or tap to categorize each company
+                </p>
+                <div className="grid grid-cols-2 gap-4 text-center">
+                  <div className="bg-blue-50 rounded-xl p-4 border-2 border-blue-300">
+                    <div className="text-3xl mb-2">👈</div>
+                    <div className="font-bold text-blue-800">Value Stock</div>
+                    <div className="text-xs text-blue-600 mt-1">Stable, dividends, mature</div>
+                  </div>
+                  <div className="bg-green-50 rounded-xl p-4 border-2 border-green-300">
+                    <div className="text-3xl mb-2">👉</div>
+                    <div className="font-bold text-green-800">Growth Stock</div>
+                    <div className="text-xs text-green-600 mt-1">Fast-growing, innovative</div>
+                  </div>
+                </div>
+                <div className="text-center text-sm text-gray-500 mt-3">
+                  Card {currentCardIndex + 1} of {swipeCards.length}
+                </div>
+              </motion.div>
+
+              {/* Swipeable Card */}
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={currentCardIndex}
+                  className="relative"
+                  initial={{ scale: 0.8, opacity: 0, rotateY: -90 }}
+                  animate={{ scale: 1, opacity: 1, rotateY: 0 }}
+                  exit={{ scale: 0.8, opacity: 0, x: swipeDirection === 'left' ? -300 : 300, rotate: swipeDirection === 'left' ? -20 : 20 }}
+                  transition={{ duration: 0.3 }}
+                  drag="x"
+                  dragConstraints={{ left: 0, right: 0 }}
+                  onDragEnd={(e, info) => {
+                    if (Math.abs(info.offset.x) > 100) {
+                      const direction = info.offset.x > 0 ? 'right' : 'left';
+                      handleSwipe(direction);
+                    }
+                  }}
+                >
+                  <div className="bg-gradient-to-br from-white to-gray-50 rounded-3xl shadow-2xl border-4 border-gray-200 overflow-hidden cursor-grab active:cursor-grabbing">
+                    {/* Card Header */}
+                    <div className="bg-gradient-to-r from-slate-800 to-slate-900 p-6 text-white">
+                      <div className="text-6xl mb-3 text-center">{swipeCards[currentCardIndex].emoji}</div>
+                      <h3 className="text-3xl font-black text-center mb-1">
+                        {swipeCards[currentCardIndex].company}
+                      </h3>
+                      <p className="text-center text-blue-300 font-bold text-lg">
+                        ${swipeCards[currentCardIndex].ticker}
+                      </p>
+                    </div>
+
+                    {/* Card Body */}
+                    <div className="p-8">
+                      <p className="text-gray-700 text-lg leading-relaxed mb-6 text-center">
+                        {swipeCards[currentCardIndex].description}
+                      </p>
+
+                      <div className="bg-blue-50 rounded-xl p-4 border-l-4 border-blue-500 mb-6">
+                        <div className="flex items-start gap-2">
+                          <span className="text-xl">💡</span>
+                          <div>
+                            <div className="font-bold text-blue-800 text-sm mb-1">Hint:</div>
+                            <p className="text-blue-700 text-sm">{swipeCards[currentCardIndex].hint}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Swipe indicators */}
+                      <div className="flex justify-between items-center mb-4">
+                        <div className="text-blue-400 font-bold text-sm">← VALUE</div>
+                        <div className="text-gray-400 text-xs">Drag or Tap</div>
+                        <div className="text-green-400 font-bold text-sm">GROWTH →</div>
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="grid grid-cols-2 gap-4 p-6 pt-0">
+                      <button
+                        onClick={() => handleSwipe('left')}
+                        className="py-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl font-bold text-lg shadow-lg transition transform hover:scale-105 active:scale-95"
+                      >
+                        👈 Value Stock
+                      </button>
+                      <button
+                        onClick={() => handleSwipe('right')}
+                        className="py-4 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-xl font-bold text-lg shadow-lg transition transform hover:scale-105 active:scale-95"
+                      >
+                        Growth Stock 👉
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              </AnimatePresence>
+
+              {/* Feedback */}
+              <AnimatePresence>
+                {showSwipeResult && (
+                  <motion.div
+                    className={`mt-6 rounded-2xl p-6 shadow-xl text-center ${
+                      swipeAnswers[swipeAnswers.length - 1]?.correct
+                        ? 'bg-green-50 border-2 border-green-400'
+                        : 'bg-red-50 border-2 border-red-400'
+                    }`}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                  >
+                    <div className="text-4xl mb-2">
+                      {swipeAnswers[swipeAnswers.length - 1]?.correct ? '✅' : '❌'}
+                    </div>
+                    <div className={`font-bold text-xl mb-2 ${
+                      swipeAnswers[swipeAnswers.length - 1]?.correct ? 'text-green-800' : 'text-red-800'
+                    }`}>
+                      {swipeAnswers[swipeAnswers.length - 1]?.correct ? 'Correct!' : 'Not quite!'}
+                    </div>
+                    <p className={`text-sm ${
+                      swipeAnswers[swipeAnswers.length - 1]?.correct ? 'text-green-700' : 'text-red-700'
+                    }`}>
+                      {swipeCards[currentCardIndex - 1]?.company} is a{' '}
+                      <span className="font-bold">{swipeCards[currentCardIndex - 1]?.type} stock</span>
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          ) : (
+            /* Results Screen */
+            <motion.div
+              className="bg-white rounded-3xl p-8 shadow-xl text-center"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+            >
+              <div className="text-6xl mb-4">
+                {swipeScore >= swipeCards.length * 0.7 ? '🎉' : '📚'}
+              </div>
+              <h2 className="text-3xl font-bold text-gray-900 mb-3">
+                {swipeScore >= swipeCards.length * 0.7 ? 'Great Job!' : 'Keep Learning!'}
+              </h2>
+              <p className="text-xl text-gray-600 mb-6">
+                You got <span className="font-bold text-blue-600">{swipeScore}/{swipeCards.length}</span> correct
+              </p>
+
+              {/* Answer Review */}
+              <div className="text-left mb-6 max-h-64 overflow-y-auto">
+                {swipeCards.map((card, index) => {
+                  const answer = swipeAnswers[index];
+                  return (
+                    <div key={index} className={`mb-3 p-4 rounded-xl border-2 ${
+                      answer?.correct ? 'bg-green-50 border-green-300' : 'bg-red-50 border-red-300'
+                    }`}>
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl">{card.emoji}</span>
+                        <div className="flex-1">
+                          <div className="font-bold text-gray-900">{card.company}</div>
+                          <div className={`text-sm ${answer?.correct ? 'text-green-700' : 'text-red-700'}`}>
+                            {card.type === 'value' ? 'Value Stock' : 'Growth Stock'}
+                            {!answer?.correct && ` (You said ${answer?.userAnswer === 'value' ? 'Value' : 'Growth'})`}
+                          </div>
+                        </div>
+                        {answer?.correct ? (
+                          <CheckCircle className="text-green-500" size={24} />
+                        ) : (
+                          <XCircle className="text-red-500" size={24} />
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <button
+                onClick={() => setCurrentPhase('test')}
+                className="w-full px-8 py-4 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white rounded-xl font-bold text-lg shadow-lg transition transform hover:scale-105"
+              >
+                Continue to Quiz
+              </button>
+            </motion.div>
+          )}
+        </motion.div>
+      )}
+
+      {/* QUIZ REVIEW PHASE - Shows user's previous answers */}
+      {currentPhase === 'quiz-review' && (
+        <motion.div
+          className="max-w-4xl mx-auto"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
+          <div className="bg-white rounded-3xl p-8 shadow-xl border border-gray-100 mb-6">
+            <h2 className="text-3xl font-black text-gray-900 mb-2 text-center">Quiz Review</h2>
+            <p className="text-gray-600 text-center mb-6">Review your answers from when you completed this module</p>
+
+            {/* All Questions Review */}
+            <div className="space-y-6">
+              {testQuestions.map((question, index) => {
+                const answered = testAnswers.find(a => a.question === index);
+                const selectedOption = question.options.find(opt => opt.id === answered?.answer);
+                const correctOption = question.options.find(opt => opt.correct);
+                const isCorrect = answered?.correct;
+
+                return (
+                  <div key={index} className="border-2 border-gray-200 rounded-2xl p-6 bg-gray-50">
+                    {/* Question Header */}
+                    <div className="flex items-start justify-between mb-4 pb-4 border-b border-gray-200">
+                      <div className="flex-1">
+                        <span className="text-sm font-bold text-blue-600 uppercase tracking-wider block mb-2">
+                          Question {index + 1} of {testQuestions.length}
+                        </span>
+                        <h3 className="text-xl font-bold text-gray-900">
+                          {question.question}
+                        </h3>
+                      </div>
+                      {isCorrect ? (
+                        <CheckCircle className="w-8 h-8 text-green-500 flex-shrink-0 ml-4" />
+                      ) : (
+                        <XCircle className="w-8 h-8 text-red-500 flex-shrink-0 ml-4" />
+                      )}
+                    </div>
+
+                    {/* Options */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                      {question.options.map((option) => {
+                        const isSelected = selectedOption?.id === option.id;
+                        const isCorrectOption = option.correct;
+
+                        return (
+                          <div
+                            key={option.id}
+                            className={`p-4 rounded-xl text-left border-2 flex items-start gap-3 ${
+                              isCorrectOption
+                                ? 'bg-green-50 border-green-500'
+                                : isSelected && !isCorrectOption
+                                  ? 'bg-red-50 border-red-500'
+                                  : 'bg-white border-gray-200 opacity-60'
+                            }`}
+                          >
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 ${
+                              isCorrectOption ? 'bg-green-500 text-white' :
+                              isSelected ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-500'
+                            }`}>
+                              {isCorrectOption ? (
+                                <CheckCircle size={20} />
+                              ) : isSelected && !isCorrectOption ? (
+                                <XCircle size={20} />
+                              ) : (
+                                option.id
+                              )}
+                            </div>
+                            <div className="flex-1">
+                              <span className={`text-base font-medium ${
+                                isCorrectOption ? 'text-green-900' :
+                                isSelected ? 'text-red-900' : 'text-gray-600'
+                              }`}>
+                                {option.text}
+                              </span>
+                              {isSelected && (
+                                <div className="text-xs font-bold mt-1 text-gray-500">
+                                  Your answer
+                                </div>
+                              )}
+                            </div>
+                            {isCorrectOption && <CheckCircle className="text-green-600 flex-shrink-0" />}
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Explanation */}
+                    <div className="bg-slate-900 text-white p-4 rounded-xl">
+                      <h4 className="font-bold text-blue-400 uppercase tracking-wider text-xs mb-2">Explanation</h4>
+                      <p className="text-sm leading-relaxed text-slate-200">
+                        {question.explanation}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Back to Teaching or Exit */}
+            <div className="flex gap-4 justify-center mt-8 pt-6 border-t border-gray-200">
+              <button
+                onClick={() => {
+                  setCurrentPhase('teaching');
+                  setTeachingStep(0);
+                }}
+                className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-xl font-bold shadow-lg transition transform hover:scale-105"
+              >
+                Review Lessons Again
+              </button>
+              <button
+                onClick={() => navigate('/game')}
+                className="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white rounded-xl font-bold shadow-lg transition transform hover:scale-105"
+              >
+                Back to Learning Path
+              </button>
+            </div>
+          </div>
         </motion.div>
       )}
 

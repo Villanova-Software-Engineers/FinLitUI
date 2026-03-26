@@ -6,7 +6,7 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
-
+.claude/skills
 .env
 .env.local
 .env.*.local
@@ -15,7 +15,6 @@ node_modules
 dist
 dist-ssr
 *.local
-
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -33,3 +32,5 @@ rules.md
 storage.rules
 
 horizon-tailwind-react-main
+*videos
+*.claude

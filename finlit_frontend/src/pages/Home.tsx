@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Star, BookOpen, Home, Target, User, Check, Flame, GraduationCap, Loader2, Lock, Play, Zap, Lightbulb, TrendingUp, PiggyBank, Shield, CreditCard, Wallet, RefreshCw, Settings, Menu, X, Calculator, ChevronRight, Trophy, Gamepad2, Brain, Award, HelpCircle, LogOut, DollarSign, Bug } from 'lucide-react';
+import { Star, BookOpen, Home, Target, User, Check, Flame, GraduationCap, Loader2, Lock, Play, Zap, Lightbulb, TrendingUp, PiggyBank, Shield, CreditCard, Wallet, RefreshCw, Settings, Menu, X, Calculator, ChevronRight, Trophy, Gamepad2, Brain, Award, HelpCircle, LogOut, DollarSign, Bug, Mail } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuthContext } from '../auth/context/AuthContext';
 import { useModuleScore, MODULES } from '../hooks/useModuleScore';
 import HowToPlayModal from '../components/HowToPlayModal';
-import { getActiveDailyChallengeQuestion } from '../firebase/firestore.service';
+import { getActiveDailyChallengeQuestion, getActiveCaseStudy } from '../firebase/firestore.service';
+import type { CaseStudy } from '../auth/types/auth.types';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
@@ -174,7 +175,12 @@ const FinLitApp: React.FC = () => {
   const [showHowToPlay, setShowHowToPlay] = useState(false);
   const [previousChallengeId, setPreviousChallengeId] = useState<string | null>(null);
   const [showChallengeUpdateNotification, setShowChallengeUpdateNotification] = useState(false);
+  const [activeCaseStudy, setActiveCaseStudy] = useState<CaseStudy | null>(null);
 
+  // Fetch active case study
+  useEffect(() => {
+    getActiveCaseStudy().then(cs => setActiveCaseStudy(cs)).catch(console.error);
+  }, []);
   // Listen for real-time changes to active daily challenge
   useEffect(() => {
     if (!user) return;
@@ -733,7 +739,7 @@ const FinLitApp: React.FC = () => {
               setActiveSection('home');
               setMobileMenuOpen(false);
             }}
-            className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg text-sm sm:text-base lg:text-lg ${activeSection === 'home' ? 'bg-blue-500' : 'hover:bg-blue-500'}`}
+            className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg text-sm sm:text-base ${activeSection === 'home' ? 'bg-blue-500' : 'hover:bg-blue-500'}`}
           >
             <Home size={20} className="sm:w-6 sm:h-6" />
             <span className="font-medium">Home</span>
@@ -744,7 +750,7 @@ const FinLitApp: React.FC = () => {
               navigate('/game');
               setMobileMenuOpen(false);
             }}
-            className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 hover:bg-blue-500 rounded-lg text-sm sm:text-base lg:text-lg"
+            className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 hover:bg-blue-500 rounded-lg text-sm sm:text-base"
           >
             <Target size={20} className="sm:w-6 sm:h-6" />
             <span className="font-medium">Learning Path</span>
@@ -755,7 +761,7 @@ const FinLitApp: React.FC = () => {
               navigate('/economic-quiz');
               setMobileMenuOpen(false);
             }}
-            className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 hover:bg-blue-500 rounded-lg text-sm sm:text-base lg:text-lg"
+            className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 hover:bg-blue-500 rounded-lg text-sm sm:text-base"
           >
             <Zap size={20} className="sm:w-6 sm:h-6" />
             <span className="font-medium">Quick Quiz</span>
@@ -766,7 +772,7 @@ const FinLitApp: React.FC = () => {
               navigate('/games');
               setMobileMenuOpen(false);
             }}
-            className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 hover:bg-blue-500 rounded-lg text-sm sm:text-base lg:text-lg"
+            className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 hover:bg-blue-500 rounded-lg text-sm sm:text-base"
           >
             <Gamepad2 size={20} className="sm:w-6 sm:h-6" />
             <span className="font-medium">Games</span>
@@ -777,7 +783,7 @@ const FinLitApp: React.FC = () => {
               navigate('/case-study');
               setMobileMenuOpen(false);
             }}
-            className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 hover:bg-blue-500 rounded-lg text-sm sm:text-base lg:text-lg"
+            className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 hover:bg-blue-500 rounded-lg text-sm sm:text-base"
           >
             <BookOpen size={20} className="sm:w-6 sm:h-6" />
             <span className="font-medium">Case Study</span>
@@ -788,7 +794,7 @@ const FinLitApp: React.FC = () => {
               navigate('/financial-tools');
               setMobileMenuOpen(false);
             }}
-            className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 hover:bg-blue-500 rounded-lg text-sm sm:text-base lg:text-lg"
+            className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 hover:bg-blue-500 rounded-lg text-sm sm:text-base"
           >
             <Calculator size={20} className="sm:w-6 sm:h-6" />
             <span className="font-medium">Financial Tools</span>
@@ -799,10 +805,10 @@ const FinLitApp: React.FC = () => {
               navigate('/big-money-decisions');
               setMobileMenuOpen(false);
             }}
-            className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 hover:bg-blue-500 rounded-lg text-sm sm:text-base lg:text-lg"
+            className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 hover:bg-blue-500 rounded-lg text-sm sm:text-base"
           >
             <DollarSign size={20} className="sm:w-6 sm:h-6" />
-            <span className="font-medium">Big Money Decisions</span>
+            <span className="font-medium">Money Decisions</span>
           </button>
 
           <button
@@ -810,7 +816,7 @@ const FinLitApp: React.FC = () => {
               navigate('/money-personality');
               setMobileMenuOpen(false);
             }}
-            className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 hover:bg-blue-500 rounded-lg text-sm sm:text-base lg:text-lg"
+            className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 hover:bg-blue-500 rounded-lg text-sm sm:text-base"
           >
             <Brain size={20} className="sm:w-6 sm:h-6" />
             <span className="font-medium">Money Personality</span>
@@ -821,7 +827,7 @@ const FinLitApp: React.FC = () => {
               setActiveSection('profile');
               setMobileMenuOpen(false);
             }}
-            className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg text-sm sm:text-base lg:text-lg ${activeSection === 'profile' ? 'bg-blue-500' : 'hover:bg-blue-500'}`}
+            className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg text-sm sm:text-base ${activeSection === 'profile' ? 'bg-blue-500' : 'hover:bg-blue-500'}`}
           >
             <User size={20} className="sm:w-6 sm:h-6" />
             <span className="font-medium">Profile</span>
@@ -833,7 +839,7 @@ const FinLitApp: React.FC = () => {
               navigate('/certificate');
               setMobileMenuOpen(false);
             }}
-            className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg text-sm sm:text-base lg:text-lg ${completedModules === totalModules ? 'bg-emerald-500' : 'hover:bg-blue-500'}`}
+            className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg text-sm sm:text-base ${completedModules === totalModules ? 'bg-emerald-500' : 'hover:bg-blue-500'}`}
 
           >
             <GraduationCap
@@ -850,12 +856,24 @@ const FinLitApp: React.FC = () => {
                 navigate(user?.role === 'owner' ? '/admin-setup' : '/admin');
                 setMobileMenuOpen(false);
               }}
-              className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 hover:bg-blue-500 rounded-lg text-sm sm:text-base lg:text-lg bg-blue-600/50 border border-white/20"
+              className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 hover:bg-blue-500 rounded-lg text-sm sm:text-base bg-blue-600/50 border border-white/20"
             >
               <Settings size={20} className="sm:w-6 sm:h-6" />
               <span className="font-medium">Admin Panel</span>
             </button>
           )}
+
+          {/* Contact Us Link */}
+          <button
+            onClick={() => {
+              navigate('/contact');
+              setMobileMenuOpen(false);
+            }}
+            className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 hover:bg-blue-500 rounded-lg text-sm sm:text-base"
+          >
+            <Mail size={20} className="sm:w-6 sm:h-6" />
+            <span className="font-medium">Contact Us</span>
+          </button>
 
           {/* Bug Report Link - For all authenticated users */}
           <button
@@ -863,7 +881,7 @@ const FinLitApp: React.FC = () => {
               navigate('/bug-report');
               setMobileMenuOpen(false);
             }}
-            className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 hover:bg-blue-500 rounded-lg text-sm sm:text-base lg:text-lg"
+            className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 hover:bg-blue-500 rounded-lg text-sm sm:text-base"
           >
             <Bug size={20} className="sm:w-6 sm:h-6" />
             <span className="font-medium">Report Bug</span>
@@ -946,7 +964,7 @@ const FinLitApp: React.FC = () => {
 
               {/* Challenge Update Notification */}
               {showChallengeUpdateNotification && (
-                <div className="lg:col-span-2 mb-4">
+                <div className="lg:col-span-2">
                   <motion.div
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -966,6 +984,7 @@ const FinLitApp: React.FC = () => {
                 </div>
               )}
 
+              {/* Row 1: Daily Challenge + Learning Path */}
               {/* Daily Challenge */}
               <div className="bg-amber-50 rounded-lg p-4 sm:p-6 shadow-sm border border-amber-100">
                 <div className="flex justify-between items-center mb-3 sm:mb-4">
@@ -1054,9 +1073,7 @@ const FinLitApp: React.FC = () => {
                 </div>
               </div>
 
-
-
-              {/* XP and Learning Path */}
+              {/* Learning Path */}
               <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm border border-gray-100">
                 <div className="mb-4 sm:mb-6">
                   <h3 className="text-lg sm:text-xl font-bold mb-2">Level {xpLevel}</h3>
@@ -1079,7 +1096,6 @@ const FinLitApp: React.FC = () => {
 
                   <div className="space-y-2">
                     {(() => {
-                      // Get next available modules (not completed) up to 4
                       const availableModules = LEARNING_MODULES
                         .map((mod, idx) => ({ ...mod, originalIndex: idx }))
                         .filter((mod) => {
@@ -1087,6 +1103,31 @@ const FinLitApp: React.FC = () => {
                           return status !== 'completed';
                         })
                         .slice(0, 4);
+
+                      // If all modules completed, show completion state with last 4 modules
+                      if (availableModules.length === 0) {
+                        return (
+                          <>
+                            {/* Completion banner */}
+                            <div className="bg-gradient-to-r from-emerald-500 to-teal-500 rounded-lg p-3 mb-2 text-center">
+                              <p className="text-white font-bold text-sm sm:text-base">🎉 All Modules Completed!</p>
+                              <p className="text-white/80 text-xs sm:text-sm">Great job mastering financial literacy</p>
+                            </div>
+                            {/* Show last 4 completed modules */}
+                            {LEARNING_MODULES.slice(-4).map((mod) => (
+                              <button
+                                key={mod.id}
+                                onClick={() => navigate(mod.route)}
+                                className="w-full flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg text-left bg-emerald-50 border-2 border-emerald-300"
+                              >
+                                <span className="text-xl sm:text-2xl">{mod.icon}</span>
+                                <span className="flex-1 text-sm sm:text-lg font-medium">{mod.title}</span>
+                                <Check size={18} className="sm:w-5 sm:h-5 text-emerald-600" />
+                              </button>
+                            ))}
+                          </>
+                        );
+                      }
 
                       return availableModules.map((mod) => {
                         const status = getModuleStatus(mod.id, mod.originalIndex);
@@ -1115,6 +1156,201 @@ const FinLitApp: React.FC = () => {
                     })()}
                   </div>
                 </div>
+              </div>
+
+              {/* Weekly Case Study */}
+              <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm border border-gray-100 flex flex-col">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg sm:text-xl font-bold">Case Study</h3>
+                  <button onClick={() => navigate('/case-study')} className="text-blue-500 hover:underline text-sm sm:text-lg">
+                    View →
+                  </button>
+                </div>
+
+                {activeCaseStudy ? (
+                  <button
+                    onClick={() => navigate('/case-study')}
+                    className="flex-1 rounded-xl overflow-hidden hover:shadow-lg transition-all group border border-gray-200"
+                  >
+                    <div className="flex h-full">
+                      {/* Left: Image */}
+                      <div className="w-1/3 flex-shrink-0 overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200">
+                        <img
+                          src={activeCaseStudy.personImageUrl}
+                          alt={activeCaseStudy.case_study.subject}
+                          className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = 'https://via.placeholder.com/400x250?text=Case+Study';
+                          }}
+                        />
+                      </div>
+
+                      {/* Right: Content */}
+                      <div className="flex-1 p-3 sm:p-4 flex flex-col text-left bg-gradient-to-br from-blue-50 to-indigo-50 overflow-hidden">
+                        {/* Header badges */}
+                        <div className="flex items-center gap-2 mb-2 flex-wrap">
+                          <span className="px-2 py-0.5 bg-blue-500 text-white text-[10px] sm:text-xs font-bold rounded">
+                            WEEK {activeCaseStudy.case_study.week}
+                          </span>
+                          <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[10px] sm:text-xs font-semibold rounded truncate max-w-[100px] sm:max-w-none">
+                            {activeCaseStudy.case_study.topic}
+                          </span>
+                        </div>
+
+                        {/* Subject */}
+                        <h4 className="text-sm sm:text-lg font-bold text-gray-800 leading-tight line-clamp-1">{activeCaseStudy.case_study.subject}</h4>
+
+                        {/* Info cards grid */}
+                        <div className="mt-2 grid grid-cols-2 gap-2 flex-1 min-h-0">
+                          {/* Who is this */}
+                          <div className="p-2 bg-white/70 rounded-lg border border-gray-100 overflow-hidden">
+                            <p className="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wide">👤 Who</p>
+                            <p className="text-[11px] sm:text-sm text-gray-700 line-clamp-2 leading-snug mt-0.5">
+                              {activeCaseStudy.case_study.who_is_this.content.slice(0, 60)}...
+                            </p>
+                          </div>
+
+                          {/* Key Concept */}
+                          <div className="p-2 bg-blue-50/80 rounded-lg border border-blue-100 overflow-hidden">
+                            <p className="text-[10px] sm:text-xs font-semibold text-blue-600 uppercase tracking-wide">💡 Concept</p>
+                            <p className="text-[11px] sm:text-sm text-gray-700 line-clamp-2 leading-snug mt-0.5">
+                              {activeCaseStudy.case_study.money_idea.title}
+                            </p>
+                          </div>
+
+                          {/* What happened */}
+                          <div className="p-2 bg-amber-50/80 rounded-lg border border-amber-100 overflow-hidden">
+                            <p className="text-[10px] sm:text-xs font-semibold text-amber-600 uppercase tracking-wide">📖 Story</p>
+                            <p className="text-[11px] sm:text-sm text-gray-700 line-clamp-2 leading-snug mt-0.5">
+                              {activeCaseStudy.case_study.what_happened.content.slice(0, 60)}...
+                            </p>
+                          </div>
+
+                          {/* Why it matters */}
+                          <div className="p-2 bg-emerald-50/80 rounded-lg border border-emerald-100 overflow-hidden">
+                            <p className="text-[10px] sm:text-xs font-semibold text-emerald-600 uppercase tracking-wide">🎯 Takeaway</p>
+                            <p className="text-[11px] sm:text-sm text-gray-700 line-clamp-2 leading-snug mt-0.5">
+                              {activeCaseStudy.case_study.money_idea.why_it_matters.slice(0, 60)}...
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Footer */}
+                        <div className="mt-2 pt-2 border-t border-gray-200/50 flex items-center justify-between">
+                          <span className="text-[10px] sm:text-xs text-gray-500">
+                            📝 {activeCaseStudy.case_study.quiz.length} questions
+                          </span>
+                          <span className="flex items-center gap-1 text-blue-600 font-semibold text-xs sm:text-sm group-hover:text-blue-700">
+                            Start <Play size={12} fill="currentColor" />
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                ) : (
+                  <div className="flex-1 flex flex-col items-center justify-center py-8 bg-slate-50 rounded-xl border border-slate-100">
+                    <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
+                      <BookOpen className="text-slate-400" size={32} />
+                    </div>
+                    <p className="text-base text-slate-600 font-medium mb-1">No Active Case Study</p>
+                    <p className="text-sm text-slate-400">Check back next week!</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Certificate Requirements Tracker - Redesigned to match Learning Path */}
+              <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm border border-gray-100 flex flex-col">
+                <div className="flex justify-between items-center mb-4 sm:mb-6">
+                  <h3 className="text-lg sm:text-xl font-bold">Certificate Progress</h3>
+                  <button onClick={() => navigate('/certificate')} className="text-blue-500 hover:underline text-sm sm:text-lg">
+                    View →
+                  </button>
+                </div>
+
+                {(() => {
+                  const caseStudiesDone = (progress?.caseStudyProgress || []).filter(cs => cs.completedAt).length;
+                  const dailyDone = progress?.dailyChallengesCompleted ?? 0;
+                  // Check quickQuizzesCompleted counter, OR check if user has answered quiz questions (backward compatibility)
+                  const quizFromCounter = progress?.quickQuizzesCompleted ?? 0;
+                  const hasAnsweredQuiz = progress?.quickQuizProgress && Object.keys(progress.quickQuizProgress.answeredQuestions || {}).length > 0;
+                  const quizDone = quizFromCounter > 0 ? quizFromCounter : (hasAnsweredQuiz ? 1 : 0);
+                  const personalityDone = !!progress?.moneyPersonality?.completedAt;
+
+                  const reqs = [
+                    { label: `All ${totalModules} Modules`, met: completedModules === totalModules, progress: `${completedModules}/${totalModules}`, icon: '🎯', route: '/game' },
+                    { label: '1 Case Study', met: caseStudiesDone >= 1, progress: `${Math.min(caseStudiesDone, 1)}/1`, icon: '📚', route: '/case-study' },
+                    { label: '4 Daily Challenges', met: dailyDone >= 4, progress: `${Math.min(dailyDone, 4)}/4`, icon: '⚡', route: null as string | null },
+                    { label: '1 Quick Quiz', met: quizDone >= 1, progress: `${Math.min(quizDone, 1)}/1`, icon: '🧠', route: '/economic-quiz' },
+                    { label: '1 Personality Test', met: personalityDone, progress: personalityDone ? '1/1' : '0/1', icon: '💭', route: '/money-personality' },
+                  ];
+
+                  const reqsMet = reqs.filter(r => r.met).length;
+                  const allMet = reqsMet === reqs.length;
+
+                  return (
+                    <div className="space-y-2">
+                      {reqs.map((req, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => req.route && navigate(req.route)}
+                          disabled={!req.route}
+                          className={`w-full flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg text-left ${
+                            req.met
+                              ? 'bg-emerald-50 border-2 border-emerald-300'
+                              : req.route
+                                ? 'bg-gray-50 hover:bg-blue-50 border-2 border-transparent hover:border-blue-200'
+                                : 'bg-gray-100 opacity-60 cursor-not-allowed border-2 border-transparent'
+                          }`}
+                        >
+                          <span className="text-xl sm:text-2xl">{req.icon}</span>
+                          <span className={`flex-1 text-sm sm:text-lg font-medium ${req.met ? 'text-emerald-800' : 'text-slate-700'}`}>
+                            {req.label}
+                          </span>
+                          {req.met ? (
+                            <Check size={18} className="sm:w-5 sm:h-5 text-emerald-600" />
+                          ) : (
+                            <span className="text-xs sm:text-sm font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+                              {req.progress}
+                            </span>
+                          )}
+                        </button>
+                      ))}
+
+                      {/* Certificate Status Card */}
+                      <div className={`mt-3 p-3 sm:p-4 rounded-xl ${
+                        allMet
+                          ? 'bg-gradient-to-r from-emerald-500 to-teal-500'
+                          : 'bg-gradient-to-r from-slate-100 to-gray-100 border border-slate-200'
+                      }`}>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center ${
+                              allMet ? 'bg-white/20' : 'bg-slate-200'
+                            }`}>
+                              <GraduationCap size={20} className={`sm:w-6 sm:h-6 ${allMet ? 'text-white' : 'text-slate-400'}`} />
+                            </div>
+                            <div>
+                              <p className={`font-bold text-sm sm:text-base ${allMet ? 'text-white' : 'text-slate-700'}`}>
+                                {allMet ? '🎉 Certificate Unlocked!' : 'Keep Going!'}
+                              </p>
+                              <p className={`text-xs sm:text-sm ${allMet ? 'text-white/80' : 'text-slate-500'}`}>
+                                {allMet ? 'Download your achievement' : `${reqsMet}/5 requirements complete`}
+                              </p>
+                            </div>
+                          </div>
+                          {allMet && (
+                            <button
+                              onClick={() => navigate('/certificate')}
+                              className="px-3 sm:px-4 py-1.5 sm:py-2 bg-white text-emerald-600 font-bold text-xs sm:text-sm rounded-lg hover:bg-emerald-50 transition-all"
+                            >
+                              View
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Financial Crossword */}

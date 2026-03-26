@@ -15,6 +15,7 @@ import {
   saveQuickQuizProgress,
   getQuickQuizProgress,
   getCurrentQuizVersion,
+  incrementQuickQuizCompleted,
 } from '../firebase/firestore.service';
 import type { StudentProgress, ModuleScore, CrosswordProgress, QuizQuestion, QuickQuizProgress } from '../auth/types/auth.types';
 
@@ -41,6 +42,9 @@ export const MODULES = {
   RISK_TAKING: { id: 'risk-taking', name: 'Risk Management', maxScore: 100 },
   GIVING: { id: 'giving', name: 'Giving Back', maxScore: 100 },
   CONSUMER_TRAPS: { id: 'consumer-traps', name: 'Consumer Traps', maxScore: 100 },
+  WHAT_IS_MONEY: { id: 'what-is-money', name: 'What is Money', maxScore: 100 },
+  REAL_ESTATE: { id: 'real-estate', name: 'Real Estate', maxScore: 100 },
+  INFLATION_DEFLATION: { id: 'inflation-deflation', name: 'Inflation & Deflation', maxScore: 100 },
 } as const;
 
 export type ModuleId = typeof MODULES[keyof typeof MODULES]['id'];
@@ -87,6 +91,7 @@ interface UseModuleScoreReturn {
   saveQuizAnswer: (questionId: string, selectedAnswer: number, isCorrect: boolean, quizVersion: string) => Promise<SaveQuizAnswerResult>;
   loadQuizProgress: (quizVersion: string) => Promise<QuickQuizProgress | null>;
   getQuizVersion: () => Promise<string>;
+  markQuizCompleted: (quizVersion: string) => Promise<{ incremented: boolean }>;
 }
 
 export const useModuleScore = (): UseModuleScoreReturn => {
@@ -359,6 +364,21 @@ export const useModuleScore = (): UseModuleScoreReturn => {
     }
   }, []);
 
+  // Mark a quick quiz as completed (increment counter only if not already completed for this version)
+  const markQuizCompleted = useCallback(async (quizVersion: string): Promise<{ incremented: boolean }> => {
+    if (!user) return { incremented: false };
+    try {
+      const result = await incrementQuickQuizCompleted(user.id, quizVersion);
+      if (result.incremented) {
+        await refreshProgress();
+      }
+      return result;
+    } catch (err) {
+      console.error('Error marking quiz completed:', err);
+      return { incremented: false };
+    }
+  }, [user, refreshProgress]);
+
   return {
     progress,
     isLoading,
@@ -380,5 +400,6 @@ export const useModuleScore = (): UseModuleScoreReturn => {
     saveQuizAnswer,
     loadQuizProgress,
     getQuizVersion,
+    markQuizCompleted,
   };
 };

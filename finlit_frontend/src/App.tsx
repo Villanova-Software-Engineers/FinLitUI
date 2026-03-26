@@ -24,6 +24,9 @@ import InvestmentVehiclesModule from "./components/InvestmentVehiclesModule";
 import RiskTakingModule from "./components/RiskTakingModule";
 import GivingModule from "./components/GivingModule";
 import ConsumerTrapsModule from "./components/ConsumerTrapsModule";
+import WhatIsMoneyModule from "./components/WhatIsMoneyModule";
+import RealEstateModule from "./components/RealEstateModule";
+import InflationDeflationModule from "./components/InflationDeflationModule";
 import AdminSetup from "./components/AdminSetup";
 import AdminDashboard from "./components/AdminDashboard";
 import QuizQuestionsAdmin from "./components/QuizQuestionsAdmin";
@@ -35,6 +38,8 @@ import Certificate from "./components/Certificate";
 import FinancialTools from "./components/FinancialTools";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
+import ContactUs from "./pages/ContactUs";
+import WhoWeAre from "./pages/WhoWeAre";
 import Games from "./pages/Games";
 import GamesHorizon from "./pages/GamesHorizon";
 import FinancialToolsHorizon from "./pages/FinancialToolsHorizon";
@@ -329,6 +334,36 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/what-is-money"
+            element={
+              <ProtectedRoute>
+                <ModuleAccessControl moduleId={MODULES.WHAT_IS_MONEY.id} moduleName="What is Money">
+                  <WhatIsMoneyModule />
+                </ModuleAccessControl>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/real-estate"
+            element={
+              <ProtectedRoute>
+                <ModuleAccessControl moduleId={MODULES.REAL_ESTATE.id} moduleName="Real Estate">
+                  <RealEstateModule />
+                </ModuleAccessControl>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/inflation-deflation"
+            element={
+              <ProtectedRoute>
+                <ModuleAccessControl moduleId={MODULES.INFLATION_DEFLATION.id} moduleName="Inflation & Deflation">
+                  <InflationDeflationModule />
+                </ModuleAccessControl>
+              </ProtectedRoute>
+            }
+          />
 
           {/* Protected Admin Routes */}
           <Route
@@ -505,6 +540,8 @@ function App() {
           {/* Public Legal Pages */}
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
+          <Route path="/contact" element={<ContactUs />} />
+          <Route path="/about" element={<WhoWeAre />} />
 
           {/* Catch all route - redirect to dashboard if authenticated, otherwise to auth */}
           <Route path="*" element={<Navigate to="/dashboard" replace />} />

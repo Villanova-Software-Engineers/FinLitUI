@@ -1,5 +1,4 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft,
@@ -18,6 +17,7 @@ import {
 import { db } from '../firebase/config';
 import { useAuthContext } from '../auth/context/AuthContext';
 import { collection, addDoc, getDocs, deleteDoc, doc, query, orderBy, where, serverTimestamp, Timestamp } from 'firebase/firestore';
+import DashboardLayout from '../components/DashboardLayout';
 
 // Types
 interface SavedBudget {
@@ -701,7 +701,6 @@ const BudgetCalculatorPage = ({
 };
 
 const FinancialToolsHorizon = () => {
-  const navigate = useNavigate();
   const [activeTool, setActiveTool] = useState<string | null>(null);
 
   const calculators = [
@@ -788,7 +787,8 @@ const FinancialToolsHorizon = () => {
     if (tool.id === 'budget') {
       setActiveTool('budget');
     } else {
-      navigate(`/financial-tools-original?tool=${tool.id}`);
+      // Other tools will open budget planner for now
+      setActiveTool('budget');
     }
   };
 
@@ -828,18 +828,10 @@ const FinancialToolsHorizon = () => {
 
   // Show main tools grid
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 pt-24 pb-12 px-4">
+    <DashboardLayout>
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors mb-6"
-          >
-            <ArrowLeft size={20} />
-            <span className="font-medium">Back to Dashboard</span>
-          </button>
-
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -885,7 +877,7 @@ const FinancialToolsHorizon = () => {
           </div>
         </motion.div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 

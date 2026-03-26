@@ -1,7 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Home, Car, GraduationCap, ArrowRight, TrendingUp, ArrowLeft } from 'lucide-react';
+import { Home, Car, GraduationCap, ArrowRight, TrendingUp } from 'lucide-react';
 import { motion } from 'framer-motion';
+import DashboardLayout from '../components/DashboardLayout';
 
 const BigMoneyDecisions: React.FC = () => {
     const navigate = useNavigate();
@@ -40,17 +41,8 @@ const BigMoneyDecisions: React.FC = () => {
     ];
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/30 to-slate-50 p-6 md:p-12">
+        <DashboardLayout>
             <div className="max-w-6xl mx-auto">
-                {/* Back Button */}
-                <button
-                    onClick={() => navigate('/dashboard')}
-                    className="mb-8 flex items-center gap-2 px-4 py-2 text-slate-600 hover:text-indigo-600 font-semibold rounded-lg hover:bg-white transition-all group"
-                >
-                    <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
-                    Back to Dashboard
-                </button>
-
                 {/* Header */}
                 <div className="mb-12 text-center">
                     <div className="inline-block mb-4">
@@ -123,7 +115,7 @@ const BigMoneyDecisions: React.FC = () => {
                     </div>
                 </div>
             </div>
-        </div>
+        </DashboardLayout>
     );
 };
 

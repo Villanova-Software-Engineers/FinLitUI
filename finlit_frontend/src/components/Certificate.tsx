@@ -1,13 +1,20 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { Download, ArrowLeft, Lock } from 'lucide-react';
+import { Download, Lock, Check, BookOpen, Zap, Brain, Award } from 'lucide-react';
 import { useAuthContext } from '../auth/context/AuthContext';
 import { useModuleScore, MODULES } from '../hooks/useModuleScore';
-import { useNavigate } from 'react-router-dom';
+import DashboardLayout from './DashboardLayout';
+
+// Certificate requirements
+const CERT_REQUIREMENTS = {
+  CASE_STUDIES: 1,
+  DAILY_CHALLENGES: 4,
+  QUICK_QUIZZES: 1,
+  PERSONALITY_TEST: 1,
+};
 
 const Certificate: React.FC = () => {
   const { user } = useAuthContext();
-  const { isModulePassed } = useModuleScore();
-  const navigate = useNavigate();
+  const { isModulePassed, progress } = useModuleScore();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [certificateImage, setCertificateImage] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -18,6 +25,74 @@ const Certificate: React.FC = () => {
     month: 'long',
     day: 'numeric'
   });
+
+  // Certificate requirements checks
+  const allModules = Object.values(MODULES);
+  const completedModules = allModules.filter(module => isModulePassed(module.id)).length;
+  const totalModules = allModules.length;
+  const hasCompletedAllModules = completedModules === totalModules;
+
+  // Activity requirements
+  const completedCaseStudies = (progress?.caseStudyProgress || []).filter(cs => cs.completedAt).length;
+  const dailyChallengesCompleted = progress?.dailyChallengesCompleted ?? 0;
+  // Check quickQuizzesCompleted counter, OR check if user has answered quiz questions (for backward compatibility)
+  const quickQuizzesFromCounter = progress?.quickQuizzesCompleted ?? 0;
+  const hasAnsweredQuizQuestions = progress?.quickQuizProgress && Object.keys(progress.quickQuizProgress.answeredQuestions || {}).length > 0;
+  const quickQuizzesCompleted = quickQuizzesFromCounter > 0 ? quickQuizzesFromCounter : (hasAnsweredQuizQuestions ? 1 : 0);
+  const hasMoneyPersonality = !!progress?.moneyPersonality?.completedAt;
+
+  const caseStudyMet = completedCaseStudies >= CERT_REQUIREMENTS.CASE_STUDIES;
+  const dailyChallengeMet = dailyChallengesCompleted >= CERT_REQUIREMENTS.DAILY_CHALLENGES;
+  const quickQuizMet = quickQuizzesCompleted >= CERT_REQUIREMENTS.QUICK_QUIZZES;
+  const personalityMet = hasMoneyPersonality;
+
+  const allRequirementsMet = hasCompletedAllModules && caseStudyMet && dailyChallengeMet && quickQuizMet && personalityMet;
+
+  const requirements = [
+    {
+      label: `Complete all ${totalModules} learning modules`,
+      met: hasCompletedAllModules,
+      progress: `${completedModules}/${totalModules}`,
+      icon: Award,
+      color: 'emerald',
+      route: '/game',
+    },
+    {
+      label: `Complete ${CERT_REQUIREMENTS.CASE_STUDIES} case study`,
+      met: caseStudyMet,
+      progress: `${Math.min(completedCaseStudies, CERT_REQUIREMENTS.CASE_STUDIES)}/${CERT_REQUIREMENTS.CASE_STUDIES}`,
+      icon: BookOpen,
+      color: 'indigo',
+      route: '/case-study',
+    },
+    {
+      label: `Complete ${CERT_REQUIREMENTS.DAILY_CHALLENGES} daily challenges`,
+      met: dailyChallengeMet,
+      progress: `${Math.min(dailyChallengesCompleted, CERT_REQUIREMENTS.DAILY_CHALLENGES)}/${CERT_REQUIREMENTS.DAILY_CHALLENGES}`,
+      icon: Zap,
+      color: 'amber',
+      route: '/dashboard',
+    },
+    {
+      label: `Complete ${CERT_REQUIREMENTS.QUICK_QUIZZES} quick quizzes`,
+      met: quickQuizMet,
+      progress: `${Math.min(quickQuizzesCompleted, CERT_REQUIREMENTS.QUICK_QUIZZES)}/${CERT_REQUIREMENTS.QUICK_QUIZZES}`,
+      icon: Zap,
+      color: 'blue',
+      route: '/economic-quiz',
+    },
+    {
+      label: `Complete ${CERT_REQUIREMENTS.PERSONALITY_TEST} money personality test`,
+      met: personalityMet,
+      progress: personalityMet ? '1/1' : '0/1',
+      icon: Brain,
+      color: 'purple',
+      route: '/money-personality',
+    },
+  ];
+
+  const totalReqs = requirements.length;
+  const metReqs = requirements.filter(r => r.met).length;
 
   const generateCertificate = useCallback(async () => {
     const canvas = canvasRef.current;
@@ -133,7 +208,7 @@ const Certificate: React.FC = () => {
     
     const timer = setTimeout(() => {
       console.log('Attempting to generate certificate...');
-      if (user) {
+      if (user && allRequirementsMet) {
         generateCertificate();
       }
     }, 500);
@@ -142,84 +217,93 @@ const Certificate: React.FC = () => {
       console.log('Cleaning up certificate generation timer');
       clearTimeout(timer);
     };
-  }, [user?.id, user?.displayName, user?.email]); // Only depend on specific user properties
-
+  }, [user?.id, user?.displayName, user?.email, allRequirementsMet]);
   
-  // Check if user has completed all modules
-  const allModules = Object.values(MODULES);
-  const completedModules = allModules.filter(module => isModulePassed(module.id)).length;
-  const totalModules = allModules.length;
-  const hasCompletedAllModules = completedModules === totalModules;
-  
-  // If not completed, show access denied page
-  if (!hasCompletedAllModules) {
+  // If not completed, show access denied page with requirements tracker
+  if (!allRequirementsMet) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 p-8">
+      <DashboardLayout>
         <div className="max-w-4xl mx-auto">
           <div className="text-center">
-            <button
-              onClick={() => navigate('/dashboard')}
-              className="inline-flex items-center gap-2 mb-8 px-4 py-2 text-slate-600 hover:text-slate-800 transition-colors"
-            >
-              <ArrowLeft size={20} />
-              Back to Dashboard
-            </button>
-            
-            <div className="bg-white/70 backdrop-blur-sm border border-slate-200/60 rounded-2xl p-12 shadow-xl">
+            <div className="bg-white/70 backdrop-blur-sm border border-slate-200/60 rounded-2xl p-8 sm:p-12 shadow-xl">
               <div className="flex justify-center mb-6">
                 <div className="w-24 h-24 bg-gradient-to-r from-slate-300 to-gray-400 rounded-full flex items-center justify-center shadow-lg">
                   <Lock className="text-white" size={48} />
                 </div>
               </div>
               
-              <h2 className="text-3xl font-bold text-slate-800 mb-4">Certificate Not Yet Available</h2>
-              <p className="text-xl text-slate-600 mb-6 leading-relaxed">
-                Complete all {totalModules} learning modules to unlock your Financial Literacy Certificate!
+              <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 mb-4">Certificate Not Yet Available</h2>
+              <p className="text-lg sm:text-xl text-slate-600 mb-8 leading-relaxed">
+                Complete all requirements below to unlock your Financial Literacy Certificate!
               </p>
               
+              {/* Overall Progress */}
               <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6 mb-8">
-                <h3 className="text-lg font-semibold text-slate-800 mb-4">Your Progress</h3>
+                <h3 className="text-lg font-semibold text-slate-800 mb-4">Overall Progress</h3>
                 <div className="flex items-center gap-4 mb-4">
                   <div className="flex-1 bg-slate-200 rounded-full h-4">
                     <div 
                       className="bg-gradient-to-r from-blue-500 to-indigo-600 h-4 rounded-full transition-all duration-300"
-                      style={{width: `${(completedModules / totalModules) * 100}%`}}
+                      style={{width: `${(metReqs / totalReqs) * 100}%`}}
                     ></div>
                   </div>
                   <span className="text-lg font-bold text-slate-800">
-                    {completedModules}/{totalModules}
+                    {metReqs}/{totalReqs}
                   </span>
                 </div>
                 <p className="text-slate-600">
-                  {totalModules - completedModules} modules remaining
+                  {totalReqs - metReqs} requirement{totalReqs - metReqs !== 1 ? 's' : ''} remaining
                 </p>
               </div>
-              
-              <button
-                onClick={() => navigate('/game')}
-                className="inline-flex items-center gap-3 px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
-              >
-                Continue Learning
-              </button>
+
+              {/* Requirements List */}
+              <div className="space-y-3 mb-8 text-left">
+                {requirements.map((req, idx) => {
+                  const IconComponent = req.icon;
+                  return (
+                    <div
+                      key={idx}
+                      className={`w-full flex items-center gap-4 p-4 rounded-xl border-2 ${
+                        req.met
+                          ? 'bg-emerald-50 border-emerald-200'
+                          : 'bg-white border-slate-200'
+                      }`}
+                    >
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                        req.met ? 'bg-emerald-500' : 'bg-slate-200'
+                      }`}>
+                        {req.met ? (
+                          <Check className="text-white" size={20} />
+                        ) : (
+                          <IconComponent className="text-slate-500" size={20} />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={`font-semibold text-sm sm:text-base ${req.met ? 'text-emerald-800' : 'text-slate-700'}`}>
+                          {req.label}
+                        </p>
+                      </div>
+                      <span className={`text-sm font-bold px-3 py-1 rounded-full flex-shrink-0 ${
+                        req.met ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'
+                      }`}>
+                        {req.progress}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </DashboardLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 p-4 sm:p-6 lg:p-8">
+    <DashboardLayout>
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="inline-flex items-center gap-2 mb-6 px-4 py-2 text-slate-600 hover:text-slate-800 transition-colors"
-          >
-            <ArrowLeft size={20} />
-            Back to Dashboard
-          </button>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-4">
             <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full flex items-center justify-center shadow-lg">
               <span className="text-white text-xl sm:text-2xl">🏆</span>
@@ -314,7 +398,7 @@ const Certificate: React.FC = () => {
           </p>
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 
