@@ -312,6 +312,211 @@ const CommonTrapsPage = ({ onNext, onPrev }) => {
   );
 };
 
+// Swipe/Match Game - Match Traps to Defenses
+const TrapMatchGame = ({ onNext, onPrev }) => {
+  const [currentMatch, setCurrentMatch] = useState(0);
+  const [selectedDefense, setSelectedDefense] = useState(null);
+  const [showResult, setShowResult] = useState(false);
+  const [correctMatches, setCorrectMatches] = useState(0);
+  const [gameComplete, setGameComplete] = useState(false);
+
+  const matchData = [
+    {
+      trap: { name: "Anchoring", icon: "⚓", description: "Inflated 'original' prices" },
+      defenses: [
+        { text: "Research actual market prices first", correct: true },
+        { text: "Trust the listed discount percentage", correct: false },
+        { text: "Buy quickly before the sale ends", correct: false }
+      ]
+    },
+    {
+      trap: { name: "Countdown Timer", icon: "⏰", description: "Flash sale ending in 2:47:33!" },
+      defenses: [
+        { text: "Rush to buy before time runs out", correct: false },
+        { text: "Check if timer resets in incognito", correct: true },
+        { text: "Buy double to stock up", correct: false }
+      ]
+    },
+    {
+      trap: { name: "Free Trial Trap", icon: "🎁", description: "30 days FREE, credit card required" },
+      defenses: [
+        { text: "Sign up and trust your memory", correct: false },
+        { text: "Set a cancellation reminder immediately", correct: true },
+        { text: "Don't worry, they'll remind you", correct: false }
+      ]
+    },
+    {
+      trap: { name: "Free Shipping Bait", icon: "📦", description: "Cart: $35. Free shipping at $50!" },
+      defenses: [
+        { text: "Add $15+ items to 'save' $7 shipping", correct: false },
+        { text: "Calculate: is shipping cheaper than extras?", correct: true },
+        { text: "Always spend more for free shipping", correct: false }
+      ]
+    },
+    {
+      trap: { name: "Checkout Upsell", icon: "🛒", description: "Add protection plan + accessories?" },
+      defenses: [
+        { text: "Add everything to protect purchase", correct: false },
+        { text: "Skip and research third-party options", correct: true },
+        { text: "The retailer knows best what I need", correct: false }
+      ]
+    }
+  ];
+
+  const handleDefenseSelect = (defense) => {
+    if (showResult) return;
+    setSelectedDefense(defense);
+    setShowResult(true);
+    if (defense.correct) {
+      setCorrectMatches(prev => prev + 1);
+    }
+  };
+
+  const handleNext = () => {
+    if (currentMatch < matchData.length - 1) {
+      setCurrentMatch(prev => prev + 1);
+      setSelectedDefense(null);
+      setShowResult(false);
+    } else {
+      setGameComplete(true);
+    }
+  };
+
+  if (gameComplete) {
+    return (
+      <div className="min-h-screen p-6 pt-20 bg-gradient-to-br from-green-50 to-emerald-100 flex items-center justify-center">
+        <motion.div
+          className="bg-white rounded-3xl shadow-2xl p-10 text-center max-w-md w-full"
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+        >
+          <div className={`w-24 h-24 mx-auto rounded-full flex items-center justify-center mb-6 text-5xl ${
+            correctMatches >= 4 ? 'bg-green-500' : 'bg-amber-500'
+          }`}>
+            {correctMatches >= 4 ? '🛡️' : '📚'}
+          </div>
+          <h2 className="text-3xl font-bold text-gray-800 mb-3">
+            {correctMatches >= 4 ? 'Defense Master!' : 'Keep Learning!'}
+          </h2>
+          <p className="text-gray-600 mb-6">
+            You matched {correctMatches}/{matchData.length} traps correctly
+          </p>
+          <button
+            onClick={onNext}
+            className="w-full py-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold text-lg shadow-lg"
+          >
+            Continue to Scenarios
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
+
+  const current = matchData[currentMatch];
+
+  return (
+    <div className="min-h-screen p-6 pt-20 bg-gradient-to-br from-purple-50 via-pink-50 to-amber-50">
+      <div className="max-w-2xl mx-auto">
+        <motion.div
+          className="text-center mb-6"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Match the Defense!</h1>
+          <p className="text-gray-600">What's the best defense against this trap?</p>
+          <div className="flex justify-center gap-2 mt-4">
+            {matchData.map((_, idx) => (
+              <div
+                key={idx}
+                className={`w-3 h-3 rounded-full transition-all ${
+                  idx < currentMatch ? 'bg-purple-500' :
+                  idx === currentMatch ? 'bg-purple-600 ring-2 ring-purple-300' : 'bg-gray-300'
+                }`}
+              />
+            ))}
+          </div>
+        </motion.div>
+
+        <motion.div
+          key={currentMatch}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="space-y-6"
+        >
+          {/* Trap Card */}
+          <div className="bg-gradient-to-r from-red-100 to-orange-100 rounded-2xl p-6 border-2 border-red-200 shadow-lg">
+            <div className="flex items-center gap-4">
+              <div className="text-5xl">{current.trap.icon}</div>
+              <div>
+                <h3 className="text-xl font-bold text-red-800">{current.trap.name}</h3>
+                <p className="text-red-700">{current.trap.description}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Defense Options */}
+          <div className="space-y-3">
+            <p className="text-center font-semibold text-gray-700">Choose the best defense:</p>
+            {current.defenses.map((defense, idx) => (
+              <motion.button
+                key={idx}
+                onClick={() => handleDefenseSelect(defense)}
+                disabled={showResult}
+                whileHover={!showResult ? { scale: 1.02 } : {}}
+                whileTap={!showResult ? { scale: 0.98 } : {}}
+                className={`w-full p-4 rounded-xl text-left border-2 transition-all ${
+                  showResult
+                    ? defense.correct
+                      ? 'bg-green-100 border-green-500 text-green-800'
+                      : selectedDefense === defense
+                        ? 'bg-red-100 border-red-500 text-red-800'
+                        : 'bg-gray-50 border-gray-200 opacity-50'
+                    : 'bg-white border-gray-200 hover:border-purple-400 hover:bg-purple-50'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  {showResult && defense.correct && <span className="text-2xl">✅</span>}
+                  {showResult && selectedDefense === defense && !defense.correct && <span className="text-2xl">❌</span>}
+                  <span className="font-medium">{defense.text}</span>
+                </div>
+              </motion.button>
+            ))}
+          </div>
+
+          {/* Result & Continue */}
+          {showResult && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-4"
+            >
+              <div className={`p-4 rounded-xl ${
+                selectedDefense?.correct ? 'bg-green-50 border-2 border-green-300' : 'bg-amber-50 border-2 border-amber-300'
+              }`}>
+                <p className={`font-bold ${selectedDefense?.correct ? 'text-green-800' : 'text-amber-800'}`}>
+                  {selectedDefense?.correct ? '🎯 Perfect defense!' : '💡 Remember this defense for next time!'}
+                </p>
+              </div>
+              <button
+                onClick={handleNext}
+                className="w-full py-4 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold shadow-lg"
+              >
+                {currentMatch < matchData.length - 1 ? 'Next Trap' : 'See Results'}
+              </button>
+            </motion.div>
+          )}
+        </motion.div>
+
+        <div className="flex justify-center mt-6">
+          <button onClick={onPrev} className="px-6 py-3 rounded-xl bg-white text-gray-600 font-medium shadow border border-gray-200 hover:bg-gray-50">
+            Back
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Trap Spotting Game
 const TrapSpottingGame = ({ onNext }) => {
   const [currentScenario, setCurrentScenario] = useState(0);
@@ -622,7 +827,7 @@ const ConsumerTrapsModule = () => {
   const shuffledQuestions = useMemo(() => shuffleQuizOptions(quizQuestions), [shuffleKey]);
 
   const modulePassed = isModulePassed(MODULES.CONSUMER_TRAPS?.id);
-  const totalSteps = 3;
+  const totalSteps = 4; // intro, common traps, match game, spot game, quiz
 
   const handleNext = () => {
     if (currentStep < totalSteps) {
@@ -712,8 +917,9 @@ const ConsumerTrapsModule = () => {
         >
           {currentStep === 0 && <IntroPage onNext={handleNext} />}
           {currentStep === 1 && <CommonTrapsPage onNext={handleNext} onPrev={handlePrev} />}
-          {currentStep === 2 && <TrapSpottingGame onNext={handleNext} />}
-          {currentStep === 3 && (
+          {currentStep === 2 && <TrapMatchGame onNext={handleNext} onPrev={handlePrev} />}
+          {currentStep === 3 && <TrapSpottingGame onNext={handleNext} />}
+          {currentStep === 4 && (
             <QuizPage
               currentQuestion={currentQuestion}
               selectedAnswer={selectedAnswer}

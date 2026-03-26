@@ -96,98 +96,110 @@ const DebtManagementModule = () => {
   const scenarios = [
     {
       id: 1,
-      title: "High Credit Card Debt",
-      description: "Sarah has $15,000 in credit card debt across 3 cards with interest rates of 18%, 22%, and 25%.",
+      title: "Credit Card Debt Crisis",
+      description: "Sarah has $15,000 in credit card debt across 3 cards. She earns $4,000/month and has $1,200 left after paying bills.",
       situation: {
         totalDebt: 15000,
         cards: [
-          { name: "Card A", balance: 5000, rate: 18, minPayment: 150 },
-          { name: "Card B", balance: 4000, rate: 22, minPayment: 120 },
-          { name: "Card C", balance: 6000, rate: 25, minPayment: 180 }
+          { name: "Store Card", balance: 4000, rate: 22, minPayment: 120 },
+          { name: "Visa Card", balance: 5000, rate: 18, minPayment: 150 },
+          { name: "Mastercard", balance: 6000, rate: 25, minPayment: 180 }
         ],
         monthlyIncome: 4000,
-        expenses: 2800
+        expenses: 2800,
+        extraMoney: 1200
       },
+      question: "Sarah wants to get out of debt as fast as possible. What's her BEST strategy?",
       strategies: [
         {
           id: 'avalanche',
-          name: 'Debt Avalanche',
-          description: 'Pay minimums on all cards, put extra money toward highest interest rate',
+          name: 'Attack Highest Interest First (Avalanche)',
+          description: 'Pay $450 minimums total, then put remaining $750 toward the 25% Mastercard each month',
           correct: true,
-          explanation: 'This saves the most money on interest over time by tackling the 25% card first.'
+          explanation: 'CORRECT! The Avalanche method targets the highest interest rate first (25% Mastercard). This saves Sarah the most money because high-interest debt grows fastest. She\'ll pay less interest overall and get debt-free sooner.',
+          mathBreakdown: 'By attacking 25% first instead of 18%, Sarah saves about $2,400 in interest!'
         },
         {
           id: 'snowball',
-          name: 'Debt Snowball',
-          description: 'Pay minimums on all cards, put extra money toward smallest balance',
+          name: 'Pay Smallest Balance First (Snowball)',
+          description: 'Pay minimums, then put extra $750 toward the $4,000 Store Card',
           correct: false,
-          explanation: 'While motivating, this costs more in interest since the highest rate card is largest.'
+          explanation: 'Not the best choice here. While the Snowball method (smallest balance first) feels good psychologically, Sarah\'s smallest debt is also her middle interest rate (22%). She\'ll pay more interest than Avalanche and take longer to be debt-free.',
+          mathBreakdown: 'This costs Sarah about $1,200 more in interest than Avalanche.'
         },
         {
-          id: 'balance',
-          name: 'Balance Transfer',
-          description: 'Transfer all balances to a 0% APR promotional card',
-          correct: true,
-          explanation: 'If she qualifies and pays it off during the promotional period, this could save significant interest.'
+          id: 'equal-split',
+          name: 'Split Money Equally Across All Cards',
+          description: 'Pay minimums, then split the extra $750 three ways ($250 each card)',
+          correct: false,
+          explanation: 'Not effective. Spreading money thin means all debts stick around longer, especially the 25% one. Each month that high-interest debt exists costs Sarah money.',
+          mathBreakdown: 'This is the slowest approach and costs the most in total interest.'
         },
         {
           id: 'minimum',
-          name: 'Pay Minimums Only',
-          description: 'Just pay minimum payments on all cards',
+          name: 'Just Pay Minimum Payments',
+          description: 'Only pay the required $450/month total minimums',
           correct: false,
-          explanation: 'This will take decades to pay off and cost tens of thousands in interest.'
+          explanation: 'WORST option! Minimum payments are designed to keep you in debt. At this rate, Sarah will be paying for 25+ YEARS and pay over $20,000 in interest on her $15,000 debt. Almost nothing goes toward the actual balance.',
+          mathBreakdown: 'Total paid: $35,000+ over 25 years. That\'s more than DOUBLE what she borrowed!'
         }
       ]
     },
     {
       id: 2,
-      title: "Student Loan Strategy",
-      description: "Michael has $45,000 in student loans with varying interest rates and is considering his repayment options.",
+      title: "Student Loan Dilemma",
+      description: "Michael graduated with $45,000 in student loans. He has $2,300/month left after expenses and wants to pay them off smartly.",
       situation: {
         totalDebt: 45000,
         loans: [
-          { name: "Federal Loan 1", balance: 20000, rate: 4.5, type: "federal" },
-          { name: "Federal Loan 2", balance: 15000, rate: 3.8, type: "federal" },
-          { name: "Private Loan", balance: 10000, rate: 7.2, type: "private" }
+          { name: "Federal Loan A", balance: 20000, rate: 4.5, type: "federal", minPayment: 200 },
+          { name: "Federal Loan B", balance: 15000, rate: 3.8, type: "federal", minPayment: 150 },
+          { name: "Private Bank Loan", balance: 10000, rate: 7.2, type: "private", minPayment: 150 }
         ],
         monthlyIncome: 5500,
-        expenses: 3200
+        expenses: 3200,
+        extraMoney: 2300
       },
+      question: "Michael has $2,300/month to put toward loans. Which loan should he prioritize?",
       strategies: [
         {
-          id: 'income-driven',
-          name: 'Income-Driven Repayment',
-          description: 'Enroll in IBR for federal loans, pay minimums',
-          correct: false,
-          explanation: 'While reducing monthly payments, this extends repayment and increases total interest paid.'
-        },
-        {
           id: 'target-private',
-          name: 'Target Private Loan First',
-          description: 'Pay minimums on federal loans, aggressively pay down 7.2% private loan',
+          name: 'Pay Off Private Loan First',
+          description: 'Pay all minimums ($500), then throw remaining $1,800/month at the 7.2% private loan',
           correct: true,
-          explanation: 'Private loans offer fewer protections and have the highest rate, making them priority.'
+          explanation: 'CORRECT! Private loans are the MOST DANGEROUS type of debt. They have the highest interest rate (7.2%) AND no safety features. Federal loans offer forbearance if you lose your job, income-based repayment, and potential forgiveness. Private loans offer NONE of this. Always kill private loans first!',
+          mathBreakdown: 'At 7.2%, Michael pays $720/year just in interest on that $10K. Paying it off fast saves money AND risk.'
         },
         {
-          id: 'refinance-all',
-          name: 'Refinance Everything',
-          description: 'Refinance all loans to potentially lower rates',
+          id: 'target-highest-balance',
+          name: 'Pay the Biggest Loan First',
+          description: 'Target the $20,000 Federal Loan A since it\'s the largest',
           correct: false,
-          explanation: 'Refinancing federal loans loses protections like forbearance and forgiveness options.'
+          explanation: 'Not the best move. Yes, Federal Loan A is the biggest, but it has a lower rate (4.5%) than the private loan (7.2%). Plus, federal loans have safety features like payment pause options if you hit hard times. The private loan is more dangerous.',
+          mathBreakdown: 'You\'d save about $600 more by targeting the 7.2% private loan instead.'
         },
         {
-          id: 'pay-minimums',
-          name: 'Pay All Minimums Equally',
-          description: 'Pay minimum on all loans, invest extra money',
+          id: 'split-equally',
+          name: 'Split Extra Money Across All Three',
+          description: 'Pay minimums, then divide remaining $1,800 equally ($600 to each loan)',
           correct: false,
-          explanation: 'The 7.2% private loan rate is higher than typical investment returns, especially risk-adjusted.'
+          explanation: 'This spreads your money too thin. By keeping all three loans alive longer, you pay more interest overall, especially on the expensive 7.2% private loan. It\'s better to focus your firepower.',
+          mathBreakdown: 'You\'ll pay about $2,000 more in interest using this approach vs. targeting private first.'
+        },
+        {
+          id: 'invest-instead',
+          name: 'Pay Minimums, Invest the Rest',
+          description: 'Pay $500 minimums, invest remaining $1,800 in the stock market',
+          correct: false,
+          explanation: 'Too risky! While the stock market averages 10% over decades, that\'s not guaranteed. The 7.2% private loan IS a guaranteed "debt return." Paying off a 7.2% loan is like earning 7.2% risk-free. Stock market is volatile and could lose money. Pay off high-rate debt first!',
+          mathBreakdown: 'Even if stocks average 10%, you\'re risking it all while paying 7.2% guaranteed interest.'
         }
       ]
     },
     {
       id: 3,
-      title: "Emergency Debt Situation",
-      description: "Lisa lost her job and is struggling with debt payments while looking for work.",
+      title: "Job Loss Emergency",
+      description: "Lisa just lost her job. She has $3,000 saved and gets $1,400/month in unemployment. Her debt payments total $790/month.",
       situation: {
         totalDebt: 25000,
         debts: [
@@ -196,36 +208,43 @@ const DebtManagementModule = () => {
           { name: "Personal Loan", balance: 5000, minPayment: 150 }
         ],
         emergencyFund: 3000,
-        unemploymentBenefit: 1400
+        unemploymentBenefit: 1400,
+        totalMinPayments: 790,
+        rentAndFood: 1200
       },
+      question: "Lisa's debt payments ($790) plus rent/food ($1,200) = $1,990/month, but she only has $1,400 unemployment income. What should she do FIRST?",
       strategies: [
         {
-          id: 'use-emergency',
-          name: 'Use Emergency Fund to Pay Debts',
-          description: 'Drain emergency fund to pay down debt balances',
-          correct: false,
-          explanation: 'Emergency fund should be preserved during unemployment to cover essential expenses.'
-        },
-        {
           id: 'contact-creditors',
-          name: 'Contact Creditors for Hardship Programs',
-          description: 'Call all creditors to explain situation and request payment modifications',
+          name: 'Call Creditors for Help NOW',
+          description: 'Contact all lenders BEFORE missing any payments to ask about hardship programs',
           correct: true,
-          explanation: 'Most creditors offer hardship programs with reduced payments during unemployment.'
+          explanation: 'CORRECT! Most lenders have "hardship programs" for people who lose jobs. They can temporarily reduce or pause payments. The KEY is calling BEFORE you miss payments. Once you\'re late, your options shrink and your credit gets damaged. Lenders would rather help you than send you to collections!',
+          mathBreakdown: 'Example: Credit card companies often reduce minimums from $360 to $100 during hardship. Car lenders can defer 2-3 months of payments. This buys Lisa time to find work.'
         },
         {
-          id: 'debt-consolidation',
-          name: 'Take Debt Consolidation Loan',
-          description: 'Apply for a large loan to pay off all existing debts',
+          id: 'use-emergency',
+          name: 'Use Savings to Pay Debts',
+          description: 'Drain the $3,000 emergency fund to make debt payments',
           correct: false,
-          explanation: 'Unlikely to qualify during unemployment, and adds another payment obligation.'
+          explanation: 'BAD IDEA! That $3,000 is her SURVIVAL MONEY. If she drains it paying debts, what happens when the car breaks down or she needs medicine? Then she\'ll need to use credit cards for emergencies, creating MORE debt. Emergency fund = keep you alive. Keep at least 1-2 months expenses saved.',
+          mathBreakdown: '$3,000 might cover 3 months of debt payments, then she\'s broke with no income. What about month 4?'
         },
         {
-          id: 'bankruptcy',
-          name: 'File for Bankruptcy Immediately',
-          description: 'File Chapter 7 bankruptcy to eliminate all debts',
+          id: 'take-new-loan',
+          name: 'Get a Debt Consolidation Loan',
+          description: 'Apply for a big loan to combine all debts into one payment',
           correct: false,
-          explanation: 'Bankruptcy should be a last resort after exploring all other options and getting counseling.'
+          explanation: 'Won\'t work when unemployed. Banks won\'t approve loans without income - you can\'t pay them back! Also, this doesn\'t solve the problem, it just reshuffles debt. The real issue is Lisa needs lower payments RIGHT NOW while she finds work.',
+          mathBreakdown: 'Loan applications require proof of income. With $1,400 unemployment and $1,990 in payments, no bank will approve this.'
+        },
+        {
+          id: 'ignore-problem',
+          name: 'Skip Payments, Deal With It Later',
+          description: 'Stop paying debts and hope it works out',
+          correct: false,
+          explanation: 'TERRIBLE IDEA! Missed payments immediately hurt your credit score (drops 100+ points). After 30 days, lenders report you as delinquent. After 90 days, they send you to collections. Then you get harassing calls, potential lawsuits, and a wrecked credit score for 7 years. Call creditors FIRST!',
+          mathBreakdown: 'One 30-day late payment can drop your credit score from 720 to 600, making future loans much more expensive.'
         }
       ]
     }

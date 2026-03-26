@@ -6,7 +6,7 @@ import {
   DollarSign, BarChart3, Activity, BookOpen, GraduationCap,
   Play, RefreshCw, Loader2, Shield, Globe, Lock,
   AlertTriangle, Lightbulb, Award, Sparkles, Bitcoin, Wallet,
-  Clock, Users, Database, Heart, Flame, PartyPopper
+  Clock, Users, Database, Flame, PartyPopper
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useModuleScore, MODULES } from '../hooks/useModuleScore';
@@ -30,7 +30,6 @@ const CryptoModule = () => {
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [showFeedback, setShowFeedback] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
-  const [hearts, setHearts] = useState(3);
 
   // Module score saving state
   const [isSaving, setIsSaving] = useState(false);
@@ -143,14 +142,14 @@ const CryptoModule = () => {
   // QUIZ DATA
   // ==========================================
   const quizQuestions = [
-    { q: "What powers most cryptocurrencies?", opts: ["Cloud Computing", "Blockchain", "AI", "Quantum"], correct: 1, emoji: "⛓️" },
-    { q: "Who created Bitcoin?", opts: ["Elon Musk", "Satoshi Nakamoto", "Mark Zuckerberg", "Vitalik Buterin"], correct: 1, emoji: "🎭" },
-    { q: "What is a 'stablecoin'?", opts: ["Never changes price", "Pegged to $1 USD", "The oldest crypto", "A physical coin"], correct: 1, emoji: "💵" },
-    { q: "What should you NEVER share?", opts: ["Your wallet address", "Transaction history", "Private key", "Portfolio value"], correct: 2, emoji: "🔑" },
-    { q: "What does 'HODL' mean?", opts: ["A crypto exchange", "Hold On for Dear Life", "A trading strategy", "A type of wallet"], correct: 1, emoji: "💎" },
-    { q: "Most secure wallet for savings?", opts: ["Hot wallet", "Exchange wallet", "Cold wallet", "Email wallet"], correct: 2, emoji: "🧊" },
-    { q: "First rule of crypto investing?", opts: ["Invest everything", "Only risk what you can lose", "Follow influencers", "Buy cheap coins"], correct: 1, emoji: "⚠️" },
-    { q: "What makes blockchain 'immutable'?", opts: ["It's fast", "Data can't be changed", "Uses AI", "Bank controlled"], correct: 1, emoji: "🔒" },
+    { q: "What powers most cryptocurrencies?", opts: ["Cloud Computing", "Blockchain", "AI", "Quantum"], correct: 1, emoji: "⛓️", explanation: "Blockchain is the revolutionary technology behind cryptocurrencies. It's a distributed ledger that records all transactions across thousands of computers, making it secure and transparent." },
+    { q: "Who created Bitcoin?", opts: ["Elon Musk", "Satoshi Nakamoto", "Mark Zuckerberg", "Vitalik Buterin"], correct: 1, emoji: "🎭", explanation: "Satoshi Nakamoto is the mysterious pseudonymous creator of Bitcoin who published the Bitcoin whitepaper in 2008. Their true identity remains unknown to this day!" },
+    { q: "What is a 'stablecoin'?", opts: ["Never changes price", "Pegged to $1 USD", "The oldest crypto", "A physical coin"], correct: 1, emoji: "💵", explanation: "Stablecoins like USDC and USDT are designed to maintain a 1:1 value with the US dollar, providing stability in the volatile crypto market." },
+    { q: "What should you NEVER share?", opts: ["Your wallet address", "Transaction history", "Private key", "Portfolio value"], correct: 2, emoji: "🔑", explanation: "Your private key (usually 12-24 words) is the master password to your crypto. Anyone with it can steal everything. Never share it with anyone - not even 'customer support'!" },
+    { q: "What does 'HODL' mean?", opts: ["A crypto exchange", "Hold On for Dear Life", "A trading strategy", "A type of wallet"], correct: 1, emoji: "💎", explanation: "HODL originated from a typo of 'hold' and became crypto slang for holding your investments long-term despite market volatility. It's now a badge of honor for patient investors!" },
+    { q: "Most secure wallet for savings?", opts: ["Hot wallet", "Exchange wallet", "Cold wallet", "Email wallet"], correct: 2, emoji: "🧊", explanation: "Cold wallets (hardware wallets like Ledger or Trezor) are offline devices that keep your crypto completely disconnected from the internet, making them immune to online hacking." },
+    { q: "First rule of crypto investing?", opts: ["Invest everything", "Only risk what you can lose", "Follow influencers", "Buy cheap coins"], correct: 1, emoji: "⚠️", explanation: "Crypto is highly volatile - prices can drop 50% or more in days. Only invest money you can afford to lose completely. Never use rent money or emergency funds!" },
+    { q: "What makes blockchain 'immutable'?", opts: ["It's fast", "Data can't be changed", "Uses AI", "Bank controlled"], correct: 1, emoji: "🔒", explanation: "Once data is written to the blockchain, it cannot be altered or deleted. Each block is cryptographically linked to the previous one, so changing anything would require redoing all subsequent blocks - practically impossible!" },
   ];
 
   // ==========================================
@@ -165,8 +164,6 @@ const CryptoModule = () => {
       setQuizScore(prev => prev + 1);
       setShowCelebration(true);
       setTimeout(() => setShowCelebration(false), 1500);
-    } else {
-      setHearts(prev => Math.max(0, prev - 1));
     }
 
     setQuizAnswers([...quizAnswers, { question: quizQuestion, answer: idx, correct: isCorrect }]);
@@ -209,7 +206,6 @@ const CryptoModule = () => {
       setSelectedAnswer(null);
       setShowFeedback(false);
       setSaveResult(null);
-      setHearts(3);
     } catch (error) {
       console.error('Error resetting:', error);
     } finally {
@@ -309,8 +305,8 @@ const CryptoModule = () => {
           className="text-center mb-8"
         >
           <motion.div
-            animate={{ y: [0, -10, 0] }}
-            transition={{ duration: 2, repeat: Infinity }}
+            animate={{ scale: [1, 1.08, 1] }}
+            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
             className="text-8xl mb-4"
           >
             🪙
@@ -513,8 +509,8 @@ const CryptoModule = () => {
             {/* Title Card */}
             <div className={`bg-gradient-to-r ${section.color} rounded-3xl p-6 text-white shadow-lg`}>
               <motion.div
-                animate={{ rotate: [0, 10, -10, 0] }}
-                transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
+                animate={{ scale: [1, 1.08, 1] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                 className="text-5xl mb-3"
               >
                 {section.emoji}
@@ -765,14 +761,8 @@ const CryptoModule = () => {
               <div className="flex-1 mx-4">
                 <ProgressBar current={quizQuestion + 1} total={quizQuestions.length} />
               </div>
-              <div className="flex items-center gap-1">
-                {[...Array(3)].map((_, i) => (
-                  <Heart
-                    key={i}
-                    size={24}
-                    className={i < hearts ? "text-red-500 fill-red-500" : "text-gray-300"}
-                  />
-                ))}
+              <div className="text-sm font-semibold text-gray-600">
+                {quizQuestion + 1}/{quizQuestions.length}
               </div>
             </div>
           </div>
@@ -783,8 +773,8 @@ const CryptoModule = () => {
             {/* Question */}
             <div className="text-center mb-8">
               <motion.div
-                animate={{ scale: [1, 1.1, 1] }}
-                transition={{ duration: 1, repeat: Infinity, repeatDelay: 2 }}
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
                 className="text-6xl mb-4"
               >
                 {q.emoji}
@@ -837,19 +827,38 @@ const CryptoModule = () => {
               })}
             </div>
 
-            {/* Continue after answer */}
+            {/* Answer Explanation & Continue */}
             {showFeedback && (
               <motion.div
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                className="mt-6"
+                className="mt-6 space-y-4"
               >
+                {/* Explanation Box */}
+                <div className={`p-4 rounded-2xl border-2 ${
+                  selectedAnswer === q.correct
+                    ? 'bg-green-50 border-green-200'
+                    : 'bg-amber-50 border-amber-200'
+                }`}>
+                  <div className="flex items-start gap-3">
+                    <span className="text-2xl">{selectedAnswer === q.correct ? '✅' : '💡'}</span>
+                    <div>
+                      <p className={`font-bold mb-1 ${
+                        selectedAnswer === q.correct ? 'text-green-800' : 'text-amber-800'
+                      }`}>
+                        {selectedAnswer === q.correct ? 'Correct!' : 'Not quite!'}
+                      </p>
+                      <p className="text-gray-700 text-sm leading-relaxed">{q.explanation}</p>
+                    </div>
+                  </div>
+                </div>
+
                 <button
                   onClick={handleNextQuestion}
                   className={`w-full py-4 rounded-2xl font-bold text-lg ${
                     selectedAnswer === q.correct
                       ? 'bg-green-500 text-white'
-                      : 'bg-red-500 text-white'
+                      : 'bg-amber-500 text-white'
                   }`}
                 >
                   {quizQuestion < quizQuestions.length - 1 ? 'CONTINUE' : 'SEE RESULTS'}
@@ -999,8 +1008,8 @@ const CryptoModule = () => {
         >
           <motion.div
             className="text-6xl mb-4"
-            animate={{ rotate: [0, -10, 10, -10, 0] }}
-            transition={{ duration: 0.5, delay: 0.3 }}
+            animate={{ scale: [1, 1.1, 1] }}
+            transition={{ duration: 1.5, ease: "easeInOut" }}
           >
             🪙
           </motion.div>
