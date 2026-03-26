@@ -26,6 +26,12 @@ const RetirementAccountsModule = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [saveResult, setSaveResult] = useState(null);
 
+  // Matching game state
+  const [matchingPairs, setMatchingPairs] = useState({});
+  const [selectedTerm, setSelectedTerm] = useState(null);
+  const [matchingScore, setMatchingScore] = useState(0);
+  const [matchingComplete, setMatchingComplete] = useState(false);
+
   // ==========================================
   // LEARNING CONTENT - Retirement Journey
   // ==========================================
@@ -216,6 +222,18 @@ const RetirementAccountsModule = () => {
       ],
       funFact: "The 'Rule of 55' lets you access 401(k) penalty-free if you leave your job at 55+! 🎂"
     }
+  ];
+
+  // ==========================================
+  // MATCHING GAME DATA
+  // ==========================================
+  const matchingGameData = [
+    { id: 1, term: "401(k)", definition: "Employer-sponsored retirement plan with tax-deferred contributions", emoji: "🏢" },
+    { id: 2, term: "Roth IRA", definition: "After-tax contributions with tax-free withdrawals in retirement", emoji: "🌟" },
+    { id: 3, term: "Traditional IRA", definition: "Tax-deductible contributions, taxed on withdrawal", emoji: "📋" },
+    { id: 4, term: "Employer Match", definition: "Free money from your company when you contribute to 401(k)", emoji: "🎁" },
+    { id: 5, term: "Vesting", definition: "Time required before employer contributions are fully yours", emoji: "⏰" },
+    { id: 6, term: "Target-Date Fund", definition: "Investment that automatically adjusts risk as you near retirement", emoji: "🎯" }
   ];
 
   // ==========================================
@@ -441,8 +459,8 @@ const RetirementAccountsModule = () => {
             className="text-center"
           >
             <motion.div
-              animate={{ y: [0, -5, 0] }}
-              transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }}
+              animate={{ scale: [1, 1.05, 1] }}
+              transition={{ duration: 4, repeat: Infinity, delay: i * 0.3, ease: "easeInOut" }}
               className="text-2xl mb-1"
             >
               {i === 0 ? '🎓' : i === 4 ? '🏖️' : '💰'}
@@ -451,10 +469,10 @@ const RetirementAccountsModule = () => {
           </motion.div>
         ))}
       </div>
-      {/* Moving coin animation */}
+      {/* Moving coin animation - subtle drift */}
       <motion.div
-        animate={{ x: [0, 300], y: [-10, 10, -10] }}
-        transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+        animate={{ x: [0, 120], opacity: [0.4, 0.6, 0.4] }}
+        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
         className="absolute top-4 left-4 text-2xl"
       >
         💵
@@ -496,8 +514,8 @@ const RetirementAccountsModule = () => {
         >
           <RetirementVisual />
           <motion.div
-            animate={{ scale: [1, 1.1, 1] }}
-            transition={{ duration: 2, repeat: Infinity }}
+            animate={{ scale: [1, 1.05, 1] }}
+            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
             className="text-6xl sm:text-7xl mb-4"
           >
             🏦
@@ -676,8 +694,8 @@ const RetirementAccountsModule = () => {
                 <Icon size={80} />
               </div>
               <motion.div
-                animate={{ rotate: [0, 10, -10, 0] }}
-                transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
+                animate={{ scale: [1, 1.08, 1] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                 className="text-4xl sm:text-5xl mb-3 relative z-10"
               >
                 {section.emoji}
@@ -699,8 +717,8 @@ const RetirementAccountsModule = () => {
                   <div className="flex gap-3 sm:gap-4">
                     <motion.div
                       className="text-2xl sm:text-3xl flex-shrink-0"
-                      animate={{ scale: [1, 1.2, 1] }}
-                      transition={{ duration: 2, repeat: Infinity, delay: idx * 0.3 }}
+                      animate={{ scale: [1, 1.1, 1] }}
+                      transition={{ duration: 3, repeat: Infinity, delay: idx * 0.5, ease: "easeInOut" }}
                     >
                       {point.emoji}
                     </motion.div>
@@ -729,8 +747,8 @@ const RetirementAccountsModule = () => {
               <div className="flex items-start gap-3">
                 <motion.span
                   className="text-2xl"
-                  animate={{ rotate: [0, 15, -15, 0] }}
-                  transition={{ duration: 1, repeat: Infinity, repeatDelay: 2 }}
+                  animate={{ scale: [1, 1.15, 1] }}
+                  transition={{ duration: 2, repeat: Infinity, repeatDelay: 3, ease: "easeInOut" }}
                 >
                   🤯
                 </motion.span>
@@ -754,15 +772,168 @@ const RetirementAccountsModule = () => {
                 } else if (isReviewMode) {
                   navigate('/game');
                 } else {
-                  setCurrentPhase('quiz');
+                  setCurrentPhase('matching-game');
                 }
               }}
               className={`w-full bg-gradient-to-r ${section.color} text-white font-bold py-4 rounded-2xl text-lg shadow-lg flex items-center justify-center gap-2`}
             >
-              {learnStep < learningSections.length - 1 ? "CONTINUE JOURNEY" : (isReviewMode ? "FINISH REVIEW" : "START QUIZ")}
+              {learnStep < learningSections.length - 1 ? "CONTINUE JOURNEY" : (isReviewMode ? "FINISH REVIEW" : "PLAY MATCHING GAME")}
               <ArrowRight size={20} />
             </motion.button>
           </motion.div>
+        </div>
+      </motion.div>
+    );
+  };
+
+  // ==========================================
+  // RENDER: MATCHING GAME PHASE
+  // ==========================================
+  const renderMatchingGame = () => {
+    const handleMatch = (termId, definitionId) => {
+      const isCorrect = termId === definitionId;
+      const newPairs = { ...matchingPairs, [termId]: definitionId };
+      setMatchingPairs(newPairs);
+
+      if (isCorrect) {
+        setMatchingScore(prev => prev + 1);
+      }
+
+      // Check if all matched
+      if (Object.keys(newPairs).length === matchingGameData.length) {
+        setTimeout(() => setMatchingComplete(true), 500);
+      }
+    };
+
+    const handleTermClick = (termId) => {
+      if (matchingPairs[termId]) return; // Already matched
+      setSelectedTerm(selectedTerm === termId ? null : termId);
+    };
+
+    const handleDefinitionClick = (defId) => {
+      if (!selectedTerm) return;
+      if (Object.values(matchingPairs).includes(defId)) return; // Already matched
+      handleMatch(selectedTerm, defId);
+      setSelectedTerm(null);
+    };
+
+    if (matchingComplete) {
+      const correctMatches = Object.entries(matchingPairs).filter(([k, v]) => parseInt(k) === v).length;
+      return (
+        <motion.div
+          className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 p-6 flex items-center justify-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
+          <motion.div
+            className="bg-white rounded-3xl p-8 shadow-2xl max-w-md w-full text-center"
+            initial={{ scale: 0.9 }}
+            animate={{ scale: 1 }}
+          >
+            <div className="text-6xl mb-4">{correctMatches >= 5 ? '🎉' : '📚'}</div>
+            <h2 className="text-3xl font-bold text-gray-900 mb-3">
+              {correctMatches >= 5 ? 'Well Done!' : 'Keep Learning!'}
+            </h2>
+            <p className="text-xl text-gray-600 mb-6">
+              You matched <span className="font-bold text-emerald-600">{correctMatches}/{matchingGameData.length}</span> correctly
+            </p>
+            <button
+              onClick={() => setCurrentPhase('quiz')}
+              className="w-full px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl font-bold text-lg shadow-lg transition transform hover:scale-105"
+            >
+              Continue to Quiz
+            </button>
+          </motion.div>
+        </motion.div>
+      );
+    }
+
+    return (
+      <motion.div
+        className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 p-6"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+      >
+        <div className="max-w-6xl mx-auto">
+          {/* Header */}
+          <motion.div
+            className="text-center mb-8"
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+          >
+            <h1 className="text-3xl sm:text-4xl font-black text-gray-900 mb-3">Match the Terms!</h1>
+            <p className="text-gray-600 text-lg">Connect each retirement term with its definition</p>
+            <div className="mt-4 text-sm text-gray-500">
+              Matched: {Object.keys(matchingPairs).length}/{matchingGameData.length}
+            </div>
+          </motion.div>
+
+          {/* Matching Grid */}
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* Left Column - Terms */}
+            <div className="space-y-4">
+              <h3 className="text-xl font-bold text-emerald-700 mb-4 text-center">TERMS</h3>
+              {matchingGameData.map(item => (
+                <motion.button
+                  key={`term-${item.id}`}
+                  onClick={() => handleTermClick(item.id)}
+                  disabled={!!matchingPairs[item.id]}
+                  className={`w-full p-5 rounded-2xl border-3 font-bold text-left transition-all flex items-center gap-3 ${
+                    matchingPairs[item.id]
+                      ? 'bg-green-100 border-green-400 opacity-50 cursor-not-allowed'
+                      : selectedTerm === item.id
+                        ? 'bg-blue-100 border-blue-500 shadow-lg scale-105'
+                        : 'bg-white border-gray-300 hover:border-emerald-400 hover:shadow-md cursor-pointer'
+                  }`}
+                  whileHover={!matchingPairs[item.id] ? { scale: 1.02 } : {}}
+                  whileTap={!matchingPairs[item.id] ? { scale: 0.98 } : {}}
+                >
+                  <span className="text-3xl">{item.emoji}</span>
+                  <span className="text-lg flex-1">{item.term}</span>
+                  {matchingPairs[item.id] && <CheckCircle className="text-green-600" size={24} />}
+                </motion.button>
+              ))}
+            </div>
+
+            {/* Right Column - Definitions */}
+            <div className="space-y-4">
+              <h3 className="text-xl font-bold text-teal-700 mb-4 text-center">DEFINITIONS</h3>
+              {matchingGameData.map(item => (
+                <motion.button
+                  key={`def-${item.id}`}
+                  onClick={() => handleDefinitionClick(item.id)}
+                  disabled={Object.values(matchingPairs).includes(item.id)}
+                  className={`w-full p-5 rounded-2xl border-3 text-left transition-all ${
+                    Object.values(matchingPairs).includes(item.id)
+                      ? 'bg-green-100 border-green-400 opacity-50 cursor-not-allowed'
+                      : 'bg-white border-gray-300 hover:border-teal-400 hover:shadow-md cursor-pointer'
+                  }`}
+                  whileHover={!Object.values(matchingPairs).includes(item.id) ? { scale: 1.02 } : {}}
+                  whileTap={!Object.values(matchingPairs).includes(item.id) ? { scale: 0.98 } : {}}
+                >
+                  <span className="text-gray-700">{item.definition}</span>
+                  {Object.values(matchingPairs).includes(item.id) && (
+                    <CheckCircle className="text-green-600 mt-2" size={20} />
+                  )}
+                </motion.button>
+              ))}
+            </div>
+          </div>
+
+          {/* Instructions */}
+          {Object.keys(matchingPairs).length === 0 && (
+            <motion.div
+              className="mt-8 bg-blue-50 border-2 border-blue-300 rounded-2xl p-6 text-center"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+            >
+              <Sparkles className="w-8 h-8 mx-auto mb-3 text-blue-600" />
+              <p className="text-blue-800 font-semibold">
+                Click a term on the left, then click its matching definition on the right!
+              </p>
+            </motion.div>
+          )}
         </div>
       </motion.div>
     );
@@ -1142,6 +1313,7 @@ const RetirementAccountsModule = () => {
     <AnimatePresence mode="wait">
       {currentPhase === 'intro' && renderIntro()}
       {currentPhase === 'learn' && renderLearn()}
+      {currentPhase === 'matching-game' && renderMatchingGame()}
       {currentPhase === 'quiz' && !showResults && renderQuiz()}
       {currentPhase === 'quiz' && showResults && renderResults()}
     </AnimatePresence>
