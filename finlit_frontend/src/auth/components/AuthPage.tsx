@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Moon, Sun } from 'lucide-react';
+import { Moon, Sun, ArrowLeft } from 'lucide-react';
 import { SignInForm } from './SignInForm';
 import { SignUpForm } from './SignUpForm';
 import { ForgotPasswordModal } from './ForgotPasswordModal';
@@ -95,12 +95,25 @@ export const AuthPage: React.FC = () => {
 
   return (
     <div className={`min-h-screen flex ${isDarkMode ? 'dark bg-navy-900' : 'bg-white'}`}>
+      {/* Back to Landing Page - Fixed position */}
+      <button
+        onClick={() => navigate('/')}
+        className={`fixed top-6 left-6 z-50 px-4 py-3 rounded-full transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center gap-2 ${
+          isDarkMode
+            ? 'bg-navy-800/80 backdrop-blur-sm border border-white/20 hover:bg-navy-700/80 text-white'
+            : 'bg-white/80 backdrop-blur-sm border border-gray-200 hover:bg-white text-gray-700'
+        }`}
+      >
+        <ArrowLeft className="w-5 h-5 transition-colors" />
+        <span className="text-sm font-medium">Home</span>
+      </button>
+
       {/* Dark Mode Toggle - Fixed position */}
       <button
         onClick={toggleDarkMode}
         className={`fixed top-6 right-6 z-50 p-3 rounded-full transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 ${
-          isDarkMode 
-            ? 'bg-navy-800/80 backdrop-blur-sm border border-white/20 hover:bg-navy-700/80' 
+          isDarkMode
+            ? 'bg-navy-800/80 backdrop-blur-sm border border-white/20 hover:bg-navy-700/80'
             : 'bg-white/80 backdrop-blur-sm border border-gray-200 hover:bg-white'
         }`}
       >

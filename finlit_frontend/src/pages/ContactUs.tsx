@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, MessageSquare, Send, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { Mail, MessageSquare, Send, CheckCircle, AlertCircle, Loader2, ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../auth/context/AuthContext';
-import DashboardLayout from '../components/DashboardLayout';
 
 interface FormErrors {
   name?: string;
@@ -12,6 +12,7 @@ interface FormErrors {
 }
 
 const ContactUs: React.FC = () => {
+  const navigate = useNavigate();
   const { user } = useAuthContext();
 
   const [formData, setFormData] = useState({
@@ -149,8 +150,21 @@ const ContactUs: React.FC = () => {
     : 'text-gray-500';
 
   return (
-    <DashboardLayout>
-      <div className="max-w-5xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-brand-50/30">
+      {/* Header with Back Button */}
+      <div className="bg-white/80 backdrop-blur-xl border-b border-gray-200 sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <button
+            onClick={() => navigate('/')}
+            className="flex items-center gap-2 text-navy-700 hover:text-brand-600 transition-colors font-medium"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            Back to Home
+          </button>
+        </div>
+      </div>
+
+      <div className="max-w-5xl mx-auto px-6 py-12">
         <AnimatePresence mode="wait">
           {isSubmitted ? (
             <motion.div
@@ -455,7 +469,16 @@ const ContactUs: React.FC = () => {
           )}
         </AnimatePresence>
       </div>
-    </DashboardLayout>
+
+      {/* Footer */}
+      <footer className="bg-navy-900 text-white py-8 mt-12">
+        <div className="max-w-7xl mx-auto px-6 text-center">
+          <p className="text-slate-400 text-sm">
+            © 2026 FinLit. All rights reserved.
+          </p>
+        </div>
+      </footer>
+    </div>
   );
 };
 

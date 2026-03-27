@@ -1,6 +1,9 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { useEffect } from "react";
 import { AuthPage, AuthProvider, ProtectedRoute } from "./auth";
 import FinLitApp from "./pages/Home";
+import LandingPage from "./pages/LandingPage";
+import SchoolsPage from "./pages/SchoolsPage";
 import FinancialRoadmap from "./pages/Roadmap";
 import BudgetingBasics from "./50-30-20/BudgetingBasics";
 import CalculatorPage from "./50-30-20/calculator";
@@ -40,6 +43,7 @@ import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import ContactUs from "./pages/ContactUs";
 import WhoWeAre from "./pages/WhoWeAre";
+import AboutUs from "./pages/AboutUs";
 import Games from "./pages/Games";
 import GamesHorizon from "./pages/GamesHorizon";
 import FinancialToolsHorizon from "./pages/FinancialToolsHorizon";
@@ -54,6 +58,17 @@ import BugReportForm from "./components/BugReportForm";
 import BugReportAdmin from "./components/BugReportAdmin";
 import { MODULES } from "./hooks/useModuleScore";
 
+// ScrollToTop component that scrolls to top on route change
+function ScrollToTop() {
+  const location = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+
+  return null;
+}
+
 // Smart Auth component that redirects authenticated users appropriately
 const SmartAuthPage: React.FC = () => {
   return <AuthPage />;
@@ -66,9 +81,11 @@ function Dashboard() {
 function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <AuthProvider>
         <Routes>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/schools" element={<SchoolsPage />} />
           <Route path="/auth" element={<SmartAuthPage />} />
 
           {/* Protected Dashboard Routes */}
@@ -541,7 +558,8 @@ function App() {
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/contact" element={<ContactUs />} />
-          <Route path="/about" element={<WhoWeAre />} />
+          <Route path="/about" element={<AboutUs />} />
+          <Route path="/who-we-are" element={<WhoWeAre />} />
 
           {/* Catch all route - redirect to dashboard if authenticated, otherwise to auth */}
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
