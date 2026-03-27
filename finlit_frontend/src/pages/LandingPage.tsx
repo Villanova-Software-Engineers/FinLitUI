@@ -472,15 +472,14 @@ const LandingPage: React.FC = () => {
             </button>
 
             {/* Video Container */}
-            <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+            <div className="relative w-full" style={{ padding: '56.25% 0 0 0', position: 'relative' }}>
               <iframe
-                allow="fullscreen"
+                src="https://player.vimeo.com/video/1177855749?badge=0&amp;autopause=0&amp;autoplay=1&amp;player_id=0&amp;app_id=58479"
+                allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
+                referrerPolicy="strict-origin-when-cross-origin"
                 allowFullScreen
-                height="100%"
-                src="https://streamable.com/e/ymtc7z?"
-                width="100%"
-                style={{ border: 'none', width: '100%', height: '100%', position: 'absolute', left: '0px', top: '0px', overflow: 'hidden' }}
-                title="FinLit Demo Video"
+                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }}
+                title="FINLIT"
               />
             </div>
           </motion.div>
