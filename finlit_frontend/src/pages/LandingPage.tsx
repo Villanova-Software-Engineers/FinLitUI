@@ -474,11 +474,12 @@ const LandingPage: React.FC = () => {
             {/* Video Container */}
             <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
               <iframe
-                src="https://streamable.com/e/ymtc7z?autoplay=1"
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allow="fullscreen"
                 allowFullScreen
-                className="absolute top-0 left-0 w-full h-full"
+                height="100%"
+                src="https://streamable.com/e/ymtc7z?"
+                width="100%"
+                style={{ border: 'none', width: '100%', height: '100%', position: 'absolute', left: '0px', top: '0px', overflow: 'hidden' }}
                 title="FinLit Demo Video"
               />
             </div>
