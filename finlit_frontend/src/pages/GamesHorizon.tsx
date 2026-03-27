@@ -2,10 +2,10 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  ArrowLeft,
   Trophy,
   Play
 } from 'lucide-react';
+import DashboardLayout from '../components/DashboardLayout';
 
 const GamesHorizon = () => {
   const navigate = useNavigate();
@@ -69,95 +69,96 @@ const GamesHorizon = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-cyan-50 pt-24 pb-12 px-4">
+    <DashboardLayout>
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors mb-6"
-          >
-            <ArrowLeft size={20} />
-            <span className="font-medium">Back to Dashboard</span>
-          </button>
-
-          <motion.div
+        {/* Page Header */}
+        <div className="mb-12 text-center">
+          <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center"
+            className="text-5xl font-bold bg-gradient-to-r from-slate-900 via-blue-700 to-cyan-700 bg-clip-text text-transparent mb-4"
+            style={{ fontFamily: '"Playfair Display", "Georgia", serif' }}
           >
-            <h1 className="text-5xl font-bold bg-gradient-to-r from-slate-900 via-blue-700 to-cyan-700 bg-clip-text text-transparent mb-4" style={{ fontFamily: '"Playfair Display", "Georgia", serif' }}>
-              Financial Arena
-            </h1>
-            <p className="text-gray-600 text-lg" style={{ fontFamily: '"Inter", sans-serif' }}>
-              Level up your financial skills through engaging games
-            </p>
-          </motion.div>
+            Financial Arena
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="text-gray-600 text-lg"
+            style={{ fontFamily: '"Inter", sans-serif' }}
+          >
+            Level up your financial skills through engaging games
+          </motion.p>
         </div>
 
         {/* Games Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
           {games.map((game, index) => (
             <motion.div
               key={game.id}
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              whileHover={{ y: -8 }}
+              whileHover={{ y: -10, transition: { duration: 0.3 } }}
               onClick={() => handleGameClick(game)}
-              className="bg-white rounded-3xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer border border-gray-100"
+              className="group cursor-pointer h-full flex flex-col"
             >
-              {/* Visual Area */}
-              <div className="w-full h-56 rounded-2xl mb-4 relative overflow-hidden">
-                <img
-                  src={game.image}
-                  alt={game.title}
-                  className={`w-full h-full bg-gray-50 ${game.id === 'crossword' ? 'object-cover scale-90' : 'object-contain'}`}
-                />
+              <div className="relative overflow-hidden rounded-2xl transition-all duration-500 group-hover:scale-[1.02] flex-1 flex flex-col bg-white shadow-lg border border-gray-100">
+                {/* Banner Image */}
+                <div className="relative h-48 overflow-hidden">
+                  <img
+                    src={game.image}
+                    alt={game.title}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                  <div className="absolute top-3 left-3">
+                    <span className={`px-3 py-1 ${game.categoryBg} ${game.categoryText} text-xs font-bold rounded-full`}>
+                      {game.category}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="p-6 flex-1 flex flex-col">
+                  <h3
+                    className="text-xl font-bold text-gray-800 mb-2"
+                    style={{ fontFamily: '"Playfair Display", "Georgia", serif' }}
+                  >
+                    {game.title}
+                  </h3>
+                  <p className="text-gray-600 text-sm mb-4 flex-grow">
+                    {game.description}
+                  </p>
+
+                  {/* Play button */}
+                  <button
+                    className={`w-full py-3 rounded-xl bg-gradient-to-r ${game.bgGradient} text-white font-bold text-base hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2`}
+                  >
+                    <Play className="w-5 h-5" />
+                    <span>Play Now</span>
+                  </button>
+                </div>
               </div>
-
-              {/* Title */}
-              <h3 className="text-xl font-bold text-gray-900 mb-2" style={{ fontFamily: '"Playfair Display", "Georgia", serif' }}>{game.title}</h3>
-
-              {/* Bottom Section */}
-              <div className="flex items-center mb-4">
-                <span className={`px-3 py-1 ${game.categoryBg} ${game.categoryText} text-xs font-semibold rounded-full`}>
-                  {game.category}
-                </span>
-              </div>
-
-              {/* Play Button */}
-              <button className={`w-full py-3.5 bg-gradient-to-r ${game.bgGradient} text-white font-bold rounded-xl hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2`}>
-                <Play className="w-5 h-5 fill-white" />
-                START GAME
-              </button>
             </motion.div>
           ))}
         </div>
 
-        {/* Learning Path CTA */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="bg-white rounded-3xl p-8 text-center shadow-lg border border-gray-100"
-        >
-          <div className="w-16 h-16 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm">
-            <Trophy className="w-8 h-8 text-blue-600" strokeWidth={2} />
+        {/* Learning Path Section */}
+        <div className="mt-16 bg-white rounded-lg border border-gray-200 p-8">
+          <div className="text-center">
+            <button
+              onClick={() => navigate('/game')}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 hover:bg-gray-800 text-white font-medium rounded-md transition-colors"
+            >
+              <Trophy className="w-5 h-5" />
+              View Learning Roadmap
+            </button>
           </div>
-          <h3 className="text-2xl font-bold text-gray-900 mb-2" style={{ fontFamily: '"Playfair Display", "Georgia", serif' }}>Ready for More?</h3>
-          <p className="text-gray-600 mb-6" style={{ fontFamily: '"Inter", sans-serif' }}>
-            Follow your personalized learning roadmap to master financial literacy
-          </p>
-          <button
-            onClick={() => navigate('/game')}
-            className="px-8 py-3.5 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-bold rounded-xl hover:shadow-xl transition-all duration-300"
-          >
-            View Learning Roadmap
-          </button>
-        </motion.div>
+        </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircle, XCircle, ArrowRight, ArrowLeft, Star, Loader2, Zap, Trophy, RotateCcw } from 'lucide-react';
+import { CheckCircle, XCircle, ArrowRight, Star, Loader2, Zap, Trophy, RotateCcw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useModuleScore } from '../hooks/useModuleScore';
 import type { QuizQuestion, QuickQuizProgress } from '../auth/types/auth.types';
+import DashboardLayout from './DashboardLayout';
 
 // Default questions (used when no Firestore questions exist)
 const DEFAULT_QUESTIONS: Omit<QuizQuestion, 'id' | 'createdAt' | 'createdBy'>[] = [
@@ -205,28 +206,32 @@ const EconomicNewsQuiz: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-blue-50 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-12 h-12 text-blue-500 animate-spin mx-auto mb-4" />
-          <p className="text-lg text-gray-600">Loading quiz...</p>
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <Loader2 className="w-12 h-12 text-blue-500 animate-spin mx-auto mb-4" />
+            <p className="text-lg text-gray-600">Loading quiz...</p>
+          </div>
         </div>
-      </div>
+      </DashboardLayout>
     );
   }
 
   if (questions.length === 0) {
     return (
-      <div className="min-h-screen bg-blue-50 flex items-center justify-center p-4">
-        <div className="text-center bg-white rounded-lg p-8 shadow-sm max-w-md">
-          <p className="text-lg text-gray-600 mb-4">No quiz questions available.</p>
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-          >
-            Back to Dashboard
-          </button>
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[60vh] p-4">
+          <div className="text-center bg-white rounded-lg p-8 shadow-sm max-w-md">
+            <p className="text-lg text-gray-600 mb-4">No quiz questions available.</p>
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+            >
+              Back to Dashboard
+            </button>
+          </div>
         </div>
-      </div>
+      </DashboardLayout>
     );
   }
 
@@ -246,26 +251,9 @@ const EconomicNewsQuiz: React.FC = () => {
   // Quiz completion screen - shown when all questions are answered (and not in review mode)
   if ((allAnswered || currentQuestion >= questions.length) && !isReviewMode) {
     return (
-      <div className="min-h-screen bg-blue-50 flex flex-col">
-        {/* Header */}
-        <header className="bg-blue-100 p-3 sm:p-4 flex justify-between items-center border-b border-blue-200">
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="flex items-center gap-2 text-blue-700 hover:text-blue-900 font-semibold text-sm sm:text-lg transition"
-          >
-            <ArrowLeft size={18} />
-            <span className="hidden sm:inline">Back to Dashboard</span>
-            <span className="sm:hidden">Back</span>
-          </button>
-          <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-blue-700">Global Economic News Quiz</h1>
-          <div className="flex items-center gap-2 bg-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg shadow-sm">
-            <Star className="text-yellow-500 fill-yellow-500" size={16} />
-            <span className="text-sm sm:text-lg font-bold text-gray-700">{actualCorrectCount}/{questions.length}</span>
-          </div>
-        </header>
-
+      <DashboardLayout title="Global Economic News Quiz">
         {/* Completion Content */}
-        <div className="flex-1 flex items-center justify-center p-4 sm:p-6">
+        <div className="flex items-center justify-center min-h-[70vh] p-4 sm:p-6">
           <div className="max-w-lg w-full">
             <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 text-center">
               {/* Trophy Icon */}
@@ -336,7 +324,7 @@ const EconomicNewsQuiz: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
+      </DashboardLayout>
     );
   }
 
@@ -347,18 +335,10 @@ const EconomicNewsQuiz: React.FC = () => {
   const previousAnswer = answeredQuestions[currentQ.id];
 
   return (
-    <div className="min-h-screen bg-blue-50 flex flex-col">
-      {/* Header */}
-      <header className="bg-blue-100 p-3 sm:p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-blue-200">
-        <button
-          onClick={() => navigate('/dashboard')}
-          className="flex items-center gap-2 text-blue-700 hover:text-blue-900 font-semibold text-sm sm:text-lg transition"
-        >
-          <ArrowLeft size={18} className="sm:w-5 sm:h-5" />
-          <span className="hidden sm:inline">Back to Dashboard</span>
-          <span className="sm:hidden">Back</span>
-        </button>
-        <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-blue-700">Global Economic News Quiz</h1>
+    <DashboardLayout title="Global Economic News Quiz">
+      {/* Quiz Header Info */}
+      <div className="mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Global Economic News Quiz</h1>
         <div className="flex items-center gap-3">
           {xpEarned > 0 && (
             <div className={`flex items-center gap-1 bg-emerald-100 px-3 py-1.5 rounded-lg ${showXpAnimation ? 'animate-pulse' : ''}`}>
@@ -366,17 +346,16 @@ const EconomicNewsQuiz: React.FC = () => {
               <span className="text-sm font-bold text-emerald-700">+{xpEarned} XP</span>
             </div>
           )}
-          <div className="flex items-center gap-2 bg-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg shadow-sm">
+          <div className="flex items-center gap-2 bg-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg shadow-sm border border-gray-200">
             <Star className="text-yellow-500 fill-yellow-500" size={16} />
             <span className="text-sm sm:text-lg font-bold text-gray-700">{actualCorrectCount}/{questions.length}</span>
           </div>
         </div>
-      </header>
+      </div>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6">
-        <div className="max-w-4xl mx-auto">
-          {/* Progress Bar */}
+      <div className="max-w-4xl mx-auto">
+        {/* Progress Bar */}
           <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm border border-gray-100 mb-4 sm:mb-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 gap-2">
               <div className="flex items-center gap-3">
@@ -578,9 +557,8 @@ const EconomicNewsQuiz: React.FC = () => {
               </div>
             </div>
           )}
-        </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 
