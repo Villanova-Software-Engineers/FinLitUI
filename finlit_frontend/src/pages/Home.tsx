@@ -137,20 +137,31 @@ const DEFAULT_DAILY_QUESTIONS = [
   { question: "What most affects your credit score?", options: ["Your income level", "Payment history", "Number of bank accounts", "Your age"], correct: 1 },
 ];
 
-// Modules
+// Modules - All 23 modules in order
 const LEARNING_MODULES = [
+  { id: MODULES.WHAT_IS_MONEY.id, title: "What is Money", subtitle: "Money Fundamentals", icon: "💵", route: "/what-is-money", points: 100 },
   { id: MODULES.BUDGETING_50_30_20.id, title: "Budgeting Basics", subtitle: "50-30-20 Rule", icon: "💰", route: "/50-30-20", points: 100 },
   { id: MODULES.NEEDS_WANTS.id, title: "Needs vs Wants", subtitle: "Financial Priorities", icon: "⚖️", route: "/needs-wants", points: 100 },
-  { id: MODULES.TAX_BASICS.id, title: "Tax Basics", subtitle: "Understanding Taxes", icon: "🧾", route: "/tax-basics", points: 200 },
-  { id: MODULES.CREDIT_SCORE.id, title: "Credit Score", subtitle: "Credit Management", icon: "📊", route: "/credit-score", points: 150 },
+  { id: MODULES.BANKING.id, title: "Banking Basics", subtitle: "Accounts & Cards", icon: "🏧", route: "/banking", points: 100 },
   { id: MODULES.EMERGENCY_FUND.id, title: "Emergency Fund", subtitle: "Financial Safety", icon: "🆘", route: "/emergency-fund", points: 150 },
-  { id: MODULES.BONDS.id, title: "Bonds", subtitle: "Fixed-Income Securities", icon: "📜", route: "/bonds", points: 100 },
-  { id: MODULES.STOCK_MARKET.id, title: "Stock Market", subtitle: "Investment Basics", icon: "📈", route: "/stock-market", points: 200 },
-  { id: MODULES.INSURANCE.id, title: "Insurance", subtitle: "Risk Management", icon: "🛡️", route: "/insurance", points: 150 },
+  { id: MODULES.TAX_BASICS.id, title: "Tax Basics", subtitle: "Understanding Taxes", icon: "🧾", route: "/tax-basics", points: 200 },
+  { id: MODULES.INTEREST_RATES.id, title: "Interest Rates", subtitle: "Borrowing & Lending", icon: "📊", route: "/interest-rates", points: 150 },
+  { id: MODULES.CREDIT_SCORE.id, title: "Credit Score", subtitle: "Credit Management", icon: "💳", route: "/credit-score", points: 150 },
   { id: MODULES.DEBT_MANAGEMENT.id, title: "Debt Management", subtitle: "Debt Freedom", icon: "🔓", route: "/debt-management", points: 200 },
-  { id: MODULES.RETIREMENT_ACCOUNTS.id, title: "Retirement Accounts", subtitle: "401(k) & Roth IRA", icon: "🏦", route: "/retirement-accounts", points: 200 },
+  { id: MODULES.CONSUMER_TRAPS.id, title: "Consumer Traps", subtitle: "Spending Pitfalls", icon: "🪤", route: "/consumer-traps", points: 150 },
+  { id: MODULES.RISK_TAKING.id, title: "Risk Management", subtitle: "Smart Risk Taking", icon: "⚖️", route: "/risk-taking", points: 150 },
+  { id: MODULES.INSURANCE.id, title: "Insurance", subtitle: "Risk Management", icon: "🛡️", route: "/insurance", points: 150 },
+  { id: MODULES.FINANCIAL_SAFETY.id, title: "Financial Safety", subtitle: "Fraud Prevention", icon: "🔒", route: "/financial-safety", points: 150 },
+  { id: MODULES.COMPOUNDING.id, title: "Power of Compounding", subtitle: "Wealth Building", icon: "📈", route: "/compounding", points: 200 },
+  { id: MODULES.INFLATION_DEFLATION.id, title: "Inflation & Deflation", subtitle: "Price Changes", icon: "📊", route: "/inflation-deflation", points: 200 },
+  { id: MODULES.BONDS.id, title: "Bonds", subtitle: "Fixed-Income Securities", icon: "📜", route: "/bonds", points: 100 },
+  { id: MODULES.STOCK_MARKET.id, title: "Stock Market", subtitle: "Investment Basics", icon: "📉", route: "/stock-market", points: 200 },
+  { id: MODULES.INVESTMENT_VEHICLES.id, title: "Investment Vehicles", subtitle: "ETFs & Mutual Funds", icon: "🚗", route: "/investment-vehicles", points: 150 },
+  { id: MODULES.REAL_ESTATE.id, title: "Real Estate", subtitle: "Property Investment", icon: "🏠", route: "/real-estate", points: 200 },
+  { id: MODULES.RETIREMENT_ACCOUNTS.id, title: "Retirement Accounts", subtitle: "401(k) & Roth IRA", icon: "🏛️", route: "/retirement-accounts", points: 200 },
   { id: MODULES.CRYPTO.id, title: "Cryptocurrency", subtitle: "Digital Assets", icon: "🪙", route: "/crypto", points: 200 },
   { id: MODULES.INVESTMENT_BANKING.id, title: "Investment Banking", subtitle: "IPO Knowledge", icon: "🏦", route: "/investment-quiz", points: 150 },
+  { id: MODULES.GIVING.id, title: "Giving Back", subtitle: "Charitable Giving", icon: "❤️", route: "/giving", points: 150 },
 ];
 
 const FinLitApp: React.FC = () => {
