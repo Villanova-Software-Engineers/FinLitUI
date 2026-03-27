@@ -474,9 +474,8 @@ const LandingPage: React.FC = () => {
             {/* Video Container */}
             <div className="relative w-full" style={{ padding: '56.25% 0 0 0', position: 'relative' }}>
               <iframe
-                src="https://player.vimeo.com/video/1177855749?badge=0&amp;autopause=0&amp;autoplay=1&amp;player_id=0&amp;app_id=58479"
-                allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
-                referrerPolicy="strict-origin-when-cross-origin"
+                src="https://player.vimeo.com/video/1177855749?h=a1b2c3d4e5&amp;badge=0&amp;autopause=0&amp;autoplay=1&amp;player_id=0&amp;app_id=58479&amp;dnt=1"
+                allow="autoplay; fullscreen; picture-in-picture; clipboard-write"
                 allowFullScreen
                 style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }}
                 title="FINLIT"
