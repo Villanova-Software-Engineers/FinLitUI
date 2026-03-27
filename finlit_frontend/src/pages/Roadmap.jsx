@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../auth/context/AuthContext';
@@ -60,21 +60,21 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 0.7], [0, 1]);
   ];
 
   // Check if a module is accessible (previous module passed or is first module)
-  const isModuleAccessible = (moduleIndex) => {
+  const isModuleAccessible = useCallback((moduleIndex) => {
     if (moduleIndex === 0) return true; // First module always accessible
     const previousModuleId = moduleOrder[moduleIndex - 1];
     return isModulePassed(previousModuleId);
-  };
+  }, [isModulePassed]);
 
   // Get module status based on progress
-  const getModuleStatus = (moduleId, moduleIndex) => {
+  const getModuleStatus = useCallback((moduleId, moduleIndex) => {
     if (isModulePassed(moduleId)) return 'Completed';
     if (!isModuleAccessible(moduleIndex)) return 'Locked';
     // Check if there's any progress on this module
     const moduleScore = progress?.moduleScores?.find(s => s.moduleId === moduleId);
     if (moduleScore && moduleScore.attempts > 0) return 'In Progress';
     return 'Next Up';
-  };
+  }, [isModulePassed, isModuleAccessible, progress?.moduleScores]);
 
   // All modules in one continuous journey - status is now dynamically calculated
   const allModulesBase = [
@@ -381,7 +381,7 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 0.7], [0, 1]);
       ...module,
       status: getModuleStatus(module.moduleId, index)
     }));
-  }, [progress]);
+  }, [getModuleStatus]);
 
   // Split modules into two parts (11 modules in part 1, 11 modules in part 2)
   const part1Modules = allModules.slice(0, 11);
@@ -410,24 +410,29 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 0.7], [0, 1]);
   // Get current part's modules
   const currentModules = currentPart === 1 ? part1Modules : part2Modules;
 
-  // Reset visible modules when part changes
-  useEffect(() => {
-    setVisibleModules(3);
-  }, [currentPart]);
-
   // Reveal modules based on path draw progress
   // Modules should appear slightly ahead of path reaching them
+  const currentModulesLength = currentModules.length;
+
   useEffect(() => {
+    // Reset when currentPart changes
+    setPathProgress(0);
+    setVisibleModules(3);
+    // Scroll to top when changing parts
+    window.scrollTo({ top: 0, behavior: 'instant' });
+
     const unsubscribe = pathDrawProgress.on('change', (progress) => {
       setPathProgress(progress);
       // Multiply progress to reveal modules faster than path draws
       // This makes modules appear just as path approaches their position
-      const modulesToShow = Math.max(3, Math.floor(progress * currentModules.length * 1.5) + 3);
-      setVisibleModules(Math.min(modulesToShow, currentModules.length));
+      const modulesToShow = Math.max(3, Math.floor(progress * currentModulesLength * 1.5) + 3);
+      setVisibleModules(Math.min(modulesToShow, currentModulesLength));
     });
 
-    return () => unsubscribe();
-  }, [pathDrawProgress, currentModules.length]);
+    return () => {
+      unsubscribe();
+    };
+  }, [pathDrawProgress, currentModulesLength, currentPart]);
 
   const [activeModule, setActiveModule] = useState(null);
 
@@ -466,8 +471,7 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 0.7], [0, 1]);
     { emoji: "🏠", size: "text-2xl", delay: 12 },
     { emoji: "📝", size: "text-lg", delay: 14 },
   ];
-    const svgHeight = currentModules.length * 380; // rough estimate px per module + spacing
-
+  const svgHeight = useMemo(() => currentModules.length * 380, [currentModules.length]);
 
   return (
     <div
@@ -581,12 +585,14 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 0.7], [0, 1]);
 
         {/* Path visual - Creating a curved, winding path */}
 <svg
+  key={`svg-path-${currentPart}`}
   className="absolute top-0 left-0 w-full pointer-events-none"
 height={svgHeight}
   viewBox={`0 0 100 ${svgHeight / 5}`}   // maintain ~5:1 ratio
   preserveAspectRatio="none"
 >
   <motion.path
+    key={`motion-path-${currentPart}`}
     d="M50,0 Q60,30 40,60 Q20,90 60,120 Q100,150 50,180 Q0,210 50,240 Q100,270 50,300 Q0,330 50,360 Q100,390 50,420 Q0,450 50,480 Q100,510 50,540 Q0,570 50,600 Q100,630 50,660 Q0,690 50,720 Q100,750 50,780 C60,800 55,820 50,840"
     stroke="#3182ce"
     strokeWidth="4"
