@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Target, User, Settings, Bug, LogOut, Menu, X, GraduationCap, Zap, Gamepad2, BookOpen, Calculator, DollarSign, Brain, Mail, Flame, HelpCircle } from 'lucide-react';
+import { Home, Target, User, Settings, Bug, LogOut, Menu, X, GraduationCap, Zap, Gamepad2, BookOpen, Calculator, DollarSign, Brain, Mail, Flame, HelpCircle, Trophy } from 'lucide-react';
 import { useAuthContext } from '../auth/context/AuthContext';
 import { useModuleScore } from '../hooks/useModuleScore';
+import HowToPlayModal from './HowToPlayModal';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -18,6 +19,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title }) =>
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showStreakTooltip, setShowStreakTooltip] = useState(false);
   const [showCertTooltip, setShowCertTooltip] = useState(false);
+  const [showHowToPlayModal, setShowHowToPlayModal] = useState(false);
 
   const totalModules = 10;
   const completedModules = progress?.moduleScores?.filter(m => m.passed).length || 0;
@@ -30,31 +32,99 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title }) =>
     setMobileMenuOpen(false);
   }, [location.pathname]);
 
+  // Guide Steps for How to Play Modal
+  const GUIDE_STEPS = [
+    {
+      icon: Target,
+      title: "Complete Learning Path",
+      description: "Master all 10 financial modules to build your knowledge",
+      color: "from-blue-500 to-indigo-600",
+      bgColor: "bg-blue-50",
+      route: "/game"
+    },
+    {
+      icon: Zap,
+      title: "Play Daily Quiz",
+      description: "Answer daily challenges to earn XP",
+      color: "from-amber-500 to-orange-600",
+      bgColor: "bg-amber-50",
+      route: null
+    },
+    {
+      icon: Brain,
+      title: "Solve Crossword",
+      description: "Test your financial vocabulary with interactive puzzles",
+      color: "from-emerald-500 to-teal-600",
+      bgColor: "bg-emerald-50",
+      route: null
+    },
+    {
+      icon: Trophy,
+      title: "Earn Certificate",
+      description: "Complete all modules to unlock your achievement certificate",
+      color: "from-purple-500 to-pink-600",
+      bgColor: "bg-purple-50",
+      route: "/certificate"
+    }
+  ];
+
   return (
     <div className="h-screen flex flex-col bg-gray-50">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 p-2 sm:p-3 flex items-center justify-between">
-        <div className="flex items-center gap-2 sm:gap-4">
+      <header className="bg-blue-100 p-3 sm:p-4 flex justify-between items-center border-b border-blue-200 flex-shrink-0">
+        <div className="flex items-center gap-2">
           {/* Mobile Menu Toggle */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
-            aria-label="Toggle menu"
+            className="lg:hidden p-2 hover:bg-blue-200 rounded-lg transition-colors"
           >
-            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            {mobileMenuOpen ? <X size={24} className="text-blue-700" /> : <Menu size={24} className="text-blue-700" />}
           </button>
 
-          {/* Logo */}
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm sm:text-base">
-              FL
-            </div>
-            <h1 className="text-base sm:text-xl font-bold text-gray-900">FinLit</h1>
-          </div>
+          <img
+            src="/veo5.png"
+            alt="FinLit Logo"
+            className="h-8 sm:h-10 w-auto object-contain"
+            style={{
+              mixBlendMode: 'darken',
+              filter: 'brightness(1.1) contrast(1.2)'
+            }}
+          />
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-4">
-          {/* Certificate Icon - Hidden on mobile in header */}
+        <div className="flex items-center gap-2 sm:gap-4 md:gap-6">
+          {/* User Info - Hidden on small mobile, shown on larger screens */}
+          <div className="hidden sm:flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm sm:text-lg font-bold">
+                {user?.displayName?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || 'U'}
+              </div>
+              <span className="hidden md:inline text-blue-800 font-semibold text-base sm:text-lg truncate max-w-[120px] lg:max-w-none">
+                {user?.displayName || user?.email}
+              </span>
+            </div>
+
+            {/* How to Play Button - Desktop */}
+            <button
+              onClick={() => setShowHowToPlayModal(true)}
+              className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-200 transition-colors text-blue-800 hover:text-blue-900 font-medium"
+              title="How to Play"
+            >
+              <HelpCircle size={18} />
+              <span className="hidden md:inline text-sm">How to Play</span>
+            </button>
+          </div>
+
+          {/* How to Play Button - Mobile only */}
+          <button
+            onClick={() => setShowHowToPlayModal(true)}
+            className="sm:hidden p-2 rounded-lg hover:bg-blue-200 transition-colors text-blue-700"
+            title="How to Play"
+          >
+            <HelpCircle size={20} />
+          </button>
+
+          {/* Certificate Icon - Hidden on mobile in header, shown in sidebar */}
           <div
             className="hidden sm:block relative cursor-pointer"
             onMouseEnter={() => setShowCertTooltip(true)}
@@ -107,7 +177,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title }) =>
             <span className="text-gray-600 ml-1">XP</span>
           </div>
 
-          {/* Logout Button */}
+          {/* Logout Button - Icon only on mobile */}
           <button
             onClick={() => signOut().then(() => navigate('/auth'))}
             className="px-2 py-1.5 sm:px-4 sm:py-2 text-gray-600 rounded-md hover:bg-gray-200 transition text-sm sm:text-lg"
@@ -257,6 +327,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title }) =>
           {children}
         </div>
       </div>
+
+      {/* How to Play Modal */}
+      <HowToPlayModal isOpen={showHowToPlayModal} onClose={() => setShowHowToPlayModal(false)} steps={GUIDE_STEPS} />
     </div>
   );
 };
