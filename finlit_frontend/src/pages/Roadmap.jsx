@@ -47,16 +47,17 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 0.7], [0, 1]);
 
     // Phase 4 — Investing & Assets
     MODULES.COMPOUNDING.id,            // 14. Power of Compounding
-    MODULES.BONDS.id,                  // 15. Bonds
-    MODULES.STOCK_MARKET.id,           // 16. Stock Market Basics
-    MODULES.INVESTMENT_VEHICLES.id,    // 17. Investment Vehicles
-    MODULES.REAL_ESTATE.id,            // 18. Real Estate
-    MODULES.RETIREMENT_ACCOUNTS.id,    // 19. Retirement Accounts
+    MODULES.INFLATION_DEFLATION.id,    // 15. Inflation & Deflation
+    MODULES.BONDS.id,                  // 16. Bonds
+    MODULES.STOCK_MARKET.id,           // 17. Stock Market Basics
+    MODULES.INVESTMENT_VEHICLES.id,    // 18. Investment Vehicles
+    MODULES.REAL_ESTATE.id,            // 19. Real Estate
+    MODULES.RETIREMENT_ACCOUNTS.id,    // 20. Retirement Accounts
 
     // Phase 5 — Advanced
-    MODULES.CRYPTO.id,                 // 20. Crypto Fundamentals
-    MODULES.INVESTMENT_BANKING.id,     // 21. Investment Banking
-    MODULES.GIVING.id,                 // 22. Giving Back
+    MODULES.CRYPTO.id,                 // 21. Crypto Fundamentals
+    MODULES.INVESTMENT_BANKING.id,     // 22. Investment Banking
+    MODULES.GIVING.id,                 // 23. Giving Back
   ];
 
   // Check if a module is accessible (previous module passed or is first module)
@@ -269,64 +270,77 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 0.7], [0, 1]);
     },
     {
       id: 15,
+      moduleId: MODULES.INFLATION_DEFLATION.id,
+      title: "Inflation & Deflation",
+      subtitle: "Price Changes",
+      icon: "📊",
+      color: "#e3f2fd",
+      position: "left",
+      route: "/inflation-deflation",
+      component: "inflation-deflation-module",
+      description: "Understand how inflation and deflation affect your money's purchasing power and learn strategies to protect your wealth.",
+      quizType: "simulation"
+    },
+    {
+      id: 16,
       moduleId: MODULES.BONDS.id,
       title: "Bonds",
       subtitle: "Fixed-Income Securities",
       icon: "📜",
-      color: "#e3f2fd",
-      position: "left",
+      color: "#e8f5e9",
+      position: "right",
       route: "/bonds",
       component: "bonds-module",
       description: "Learn about bonds, fixed-income investing, and steady returns.",
       quizType: "mcq"
     },
     {
-      id: 16,
+      id: 17,
       moduleId: MODULES.STOCK_MARKET.id,
       title: "Stock Market Basics",
       subtitle: "Investment Fundamentals",
       icon: "📉",
-      color: "#e8f5e9",
-      position: "right",
+      color: "#e3f2fd",
+      position: "left",
       route: "/stock-market",
       component: "stock-module",
       description: "Learn the fundamentals of stock market investing and portfolio building.",
       quizType: "matching"
     },
     {
-      id: 17,
+      id: 18,
       moduleId: MODULES.INVESTMENT_VEHICLES.id,
       title: "Investment Vehicles",
       subtitle: "ETFs & Mutual Funds",
       icon: "🚗",
-      color: "#e3f2fd",
-      position: "left",
+      color: "#e8f5e9",
+      position: "right",
       route: "/investment-vehicles",
       component: "investment-vehicles-module",
       description: "Compare ETFs, mutual funds, value vs growth investing strategies.",
       quizType: "matching"
     },
     {
-      id: 18,
+      id: 19,
       moduleId: MODULES.REAL_ESTATE.id,
       title: "Real Estate",
       subtitle: "Property Investment",
       icon: "🏠",
-      color: "#e8f5e9",
-      position: "right",
+      color: "#e3f2fd",
+      position: "left",
       route: "/real-estate",
       component: "real-estate-module",
       description: "Learn about real estate investing, mortgages, and property ownership strategies.",
       quizType: "mcq"
     },
     {
-      id: 19,
+      id: 20,
       moduleId: MODULES.RETIREMENT_ACCOUNTS.id,
       title: "Retirement Accounts",
       subtitle: "401(k) & Roth IRA",
       icon: "🏛️",
-      color: "#e3f2fd",
-      position: "left",
+      color: "#e8f5e9",
+      position: "right",
       route: "/retirement-accounts",
       component: "retirement-module",
       description: "Master retirement savings with 401(k)s, Roth IRAs, and tax-advantaged investing.",
@@ -335,39 +349,39 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 0.7], [0, 1]);
 
     // Phase 5 — Advanced
     {
-      id: 20,
+      id: 21,
       moduleId: MODULES.CRYPTO.id,
       title: "Crypto Fundamentals",
       subtitle: "Digital Assets",
       icon: "🪙",
-      color: "#e8f5e9",
-      position: "right",
+      color: "#e3f2fd",
+      position: "left",
       route: "/crypto",
       component: "crypto-module",
       description: "Learn the fundamentals of cryptocurrency and blockchain technology.",
       quizType: "mcq"
     },
     {
-      id: 21,
+      id: 22,
       moduleId: MODULES.INVESTMENT_BANKING.id,
       title: "Investment Banking",
       subtitle: "IPO Knowledge",
       icon: "🏦",
-      color: "#e3f2fd",
-      position: "left",
+      color: "#e8f5e9",
+      position: "right",
       route: "/investment-quiz",
       component: "truefalse",
       description: "Test your knowledge about Initial Public Offerings and investment banking.",
       quizType: "true-false"
     },
     {
-      id: 22,
+      id: 23,
       moduleId: MODULES.GIVING.id,
       title: "Giving Back",
       subtitle: "Charitable Giving",
       icon: "❤️",
-      color: "#e8f5e9",
-      position: "right",
+      color: "#e3f2fd",
+      position: "left",
       route: "/giving",
       component: "giving-module",
       description: "Understand the importance of giving back and how to allocate for charitable causes.",
@@ -383,11 +397,11 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 0.7], [0, 1]);
     }));
   }, [getModuleStatus]);
 
-  // Split modules into two parts (11 modules in part 1, 11 modules in part 2)
-  const part1Modules = allModules.slice(0, 11);
-  const part2Modules = allModules.slice(11, 22);
+  // Split modules into two parts (12 modules in part 1, 11 modules in part 2)
+  const part1Modules = allModules.slice(0, 12);
+  const part2Modules = allModules.slice(12, 23);
 
-  // Check if Part 1 is complete (all 11 modules passed)
+  // Check if Part 1 is complete (all 12 modules passed)
   const isPart1Complete = part1Modules.every(m => m.status === 'Completed');
 
   // Auto-determine which part to show based on completion

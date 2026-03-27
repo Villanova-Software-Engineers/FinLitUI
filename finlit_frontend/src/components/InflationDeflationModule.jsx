@@ -493,14 +493,14 @@ const PurchasingPowerGame = ({ onPrev, onNext }) => {
   if (complete) {
     return (
       <div className="min-h-screen p-6 pt-20 flex items-center justify-center" style={{ background: 'linear-gradient(120deg, #fef3c7 0%, #ffedd5 50%, #fed7aa 100%)' }}>
-        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white rounded-3xl shadow-2xl p-12 text-center max-w-lg">
-          <div className={`w-28 h-28 mx-auto rounded-full flex items-center justify-center mb-8 shadow-xl ${score >= 3 ? 'bg-green-500' : 'bg-amber-500'}`}>
-            <span className="text-5xl">{score >= 3 ? '✓' : '→'}</span>
+        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white rounded-3xl shadow-2xl p-12 text-center max-w-2xl w-full">
+          <div className={`w-32 h-32 mx-auto rounded-full flex items-center justify-center mb-8 shadow-xl ${score >= 3 ? 'bg-green-500' : 'bg-amber-500'}`}>
+            <span className="text-6xl">{score >= 3 ? '✓' : '→'}</span>
           </div>
-          <h2 className="text-3xl font-bold text-gray-800 mb-4">{score >= 3 ? 'Well Done!' : 'Keep Learning!'}</h2>
-          <p className="text-xl text-gray-600 mb-8">You got {score}/{rounds.length} correct!</p>
-          <button onClick={onNext} className="w-full py-4 bg-orange-500 text-white rounded-xl font-bold text-lg hover:bg-orange-600">
-            Continue to Final Quiz
+          <h2 className="text-4xl font-bold text-gray-800 mb-6">{score >= 3 ? 'Well Done!' : 'Keep Learning!'}</h2>
+          <p className="text-2xl text-gray-600 mb-10">You got {score}/{rounds.length} correct!</p>
+          <button onClick={onNext} className="w-full max-w-md mx-auto block py-5 bg-orange-500 text-white rounded-xl font-bold text-xl hover:bg-orange-600 transition-all shadow-lg">
+            Continue to Savings Impact Calculator →
           </button>
         </motion.div>
       </div>
@@ -573,6 +573,207 @@ const PurchasingPowerGame = ({ onPrev, onNext }) => {
                 </motion.div>
               )}
             </motion.div>
+          </div>
+        </motion.div>
+      </div>
+    </div>
+  );
+};
+
+// Savings Impact Game - Shows how inflation affects savings over time
+const SavingsImpactGame = ({ onPrev, onNext }) => {
+  const [savingsAmount, setSavingsAmount] = useState(10000);
+  const [yearsToProject, setYearsToProject] = useState(10);
+  const [inflationRate, setInflationRate] = useState(3);
+  const [showComparison, setShowComparison] = useState(false);
+
+  const calculatePurchasingPower = (amount, years, rate) => {
+    return amount / Math.pow(1 + rate / 100, years);
+  };
+
+  const purchasingPowerLoss = savingsAmount - calculatePurchasingPower(savingsAmount, yearsToProject, inflationRate);
+  const percentageLoss = ((purchasingPowerLoss / savingsAmount) * 100).toFixed(1);
+  const futurePurchasingPower = calculatePurchasingPower(savingsAmount, yearsToProject, inflationRate);
+
+  // Calculate what you'd need to invest at different returns to beat inflation
+  const investmentReturns = [5, 7, 10];
+  const futureValues = investmentReturns.map(rate =>
+    savingsAmount * Math.pow(1 + rate / 100, yearsToProject)
+  );
+
+  return (
+    <div className="min-h-screen p-6 pt-20" style={{ background: 'linear-gradient(120deg, #fef3c7 0%, #ffedd5 50%, #fed7aa 100%)' }}>
+      <div className="max-w-5xl mx-auto">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-3xl shadow-xl overflow-hidden">
+          <div className="bg-gradient-to-r from-red-500 to-orange-500 p-8 text-white text-center">
+            <h1 className="text-3xl font-bold">Savings Impact Calculator</h1>
+            <p className="text-orange-100 mt-2">See how inflation erodes your savings over time</p>
+          </div>
+
+          <div className="p-8">
+            {/* Input Controls */}
+            <div className="grid md:grid-cols-3 gap-6 mb-8">
+              {/* Savings Amount */}
+              <div className="bg-gray-50 rounded-2xl p-6">
+                <label className="block text-sm font-bold text-gray-700 mb-3">
+                  Your Savings
+                </label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-xl font-bold">$</span>
+                  <input
+                    type="number"
+                    min="1000"
+                    max="1000000"
+                    step="1000"
+                    value={savingsAmount}
+                    onChange={(e) => setSavingsAmount(Math.max(1000, parseInt(e.target.value) || 1000))}
+                    className="w-full pl-8 pr-4 py-3 text-xl font-bold text-gray-800 bg-white border-2 border-gray-200 rounded-xl focus:border-orange-400 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Years */}
+              <div className="bg-gray-50 rounded-2xl p-6">
+                <label className="block text-sm font-bold text-gray-700 mb-3">
+                  Time Period: <span className="text-orange-600">{yearsToProject} years</span>
+                </label>
+                <input
+                  type="range"
+                  min="1"
+                  max="30"
+                  value={yearsToProject}
+                  onChange={(e) => setYearsToProject(parseInt(e.target.value))}
+                  className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-orange-500"
+                />
+                <div className="flex justify-between text-xs text-gray-500 mt-2">
+                  <span>1 yr</span>
+                  <span>30 yrs</span>
+                </div>
+              </div>
+
+              {/* Inflation Rate */}
+              <div className="bg-gray-50 rounded-2xl p-6">
+                <label className="block text-sm font-bold text-gray-700 mb-3">
+                  Inflation Rate: <span className="text-orange-600">{inflationRate}%</span>
+                </label>
+                <div className="flex gap-2">
+                  {[2, 3, 4, 6, 8].map((rate) => (
+                    <button
+                      key={rate}
+                      onClick={() => setInflationRate(rate)}
+                      className={`flex-1 py-2 rounded-lg font-bold text-sm transition-all ${
+                        inflationRate === rate
+                          ? 'bg-orange-500 text-white shadow-lg'
+                          : 'bg-white text-gray-600 hover:bg-orange-100 border border-gray-200'
+                      }`}
+                    >
+                      {rate}%
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Results */}
+            <div className="bg-gradient-to-br from-red-50 to-orange-50 rounded-2xl p-8 mb-6 border-2 border-red-200">
+              <div className="grid md:grid-cols-3 gap-6 mb-6">
+                <div className="text-center">
+                  <div className="text-sm text-gray-600 mb-2">Today's Value</div>
+                  <div className="text-3xl font-bold text-gray-800">
+                    ${savingsAmount.toLocaleString()}
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-sm text-gray-600 mb-2">Future Purchasing Power</div>
+                  <div className="text-3xl font-bold text-red-600">
+                    ${futurePurchasingPower.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-sm text-gray-600 mb-2">Purchasing Power Loss</div>
+                  <div className="text-3xl font-bold text-red-600">
+                    -{percentageLoss}%
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl p-5 border border-red-200">
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl">⚠️</span>
+                  <div>
+                    <h4 className="font-bold text-gray-800 mb-2">What This Means</h4>
+                    <p className="text-gray-700">
+                      In {yearsToProject} years, your ${savingsAmount.toLocaleString()} will only buy what{' '}
+                      <span className="font-bold text-red-600">${futurePurchasingPower.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>{' '}
+                      buys today. You'll effectively lose{' '}
+                      <span className="font-bold text-red-600">${purchasingPowerLoss.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>{' '}
+                      in purchasing power if you keep cash under your mattress!
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Investment Comparison */}
+            <div className="mb-6">
+              <button
+                onClick={() => setShowComparison(!showComparison)}
+                className="w-full bg-blue-500 text-white py-3 rounded-xl font-bold hover:bg-blue-600 transition-all flex items-center justify-center gap-2"
+              >
+                {showComparison ? '▼' : '▶'} How to Beat Inflation with Investing
+              </button>
+
+              {showComparison && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  className="mt-4 bg-green-50 rounded-2xl p-6 border-2 border-green-200"
+                >
+                  <h3 className="text-xl font-bold text-gray-800 mb-4">Investment Growth Comparison</h3>
+                  <div className="grid md:grid-cols-3 gap-4">
+                    {investmentReturns.map((rate, idx) => {
+                      const futureValue = futureValues[idx];
+                      const realGain = futureValue - savingsAmount;
+                      const netAfterInflation = calculatePurchasingPower(futureValue, yearsToProject, inflationRate);
+
+                      return (
+                        <div key={rate} className="bg-white rounded-xl p-5 border border-green-300">
+                          <div className="text-center mb-3">
+                            <div className="text-sm text-gray-600">Investing at {rate}% annually</div>
+                            <div className="text-2xl font-bold text-green-600 mt-2">
+                              ${futureValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                            </div>
+                            <div className="text-xs text-gray-500 mt-1">
+                              Real Value: ${netAfterInflation.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                            </div>
+                          </div>
+                          <div className="text-center pt-3 border-t border-gray-200">
+                            <span className="text-sm font-bold text-green-700">
+                              +${realGain.toLocaleString(undefined, { maximumFractionDigits: 0 })} gain
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="mt-4 bg-blue-50 rounded-xl p-4 border border-blue-200">
+                    <p className="text-blue-900 text-sm">
+                      <span className="font-bold">💡 Pro Tip:</span> To preserve and grow wealth, your investment returns should exceed inflation.
+                      Stocks historically return ~10% annually, easily beating the average 2-3% inflation rate.
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+            </div>
+
+            <div className="flex justify-center gap-4">
+              <button onClick={onPrev} className="px-8 py-4 rounded-2xl border-2 border-orange-400 bg-white text-orange-600 font-semibold text-lg shadow-lg hover:bg-orange-50">
+                ← Back
+              </button>
+              <button onClick={onNext} className="px-8 py-4 rounded-2xl bg-orange-500 text-white font-semibold text-lg shadow-lg hover:bg-orange-600">
+                Next: Final Quiz →
+              </button>
+            </div>
           </div>
         </motion.div>
       </div>
@@ -721,7 +922,7 @@ const InflationDeflationModule = () => {
 
   const shuffledQuestions = useMemo(() => shuffleQuizOptions(quizQuestions), [shuffleKey]);
 
-  const totalSteps = 7; // intro, inflation, deflation, causes, protection, simulator, purchasing-power, quiz
+  const totalSteps = 8; // intro, inflation, deflation, causes, protection, simulator, purchasing-power, savings-impact, quiz
 
   const modulePassed = isModulePassed(MODULES.INFLATION_DEFLATION?.id || 'inflation-deflation');
 
@@ -819,7 +1020,7 @@ const InflationDeflationModule = () => {
       </div>
 
       {/* Side Navigation Arrows */}
-      {currentStep > 0 && currentStep < 7 && (
+      {currentStep > 0 && currentStep < 8 && (
         <button
           onClick={handlePrev}
           className="fixed left-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-orange-500 text-white rounded-full shadow-lg hover:bg-orange-600 transition flex items-center justify-center z-40"
@@ -828,7 +1029,7 @@ const InflationDeflationModule = () => {
           ←
         </button>
       )}
-      {currentStep < 6 && (
+      {currentStep < 7 && (
         <button
           onClick={handleNext}
           className="fixed right-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-orange-500 text-white rounded-full shadow-lg hover:bg-orange-600 transition flex items-center justify-center z-40"
@@ -854,7 +1055,8 @@ const InflationDeflationModule = () => {
           {currentStep === 4 && <CategoryPage data={protectionData} borderColor="#10b981" currentStep={currentStep} totalSteps={totalSteps} onPrev={handlePrev} onNext={handleNext} />}
           {currentStep === 5 && <PriceSimulatorGame onPrev={handlePrev} onNext={handleNext} />}
           {currentStep === 6 && <PurchasingPowerGame onPrev={handlePrev} onNext={handleNext} />}
-          {currentStep === 7 && (
+          {currentStep === 7 && <SavingsImpactGame onPrev={handlePrev} onNext={handleNext} />}
+          {currentStep === 8 && (
             <QuizPage
               currentQuestion={quizQuestion}
               selectedAnswer={selectedAnswer}
