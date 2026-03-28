@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Check, School, Send, ArrowLeft, BookOpen } from 'lucide-react';
+import { Check, Building2, Send, ArrowLeft, Loader2 } from 'lucide-react';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../firebase';
 
 const SchoolsPage: React.FC = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    schoolName: '',
+    organizationName: '',
+    organizationType: '',
     location: '',
-    studentCount: '',
+    participantCount: '',
     duration: '',
     requirements: '',
     otherDetails: '',
@@ -16,32 +19,83 @@ const SchoolsPage: React.FC = () => {
     contactName: ''
   });
   const [formSubmitted, setFormSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+  const MAX_WORDS = 100;
+
+  const countWords = (text: string): number => {
+    return text.trim().split(/\s+/).filter(word => word.length > 0).length;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Here you would integrate with your backend/email service
-    console.log('Form submitted:', formData);
-    setFormSubmitted(true);
-    setTimeout(() => {
-      setFormSubmitted(false);
+  const getWordCountColor = (count: number): string => {
+    if (count > MAX_WORDS) return 'text-red-600';
+    if (count > MAX_WORDS * 0.9) return 'text-amber-600';
+    return 'text-slate-500';
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+
+    // If organization type changes, reset duration field
+    if (name === 'organizationType') {
       setFormData({
-        schoolName: '',
-        location: '',
-        studentCount: '',
-        duration: '',
-        requirements: '',
-        otherDetails: '',
-        contactEmail: '',
-        contactName: ''
+        ...formData,
+        [name]: value,
+        duration: '' // Clear duration when org type changes
       });
-    }, 3000);
+    } else {
+      setFormData({
+        ...formData,
+        [name]: value
+      });
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError('');
+
+    // Validate word count
+    const requirementsWordCount = countWords(formData.requirements);
+    const otherDetailsWordCount = countWords(formData.otherDetails);
+
+    if (requirementsWordCount > MAX_WORDS || otherDetailsWordCount > MAX_WORDS) {
+      setError(`Please ensure all text fields have ${MAX_WORDS} words or less.`);
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      // Save to Firebase
+      await addDoc(collection(db, 'organizationInquiries'), {
+        ...formData,
+        submittedAt: serverTimestamp(),
+        status: 'new'
+      });
+
+      setFormSubmitted(true);
+      setTimeout(() => {
+        setFormSubmitted(false);
+        setFormData({
+          organizationName: '',
+          organizationType: '',
+          location: '',
+          participantCount: '',
+          duration: '',
+          requirements: '',
+          otherDetails: '',
+          contactEmail: '',
+          contactName: ''
+        });
+      }, 3000);
+    } catch (err) {
+      console.error('Error submitting form:', err);
+      setError('Failed to submit form. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -68,17 +122,17 @@ const SchoolsPage: React.FC = () => {
           >
             <div className="text-center mb-12">
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-brand-500/20 backdrop-blur-sm rounded-full mb-6">
-                <School className="w-4 h-4 text-brand-300" />
-                <span className="text-brand-200 font-semibold text-sm">For Educational Institutions</span>
+                <Building2 className="w-4 h-4 text-brand-300" />
+                <span className="text-brand-200 font-semibold text-sm">For Organizations</span>
               </div>
               <h1 className="text-5xl md:text-6xl font-bold text-white mb-6">
                 Bring FinLit to Your{' '}
                 <span className="bg-gradient-to-r from-brand-300 to-brand-400 bg-clip-text text-transparent">
-                  School
+                  Organization
                 </span>
               </h1>
               <p className="text-xl text-navy-200 max-w-2xl mx-auto">
-                Transform your students' financial literacy with our comprehensive curriculum. Get in touch to discuss custom solutions tailored to your institution.
+                Transform financial literacy in your organization with our comprehensive curriculum. Get in touch to discuss custom solutions tailored to your needs.
               </p>
             </div>
 
@@ -86,16 +140,16 @@ const SchoolsPage: React.FC = () => {
             <div className="grid md:grid-cols-3 gap-6 mb-12">
               {[
                 {
-                  title: "Curriculum Aligned",
-                  description: "Meets educational standards and learning objectives"
+                  title: "Customizable Content",
+                  description: "Tailored curriculum to meet your specific needs and goals"
                 },
                 {
-                  title: "Teacher Support",
-                  description: "Complete resources and training for educators"
+                  title: "Full Support",
+                  description: "Complete resources and training for facilitators"
                 },
                 {
                   title: "Progress Tracking",
-                  description: "Monitor student performance and engagement"
+                  description: "Monitor participant performance and engagement"
                 }
               ].map((item, index) => (
                 <motion.div
@@ -136,32 +190,53 @@ const SchoolsPage: React.FC = () => {
                   <div className="grid md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-sm font-semibold text-navy-800 mb-2">
-                        School Name *
+                        Organization Name *
                       </label>
                       <input
                         type="text"
-                        name="schoolName"
+                        name="organizationName"
                         required
-                        value={formData.schoolName}
+                        value={formData.organizationName}
                         onChange={handleInputChange}
                         className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-500 focus:outline-none transition-colors"
-                        placeholder="Enter school name"
+                        placeholder="Enter organization name"
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-semibold text-navy-800 mb-2">
-                        Location *
+                        Organization Type *
                       </label>
-                      <input
-                        type="text"
-                        name="location"
+                      <select
+                        name="organizationType"
                         required
-                        value={formData.location}
+                        value={formData.organizationType}
                         onChange={handleInputChange}
                         className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-500 focus:outline-none transition-colors"
-                        placeholder="City, State/Country"
-                      />
+                      >
+                        <option value="">Select type</option>
+                        <option value="school">School</option>
+                        <option value="non-profit">Non-Profit</option>
+                        <option value="corporate">Corporate</option>
+                        <option value="government">Government</option>
+                        <option value="community">Community Organization</option>
+                        <option value="other">Other</option>
+                      </select>
                     </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-navy-800 mb-2">
+                      Location *
+                    </label>
+                    <input
+                      type="text"
+                      name="location"
+                      required
+                      value={formData.location}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-500 focus:outline-none transition-colors"
+                      placeholder="City, State/Country"
+                    />
                   </div>
 
                   <div className="grid md:grid-cols-2 gap-6">
@@ -190,7 +265,7 @@ const SchoolsPage: React.FC = () => {
                         value={formData.contactEmail}
                         onChange={handleInputChange}
                         className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-500 focus:outline-none transition-colors"
-                        placeholder="your.email@school.edu"
+                        placeholder="your.email@organization.com"
                       />
                     </div>
                   </div>
@@ -198,21 +273,21 @@ const SchoolsPage: React.FC = () => {
                   <div className="grid md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-sm font-semibold text-navy-800 mb-2">
-                        Number of Students *
+                        Number of Participants *
                       </label>
                       <select
-                        name="studentCount"
+                        name="participantCount"
                         required
-                        value={formData.studentCount}
+                        value={formData.participantCount}
                         onChange={handleInputChange}
                         className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-500 focus:outline-none transition-colors"
                       >
                         <option value="">Select range</option>
-                        <option value="1-50">1-50 students</option>
-                        <option value="51-200">51-200 students</option>
-                        <option value="201-500">201-500 students</option>
-                        <option value="501-1000">501-1,000 students</option>
-                        <option value="1000+">1,000+ students</option>
+                        <option value="1-50">1-50 participants</option>
+                        <option value="51-200">51-200 participants</option>
+                        <option value="201-500">201-500 participants</option>
+                        <option value="501-1000">501-1,000 participants</option>
+                        <option value="1000+">1,000+ participants</option>
                       </select>
                     </div>
                     <div>
@@ -227,19 +302,36 @@ const SchoolsPage: React.FC = () => {
                         className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-500 focus:outline-none transition-colors"
                       >
                         <option value="">Select duration</option>
-                        <option value="1-semester">1 Semester</option>
-                        <option value="2-semesters">2 Semesters (Full Year)</option>
-                        <option value="summer">Summer Program</option>
-                        <option value="ongoing">Ongoing Access</option>
-                        <option value="custom">Custom Duration</option>
+                        {formData.organizationType === 'school' ? (
+                          <>
+                            <option value="1-semester">1 Semester</option>
+                            <option value="2-semesters">2 Semesters (Full Year)</option>
+                            <option value="summer">Summer Program</option>
+                            <option value="ongoing">Ongoing Access</option>
+                            <option value="custom">Custom Duration</option>
+                          </>
+                        ) : (
+                          <>
+                            <option value="3-months">3 Months</option>
+                            <option value="6-months">6 Months</option>
+                            <option value="1-year">1 Year</option>
+                            <option value="ongoing">Ongoing Access</option>
+                            <option value="custom">Custom Duration</option>
+                          </>
+                        )}
                       </select>
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-navy-800 mb-2">
-                      Specific Requirements
-                    </label>
+                    <div className="flex justify-between items-center mb-2">
+                      <label className="block text-sm font-semibold text-navy-800">
+                        Specific Requirements
+                      </label>
+                      <span className={`text-xs font-medium ${getWordCountColor(countWords(formData.requirements))}`}>
+                        {countWords(formData.requirements)}/{MAX_WORDS} words
+                      </span>
+                    </div>
                     <textarea
                       name="requirements"
                       value={formData.requirements}
@@ -248,12 +340,22 @@ const SchoolsPage: React.FC = () => {
                       className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-500 focus:outline-none transition-colors resize-none"
                       placeholder="Any specific curriculum requirements, grade levels, or learning objectives?"
                     />
+                    {countWords(formData.requirements) > MAX_WORDS && (
+                      <p className="text-xs text-red-600 mt-1">
+                        Please reduce to {MAX_WORDS} words or less
+                      </p>
+                    )}
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-navy-800 mb-2">
-                      Additional Details
-                    </label>
+                    <div className="flex justify-between items-center mb-2">
+                      <label className="block text-sm font-semibold text-navy-800">
+                        Additional Details
+                      </label>
+                      <span className={`text-xs font-medium ${getWordCountColor(countWords(formData.otherDetails))}`}>
+                        {countWords(formData.otherDetails)}/{MAX_WORDS} words
+                      </span>
+                    </div>
                     <textarea
                       name="otherDetails"
                       value={formData.otherDetails}
@@ -262,16 +364,37 @@ const SchoolsPage: React.FC = () => {
                       className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-500 focus:outline-none transition-colors resize-none"
                       placeholder="Tell us more about your goals, budget, timeline, or any questions you have..."
                     />
+                    {countWords(formData.otherDetails) > MAX_WORDS && (
+                      <p className="text-xs text-red-600 mt-1">
+                        Please reduce to {MAX_WORDS} words or less
+                      </p>
+                    )}
                   </div>
+
+                  {error && (
+                    <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+                      {error}
+                    </div>
+                  )}
 
                   <motion.button
                     type="submit"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="w-full px-8 py-4 bg-gradient-to-r from-brand-500 to-brand-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer"
+                    disabled={isSubmitting}
+                    whileHover={{ scale: isSubmitting ? 1 : 1.02 }}
+                    whileTap={{ scale: isSubmitting ? 1 : 0.98 }}
+                    className="w-full px-8 py-4 bg-gradient-to-r from-brand-500 to-brand-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
                   >
-                    <Send className="w-5 h-5" />
-                    Submit Request
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Submitting...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-5 h-5" />
+                        Submit Request
+                      </>
+                    )}
                   </motion.button>
                 </form>
               )}

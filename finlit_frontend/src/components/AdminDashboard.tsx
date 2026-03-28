@@ -33,6 +33,7 @@ import {
   Sun,
   Bell,
   Bug,
+  Mail,
   Brain,
   Puzzle,
   FileText,
@@ -395,6 +396,19 @@ const AdminDashboard: React.FC = () => {
             >
               <Bug size={20} />
               Bug Reports
+            </button>
+          )}
+
+          {user?.role === 'owner' && (
+            <button
+              onClick={() => {
+                navigate('/admin/form-submissions');
+                setMobileMenuOpen(false);
+              }}
+              className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${textSecondaryClass} hover:bg-gray-100 ${darkMode ? 'hover:bg-white/10' : ''}`}
+            >
+              <Mail size={20} />
+              Form Submissions
             </button>
           )}
 

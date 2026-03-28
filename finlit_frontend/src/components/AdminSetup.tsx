@@ -28,7 +28,9 @@ import {
   Moon,
   Sun,
   Bell,
-  BookOpen
+  BookOpen,
+  Bug,
+  Mail as MailIcon
 } from 'lucide-react';
 import { createOrganizationWithAdmin, getAllOrganizations, checkIsSuperAdmin, getQuizQuestions } from '../firebase/firestore.service';
 import { useAuthContext } from '../auth/context/AuthContext';
@@ -229,6 +231,22 @@ const AdminSetup: React.FC = () => {
           >
             <BookOpen size={20} />
             Case Studies
+          </button>
+
+          <button
+            onClick={() => navigate('/admin/bug-reports')}
+            className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${textSecondaryClass} hover:bg-gray-100 ${darkMode ? 'hover:bg-white/10' : ''}`}
+          >
+            <Bug size={20} />
+            Bug Reports
+          </button>
+
+          <button
+            onClick={() => navigate('/admin/form-submissions')}
+            className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${textSecondaryClass} hover:bg-gray-100 ${darkMode ? 'hover:bg-white/10' : ''}`}
+          >
+            <MailIcon size={20} />
+            Form Submissions
           </button>
 
           <button

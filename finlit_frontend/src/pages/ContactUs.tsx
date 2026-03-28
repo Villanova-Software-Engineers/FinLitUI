@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, MessageSquare, Send, CheckCircle, AlertCircle, Loader2, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../auth/context/AuthContext';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../firebase';
 
 interface FormErrors {
   name?: string;
@@ -27,6 +29,11 @@ const ContactUs: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const MESSAGE_MAX_LENGTH = 500;
+  const MAX_WORDS = 100;
+
+  const countWords = (text: string): number => {
+    return text.trim().split(/\s+/).filter(word => word.length > 0).length;
+  };
 
   // Validation functions
   const validateName = (name: string): string | undefined => {
@@ -51,6 +58,8 @@ const ContactUs: React.FC = () => {
     if (!message.trim()) return 'Message is required';
     if (message.trim().length < 10) return 'Message must be at least 10 characters';
     if (message.length > MESSAGE_MAX_LENGTH) return `Message must be under ${MESSAGE_MAX_LENGTH} characters`;
+    const wordCount = countWords(message);
+    if (wordCount > MAX_WORDS) return `Message must be ${MAX_WORDS} words or less (currently ${wordCount} words)`;
     return undefined;
   };
 
@@ -119,33 +128,47 @@ const ContactUs: React.FC = () => {
 
     setIsSubmitting(true);
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-
-    // In a real app, this would send to a backend
-    console.log('Contact form submitted:', formData);
-
-    setIsSubmitting(false);
-    setIsSubmitted(true);
-
-    // Reset form after 4 seconds
-    setTimeout(() => {
-      setIsSubmitted(false);
-      setFormData({
-        name: user?.displayName || '',
-        email: user?.email || '',
-        subject: '',
-        message: ''
+    try {
+      // Save to Firebase
+      await addDoc(collection(db, 'contactSubmissions'), {
+        ...formData,
+        userId: user?.id || null,
+        submittedAt: serverTimestamp(),
+        status: 'new'
       });
-      setErrors({});
-      setTouchedFields(new Set());
-    }, 4000);
+
+      setIsSubmitted(true);
+
+      // Reset form after 4 seconds
+      setTimeout(() => {
+        setIsSubmitted(false);
+        setFormData({
+          name: user?.displayName || '',
+          email: user?.email || '',
+          subject: '',
+          message: ''
+        });
+        setErrors({});
+        setTouchedFields(new Set());
+      }, 4000);
+    } catch (error) {
+      console.error('Error submitting contact form:', error);
+      setErrors({ message: 'Failed to submit. Please try again.' });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const messageCharCount = formData.message.length;
+  const messageWordCount = countWords(formData.message);
   const messageCharCountColor = messageCharCount > MESSAGE_MAX_LENGTH
     ? 'text-red-600'
     : messageCharCount > MESSAGE_MAX_LENGTH * 0.9
+    ? 'text-amber-600'
+    : 'text-gray-500';
+  const messageWordCountColor = messageWordCount > MAX_WORDS
+    ? 'text-red-600'
+    : messageWordCount > MAX_WORDS * 0.9
     ? 'text-amber-600'
     : 'text-gray-500';
 
@@ -401,9 +424,14 @@ const ContactUs: React.FC = () => {
                         <label htmlFor="message" className="block text-base font-semibold text-gray-700">
                           Message <span className="text-red-500">*</span>
                         </label>
-                        <span className={`text-sm font-medium ${messageCharCountColor} transition-colors duration-150`}>
-                          {messageCharCount}/{MESSAGE_MAX_LENGTH}
-                        </span>
+                        <div className="flex gap-3 text-sm">
+                          <span className={`font-medium ${messageWordCountColor} transition-colors duration-150`}>
+                            {messageWordCount}/{MAX_WORDS} words
+                          </span>
+                          <span className={`font-medium ${messageCharCountColor} transition-colors duration-150`}>
+                            {messageCharCount}/{MESSAGE_MAX_LENGTH} chars
+                          </span>
+                        </div>
                       </div>
                       <textarea
                         id="message"
