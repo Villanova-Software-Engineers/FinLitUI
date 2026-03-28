@@ -19,6 +19,7 @@ import {
   ChevronUp,
   MessageSquare,
   Save,
+  ArrowLeft,
 } from 'lucide-react';
 import { useAuthContext } from '../auth/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -177,6 +178,17 @@ const BugReportAdmin: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-100 py-8 px-4 font-dm">
       <div className="max-w-7xl mx-auto">
+        {/* Back Button */}
+        <div className="mb-6">
+          <button
+            onClick={() => navigate('/admin')}
+            className="flex items-center gap-2 text-navy-700 hover:text-brand-600 transition-colors font-medium"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            Back to Admin Dashboard
+          </button>
+        </div>
+
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-4 mb-4">

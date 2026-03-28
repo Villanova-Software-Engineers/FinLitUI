@@ -56,6 +56,7 @@ import CarImmersion from "./pages/big-money/CarImmersion";
 import CollegeImmersion from "./pages/big-money/CollegeImmersion";
 import BugReportForm from "./components/BugReportForm";
 import BugReportAdmin from "./components/BugReportAdmin";
+import FormSubmissionsAdmin from "./components/FormSubmissionsAdmin";
 import { MODULES } from "./hooks/useModuleScore";
 
 // ScrollToTop component that scrolls to top on route change
@@ -428,6 +429,14 @@ function App() {
             element={
               <ProtectedRoute requiredRole="owner">
                 <BugReportAdmin />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/form-submissions"
+            element={
+              <ProtectedRoute requiredRole="owner">
+                <FormSubmissionsAdmin />
               </ProtectedRoute>
             }
           />

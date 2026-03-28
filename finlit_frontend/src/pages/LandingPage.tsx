@@ -66,7 +66,7 @@ const LandingPage: React.FC = () => {
                 About Us
               </a>
               <a onClick={() => navigate('/schools')} className="text-navy-700 hover:text-brand-500 transition-colors duration-200 font-medium cursor-pointer">
-                For Schools
+                For Organizations
               </a>
             </div>
 
@@ -104,7 +104,7 @@ const LandingPage: React.FC = () => {
                 <a href="#features" className="text-navy-700 hover:text-brand-500 py-2 cursor-pointer">Features</a>
                 <a href="#how-it-works" className="text-navy-700 hover:text-brand-500 py-2 cursor-pointer">How It Works</a>
                 <a onClick={() => navigate('/about')} className="text-navy-700 hover:text-brand-500 py-2 cursor-pointer">About Us</a>
-                <a onClick={() => navigate('/schools')} className="text-navy-700 hover:text-brand-500 py-2 cursor-pointer">For Schools</a>
+                <a onClick={() => navigate('/schools')} className="text-navy-700 hover:text-brand-500 py-2 cursor-pointer">For Organizations</a>
                 <div className="pt-2 border-t border-gray-200">
                   <button onClick={() => navigate('/auth')} className="w-full px-6 py-2.5 bg-gradient-to-r from-brand-500 to-brand-600 text-white font-semibold rounded-xl cursor-pointer">
                     Get Started
@@ -383,11 +383,11 @@ const LandingPage: React.FC = () => {
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
               Interested in Bringing FinLit to{' '}
               <span className="bg-gradient-to-r from-brand-300 to-brand-400 bg-clip-text text-transparent">
-                Your School?
+                Your Organization?
               </span>
             </h2>
             <p className="text-xl text-navy-200 mb-10">
-              Transform your students' financial literacy with our comprehensive curriculum.
+              Transform financial literacy in your organization with our comprehensive curriculum.
             </p>
 
             <motion.button
@@ -396,11 +396,11 @@ const LandingPage: React.FC = () => {
               onClick={() => navigate('/schools')}
               className="px-10 py-5 bg-white text-navy-800 text-lg font-bold rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-200 inline-flex items-center gap-3 cursor-pointer"
             >
-              Contact Us for Schools
+              Contact Us for Organizations
               <ArrowRight className="w-6 h-6" />
             </motion.button>
 
-            <p className="text-navy-300 mt-6">Get custom pricing and dedicated support for educational institutions</p>
+            <p className="text-navy-300 mt-6">Get custom pricing and dedicated support for your organization</p>
           </motion.div>
         </div>
       </section>
