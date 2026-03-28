@@ -132,7 +132,7 @@ const ContactUs: React.FC = () => {
       // Save to Firebase
       await addDoc(collection(db, 'contactSubmissions'), {
         ...formData,
-        userId: user?.uid || null,
+        userId: user?.id || null,
         submittedAt: serverTimestamp(),
         status: 'new'
       });
