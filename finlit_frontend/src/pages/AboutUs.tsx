@@ -245,7 +245,7 @@ const AboutUs: React.FC = () => {
 
           <div className="border-t border-slate-800 pt-6 text-center">
             <p className="text-slate-400 text-sm">
-              © 2024 FinLit. All rights reserved.
+              © 2026 FinLit. All rights reserved.
             </p>
           </div>
         </div>
