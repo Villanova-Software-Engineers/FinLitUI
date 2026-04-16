@@ -1165,7 +1165,7 @@ const ToolHeader: React.FC<{
 // Common props for calculator components
 interface CalculatorProps {
   onBack: () => void;
-  onSave: (type: ToolId, name: string, data: Record<string, any>, results: Record<string, any>) => Promise<boolean>;
+  onSave?: (type: ToolId, name: string, data: Record<string, any>, results: Record<string, any>) => Promise<boolean>;
   loadedData?: Record<string, any>;
   loadedName?: string;
 }
@@ -1188,6 +1188,7 @@ const BudgetCalculator: React.FC<CalculatorProps> = ({ onBack, onSave, loadedDat
   ];
 
   const handleSave = async (customName?: string) => {
+    if (!onSave) return;
     setSaving(true);
     const defaultName = `Budget Plan - $${monthlyIncome.toLocaleString()}/mo`;
     const success = await onSave(
@@ -1329,6 +1330,7 @@ const SavingsPlanner: React.FC<CalculatorProps> = ({ onBack, onSave, loadedData,
     : 'Set your goal';
 
   const handleSave = async (customName?: string) => {
+    if (!onSave) return;
     setSaving(true);
     const defaultName = goalName || 'Savings Goal';
     const success = await onSave(
@@ -1483,6 +1485,7 @@ const LoanCalculator: React.FC<CalculatorProps> = ({ onBack, onSave, loadedData,
   const principalPercent = totalPayment > 0 ? (principal / totalPayment) * 100 : 0;
 
   const handleSave = async (customName?: string) => {
+    if (!onSave) return;
     setSaving(true);
     const defaultName = `Loan - $${principal.toLocaleString()} at ${ratePercent}%`;
     const success = await onSave(
@@ -1649,6 +1652,7 @@ const NetWorthCalculator: React.FC<CalculatorProps> = ({ onBack, onSave, loadedD
   ];
 
   const handleSave = async (customName?: string) => {
+    if (!onSave) return;
     setSaving(true);
     const defaultName = `Net Worth - ${netWorth >= 0 ? '' : '-'}$${Math.abs(netWorth).toLocaleString()}`;
     const success = await onSave(
@@ -1794,6 +1798,7 @@ const CompoundInterestCalculator: React.FC<CalculatorProps> = ({ onBack, onSave,
   const growthPercent = totalContributed > 0 ? ((futureValue / totalContributed) - 1) * 100 : 0;
 
   const handleSave = async (customName?: string) => {
+    if (!onSave) return;
     setSaving(true);
     const defaultName = `Investment - $${p.toLocaleString()} + $${pmt}/mo for ${yearsNum}yrs`;
     const success = await onSave(
@@ -1972,6 +1977,7 @@ const DebtPayoffPlanner: React.FC<CalculatorProps> = ({ onBack, onSave, loadedDa
     : 'Add your debts';
 
   const handleSave = async (customName?: string) => {
+    if (!onSave) return;
     setSaving(true);
     const debtNames = debts.filter(d => d.name).map(d => d.name).join(', ') || 'Debts';
     const defaultName = `${debtNames} - $${totalDebt.toLocaleString()} total`;
@@ -2201,6 +2207,7 @@ const EmergencyFundCalculator: React.FC<CalculatorProps> = ({ onBack, onSave, lo
   const coverageMonths = totalMonthlyExpenses > 0 ? current / totalMonthlyExpenses : 0;
 
   const handleSave = async (customName?: string) => {
+    if (!onSave) return;
     setSaving(true);
     const defaultName = `Emergency Fund - ${selectedScenarioObj?.months || 6} months target`;
     const success = await onSave(
@@ -2621,3 +2628,17 @@ const FinancialTools: React.FC = () => {
 };
 
 export default FinancialTools;
+
+// Export individual calculators for use in other components
+export {
+  SavingsPlanner,
+  LoanCalculator,
+  NetWorthCalculator,
+  CompoundInterestCalculator,
+  DebtPayoffPlanner,
+  EmergencyFundCalculator,
+  BudgetCalculator
+};
+
+// Export types
+export type { CalculatorProps };
