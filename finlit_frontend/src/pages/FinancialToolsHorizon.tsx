@@ -18,6 +18,14 @@ import { db } from '../firebase/config';
 import { useAuthContext } from '../auth/context/AuthContext';
 import { collection, addDoc, getDocs, deleteDoc, doc, query, orderBy, where, serverTimestamp, Timestamp } from 'firebase/firestore';
 import DashboardLayout from '../components/DashboardLayout';
+import {
+  SavingsPlanner,
+  LoanCalculator,
+  NetWorthCalculator,
+  CompoundInterestCalculator,
+  DebtPayoffPlanner,
+  EmergencyFundCalculator
+} from '../components/FinancialTools';
 
 // Types
 interface SavedBudget {
@@ -340,7 +348,7 @@ const BudgetCalculatorPage = ({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 pt-24 pb-12 px-4">
+    <DashboardLayout>
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -696,7 +704,7 @@ const BudgetCalculatorPage = ({
           )}
         </motion.div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 
@@ -784,12 +792,7 @@ const FinancialToolsHorizon = () => {
   ];
 
   const handleToolClick = (tool: any) => {
-    if (tool.id === 'budget') {
-      setActiveTool('budget');
-    } else {
-      // Other tools will open budget planner for now
-      setActiveTool('budget');
-    }
+    setActiveTool(tool.id);
   };
 
   const renderCard = (tool: any, index: number) => (
@@ -824,6 +827,72 @@ const FinancialToolsHorizon = () => {
   // Show Budget Calculator full page
   if (activeTool === 'budget') {
     return <BudgetCalculatorPage onBack={() => setActiveTool(null)} />;
+  }
+
+  // Show Savings Planner
+  if (activeTool === 'savings') {
+    return (
+      <DashboardLayout>
+        <div className="max-w-6xl mx-auto">
+          <SavingsPlanner onBack={() => setActiveTool(null)} />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Show Loan Calculator
+  if (activeTool === 'loan') {
+    return (
+      <DashboardLayout>
+        <div className="max-w-6xl mx-auto">
+          <LoanCalculator onBack={() => setActiveTool(null)} />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Show Net Worth Calculator
+  if (activeTool === 'networth') {
+    return (
+      <DashboardLayout>
+        <div className="max-w-6xl mx-auto">
+          <NetWorthCalculator onBack={() => setActiveTool(null)} />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Show Compound Interest Calculator
+  if (activeTool === 'compound') {
+    return (
+      <DashboardLayout>
+        <div className="max-w-6xl mx-auto">
+          <CompoundInterestCalculator onBack={() => setActiveTool(null)} />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Show Debt Payoff Planner
+  if (activeTool === 'debt-payoff') {
+    return (
+      <DashboardLayout>
+        <div className="max-w-6xl mx-auto">
+          <DebtPayoffPlanner onBack={() => setActiveTool(null)} />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Show Emergency Fund Calculator
+  if (activeTool === 'emergency-fund') {
+    return (
+      <DashboardLayout>
+        <div className="max-w-6xl mx-auto">
+          <EmergencyFundCalculator onBack={() => setActiveTool(null)} />
+        </div>
+      </DashboardLayout>
+    );
   }
 
   // Show main tools grid
