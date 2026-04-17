@@ -58,6 +58,8 @@ import CollegeImmersion from "./pages/big-money/CollegeImmersion";
 import BugReportForm from "./components/BugReportForm";
 import BugReportAdmin from "./components/BugReportAdmin";
 import FormSubmissionsAdmin from "./components/FormSubmissionsAdmin";
+import AdminManagementWrapper from "./components/AdminManagementWrapper";
+import OrganizationDetails from "./components/OrganizationDetails";
 import { MODULES } from "./hooks/useModuleScore";
 
 // ScrollToTop component that scrolls to top on route change
@@ -394,6 +396,14 @@ function App() {
             }
           />
           <Route
+            path="/admin/organization/:orgId"
+            element={
+              <ProtectedRoute requiredRole="owner">
+                <OrganizationDetails />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/admin/quiz-questions"
             element={
               <ProtectedRoute requiredRole="owner">
@@ -438,6 +448,14 @@ function App() {
             element={
               <ProtectedRoute requiredRole="owner">
                 <FormSubmissionsAdmin />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/manage-admins"
+            element={
+              <ProtectedRoute>
+                <AdminManagementWrapper />
               </ProtectedRoute>
             }
           />

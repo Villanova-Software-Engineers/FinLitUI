@@ -41,6 +41,7 @@ import {
   Calendar,
   Trophy,
   Target,
+  UserCog,
 } from 'lucide-react';
 import { useAuthContext } from '../auth/context/AuthContext';
 import {
@@ -335,6 +336,19 @@ const AdminDashboard: React.FC = () => {
             >
               <Building2 size={20} />
               Organizations
+            </button>
+          )}
+
+          {user.role === 'admin' && (
+            <button
+              onClick={() => {
+                navigate('/admin/manage-admins');
+                setMobileMenuOpen(false);
+              }}
+              className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${textSecondaryClass} hover:bg-gray-100 ${darkMode ? 'hover:bg-white/10' : ''}`}
+            >
+              <UserCog size={20} />
+              Manage Admins
             </button>
           )}
 

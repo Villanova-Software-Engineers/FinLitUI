@@ -5,6 +5,7 @@ import {
   getDocs,
   setDoc,
   updateDoc,
+  deleteDoc,
   query,
   where,
   serverTimestamp,
@@ -13,7 +14,7 @@ import {
   orderBy,
 } from 'firebase/firestore';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { getSecondaryAuth, cleanupSecondaryApp } from './config';
+import { getSecondaryAuth, cleanupSecondaryApp, auth } from './config';
 import {
   ref,
   uploadBytes,
@@ -23,6 +24,7 @@ import {
 import { db, storage } from './config';
 import type {
   Organization,
+  OrganizationAdmin,
   ClassCode,
   StudentProgress,
   ModuleScore,
@@ -107,10 +109,22 @@ export async function createOrganizationWithAdmin(
 
     // Create organization in Firestore
     const orgRef = doc(collection(db, ORGANIZATIONS));
+
+    // Create the first admin (super admin) entry
+    const firstAdmin: OrganizationAdmin = {
+      userId: adminUser.uid,
+      email: contactEmail,
+      displayName: orgName + ' Admin',
+      isSuperAdmin: true, // First admin is always super admin
+      addedBy: createdBy, // Added by website super admin
+      addedAt: new Date(),
+    };
+
     const orgData: WithServerTimestamp<Omit<Organization, 'id'>, 'createdAt'> = {
       name: orgName,
       contactEmail,
-      adminId: adminUser.uid,
+      adminId: adminUser.uid, // Keep for backwards compatibility
+      admins: [firstAdmin], // Initialize with first admin
       createdBy,
       createdAt: serverTimestamp(),
     };
@@ -134,6 +148,7 @@ export async function createOrganizationWithAdmin(
         name: orgName,
         contactEmail,
         adminId: adminUser.uid,
+        admins: [firstAdmin],
         createdBy,
         createdAt: new Date(),
       },
@@ -148,11 +163,236 @@ export async function createOrganizationWithAdmin(
 export async function getAllOrganizations(): Promise<Organization[]> {
   const snapshot = await getDocs(collection(db, ORGANIZATIONS));
 
-  return snapshot.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data(),
-    createdAt: (doc.data().createdAt as Timestamp)?.toDate() || new Date(),
-  })) as Organization[];
+  return snapshot.docs.map(doc => {
+    const data = doc.data();
+
+    // Backwards compatibility: if admins array doesn't exist, create it from adminId
+    let admins = data.admins || [];
+    if (admins.length === 0 && data.adminId) {
+      // Create first admin from legacy adminId
+      admins = [{
+        userId: data.adminId,
+        email: data.contactEmail,
+        displayName: data.name + ' Admin',
+        isSuperAdmin: true,
+        addedBy: data.createdBy,
+        addedAt: (data.createdAt as Timestamp)?.toDate() || new Date(),
+      }];
+    }
+
+    return {
+      id: doc.id,
+      ...data,
+      admins,
+      createdAt: (data.createdAt as Timestamp)?.toDate() || new Date(),
+    };
+  }) as Organization[];
+}
+
+// ============== Organization Admin Management Functions ==============
+
+/**
+ * Add a new admin to an organization
+ * @param organizationId - The organization ID
+ * @param adminEmail - Email of the new admin
+ * @param addedByUserId - User ID of the admin adding this person
+ * @returns The newly created admin user and password
+ */
+export async function addOrganizationAdmin(
+  organizationId: string,
+  adminEmail: string,
+  addedByUserId: string
+): Promise<{ admin: OrganizationAdmin; password: string }> {
+  // Check if user adding is an admin of this organization
+  const org = await getOrganization(organizationId);
+  if (!org) {
+    throw new Error('Organization not found');
+  }
+
+  const isAdmin = org.admins.some(admin => admin.userId === addedByUserId);
+  if (!isAdmin) {
+    throw new Error('Only organization admins can add new admins');
+  }
+
+  // Check if email is already an admin
+  const existingAdmin = org.admins.find(admin => admin.email === adminEmail);
+  if (existingAdmin) {
+    throw new Error('This email is already an admin of this organization');
+  }
+
+  // Generate a random password for the new admin
+  const password = generatePassword();
+
+  // Use secondary auth instance to create admin user
+  const { secondaryAuth } = await getSecondaryAuth();
+
+  try {
+    // Create Firebase Auth account for the new admin
+    const userCredential = await createUserWithEmailAndPassword(secondaryAuth, adminEmail, password);
+    const newAdminUser = userCredential.user;
+
+    // Create the new admin entry
+    const newAdmin: OrganizationAdmin = {
+      userId: newAdminUser.uid,
+      email: adminEmail,
+      displayName: org.name + ' Admin',
+      isSuperAdmin: false, // Only first admin is super admin
+      addedBy: addedByUserId,
+      addedAt: new Date(),
+    };
+
+    // Update organization with new admin
+    const orgRef = doc(db, ORGANIZATIONS, organizationId);
+    const updatedAdmins = [...org.admins, newAdmin];
+    await updateDoc(orgRef, { admins: updatedAdmins });
+
+    // Create admin user profile in Firestore
+    await setDoc(doc(db, USERS, newAdminUser.uid), {
+      id: newAdminUser.uid,
+      email: adminEmail,
+      role: 'admin',
+      displayName: org.name + ' Admin',
+      organizationId: organizationId,
+      organizationName: org.name,
+      createdAt: serverTimestamp(),
+    });
+
+    return {
+      admin: newAdmin,
+      password,
+    };
+  } finally {
+    await cleanupSecondaryApp();
+  }
+}
+
+/**
+ * Remove an admin from an organization
+ * @param organizationId - The organization ID
+ * @param adminUserId - User ID of the admin to remove
+ * @param removedByUserId - User ID of the admin performing the removal
+ */
+export async function removeOrganizationAdmin(
+  organizationId: string,
+  adminUserId: string,
+  removedByUserId: string
+): Promise<void> {
+  const org = await getOrganization(organizationId);
+  if (!org) {
+    throw new Error('Organization not found');
+  }
+
+  // Check if user removing is the super admin of this organization
+  const removingUser = org.admins.find(admin => admin.userId === removedByUserId);
+  if (!removingUser) {
+    throw new Error('You are not an admin of this organization');
+  }
+
+  // Only organization super admin can remove other admins
+  if (!removingUser.isSuperAdmin) {
+    throw new Error('Only the organization super admin can remove other admins');
+  }
+
+  // Find the admin to remove
+  const adminToRemove = org.admins.find(admin => admin.userId === adminUserId);
+  if (!adminToRemove) {
+    throw new Error('Admin not found in this organization');
+  }
+
+  // Prevent removing super admin
+  if (adminToRemove.isSuperAdmin) {
+    throw new Error('Cannot remove the organization super admin (first admin created)');
+  }
+
+  // Remove admin from organization
+  const orgRef = doc(db, ORGANIZATIONS, organizationId);
+  const updatedAdmins = org.admins.filter(admin => admin.userId !== adminUserId);
+  await updateDoc(orgRef, { admins: updatedAdmins });
+
+  // Delete user from Firestore
+  const userRef = doc(db, USERS, adminUserId);
+  await deleteDoc(userRef);
+
+  // Note: Firebase Auth account will remain active but user has no Firestore profile
+  // They won't be able to access the app since getUserProfile will return null
+  // To fully delete from Firebase Auth, you would need:
+  // 1. Firebase Admin SDK (backend/cloud function)
+  // 2. Or have the user delete their own account
+  // For security, the app will deny access to users without a Firestore profile
+}
+
+/**
+ * Get organization by ID
+ */
+export async function getOrganization(organizationId: string): Promise<Organization | null> {
+  const orgDoc = await getDoc(doc(db, ORGANIZATIONS, organizationId));
+  if (!orgDoc.exists()) {
+    return null;
+  }
+
+  const data = orgDoc.data();
+
+  // Backwards compatibility: if admins array doesn't exist, create it from adminId
+  let admins = data.admins || [];
+
+  // Convert Firestore Timestamps to Date objects in admins array
+  if (admins.length > 0) {
+    admins = admins.map((admin: any) => ({
+      ...admin,
+      addedAt: admin.addedAt?.toDate ? admin.addedAt.toDate() : admin.addedAt,
+    }));
+  } else if (data.adminId) {
+    // Create first admin from legacy adminId
+    admins = [{
+      userId: data.adminId,
+      email: data.contactEmail,
+      displayName: data.name + ' Admin',
+      isSuperAdmin: true,
+      addedBy: data.createdBy,
+      addedAt: (data.createdAt as Timestamp)?.toDate() || new Date(),
+    }];
+  }
+
+  return {
+    id: orgDoc.id,
+    ...data,
+    admins,
+    createdAt: (data.createdAt as Timestamp)?.toDate() || new Date(),
+  } as Organization;
+}
+
+/**
+ * Get all admins for an organization
+ */
+export async function getOrganizationAdmins(organizationId: string): Promise<OrganizationAdmin[]> {
+  const org = await getOrganization(organizationId);
+  if (!org) {
+    return [];
+  }
+  return org.admins;
+}
+
+/**
+ * Check if a user is an admin of an organization
+ */
+export async function isOrganizationAdmin(userId: string, organizationId: string): Promise<boolean> {
+  const org = await getOrganization(organizationId);
+  if (!org) {
+    return false;
+  }
+  return org.admins.some(admin => admin.userId === userId);
+}
+
+/**
+ * Check if a user is the super admin (first admin) of an organization
+ */
+export async function isOrganizationSuperAdmin(userId: string, organizationId: string): Promise<boolean> {
+  const org = await getOrganization(organizationId);
+  if (!org) {
+    return false;
+  }
+  const admin = org.admins.find(admin => admin.userId === userId);
+  return admin?.isSuperAdmin || false;
 }
 
 // ============== Class Code Functions (Admin Only) ==============
