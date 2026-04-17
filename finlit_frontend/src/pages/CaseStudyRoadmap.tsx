@@ -23,6 +23,7 @@ import type { CaseStudy, CaseStudyProgress } from '../auth/types/auth.types';
 import {
   getActiveCaseStudy,
   getCaseStudyProgress,
+  isCaseStudyWeekAccessible,
 } from '../firebase/firestore.service';
 
 const CaseStudyRoadmap: React.FC = () => {
@@ -31,6 +32,7 @@ const CaseStudyRoadmap: React.FC = () => {
 
   const [caseStudy, setCaseStudy] = useState<CaseStudy | null>(null);
   const [allProgress, setAllProgress] = useState<CaseStudyProgress[]>([]);
+  const [lockedWeeks, setLockedWeeks] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(true);
   const [hoveredWeek, setHoveredWeek] = useState<number | null>(null);
 
@@ -59,6 +61,18 @@ const CaseStudyRoadmap: React.FC = () => {
           }
         }
         setAllProgress(progressArray);
+
+        // Check admin locks for students
+        if (user.role === 'student' && user.organizationId) {
+          const adminLockedWeeks = new Set<number>();
+          for (let week = 1; week <= totalWeeks; week++) {
+            const isAccessible = await isCaseStudyWeekAccessible(user.organizationId, week);
+            if (!isAccessible) {
+              adminLockedWeeks.add(week);
+            }
+          }
+          setLockedWeeks(adminLockedWeeks);
+        }
       }
     } catch (err) {
       console.error('Error loading case study:', err);
@@ -108,11 +122,16 @@ const CaseStudyRoadmap: React.FC = () => {
     : [1, 2, 3, 4, 5, 6, 7, 8];
 
   // Check completion status for each week
-  const getWeekStatus = (week: number) => {
+  const getWeekStatus = (week: number): 'locked' | 'admin_locked' | 'completed' | 'available' => {
+    // Check if admin has locked this week
+    if (lockedWeeks.has(week)) {
+      return 'admin_locked';
+    }
+
     // Find progress for this specific week
     const weekProgress = allProgress.find(p => p.week === week);
 
-    // Week 1 is always unlocked
+    // Week 1 is always unlocked (unless admin locked)
     if (week === 1) {
       return weekProgress?.completedAt ? 'completed' : 'available';
     }
@@ -206,7 +225,8 @@ const CaseStudyRoadmap: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
           {weeks.map((week, index) => {
             const status = getWeekStatus(week);
-            const isLocked = status === 'locked';
+            const isLocked = status === 'locked' || status === 'admin_locked';
+            const isAdminLocked = status === 'admin_locked';
             const isCompleted = status === 'completed';
             const isHovered = hoveredWeek === week;
 
@@ -258,6 +278,11 @@ const CaseStudyRoadmap: React.FC = () => {
                           <div className="flex items-center gap-1 px-3 py-1 bg-green-500 text-white rounded-full text-xs font-bold shadow-lg">
                             <CheckCircle size={14} />
                             Complete
+                          </div>
+                        ) : isAdminLocked ? (
+                          <div className="flex items-center gap-1 px-3 py-1 bg-red-600 text-white rounded-full text-xs font-bold shadow-lg">
+                            <Lock size={14} />
+                            Instructor Locked
                           </div>
                         ) : isLocked ? (
                           <div className="flex items-center gap-1 px-3 py-1 bg-gray-800 text-white rounded-full text-xs font-bold shadow-lg">

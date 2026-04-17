@@ -26,8 +26,8 @@ import {
   Target,
   Shield,
   Sparkles,
-  Quote,
   Zap,
+  Quote,
 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuthContext } from '../auth/context/AuthContext';
@@ -385,7 +385,7 @@ const CaseStudyPage: React.FC = () => {
                     </div>
 
                     <h2 className="text-xl sm:text-3xl lg:text-5xl font-black text-slate-900 mb-4 sm:mb-8 leading-tight">
-                      Who is {weekContent.subject}?
+                      {weekContent.who_is_this.title || `Who is ${weekContent.subject}?`}
                     </h2>
 
                     <p className="text-sm sm:text-lg lg:text-2xl text-slate-600 leading-relaxed font-medium mb-6 sm:mb-10 text-pretty">
@@ -474,38 +474,39 @@ const CaseStudyPage: React.FC = () => {
 
               {/* Page 4: Why It Matters */}
               {currentPage === 4 && (
-                <div className="flex-1 bg-white rounded-xl sm:rounded-3xl shadow-xl border border-gray-100 overflow-hidden p-4 sm:p-8 lg:p-16 flex flex-col justify-center">
-                  <div className="max-w-4xl mx-auto w-full">
-                    <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-8 justify-center">
-                      <div className="p-2 sm:p-3 bg-emerald-100 rounded-lg sm:rounded-xl text-emerald-600">
-                        <Target size={20} className="sm:w-7 sm:h-7" />
-                      </div>
-                      <span className="text-xs sm:text-sm font-bold text-emerald-600 uppercase tracking-wider">Impact</span>
-                    </div>
-
-                    <h2 className="text-xl sm:text-3xl lg:text-6xl font-black text-center text-slate-900 mb-6 sm:mb-12">
-                      Why does this matter to you?
-                    </h2>
-
-                    <div className="grid lg:grid-cols-2 gap-6 sm:gap-12 items-center">
-                      <div className="relative">
-                        <div className="absolute -top-6 sm:-top-10 -left-4 sm:-left-10 text-emerald-100">
-                          <Quote size={60} className="sm:w-[120px] sm:h-[120px]" />
+                <div className="flex-1 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl sm:rounded-3xl shadow-xl border border-emerald-100 overflow-hidden flex flex-col">
+                  <div className="flex-1 overflow-y-auto p-4 sm:p-8 lg:p-12">
+                    <div className="max-w-5xl mx-auto w-full">
+                      {/* Header */}
+                      <div className="text-center mb-6 sm:mb-10">
+                        <div className="inline-flex items-center px-4 py-2 bg-emerald-100 rounded-full text-emerald-700 text-xs sm:text-sm font-bold uppercase tracking-wider mb-4">
+                          Impact
                         </div>
-                        <p className="relative text-base sm:text-2xl lg:text-3xl font-medium text-slate-700 leading-relaxed text-pretty">
-                          "{weekContent.money_idea.why_it_matters}"
-                        </p>
+                        <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-slate-900">
+                          Why does this matter to you?
+                        </h2>
                       </div>
 
-                      <div className="bg-emerald-50 rounded-xl sm:rounded-3xl p-4 sm:p-8 lg:p-10 flex items-center gap-4 sm:gap-6 border border-emerald-100">
+                      {/* Main Quote Card */}
+                      <div className="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-10 lg:p-12 shadow-lg border border-emerald-100 mb-6 sm:mb-8">
+                        <div className="flex gap-4 sm:gap-6">
+                          <Quote className="w-10 h-10 sm:w-14 sm:h-14 lg:w-16 lg:h-16 text-emerald-400 shrink-0 mt-1" />
+                          <p className="text-base sm:text-xl lg:text-2xl text-slate-700 leading-relaxed text-pretty whitespace-pre-line font-medium">
+                            {weekContent.money_idea.why_it_matters}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Strategy Card */}
+                      <div className="bg-white/80 backdrop-blur rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-emerald-100 flex flex-col sm:flex-row items-center gap-4 sm:gap-6 shadow-md">
                         <img
                           src={images.personImageUrl}
                           alt="Expert"
-                          className="w-14 h-14 sm:w-20 sm:h-20 rounded-full object-cover border-2 sm:border-4 border-white shadow-lg shrink-0"
+                          className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-4 border-emerald-200 shadow-lg shrink-0"
                         />
-                        <div>
-                          <h4 className="font-bold text-emerald-900 text-sm sm:text-lg mb-0.5 sm:mb-1">{weekContent.subject}'s Strategy</h4>
-                          <p className="text-emerald-700 leading-snug text-xs sm:text-base">Understanding this principle is key to long-term wealth building.</p>
+                        <div className="text-center sm:text-left">
+                          <h4 className="font-bold text-emerald-800 text-base sm:text-lg mb-1">{weekContent.subject}'s Strategy</h4>
+                          <p className="text-slate-600 text-sm sm:text-base">Understanding this principle is key to long-term wealth building.</p>
                         </div>
                       </div>
                     </div>
@@ -553,25 +554,38 @@ const CaseStudyPage: React.FC = () => {
 
               {/* Page 6: Real Life Example */}
               {currentPage === 6 && (
-                <div className="flex-1 bg-white rounded-xl sm:rounded-3xl shadow-xl border border-gray-100 overflow-hidden p-4 sm:p-8 lg:p-16 flex flex-col items-center justify-center text-center relative">
-                  <div className="absolute top-0 left-0 w-full h-2 sm:h-4 bg-gradient-to-r from-orange-400 to-amber-400"></div>
+                <div className="flex-1 bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl sm:rounded-3xl shadow-xl border border-orange-100 overflow-hidden flex flex-col">
+                  <div className="flex-1 overflow-y-auto p-4 sm:p-8 lg:p-12">
+                    <div className="max-w-5xl mx-auto w-full">
+                      {/* Header */}
+                      <div className="text-center mb-6 sm:mb-10">
+                        <div className="inline-flex items-center px-4 py-2 bg-orange-100 rounded-full text-orange-700 text-xs sm:text-sm font-bold uppercase tracking-wider mb-4">
+                          Real Life Application
+                        </div>
+                        <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-slate-900">
+                          How does this apply to you?
+                        </h2>
+                      </div>
 
-                  <div className="max-w-4xl mx-auto">
-                    <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-orange-50 rounded-full text-orange-600 text-xs sm:text-sm font-bold uppercase tracking-wider mb-4 sm:mb-8">
-                      <HomeIcon size={14} className="sm:w-4 sm:h-4" /> Real Life Application
-                    </div>
+                      {/* Main Quote Card */}
+                      <div className="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-10 lg:p-12 shadow-lg border border-orange-100 mb-6 sm:mb-8">
+                        <div className="flex gap-4 sm:gap-6">
+                          <Quote className="w-10 h-10 sm:w-14 sm:h-14 lg:w-16 lg:h-16 text-orange-400 shrink-0 mt-1" />
+                          <p className="text-base sm:text-xl lg:text-2xl text-slate-700 leading-relaxed text-pretty whitespace-pre-line font-medium">
+                            {weekContent.money_idea.real_life}
+                          </p>
+                        </div>
+                      </div>
 
-                    <h2 className="text-lg sm:text-2xl lg:text-4xl font-black text-slate-900 mb-6 sm:mb-12 leading-tight px-2">
-                      "{weekContent.money_idea.real_life}"
-                    </h2>
-
-                    <div className="bg-slate-50 rounded-xl sm:rounded-3xl p-4 sm:p-8 lg:p-10 border border-slate-100 inline-flex flex-col md:flex-row items-center gap-4 sm:gap-8 text-left max-w-3xl">
-                      <img src={images.companyImageUrl2} alt="Example" className="w-20 h-20 sm:w-32 sm:h-32 rounded-xl sm:rounded-2xl object-cover shadow-lg" />
-                      <div>
-                        <h3 className="text-lg sm:text-2xl font-bold text-slate-800 mb-1 sm:mb-2">Apply this today</h3>
-                        <p className="text-slate-600 text-sm sm:text-lg">
-                          Take a moment to reflect on your own finances. Where can you apply this principle right now?
-                        </p>
+                      {/* Apply Today Card */}
+                      <div className="bg-white/80 backdrop-blur rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-orange-100 flex flex-col sm:flex-row items-center gap-4 sm:gap-6 shadow-md">
+                        <img src={images.companyImageUrl2} alt="Example" className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl object-cover border-4 border-orange-200 shadow-lg shrink-0" />
+                        <div className="text-center sm:text-left">
+                          <h3 className="text-base sm:text-lg font-bold text-orange-800 mb-1">Apply this today</h3>
+                          <p className="text-slate-600 text-sm sm:text-base">
+                            Take a moment to reflect on your own finances. Where can you apply this principle right now?
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
