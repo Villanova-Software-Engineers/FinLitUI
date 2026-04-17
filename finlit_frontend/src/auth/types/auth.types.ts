@@ -11,12 +11,23 @@ export interface User {
   createdAt: Date;
 }
 
+// Organization admin with role information
+export interface OrganizationAdmin {
+  userId: string;
+  email: string;
+  displayName?: string;
+  isSuperAdmin: boolean; // First admin created, cannot be deleted
+  addedBy: string; // User ID who added this admin
+  addedAt: Date;
+}
+
 // Organization structure in Firestore
 export interface Organization {
   id: string;
   name: string;
-  contactEmail: string; // Admin contact email
-  adminId: string; // Firebase Auth UID of the admin
+  contactEmail: string; // Primary contact email
+  adminId: string; // Legacy: Firebase Auth UID of the first admin (kept for backwards compatibility)
+  admins: OrganizationAdmin[]; // Array of all admins
   createdBy: string; // Owner who created this org
   createdAt: Date;
 }

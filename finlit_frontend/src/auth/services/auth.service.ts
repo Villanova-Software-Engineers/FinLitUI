@@ -57,7 +57,9 @@ export class AuthService {
       const userProfile = await getUserProfile(firebaseUser.uid);
 
       if (!userProfile) {
-        throw new Error('User profile not found. Please contact support.');
+        // Sign out the user since they have no profile (likely deleted/removed)
+        await firebaseSignOut(auth);
+        throw new Error('Your account has been removed. Please contact your administrator if you believe this is an error.');
       }
 
       return {

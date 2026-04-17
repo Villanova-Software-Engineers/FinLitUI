@@ -18,7 +18,6 @@ import {
   Users,
   LayoutDashboard,
   Shield,
-  MoreHorizontal,
   XCircle,
   Calendar,
   Loader2,
@@ -576,8 +575,11 @@ const AdminSetup: React.FC = () => {
                           </div>
                         </td>
                         <td className="px-6 py-5 text-right">
-                          <button className={`p-2 rounded-xl transition-colors ${darkMode ? 'hover:bg-navy-600' : 'hover:bg-gray-100'}`}>
-                            <MoreHorizontal size={18} className={textSecondaryClass} />
+                          <button
+                            onClick={() => navigate(`/admin/organization/${org.id}`)}
+                            className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                          >
+                            View Details
                           </button>
                         </td>
                       </tr>
