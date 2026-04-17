@@ -1178,17 +1178,62 @@ const FinLitApp: React.FC = () => {
                   </button>
                 </div>
 
-                {activeCaseStudy ? (
+                {activeCaseStudy ? (() => {
+                  // Get current week's content (support both new multi-week and legacy format)
+                  // Firebase stores object keys as strings, so we need to handle both number and string keys
+                  const weeksData = activeCaseStudy.weeks as Record<string | number, typeof activeCaseStudy.case_study> | undefined;
+                  const weekImagesData = activeCaseStudy.weekImages as Record<string | number, typeof activeCaseStudy.weekImages[number]> | undefined;
+
+                  // Determine the next week to display based on user progress
+                  let currentWeek = 1;
+
+                  // Find all case study progress entries for this case study
+                  const allProgress = progress?.caseStudyProgress?.filter(
+                    cs => cs.caseStudyId === activeCaseStudy.id
+                  ) || [];
+
+                  if (allProgress.length > 0) {
+                    // Find the highest completed week
+                    const completedWeeks = allProgress.filter(p => p.completedAt).map(p => p.week);
+                    if (completedWeeks.length > 0) {
+                      // Show the next week after the highest completed week
+                      const maxCompletedWeek = Math.max(...completedWeeks);
+                      currentWeek = maxCompletedWeek + 1;
+                    } else {
+                      // No completed weeks, find the week they're currently on
+                      const inProgressWeeks = allProgress.map(p => p.week);
+                      currentWeek = Math.min(...inProgressWeeks);
+                    }
+                  }
+
+                  // Make sure the week exists in the data
+                  if (weeksData && !weeksData[currentWeek] && !weeksData[String(currentWeek)]) {
+                    const availableWeeks = Object.keys(weeksData).map(Number).sort((a, b) => a - b);
+                    if (availableWeeks.length > 0) {
+                      currentWeek = availableWeeks[0];
+                    }
+                  }
+
+                  const weekContent = weeksData?.[currentWeek]
+                    || weeksData?.[String(currentWeek)]
+                    || activeCaseStudy.case_study;
+                  const weekImages = weekImagesData?.[currentWeek]
+                    || weekImagesData?.[String(currentWeek)];
+                  const personImage = weekImages?.personImageUrl || activeCaseStudy.personImageUrl;
+
+                  if (!weekContent) return null;
+
+                  return (
                   <button
-                    onClick={() => navigate('/case-study')}
+                    onClick={() => navigate(`/case-study/${currentWeek}`)}
                     className="flex-1 rounded-xl overflow-hidden hover:shadow-lg transition-all group border border-gray-200"
                   >
                     <div className="flex h-full">
                       {/* Left: Image */}
                       <div className="w-1/3 flex-shrink-0 overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200">
                         <img
-                          src={activeCaseStudy.personImageUrl}
-                          alt={activeCaseStudy.case_study.subject}
+                          src={personImage}
+                          alt={weekContent.subject}
                           className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
                           onError={(e) => {
                             (e.target as HTMLImageElement).src = 'https://via.placeholder.com/400x250?text=Case+Study';
@@ -1201,15 +1246,15 @@ const FinLitApp: React.FC = () => {
                         {/* Header badges */}
                         <div className="flex items-center gap-2 mb-2 flex-wrap">
                           <span className="px-2 py-0.5 bg-blue-500 text-white text-[10px] sm:text-xs font-bold rounded">
-                            WEEK {activeCaseStudy.case_study.week}
+                            WEEK {weekContent.week}
                           </span>
                           <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[10px] sm:text-xs font-semibold rounded truncate max-w-[100px] sm:max-w-none">
-                            {activeCaseStudy.case_study.topic}
+                            {weekContent.topic}
                           </span>
                         </div>
 
                         {/* Subject */}
-                        <h4 className="text-sm sm:text-lg font-bold text-gray-800 leading-tight line-clamp-1">{activeCaseStudy.case_study.subject}</h4>
+                        <h4 className="text-sm sm:text-lg font-bold text-gray-800 leading-tight line-clamp-1">{weekContent.subject}</h4>
 
                         {/* Info cards grid */}
                         <div className="mt-2 grid grid-cols-2 gap-2 flex-1 min-h-0">
@@ -1217,7 +1262,7 @@ const FinLitApp: React.FC = () => {
                           <div className="p-2 bg-white/70 rounded-lg border border-gray-100 overflow-hidden">
                             <p className="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wide">👤 Who</p>
                             <p className="text-[11px] sm:text-sm text-gray-700 line-clamp-2 leading-snug mt-0.5">
-                              {activeCaseStudy.case_study.who_is_this.content.slice(0, 60)}...
+                              {weekContent.who_is_this.content.slice(0, 60)}...
                             </p>
                           </div>
 
@@ -1225,7 +1270,7 @@ const FinLitApp: React.FC = () => {
                           <div className="p-2 bg-blue-50/80 rounded-lg border border-blue-100 overflow-hidden">
                             <p className="text-[10px] sm:text-xs font-semibold text-blue-600 uppercase tracking-wide">💡 Concept</p>
                             <p className="text-[11px] sm:text-sm text-gray-700 line-clamp-2 leading-snug mt-0.5">
-                              {activeCaseStudy.case_study.money_idea.title}
+                              {weekContent.money_idea.title}
                             </p>
                           </div>
 
@@ -1233,7 +1278,7 @@ const FinLitApp: React.FC = () => {
                           <div className="p-2 bg-amber-50/80 rounded-lg border border-amber-100 overflow-hidden">
                             <p className="text-[10px] sm:text-xs font-semibold text-amber-600 uppercase tracking-wide">📖 Story</p>
                             <p className="text-[11px] sm:text-sm text-gray-700 line-clamp-2 leading-snug mt-0.5">
-                              {activeCaseStudy.case_study.what_happened.content.slice(0, 60)}...
+                              {weekContent.what_happened.content.slice(0, 60)}...
                             </p>
                           </div>
 
@@ -1241,7 +1286,7 @@ const FinLitApp: React.FC = () => {
                           <div className="p-2 bg-emerald-50/80 rounded-lg border border-emerald-100 overflow-hidden">
                             <p className="text-[10px] sm:text-xs font-semibold text-emerald-600 uppercase tracking-wide">🎯 Takeaway</p>
                             <p className="text-[11px] sm:text-sm text-gray-700 line-clamp-2 leading-snug mt-0.5">
-                              {activeCaseStudy.case_study.money_idea.why_it_matters.slice(0, 60)}...
+                              {weekContent.money_idea.why_it_matters.slice(0, 60)}...
                             </p>
                           </div>
                         </div>
@@ -1249,7 +1294,7 @@ const FinLitApp: React.FC = () => {
                         {/* Footer */}
                         <div className="mt-2 pt-2 border-t border-gray-200/50 flex items-center justify-between">
                           <span className="text-[10px] sm:text-xs text-gray-500">
-                            📝 {activeCaseStudy.case_study.quiz.length} questions
+                            📝 {weekContent.quiz.length} questions
                           </span>
                           <span className="flex items-center gap-1 text-blue-600 font-semibold text-xs sm:text-sm group-hover:text-blue-700">
                             Start <Play size={12} fill="currentColor" />
@@ -1258,7 +1303,8 @@ const FinLitApp: React.FC = () => {
                       </div>
                     </div>
                   </button>
-                ) : (
+                  );
+                })() : (
                   <div className="flex-1 flex flex-col items-center justify-center py-8 bg-slate-50 rounded-xl border border-slate-100">
                     <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
                       <BookOpen className="text-slate-400" size={32} />

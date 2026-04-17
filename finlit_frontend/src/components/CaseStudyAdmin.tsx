@@ -36,7 +36,11 @@ import {
   setActiveCaseStudy,
   deactivateCaseStudy,
   getCaseStudyById,
+  setActiveWeek,
 } from '../firebase/firestore.service';
+import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../firebase/config';
+import { CaseStudyWeekViewer } from './CaseStudyWeekViewer';
 
 const CaseStudyAdmin: React.FC = () => {
   const { user } = useAuthContext();
@@ -51,24 +55,20 @@ const CaseStudyAdmin: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Form state
-  const [jsonContent, setJsonContent] = useState<CaseStudyContent | null>(null);
+  const [jsonContent, setJsonContent] = useState<{ [week: number]: CaseStudyContent } | null>(null);
   const [jsonError, setJsonError] = useState<string | null>(null);
-  const [personImage, setPersonImage] = useState<File | null>(null);
-  const [companyImage1, setCompanyImage1] = useState<File | null>(null);
-  const [companyImage2, setCompanyImage2] = useState<File | null>(null);
-  const [personImagePreview, setPersonImagePreview] = useState<string | null>(null);
-  const [companyImage1Preview, setCompanyImage1Preview] = useState<string | null>(null);
-  const [companyImage2Preview, setCompanyImage2Preview] = useState<string | null>(null);
+  const [weekImages, setWeekImages] = useState<{ [week: number]: { person: File | null; company1: File | null; company2: File | null } }>({});
+  const [weekImagePreviews, setWeekImagePreviews] = useState<{ [week: number]: { person: string | null; company1: string | null; company2: string | null } }>({});
 
   // Preview state
   const [previewCaseStudy, setPreviewCaseStudy] = useState<CaseStudy | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [selectedWeek, setSelectedWeek] = useState<number>(1);
+  const [editMode, setEditMode] = useState(false);
+  const [editedContent, setEditedContent] = useState<CaseStudyContent | null>(null);
 
   // File input refs
   const jsonInputRef = useRef<HTMLInputElement>(null);
-  const personImageRef = useRef<HTMLInputElement>(null);
-  const companyImage1Ref = useRef<HTMLInputElement>(null);
-  const companyImage2Ref = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (user?.role !== 'owner') {
@@ -99,11 +99,35 @@ const CaseStudyAdmin: React.FC = () => {
     reader.onload = (event) => {
       try {
         const content = JSON.parse(event.target?.result as string);
-        if (content.case_study) {
-          setJsonContent(content.case_study);
-          setJsonError(null);
+
+        // Check if it's multi-week format with "weeks" array
+        if (content.weeks && Array.isArray(content.weeks)) {
+          const weeksObj: { [week: number]: CaseStudyContent } = {};
+          content.weeks.forEach((weekContent: CaseStudyContent) => {
+            if (weekContent.week) {
+              weeksObj[weekContent.week] = weekContent;
+            }
+          });
+
+          if (Object.keys(weeksObj).length > 0) {
+            setJsonContent(weeksObj);
+            setJsonError(null);
+
+            // Initialize empty image slots for each week
+            const initialImages: typeof weekImages = {};
+            const initialPreviews: typeof weekImagePreviews = {};
+            Object.keys(weeksObj).forEach(week => {
+              const weekNum = Number(week);
+              initialImages[weekNum] = { person: null, company1: null, company2: null };
+              initialPreviews[weekNum] = { person: null, company1: null, company2: null };
+            });
+            setWeekImages(initialImages);
+            setWeekImagePreviews(initialPreviews);
+          } else {
+            setJsonError('No valid weeks found in JSON');
+          }
         } else {
-          setJsonError('Invalid format: Missing "case_study" key');
+          setJsonError('Invalid format: Must contain "weeks" array. See sample format.');
         }
       } catch {
         setJsonError('Invalid JSON file');
@@ -114,6 +138,7 @@ const CaseStudyAdmin: React.FC = () => {
 
   const handleImageUpload = (
     e: React.ChangeEvent<HTMLInputElement>,
+    weekNumber: number,
     type: 'person' | 'company1' | 'company2'
   ) => {
     const file = e.target.files?.[0];
@@ -122,28 +147,40 @@ const CaseStudyAdmin: React.FC = () => {
     const reader = new FileReader();
     reader.onload = (event) => {
       const preview = event.target?.result as string;
-      switch (type) {
-        case 'person':
-          setPersonImage(file);
-          setPersonImagePreview(preview);
-          break;
-        case 'company1':
-          setCompanyImage1(file);
-          setCompanyImage1Preview(preview);
-          break;
-        case 'company2':
-          setCompanyImage2(file);
-          setCompanyImage2Preview(preview);
-          break;
-      }
+
+      setWeekImages(prev => ({
+        ...prev,
+        [weekNumber]: {
+          ...prev[weekNumber],
+          [type]: file
+        }
+      }));
+
+      setWeekImagePreviews(prev => ({
+        ...prev,
+        [weekNumber]: {
+          ...prev[weekNumber],
+          [type]: preview
+        }
+      }));
     };
     reader.readAsDataURL(file);
   };
 
   const handleSubmit = async () => {
-    if (!jsonContent || !personImage || !companyImage1 || !companyImage2 || !user) {
-      setError('Please provide JSON content and all 3 images');
+    if (!jsonContent || !user) {
+      setError('Please provide JSON content');
       return;
+    }
+
+    // Validate all weeks have images
+    const weeks = Object.keys(jsonContent).map(Number);
+    for (const week of weeks) {
+      const images = weekImages[week];
+      if (!images || !images.person || !images.company1 || !images.company2) {
+        setError(`Please upload all 3 images for Week ${week}`);
+        return;
+      }
     }
 
     setIsSubmitting(true);
@@ -152,13 +189,11 @@ const CaseStudyAdmin: React.FC = () => {
     try {
       await createCaseStudy(
         jsonContent,
-        personImage,
-        companyImage1,
-        companyImage2,
+        weekImages,
         user.id
       );
 
-      setSuccessMessage('Case study created successfully!');
+      setSuccessMessage('Multi-week case study created successfully!');
       resetForm();
       await loadCaseStudies();
     } catch (err) {
@@ -172,17 +207,10 @@ const CaseStudyAdmin: React.FC = () => {
   const resetForm = () => {
     setJsonContent(null);
     setJsonError(null);
-    setPersonImage(null);
-    setCompanyImage1(null);
-    setCompanyImage2(null);
-    setPersonImagePreview(null);
-    setCompanyImage1Preview(null);
-    setCompanyImage2Preview(null);
+    setWeekImages({});
+    setWeekImagePreviews({});
     setShowForm(false);
     if (jsonInputRef.current) jsonInputRef.current.value = '';
-    if (personImageRef.current) personImageRef.current.value = '';
-    if (companyImage1Ref.current) companyImage1Ref.current.value = '';
-    if (companyImage2Ref.current) companyImage2Ref.current.value = '';
   };
 
   const handleDelete = async (caseStudyId: string) => {
@@ -225,11 +253,104 @@ const CaseStudyAdmin: React.FC = () => {
       const study = await getCaseStudyById(caseStudyId);
       if (study) {
         setPreviewCaseStudy(study);
+        // Set first available week as default
+        if (study.weeks) {
+          const weeks = Object.keys(study.weeks).map(Number).sort((a, b) => a - b);
+          setSelectedWeek(weeks[0] || 1);
+        }
+        setEditMode(false);
         setShowPreview(true);
       }
     } catch (err) {
       console.error('Error loading preview:', err);
       setError('Failed to load preview');
+    }
+  };
+
+  const handleEditWeek = () => {
+    if (!previewCaseStudy || !previewCaseStudy.weeks) return;
+    const weekContent = previewCaseStudy.weeks[selectedWeek];
+    if (weekContent) {
+      setEditedContent(JSON.parse(JSON.stringify(weekContent))); // Deep copy
+      setEditMode(true);
+    }
+  };
+
+  const handleSaveEdit = async () => {
+    if (!previewCaseStudy || !editedContent) return;
+
+    try {
+      setIsSubmitting(true);
+      const PERMANENT_CASE_STUDY_ID = 'permanent-case-study';
+
+      // Update the specific week content in Firestore
+      await updateDoc(doc(db, 'caseStudies', PERMANENT_CASE_STUDY_ID), {
+        [`weeks.${selectedWeek}`]: editedContent,
+        updatedAt: serverTimestamp(),
+      });
+
+      setSuccessMessage(`Week ${selectedWeek} updated successfully!`);
+      setEditMode(false);
+
+      // Reload case study
+      const updated = await getCaseStudyById(PERMANENT_CASE_STUDY_ID);
+      if (updated) {
+        setPreviewCaseStudy(updated);
+      }
+      await loadCaseStudies();
+    } catch (err) {
+      console.error('Error saving week:', err);
+      setError('Failed to save changes');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditMode(false);
+    setEditedContent(null);
+  };
+
+  const handleCleanupOldCaseStudies = async () => {
+    if (!confirm('This will DELETE all old case studies and keep only the permanent one. Are you sure?')) {
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      const PERMANENT_ID = 'permanent-case-study';
+
+      // Get all case studies
+      const allStudies = await getAllCaseStudies();
+
+      // Delete all except permanent
+      const deletePromises = allStudies
+        .filter(cs => cs.id !== PERMANENT_ID)
+        .map(cs => deleteCaseStudy(cs.id));
+
+      await Promise.all(deletePromises);
+
+      // Activate the permanent one
+      await setActiveCaseStudy(PERMANENT_ID);
+
+      setSuccessMessage(`Cleaned up ${deletePromises.length} old case studies. Permanent case study is now active!`);
+      await loadCaseStudies();
+    } catch (err) {
+      console.error('Error cleaning up:', err);
+      setError('Failed to cleanup case studies');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSetActiveWeek = async (caseStudyId: string, weekNumber: number) => {
+    try {
+      await setActiveWeek(caseStudyId, weekNumber);
+      setSuccessMessage(`Week ${weekNumber} is now the active week!`);
+      await loadCaseStudies();
+    } catch (err) {
+      console.error('Error setting active week:', err);
+      setError('Failed to set active week');
     }
   };
 
@@ -343,33 +464,91 @@ const CaseStudyAdmin: React.FC = () => {
                               ACTIVE
                             </span>
                           )}
-                          <span className="px-2 py-1 bg-slate-200 text-slate-700 text-xs font-bold rounded-lg">
-                            Week {study.case_study.week}
-                          </span>
-                          <h3 className="font-bold text-slate-800 text-lg">
-                            {study.case_study.subject}
-                          </h3>
+                          {study.weeks ? (
+                            <>
+                              <span className="px-2 py-1 bg-slate-200 text-slate-700 text-xs font-bold rounded-lg">
+                                {Object.keys(study.weeks).length} Weeks
+                              </span>
+                              <h3 className="font-bold text-slate-800 text-lg">
+                                Multi-Week Case Study
+                              </h3>
+                            </>
+                          ) : (
+                            <>
+                              <span className="px-2 py-1 bg-slate-200 text-slate-700 text-xs font-bold rounded-lg">
+                                Week {study.case_study?.week}
+                              </span>
+                              <h3 className="font-bold text-slate-800 text-lg">
+                                {study.case_study?.subject}
+                              </h3>
+                            </>
+                          )}
                         </div>
-                        <p className="text-slate-600 mb-3">{study.case_study.topic}</p>
+                        <p className="text-slate-600 mb-3">
+                          {study.weeks
+                            ? `Weeks: ${Object.keys(study.weeks).sort((a, b) => Number(a) - Number(b)).join(', ')}`
+                            : study.case_study?.topic
+                          }
+                        </p>
+
+                        {study.isActive && study.weeks && (
+                          <div className="mb-3 flex items-center gap-2">
+                            <span className="text-xs font-semibold text-indigo-700">Active Week:</span>
+                            <select
+                              value={study.activeWeek || 1}
+                              onChange={(e) => handleSetActiveWeek(study.id, Number(e.target.value))}
+                              className="px-3 py-1 text-xs font-semibold border-2 border-indigo-400 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            >
+                              {Object.keys(study.weeks).map(Number).sort((a, b) => a - b).map(week => (
+                                <option key={week} value={week}>Week {week}</option>
+                              ))}
+                            </select>
+                            <span className="text-xs text-slate-500">(Students can access weeks 1-{study.activeWeek || 1})</span>
+                          </div>
+                        )}
+
                         <div className="flex items-center gap-4 mb-3">
-                          <img
-                            src={study.personImageUrl}
-                            alt="Person"
-                            className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-md"
-                          />
-                          <img
-                            src={study.companyImageUrl1}
-                            alt="Company 1"
-                            className="w-12 h-12 rounded-lg object-cover border-2 border-white shadow-md"
-                          />
-                          <img
-                            src={study.companyImageUrl2}
-                            alt="Company 2"
-                            className="w-12 h-12 rounded-lg object-cover border-2 border-white shadow-md"
-                          />
+                          {study.weekImages && study.activeWeek && study.weekImages[study.activeWeek] ? (
+                            <>
+                              <img
+                                src={study.weekImages[study.activeWeek].personImageUrl}
+                                alt="Person"
+                                className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-md"
+                              />
+                              <img
+                                src={study.weekImages[study.activeWeek].companyImageUrl1}
+                                alt="Company 1"
+                                className="w-12 h-12 rounded-lg object-cover border-2 border-white shadow-md"
+                              />
+                              <img
+                                src={study.weekImages[study.activeWeek].companyImageUrl2}
+                                alt="Company 2"
+                                className="w-12 h-12 rounded-lg object-cover border-2 border-white shadow-md"
+                              />
+                            </>
+                          ) : (
+                            <>
+                              <img
+                                src={study.personImageUrl}
+                                alt="Person"
+                                className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-md"
+                              />
+                              <img
+                                src={study.companyImageUrl1}
+                                alt="Company 1"
+                                className="w-12 h-12 rounded-lg object-cover border-2 border-white shadow-md"
+                              />
+                              <img
+                                src={study.companyImageUrl2}
+                                alt="Company 2"
+                                className="w-12 h-12 rounded-lg object-cover border-2 border-white shadow-md"
+                              />
+                            </>
+                          )}
                         </div>
                         <p className="text-xs text-slate-500">
-                          Created {study.createdAt.toLocaleDateString()} | {study.case_study.quiz.length} quiz questions
+                          Created {study.createdAt.toLocaleDateString()}
+                          {study.weeks ? ` | ${Object.keys(study.weeks).length} weeks with content` : ` | ${study.case_study?.quiz?.length || 0} quiz questions`}
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
@@ -397,13 +576,6 @@ const CaseStudyAdmin: React.FC = () => {
                             <CheckCircle size={18} />
                           </button>
                         )}
-                        <button
-                          onClick={() => handleDelete(study.id)}
-                          className="p-2 hover:bg-red-100 rounded-lg transition-colors text-red-600"
-                          title="Delete"
-                        >
-                          <Trash2 size={18} />
-                        </button>
                       </div>
                     </div>
                   </div>
@@ -414,12 +586,32 @@ const CaseStudyAdmin: React.FC = () => {
             <div className="mt-6 px-4 py-3 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg border border-indigo-200">
               <div className="flex items-start gap-3">
                 <AlertTriangle size={18} className="text-indigo-600 mt-0.5" />
-                <div className="text-sm text-indigo-700">
+                <div className="text-sm text-indigo-700 flex-1">
                   <p className="font-semibold mb-1">How it works:</p>
-                  <p>Only one case study can be active at a time. The active case study will be visible to all students. Use the Preview button to test before making it live.</p>
+                  <p><strong>Permanent Case Study System:</strong> There is ONE case study that accumulates all weeks. When you upload a new JSON with weeks 1-11, they become weeks {caseStudies[0]?.weeks ? Math.max(...Object.keys(caseStudies[0].weeks).map(Number)) + 1 : 12}-{caseStudies[0]?.weeks ? Math.max(...Object.keys(caseStudies[0].weeks).map(Number)) + 11 : 22}. Toggle active/inactive with the buttons above. Set which week students can currently access using the week selector.</p>
                 </div>
               </div>
             </div>
+
+            {caseStudies.length > 1 && (
+              <div className="mt-4 px-4 py-3 bg-gradient-to-r from-red-50 to-orange-50 rounded-lg border border-red-200">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle size={18} className="text-red-600 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm text-red-700 font-semibold mb-2">Old case studies detected!</p>
+                    <p className="text-sm text-red-600 mb-3">You have {caseStudies.length - 1} old case studies. Click below to delete them and keep only the permanent one.</p>
+                    <button
+                      onClick={handleCleanupOldCaseStudies}
+                      disabled={isSubmitting}
+                      className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold text-sm transition-colors disabled:opacity-50 flex items-center gap-2"
+                    >
+                      <Trash2 size={16} />
+                      {isSubmitting ? 'Cleaning up...' : 'Delete Old Case Studies'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -467,101 +659,120 @@ const CaseStudyAdmin: React.FC = () => {
                         <span className="font-semibold">JSON Loaded Successfully</span>
                       </div>
                       <div className="mt-2 text-sm text-green-600">
-                        <p><strong>Week:</strong> {jsonContent.week}</p>
-                        <p><strong>Subject:</strong> {jsonContent.subject}</p>
-                        <p><strong>Topic:</strong> {jsonContent.topic}</p>
-                        <p><strong>Quiz Questions:</strong> {jsonContent.quiz?.length || 0}</p>
+                        <p><strong>Total Weeks:</strong> {Object.keys(jsonContent).length}</p>
+                        <p><strong>Weeks:</strong> {Object.keys(jsonContent).map(w => `Week ${w}`).join(', ')}</p>
                       </div>
                     </div>
                   )}
                 </div>
 
-                {/* Image Uploads */}
-                <div className="grid grid-cols-3 gap-4">
-                  {/* Person Image */}
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
-                      <User className="inline mr-1" size={14} />
-                      Person Image
-                    </label>
-                    <input
-                      ref={personImageRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => handleImageUpload(e, 'person')}
-                      className="hidden"
-                    />
-                    <button
-                      onClick={() => personImageRef.current?.click()}
-                      className="w-full aspect-square border-2 border-dashed border-slate-300 rounded-xl hover:border-indigo-400 hover:bg-indigo-50/50 transition-all duration-200 flex flex-col items-center justify-center overflow-hidden"
-                    >
-                      {personImagePreview ? (
-                        <img src={personImagePreview} alt="Person" className="w-full h-full object-cover" />
-                      ) : (
-                        <>
-                          <Image size={24} className="text-slate-400" />
-                          <span className="text-xs text-slate-500 mt-1">Upload</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
+                {/* Image Uploads Per Week */}
+                {jsonContent && Object.keys(jsonContent).length > 0 && (
+                  <div className="space-y-6">
+                    <h4 className="font-bold text-slate-800 text-sm">Upload Images for Each Week</h4>
+                    {Object.keys(jsonContent).sort((a, b) => Number(a) - Number(b)).map(weekStr => {
+                      const week = Number(weekStr);
+                      const weekContent = jsonContent[week];
+                      const images = weekImages[week] || {};
+                      const previews = weekImagePreviews[week] || {};
 
-                  {/* Company Image 1 */}
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
-                      <Building2 className="inline mr-1" size={14} />
-                      Company Image 1
-                    </label>
-                    <input
-                      ref={companyImage1Ref}
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => handleImageUpload(e, 'company1')}
-                      className="hidden"
-                    />
-                    <button
-                      onClick={() => companyImage1Ref.current?.click()}
-                      className="w-full aspect-square border-2 border-dashed border-slate-300 rounded-xl hover:border-indigo-400 hover:bg-indigo-50/50 transition-all duration-200 flex flex-col items-center justify-center overflow-hidden"
-                    >
-                      {companyImage1Preview ? (
-                        <img src={companyImage1Preview} alt="Company 1" className="w-full h-full object-cover" />
-                      ) : (
-                        <>
-                          <Image size={24} className="text-slate-400" />
-                          <span className="text-xs text-slate-500 mt-1">Upload</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
+                      return (
+                        <div key={week} className="p-4 border-2 border-indigo-200 rounded-xl bg-indigo-50/30">
+                          <h5 className="font-bold text-indigo-900 mb-3 flex items-center gap-2">
+                            <span className="px-2 py-0.5 bg-indigo-600 text-white text-xs rounded">Week {week}</span>
+                            <span className="text-sm">{weekContent.subject}</span>
+                          </h5>
 
-                  {/* Company Image 2 */}
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
-                      <Sparkles className="inline mr-1" size={14} />
-                      Company Image 2
-                    </label>
-                    <input
-                      ref={companyImage2Ref}
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => handleImageUpload(e, 'company2')}
-                      className="hidden"
-                    />
-                    <button
-                      onClick={() => companyImage2Ref.current?.click()}
-                      className="w-full aspect-square border-2 border-dashed border-slate-300 rounded-xl hover:border-indigo-400 hover:bg-indigo-50/50 transition-all duration-200 flex flex-col items-center justify-center overflow-hidden"
-                    >
-                      {companyImage2Preview ? (
-                        <img src={companyImage2Preview} alt="Company 2" className="w-full h-full object-cover" />
-                      ) : (
-                        <>
-                          <Image size={24} className="text-slate-400" />
-                          <span className="text-xs text-slate-500 mt-1">Upload</span>
-                        </>
-                      )}
-                    </button>
+                          <div className="grid grid-cols-3 gap-3">
+                            {/* Person Image */}
+                            <div>
+                              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                                <User className="inline mr-1" size={12} />
+                                Person
+                              </label>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => handleImageUpload(e, week, 'person')}
+                                className="hidden"
+                                id={`person-${week}`}
+                              />
+                              <label
+                                htmlFor={`person-${week}`}
+                                className="block w-full aspect-square border-2 border-dashed border-slate-300 rounded-lg hover:border-indigo-400 hover:bg-indigo-50 transition-all duration-200 cursor-pointer overflow-hidden"
+                              >
+                                {previews.person ? (
+                                  <img src={previews.person} alt="Person" className="w-full h-full object-cover" />
+                                ) : (
+                                  <div className="w-full h-full flex flex-col items-center justify-center">
+                                    <Image size={20} className="text-slate-400" />
+                                    <span className="text-xs text-slate-500 mt-1">Upload</span>
+                                  </div>
+                                )}
+                              </label>
+                            </div>
+
+                            {/* Company Image 1 */}
+                            <div>
+                              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                                <Building2 className="inline mr-1" size={12} />
+                                Company 1
+                              </label>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => handleImageUpload(e, week, 'company1')}
+                                className="hidden"
+                                id={`company1-${week}`}
+                              />
+                              <label
+                                htmlFor={`company1-${week}`}
+                                className="block w-full aspect-square border-2 border-dashed border-slate-300 rounded-lg hover:border-indigo-400 hover:bg-indigo-50 transition-all duration-200 cursor-pointer overflow-hidden"
+                              >
+                                {previews.company1 ? (
+                                  <img src={previews.company1} alt="Company 1" className="w-full h-full object-cover" />
+                                ) : (
+                                  <div className="w-full h-full flex flex-col items-center justify-center">
+                                    <Image size={20} className="text-slate-400" />
+                                    <span className="text-xs text-slate-500 mt-1">Upload</span>
+                                  </div>
+                                )}
+                              </label>
+                            </div>
+
+                            {/* Company Image 2 */}
+                            <div>
+                              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                                <Sparkles className="inline mr-1" size={12} />
+                                Company 2
+                              </label>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => handleImageUpload(e, week, 'company2')}
+                                className="hidden"
+                                id={`company2-${week}`}
+                              />
+                              <label
+                                htmlFor={`company2-${week}`}
+                                className="block w-full aspect-square border-2 border-dashed border-slate-300 rounded-lg hover:border-indigo-400 hover:bg-indigo-50 transition-all duration-200 cursor-pointer overflow-hidden"
+                              >
+                                {previews.company2 ? (
+                                  <img src={previews.company2} alt="Company 2" className="w-full h-full object-cover" />
+                                ) : (
+                                  <div className="w-full h-full flex flex-col items-center justify-center">
+                                    <Image size={20} className="text-slate-400" />
+                                    <span className="text-xs text-slate-500 mt-1">Upload</span>
+                                  </div>
+                                )}
+                              </label>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                </div>
+                )}
 
                 {/* Actions */}
                 <div className="flex gap-3 pt-4">
@@ -574,7 +785,7 @@ const CaseStudyAdmin: React.FC = () => {
                   </button>
                   <button
                     onClick={handleSubmit}
-                    disabled={isSubmitting || !jsonContent || !personImage || !companyImage1 || !companyImage2}
+                    disabled={isSubmitting || !jsonContent || Object.keys(weekImages).length === 0}
                     className="flex-1 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm font-semibold rounded-xl hover:from-indigo-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg flex items-center justify-center gap-2"
                   >
                     {isSubmitting ? (
@@ -595,13 +806,24 @@ const CaseStudyAdmin: React.FC = () => {
           </div>
         )}
 
-        {/* Preview Modal */}
+        {/* Preview/Edit Modal */}
         {showPreview && previewCaseStudy && (
-          <CaseStudyPreview
+          <CaseStudyWeekViewer
             caseStudy={previewCaseStudy}
+            selectedWeek={selectedWeek}
+            onWeekChange={setSelectedWeek}
+            editMode={editMode}
+            editedContent={editedContent}
+            onContentChange={setEditedContent}
+            onEdit={handleEditWeek}
+            onSave={handleSaveEdit}
+            onCancelEdit={handleCancelEdit}
+            isSubmitting={isSubmitting}
             onClose={() => {
               setShowPreview(false);
               setPreviewCaseStudy(null);
+              setEditMode(false);
+              setEditedContent(null);
             }}
           />
         )}
@@ -610,213 +832,5 @@ const CaseStudyAdmin: React.FC = () => {
   );
 };
 
-// Preview Component
-interface CaseStudyPreviewProps {
-  caseStudy: CaseStudy;
-  onClose: () => void;
-}
-
-const CaseStudyPreview: React.FC<CaseStudyPreviewProps> = ({ caseStudy, onClose }) => {
-  const [currentPage, setCurrentPage] = useState(0);
-  const content = caseStudy.case_study;
-
-  const pages = [
-    { title: 'Introduction', key: 'intro' },
-    { title: content.who_is_this.title, key: 'who' },
-    { title: content.what_happened.title, key: 'what' },
-    { title: content.money_idea.title, key: 'money' },
-    { title: 'Quiz', key: 'quiz' },
-  ];
-
-  return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-        {/* Preview Header */}
-        <div className="px-6 py-4 border-b border-slate-200 bg-gradient-to-r from-indigo-500 to-purple-600 text-white flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Eye size={20} />
-            <span className="font-bold">Preview Mode</span>
-            <span className="px-2 py-1 bg-white/20 rounded text-xs">Week {content.week}</span>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-          >
-            <XCircle size={20} />
-          </button>
-        </div>
-
-        {/* Page Navigation */}
-        <div className="px-6 py-3 border-b border-slate-200 bg-slate-50 flex items-center gap-2 overflow-x-auto">
-          {pages.map((page, index) => (
-            <button
-              key={page.key}
-              onClick={() => setCurrentPage(index)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
-                currentPage === index
-                  ? 'bg-indigo-500 text-white'
-                  : 'bg-white text-slate-600 hover:bg-slate-100'
-              }`}
-            >
-              {index + 1}. {page.title}
-            </button>
-          ))}
-        </div>
-
-        {/* Content Area */}
-        <div className="flex-1 overflow-y-auto p-6">
-          {currentPage === 0 && (
-            <div className="text-center space-y-6">
-              <img
-                src={caseStudy.personImageUrl}
-                alt={content.subject}
-                className="w-48 h-48 rounded-full object-cover mx-auto shadow-2xl border-4 border-white"
-              />
-              <div>
-                <h1 className="text-3xl font-bold text-slate-800 mb-2">{content.subject}</h1>
-                <p className="text-xl text-indigo-600 font-medium">{content.topic}</p>
-              </div>
-              <div className="flex justify-center gap-4">
-                <img
-                  src={caseStudy.companyImageUrl1}
-                  alt="Company 1"
-                  className="w-24 h-24 rounded-xl object-cover shadow-lg"
-                />
-                <img
-                  src={caseStudy.companyImageUrl2}
-                  alt="Company 2"
-                  className="w-24 h-24 rounded-xl object-cover shadow-lg"
-                />
-              </div>
-            </div>
-          )}
-
-          {currentPage === 1 && (
-            <div className="space-y-6">
-              <div className="flex items-center gap-4">
-                <img
-                  src={caseStudy.personImageUrl}
-                  alt={content.subject}
-                  className="w-20 h-20 rounded-full object-cover shadow-lg"
-                />
-                <div>
-                  <h2 className="text-2xl font-bold text-slate-800">{content.who_is_this.title}</h2>
-                  <p className="text-indigo-600">{content.subject}</p>
-                </div>
-              </div>
-              <p className="text-slate-700 leading-relaxed text-lg">{content.who_is_this.content}</p>
-            </div>
-          )}
-
-          {currentPage === 2 && (
-            <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-slate-800">{content.what_happened.title}</h2>
-              <p className="text-slate-700 leading-relaxed text-lg">{content.what_happened.content}</p>
-              <div className="flex gap-4 mt-6">
-                <img
-                  src={caseStudy.companyImageUrl1}
-                  alt="Company 1"
-                  className="w-32 h-32 rounded-xl object-cover shadow-lg"
-                />
-                <img
-                  src={caseStudy.companyImageUrl2}
-                  alt="Company 2"
-                  className="w-32 h-32 rounded-xl object-cover shadow-lg"
-                />
-              </div>
-            </div>
-          )}
-
-          {currentPage === 3 && (
-            <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-slate-800">{content.money_idea.title}</h2>
-
-              <div className="bg-indigo-50 p-6 rounded-xl border border-indigo-200">
-                <h3 className="font-bold text-indigo-800 mb-2">What It Means</h3>
-                <p className="text-slate-700">{content.money_idea.what_it_means}</p>
-              </div>
-
-              <div className="bg-green-50 p-6 rounded-xl border border-green-200">
-                <h3 className="font-bold text-green-800 mb-2">Why It Matters</h3>
-                <p className="text-slate-700">{content.money_idea.why_it_matters}</p>
-              </div>
-
-              {content.money_idea.formula && (
-                <div className="bg-purple-50 p-6 rounded-xl border border-purple-200">
-                  <h3 className="font-bold text-purple-800 mb-2">Formula</h3>
-                  <p className="text-slate-700 font-mono">{content.money_idea.formula}</p>
-                </div>
-              )}
-
-              <div className="bg-red-50 p-6 rounded-xl border border-red-200">
-                <h3 className="font-bold text-red-800 mb-2">Risk</h3>
-                <p className="text-slate-700">{content.money_idea.risk}</p>
-              </div>
-
-              <div className="bg-amber-50 p-6 rounded-xl border border-amber-200">
-                <h3 className="font-bold text-amber-800 mb-2">Real Life Example</h3>
-                <p className="text-slate-700">{content.money_idea.real_life}</p>
-              </div>
-            </div>
-          )}
-
-          {currentPage === 4 && (
-            <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-slate-800">Quiz ({content.quiz.length} Questions)</h2>
-              <div className="space-y-4">
-                {content.quiz.map((q, idx) => (
-                  <div key={idx} className="bg-slate-50 p-5 rounded-xl border border-slate-200">
-                    <p className="font-semibold text-slate-800 mb-3">
-                      {idx + 1}. {q.question}
-                    </p>
-                    <div className="grid grid-cols-2 gap-2">
-                      {q.options.map((opt, optIdx) => (
-                        <div
-                          key={optIdx}
-                          className={`px-4 py-2 rounded-lg text-sm ${
-                            opt === q.answer
-                              ? 'bg-green-100 text-green-700 font-semibold border border-green-300'
-                              : 'bg-white text-slate-600 border border-slate-200'
-                          }`}
-                        >
-                          {opt}
-                        </div>
-                      ))}
-                    </div>
-                    <p className="text-xs text-slate-500 mt-3 italic">
-                      Teaching Point: {q.teaching_point}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Navigation Footer */}
-        <div className="px-6 py-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
-          <button
-            onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
-            disabled={currentPage === 0}
-            className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            Previous
-          </button>
-          <span className="text-sm text-slate-500">
-            Page {currentPage + 1} of {pages.length}
-          </span>
-          <button
-            onClick={() => setCurrentPage(Math.min(pages.length - 1, currentPage + 1))}
-            disabled={currentPage === pages.length - 1}
-            className="px-4 py-2 text-sm font-medium bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1"
-          >
-            Next
-            <ChevronRight size={16} />
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 export default CaseStudyAdmin;
+
