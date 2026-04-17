@@ -211,8 +211,10 @@ const CaseStudyRoadmap: React.FC = () => {
             const isHovered = hoveredWeek === week;
 
             // Get week content
-            const weekContent = caseStudy.weeks?.[week] || caseStudy.weeks?.[String(week)];
-            const weekImages = caseStudy.weekImages?.[week] || caseStudy.weekImages?.[String(week)];
+            const weeksData = caseStudy.weeks as Record<string | number, any> | undefined;
+            const weekImagesData = caseStudy.weekImages as Record<string | number, any> | undefined;
+            const weekContent = weeksData?.[week] || weeksData?.[String(week)];
+            const weekImages = weekImagesData?.[week] || weekImagesData?.[String(week)];
 
             return (
               <motion.div

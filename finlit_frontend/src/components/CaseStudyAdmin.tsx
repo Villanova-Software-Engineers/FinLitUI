@@ -646,7 +646,7 @@ const CaseStudyAdmin: React.FC = () => {
                   >
                     <Upload size={24} className="text-slate-400" />
                     <span className="text-sm text-slate-600">
-                      {jsonContent ? `Loaded: Week ${jsonContent.week} - ${jsonContent.subject}` : 'Click to upload JSON file'}
+                      {jsonContent ? `Loaded: ${Object.keys(jsonContent).length} week(s)` : 'Click to upload JSON file'}
                     </span>
                   </button>
                   {jsonError && (

@@ -32,15 +32,17 @@ export const CaseStudyWeekViewer: React.FC<CaseStudyWeekViewerProps> = ({
   const [currentSection, setCurrentSection] = useState(0);
 
   // Get content for the selected week
+  const weeksData = caseStudy.weeks as Record<string | number, typeof editedContent> | undefined;
   const weekContent = editMode && editedContent
     ? editedContent
-    : caseStudy.weeks?.[selectedWeek] || caseStudy.weeks?.[String(selectedWeek)];
+    : weeksData?.[selectedWeek] || weeksData?.[String(selectedWeek)];
 
   if (!weekContent) {
     return null;
   }
 
-  const weekImageData = caseStudy.weekImages?.[selectedWeek] || caseStudy.weekImages?.[String(selectedWeek)];
+  const weekImagesData = caseStudy.weekImages as Record<string | number, any> | undefined;
+  const weekImageData = weekImagesData?.[selectedWeek] || weekImagesData?.[String(selectedWeek)];
 
   const sections = [
     { title: 'Overview', key: 'overview' },
