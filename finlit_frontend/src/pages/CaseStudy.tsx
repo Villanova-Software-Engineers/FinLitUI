@@ -37,6 +37,7 @@ import {
   getCaseStudyProgress,
   saveCaseStudyProgress,
   completeCaseStudy,
+  isCaseStudyAccessible,
 } from '../firebase/firestore.service';
 import { shuffleQuizOptions } from '../utils/shuffleQuizOptions';
 
@@ -54,6 +55,7 @@ const CaseStudyPage: React.FC = () => {
   const [currentQuizIndex, setCurrentQuizIndex] = useState(0);
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [finalScore, setFinalScore] = useState<{ score: number; passed: boolean } | null>(null);
+  const [isLocked, setIsLocked] = useState(false);
   const currentWeek = parseInt(weekParam || '1');
 
   // Get content for current week (supports both multi-week and legacy formats)
@@ -96,6 +98,19 @@ const CaseStudyPage: React.FC = () => {
     setLoading(true);
     try {
       const study = await getActiveCaseStudy();
+
+      // Check if case study is locked by admin
+      if (study && user?.organizationId && user?.role === 'student') {
+        const accessible = await isCaseStudyAccessible(user.organizationId, study.id);
+        setIsLocked(!accessible);
+
+        if (!accessible) {
+          setCaseStudy(null);
+          setLoading(false);
+          return;
+        }
+      }
+
       setCaseStudy(study);
 
       if (study && user) {
@@ -186,6 +201,26 @@ const CaseStudyPage: React.FC = () => {
         <div className="text-center">
           <Loader2 className="animate-spin mx-auto text-indigo-600" size={48} />
           <p className="text-gray-500 mt-4 font-medium tracking-wide">LOADING CASE STUDY</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLocked) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="text-center max-w-md bg-white rounded-3xl p-10 shadow-2xl border border-red-100">
+          <div className="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Shield className="text-red-600" size={48} />
+          </div>
+          <h1 className="text-3xl font-black text-gray-900 mb-3">🔒 Case Study Locked</h1>
+          <p className="text-gray-500 mb-8 text-lg">This case study has been locked by your instructor. Contact them to unlock access.</p>
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="px-8 py-4 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200"
+          >
+            Back to Dashboard
+          </button>
         </div>
       </div>
     );

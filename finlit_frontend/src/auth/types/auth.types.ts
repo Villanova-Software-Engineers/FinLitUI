@@ -21,6 +21,14 @@ export interface OrganizationAdmin {
   addedAt: Date;
 }
 
+// Module/Case Study Lock Status
+export interface ContentLock {
+  lockedBySuperAdmin: boolean; // If true, org admin cannot unlock
+  lockedByOrgAdmin: boolean;   // If true, students cannot access
+  lockedAt: Date;
+  lockedBy: string; // userId who last modified the lock
+}
+
 // Organization structure in Firestore
 export interface Organization {
   id: string;
@@ -30,6 +38,9 @@ export interface Organization {
   admins: OrganizationAdmin[]; // Array of all admins
   createdBy: string; // Owner who created this org
   createdAt: Date;
+  // Content locking for this organization
+  lockedModules?: { [moduleId: string]: ContentLock };
+  lockedCaseStudies?: { [caseStudyId: string]: ContentLock };
 }
 
 // Class/Code structure in Firestore (created by admin)

@@ -43,6 +43,7 @@ import type {
   CaseStudyProgress,
   MoneyPersonalityResult,
   SavedCalculation,
+  ContentLock,
 } from '../auth/types/auth.types';
 
 // Type helper for Firestore documents with serverTimestamp
@@ -2059,4 +2060,224 @@ export async function clearMoneyPersonalityResult(userId: string): Promise<void>
     moneyPersonality: null,
     lastActivityAt: serverTimestamp(),
   });
+}
+
+// ============== Content Locking Functions ==============
+
+/**
+ * Lock/Unlock a module for an organization (Super Admin only)
+ * When locked by super admin, org admins cannot unlock it
+ */
+export async function setModuleLockBySuperAdmin(
+  organizationId: string,
+  moduleId: string,
+  locked: boolean,
+  userId: string
+): Promise<void> {
+  const orgRef = doc(db, ORGANIZATIONS, organizationId);
+  const org = await getOrganization(organizationId);
+
+  if (!org) {
+    throw new Error('Organization not found');
+  }
+
+  const lockedModules = org.lockedModules || {};
+
+  if (locked) {
+    // Lock the module for this organization
+    lockedModules[moduleId] = {
+      lockedBySuperAdmin: true,
+      lockedByOrgAdmin: false, // Super admin lock overrides org admin lock
+      lockedAt: new Date(),
+      lockedBy: userId,
+    };
+  } else {
+    // Unlock the module - remove the lock entirely
+    delete lockedModules[moduleId];
+  }
+
+  await updateDoc(orgRef, {
+    lockedModules,
+  });
+}
+
+/**
+ * Lock/Unlock a module for students (Org Admin only)
+ * Can only lock/unlock if not locked by super admin
+ */
+export async function setModuleLockByOrgAdmin(
+  organizationId: string,
+  moduleId: string,
+  locked: boolean,
+  userId: string
+): Promise<void> {
+  const orgRef = doc(db, ORGANIZATIONS, organizationId);
+  const org = await getOrganization(organizationId);
+
+  if (!org) {
+    throw new Error('Organization not found');
+  }
+
+  const lockedModules = org.lockedModules || {};
+  const existingLock = lockedModules[moduleId];
+
+  // Check if locked by super admin
+  if (existingLock?.lockedBySuperAdmin) {
+    throw new Error('Cannot modify module locked by super admin');
+  }
+
+  if (locked) {
+    // Lock the module for students
+    lockedModules[moduleId] = {
+      lockedBySuperAdmin: false,
+      lockedByOrgAdmin: true,
+      lockedAt: new Date(),
+      lockedBy: userId,
+    };
+  } else {
+    // Unlock the module for students
+    delete lockedModules[moduleId];
+  }
+
+  await updateDoc(orgRef, {
+    lockedModules,
+  });
+}
+
+/**
+ * Lock/Unlock a case study for an organization (Super Admin only)
+ */
+export async function setCaseStudyLockBySuperAdmin(
+  organizationId: string,
+  caseStudyId: string,
+  locked: boolean,
+  userId: string
+): Promise<void> {
+  const orgRef = doc(db, ORGANIZATIONS, organizationId);
+  const org = await getOrganization(organizationId);
+
+  if (!org) {
+    throw new Error('Organization not found');
+  }
+
+  const lockedCaseStudies = org.lockedCaseStudies || {};
+
+  if (locked) {
+    lockedCaseStudies[caseStudyId] = {
+      lockedBySuperAdmin: true,
+      lockedByOrgAdmin: false,
+      lockedAt: new Date(),
+      lockedBy: userId,
+    };
+  } else {
+    delete lockedCaseStudies[caseStudyId];
+  }
+
+  await updateDoc(orgRef, {
+    lockedCaseStudies,
+  });
+}
+
+/**
+ * Lock/Unlock a case study for students (Org Admin only)
+ */
+export async function setCaseStudyLockByOrgAdmin(
+  organizationId: string,
+  caseStudyId: string,
+  locked: boolean,
+  userId: string
+): Promise<void> {
+  const orgRef = doc(db, ORGANIZATIONS, organizationId);
+  const org = await getOrganization(organizationId);
+
+  if (!org) {
+    throw new Error('Organization not found');
+  }
+
+  const lockedCaseStudies = org.lockedCaseStudies || {};
+  const existingLock = lockedCaseStudies[caseStudyId];
+
+  if (existingLock?.lockedBySuperAdmin) {
+    throw new Error('Cannot modify case study locked by super admin');
+  }
+
+  if (locked) {
+    lockedCaseStudies[caseStudyId] = {
+      lockedBySuperAdmin: false,
+      lockedByOrgAdmin: true,
+      lockedAt: new Date(),
+      lockedBy: userId,
+    };
+  } else {
+    delete lockedCaseStudies[caseStudyId];
+  }
+
+  await updateDoc(orgRef, {
+    lockedCaseStudies,
+  });
+}
+
+/**
+ * Check if a module is accessible to a student
+ * Returns true if student can access (not locked)
+ */
+export async function isModuleAccessible(
+  organizationId: string,
+  moduleId: string
+): Promise<boolean> {
+  const org = await getOrganization(organizationId);
+
+  if (!org) {
+    return true; // Default to accessible if org not found
+  }
+
+  const lock = org.lockedModules?.[moduleId];
+
+  if (!lock) {
+    return true; // No lock = accessible
+  }
+
+  // Locked if either super admin or org admin has locked it
+  return !(lock.lockedBySuperAdmin || lock.lockedByOrgAdmin);
+}
+
+/**
+ * Check if a case study is accessible to a student
+ */
+export async function isCaseStudyAccessible(
+  organizationId: string,
+  caseStudyId: string
+): Promise<boolean> {
+  const org = await getOrganization(organizationId);
+
+  if (!org) {
+    return true;
+  }
+
+  const lock = org.lockedCaseStudies?.[caseStudyId];
+
+  if (!lock) {
+    return true;
+  }
+
+  return !(lock.lockedBySuperAdmin || lock.lockedByOrgAdmin);
+}
+
+/**
+ * Get all locked content for an organization
+ */
+export async function getOrganizationLocks(organizationId: string): Promise<{
+  modules: { [moduleId: string]: ContentLock };
+  caseStudies: { [caseStudyId: string]: ContentLock };
+}> {
+  const org = await getOrganization(organizationId);
+
+  if (!org) {
+    return { modules: {}, caseStudies: {} };
+  }
+
+  return {
+    modules: org.lockedModules || {},
+    caseStudies: org.lockedCaseStudies || {},
+  };
 }

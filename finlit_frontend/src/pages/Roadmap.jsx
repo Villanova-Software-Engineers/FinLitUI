@@ -3,6 +3,7 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../auth/context/AuthContext';
 import { useModuleScore, MODULES } from '../hooks/useModuleScore';
+import { isModuleAccessible as checkModuleAccessibility } from '../firebase/firestore.service';
 
 const FinancialRoadmap = () => {
   const { scrollYProgress } = useScroll();
@@ -10,10 +11,29 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 0.7], [0, 1]);
   const [visibleModules, setVisibleModules] = useState(3);
   const [pathProgress, setPathProgress] = useState(0);
   const [lockedMessage, setLockedMessage] = useState(null);
+  const [adminLockedModules, setAdminLockedModules] = useState(new Set());
   const scrollRef = useRef(null);
   const navigate = useNavigate();
   const { user } = useAuthContext();
   const { isModulePassed, progress } = useModuleScore();
+
+  // Load admin-locked modules on mount
+  useEffect(() => {
+    const loadLockedModules = async () => {
+      if (user?.organizationId && user?.role === 'student') {
+        const locked = new Set();
+        // Check all modules for locks
+        for (const moduleId of Object.values(MODULES).map(m => m.id)) {
+          const accessible = await checkModuleAccessibility(user.organizationId, moduleId);
+          if (!accessible) {
+            locked.add(moduleId);
+          }
+        }
+        setAdminLockedModules(locked);
+      }
+    };
+    loadLockedModules();
+  }, [user?.organizationId, user?.role]);
 
 
   // Show locked message temporarily
@@ -60,22 +80,28 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 0.7], [0, 1]);
     MODULES.GIVING.id,                 // 23. Giving Back
   ];
 
-  // Check if a module is accessible (previous module passed or is first module)
-  const isModuleAccessible = useCallback((moduleIndex) => {
-    if (moduleIndex === 0) return true; // First module always accessible
+  // Check if a module is accessible (previous module passed AND not locked by admin)
+  const isModuleAccessible = useCallback((moduleIndex, moduleId) => {
+    // Check if locked by admin first
+    if (adminLockedModules.has(moduleId)) return false;
+
+    if (moduleIndex === 0) return true; // First module always accessible (unless locked by admin)
     const previousModuleId = moduleOrder[moduleIndex - 1];
     return isModulePassed(previousModuleId);
-  }, [isModulePassed]);
+  }, [isModulePassed, adminLockedModules]);
 
   // Get module status based on progress
   const getModuleStatus = useCallback((moduleId, moduleIndex) => {
+    // Check if locked by admin first
+    if (adminLockedModules.has(moduleId)) return 'Locked by Admin';
+
     if (isModulePassed(moduleId)) return 'Completed';
-    if (!isModuleAccessible(moduleIndex)) return 'Locked';
+    if (!isModuleAccessible(moduleIndex, moduleId)) return 'Locked';
     // Check if there's any progress on this module
     const moduleScore = progress?.moduleScores?.find(s => s.moduleId === moduleId);
     if (moduleScore && moduleScore.attempts > 0) return 'In Progress';
     return 'Next Up';
-  }, [isModulePassed, isModuleAccessible, progress?.moduleScores]);
+  }, [isModulePassed, isModuleAccessible, progress?.moduleScores, adminLockedModules]);
 
   // All modules in one continuous journey - status is now dynamically calculated
   const allModulesBase = [
@@ -460,6 +486,7 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 0.7], [0, 1]);
       case "In Progress": return "text-blue-500";
       case "Next Up": return "text-purple-500";
       case "Locked": return "text-gray-400";
+      case "Locked by Admin": return "text-red-500";
       default: return "text-gray-600";
     }
   };
@@ -470,6 +497,7 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 0.7], [0, 1]);
       case "In Progress": return "bg-blue-100";
       case "Next Up": return "bg-purple-100";
       case "Locked": return "bg-gray-100";
+      case "Locked by Admin": return "bg-red-100";
       default: return "bg-gray-100";
     }
   };
@@ -661,7 +689,7 @@ height={svgHeight}
                         {module.status}
                       </p>
                     </div>
-                    {module.status !== 'Locked' && (
+                    {module.status !== 'Locked' && module.status !== 'Locked by Admin' && (
                       <div className="text-blue-500">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -681,7 +709,7 @@ height={svgHeight}
                   >
                     <p className="py-3 text-gray-600 text-sm">{module.description}</p>
                     <div className="space-y-2">
-                      {module.status !== 'Locked' ? (
+                      {module.status !== 'Locked' && module.status !== 'Locked by Admin' ? (
                         <>
                           <button
                             className="mt-1 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors w-full font-medium text-sm"
@@ -699,10 +727,14 @@ height={svgHeight}
                           </div>
                         </>
                       ) : (
-                        <div className="mt-2 p-3 bg-gray-100 rounded-lg text-center">
-                          <div className="text-gray-500 text-sm font-medium mb-1">Module Locked</div>
-                          <div className="text-xs text-gray-400">
-                            Complete the previous module to unlock
+                        <div className={`mt-2 p-3 rounded-lg text-center ${module.status === 'Locked by Admin' ? 'bg-red-50' : 'bg-gray-100'}`}>
+                          <div className={`text-sm font-medium mb-1 ${module.status === 'Locked by Admin' ? 'text-red-600' : 'text-gray-500'}`}>
+                            {module.status === 'Locked by Admin' ? '🔒 Locked by Instructor' : 'Module Locked'}
+                          </div>
+                          <div className={`text-xs ${module.status === 'Locked by Admin' ? 'text-red-500' : 'text-gray-400'}`}>
+                            {module.status === 'Locked by Admin'
+                              ? 'Contact your instructor to unlock this module'
+                              : 'Complete the previous module to unlock'}
                           </div>
                         </div>
                       )}
@@ -714,7 +746,7 @@ height={svgHeight}
               
               {/* Node on the path */}
               <div 
-                className={`absolute top-1/2 -mt-3 ${module.position === 'left' ? 'right-4' : 'left-4'} w-6 h-6 rounded-full z-10 flex items-center justify-center ${module.status === 'Locked' ? 'bg-gray-300' : 'bg-blue-500'}`} 
+                className={`absolute top-1/2 -mt-3 ${module.position === 'left' ? 'right-4' : 'left-4'} w-6 h-6 rounded-full z-10 flex items-center justify-center ${module.status === 'Locked' || module.status === 'Locked by Admin' ? (module.status === 'Locked by Admin' ? 'bg-red-400' : 'bg-gray-300') : 'bg-blue-500'}`} 
               >
                 {module.status === 'Completed' && (
                   <motion.svg 
