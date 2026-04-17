@@ -1,10 +1,10 @@
 /**
  * Admin Management Component
- * Allows organization admins to add/remove other admins
- * Super admin (first admin) cannot be deleted
+ * Styled exactly like What is Money module - colorful boxes, white backgrounds, same design
  */
 
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   UserPlus,
   Trash2,
@@ -17,6 +17,9 @@ import {
   X,
   Loader2,
   Copy,
+  Sparkles,
+  Award,
+  Users,
 } from 'lucide-react';
 import {
   getOrganizationAdmins,
@@ -146,264 +149,336 @@ const AdminManagement: React.FC<AdminManagementProps> = ({
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center p-12">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      <div className="min-h-screen flex justify-center items-center" style={{ background: 'linear-gradient(120deg, #e0f7fa 0%, #e8f5e9 50%, #e3f2fd 100%)' }}>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center"
+        >
+          <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
+          <p className="text-gray-600 font-semibold tracking-wide">Loading Admins...</p>
+        </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Management</h1>
-        <p className="text-gray-600">
-          Manage administrators for <span className="font-semibold">{organizationName}</span>
-        </p>
+    <div className="min-h-screen relative overflow-x-hidden pb-12" style={{ background: 'linear-gradient(120deg, #e0f7fa 0%, #e8f5e9 50%, #e3f2fd 100%)' }}>
+      <div className="max-w-5xl mx-auto pt-16 px-6">
+        {/* Header Section */}
+        <motion.div
+          className="text-center mb-12"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <div className="flex justify-center mb-6">
+            <div className="w-20 h-20 rounded-2xl bg-blue-500 flex items-center justify-center shadow-lg">
+              <Users className="h-10 w-10 text-white" />
+            </div>
+          </div>
+          <h1 className="text-5xl font-bold mb-4 text-gray-800">Admin Management</h1>
+          <p className="text-xl text-gray-600">
+            Manage administrators for <span className="font-bold text-blue-600">{organizationName}</span>
+          </p>
+        </motion.div>
+
+        {/* Status Messages */}
+        <AnimatePresence>
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="mb-6 bg-red-50 border-2 border-red-200 rounded-2xl p-6 flex items-start gap-4"
+            >
+              <AlertCircle className="h-6 w-6 text-red-600 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-red-900">Error</h3>
+                <p className="text-red-700 mt-1">{error}</p>
+              </div>
+              <button onClick={() => setError(null)} className="text-red-600 hover:text-red-800">
+                <X className="h-5 w-5" />
+              </button>
+            </motion.div>
+          )}
+
+          {success && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="mb-6 bg-green-50 border-2 border-green-200 rounded-2xl p-6 flex items-start gap-4"
+            >
+              <Check className="h-6 w-6 text-green-600 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-green-900">Success</h3>
+                <p className="text-green-700 mt-1">{success}</p>
+                {generatedPassword && (
+                  <div className="mt-4 bg-white border-2 border-green-300 rounded-xl p-4">
+                    <p className="text-sm font-bold text-gray-900 mb-3">
+                      Generated Password (share this with the new admin):
+                    </p>
+                    <div className="flex items-center gap-3">
+                      <code className="flex-1 bg-gray-50 px-4 py-3 rounded-lg border-2 border-gray-200 text-base font-mono font-semibold text-slate-900">
+                        {generatedPassword}
+                      </code>
+                      <button
+                        onClick={() => copyToClipboard(generatedPassword)}
+                        className="px-5 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors flex items-center gap-2 font-bold shadow-lg"
+                      >
+                        {copied ? <Check className="h-5 w-5" /> : <Copy className="h-5 w-5" />}
+                        {copied ? 'Copied!' : 'Copy'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <button onClick={() => setSuccess(null)} className="text-green-600 hover:text-green-800">
+                <X className="h-5 w-5" />
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Super Admin or View Only Info Box */}
+        {isSuperAdmin ? (
+          <div className="flex justify-center mb-8">
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="px-10 py-4 rounded-2xl bg-blue-500 text-white font-bold text-lg shadow-xl hover:bg-blue-600 transition flex items-center gap-3"
+            >
+              <UserPlus className="h-6 w-6" />
+              Add New Admin
+            </button>
+          </div>
+        ) : (
+          <motion.div
+            className="p-8 rounded-3xl shadow-xl bg-white mb-8"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <div className="flex items-start gap-4">
+              <div className="w-16 h-16 rounded-2xl bg-amber-500 flex items-center justify-center shadow-lg flex-shrink-0">
+                <AlertCircle className="h-8 w-8 text-white" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold text-gray-800 mb-3">View Only Access</h3>
+                <p className="text-gray-700 text-lg leading-relaxed">
+                  You can view the admin list, but only the <span className="font-bold text-amber-600">organization super admin</span> can add or remove admins.
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Admin Cards - Same style as What is Money boxes */}
+        <div className="space-y-6 mb-12">
+          {admins.map((admin, index) => (
+            <motion.div
+              key={admin.userId}
+              className="p-8 rounded-3xl shadow-xl bg-white"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.1 }}
+            >
+              <div className="flex items-start gap-4">
+                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0 ${
+                  admin.isSuperAdmin ? 'bg-amber-500' : 'bg-blue-500'
+                }`}>
+                  {admin.isSuperAdmin ? (
+                    <Shield className="h-8 w-8 text-white" />
+                  ) : (
+                    <ShieldAlert className="h-8 w-8 text-white" />
+                  )}
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-3 flex-wrap">
+                    <h3 className="text-2xl font-bold text-gray-800">
+                      {admin.displayName || 'Admin'}
+                    </h3>
+                    {admin.isSuperAdmin && (
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                        <Award className="h-3 w-3 mr-1" />
+                        Super Admin
+                      </span>
+                    )}
+                    {admin.userId === currentUserId && (
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-blue-100 text-blue-800 border border-blue-200">
+                        You
+                      </span>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-gray-700">
+                      <Mail className="h-5 w-5 text-gray-500" />
+                      <span className="text-lg font-medium">{admin.email}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <Clock className="h-5 w-5 text-gray-500" />
+                      <span>Added {formatDate(admin.addedAt)}</span>
+                    </div>
+                  </div>
+                  {admin.isSuperAdmin && (
+                    <div className="mt-4 bg-amber-50 border border-amber-200 rounded-xl p-3">
+                      <p className="text-sm text-amber-900 font-medium">
+                        ⭐ First admin created for this organization. Cannot be removed.
+                      </p>
+                    </div>
+                  )}
+                </div>
+                {!admin.isSuperAdmin && isSuperAdmin && (
+                  <button
+                    onClick={() => handleRemoveAdmin(admin.userId, admin.email)}
+                    className="px-4 py-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-all border-2 border-red-200 font-bold flex items-center gap-2"
+                    title="Remove admin"
+                  >
+                    <Trash2 className="h-5 w-5" />
+                    Remove
+                  </button>
+                )}
+              </div>
+            </motion.div>
+          ))}
+
+          {admins.length === 0 && (
+            <motion.div
+              className="p-12 rounded-3xl shadow-xl bg-white text-center"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+            >
+              <ShieldAlert className="h-16 w-16 mx-auto mb-4 text-gray-400" />
+              <p className="text-gray-600 text-lg">No admins found</p>
+            </motion.div>
+          )}
+        </div>
+
+        {/* Info Box - Same style as What is Money */}
+        <motion.div
+          className="p-8 rounded-3xl shadow-xl bg-white"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6 }}
+        >
+          <div className="flex items-start gap-4">
+            <div className="w-16 h-16 rounded-2xl bg-green-500 flex items-center justify-center shadow-lg flex-shrink-0">
+              <AlertCircle className="h-8 w-8 text-white" />
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-gray-800 mb-4">Admin Permissions</h3>
+              <div className="space-y-3">
+                {[
+                  "Only the organization super admin can add or remove admins",
+                  "The super admin (first admin) cannot be removed",
+                  "All admins have full access to manage students, classes, and content",
+                  "Regular admins can view the admin list but cannot modify it"
+                ].map((item, i) => (
+                  <div key={i} className="flex items-start gap-3">
+                    <span className="text-green-600 font-bold text-2xl">✓</span>
+                    <p className="text-gray-700 text-lg">{item}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </motion.div>
       </div>
 
-      {/* Status Messages */}
-      {error && (
-        <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
-          <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
-          <div className="flex-1">
-            <h3 className="text-sm font-medium text-red-800">Error</h3>
-            <p className="text-sm text-red-700 mt-1">{error}</p>
-          </div>
-          <button onClick={() => setError(null)} className="text-red-600 hover:text-red-800">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-      )}
-
-      {success && (
-        <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">
-          <Check className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
-          <div className="flex-1">
-            <h3 className="text-sm font-medium text-green-800">Success</h3>
-            <p className="text-sm text-green-700 mt-1">{success}</p>
-            {generatedPassword && (
-              <div className="mt-3 bg-white border border-green-300 rounded-lg p-3">
-                <p className="text-sm font-medium text-gray-900 mb-2">
-                  Generated Password (share this with the new admin):
-                </p>
-                <div className="flex items-center gap-2">
-                  <code className="flex-1 bg-gray-50 px-3 py-2 rounded border text-sm font-mono">
-                    {generatedPassword}
-                  </code>
-                  <button
-                    onClick={() => copyToClipboard(generatedPassword)}
-                    className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
-                  >
-                    {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                    {copied ? 'Copied!' : 'Copy'}
-                  </button>
-                </div>
-                <p className="text-xs text-gray-600 mt-2">
-                  The admin can change this password after their first login.
-                </p>
-              </div>
-            )}
-          </div>
-          <button onClick={() => setSuccess(null)} className="text-green-600 hover:text-green-800">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-      )}
-
-      {/* Add Admin Button - Only visible to super admin */}
-      {isSuperAdmin ? (
-        <div className="mb-6">
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-sm"
+      {/* Add Admin Modal - Styled like What is Money */}
+      <AnimatePresence>
+        {showAddModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            onClick={() => {
+              setShowAddModal(false);
+              setNewAdminEmail('');
+              setError(null);
+            }}
           >
-            <UserPlus className="h-5 w-5" />
-            Add New Admin
-          </button>
-        </div>
-      ) : (
-        <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
-            <div className="text-sm text-yellow-800">
-              <p className="font-medium mb-1">View Only Access</p>
-              <p className="text-yellow-700">
-                You can view the admin list, but only the organization super admin can add or remove admins.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Add Admin Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-gray-900">Add New Admin</h2>
-              <button
-                onClick={() => {
-                  setShowAddModal(false);
-                  setNewAdminEmail('');
-                  setError(null);
-                }}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="h-6 w-6" />
-              </button>
-            </div>
-
-            <form onSubmit={handleAddAdmin}>
-              <div className="mb-4">
-                <label htmlFor="adminEmail" className="block text-sm font-medium text-gray-700 mb-2">
-                  Admin Email
-                </label>
-                <input
-                  id="adminEmail"
-                  type="email"
-                  value={newAdminEmail}
-                  onChange={(e) => setNewAdminEmail(e.target.value)}
-                  placeholder="admin@example.com"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  disabled={isAdding}
-                />
-                <p className="text-xs text-gray-500 mt-2">
-                  A temporary password will be generated and displayed after creation.
-                </p>
-              </div>
-
-              <div className="flex gap-3">
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-8"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-blue-500 flex items-center justify-center shadow-lg">
+                    <UserPlus className="h-6 w-6 text-white" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-gray-800">Add New Admin</h2>
+                </div>
                 <button
-                  type="button"
                   onClick={() => {
                     setShowAddModal(false);
                     setNewAdminEmail('');
                     setError(null);
                   }}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                  disabled={isAdding}
+                  className="text-gray-400 hover:text-gray-600"
                 >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isAdding}
-                  className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  {isAdding ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Adding...
-                    </>
-                  ) : (
-                    <>
-                      <UserPlus className="h-4 w-4" />
-                      Add Admin
-                    </>
-                  )}
+                  <X className="h-6 w-6" />
                 </button>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
 
-      {/* Admins List */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="px-6 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">
-            Organization Admins ({admins.length})
-          </h2>
-        </div>
-
-        <div className="divide-y divide-gray-200">
-          {admins.map((admin) => (
-            <div
-              key={admin.userId}
-              className="px-6 py-4 hover:bg-gray-50 transition-colors"
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="flex items-center gap-2">
-                      {admin.isSuperAdmin ? (
-                        <Shield className="h-5 w-5 text-yellow-600" />
-                      ) : (
-                        <ShieldAlert className="h-5 w-5 text-blue-600" />
-                      )}
-                      <span className="font-medium text-gray-900">
-                        {admin.displayName || 'Admin'}
-                      </span>
-                    </div>
-                    {admin.isSuperAdmin && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                        Super Admin
-                      </span>
-                    )}
-                    {admin.userId === currentUserId && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        You
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-4 text-sm text-gray-600">
-                    <div className="flex items-center gap-1">
-                      <Mail className="h-4 w-4" />
-                      <span>{admin.email}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Clock className="h-4 w-4" />
-                      <span>Added {formatDate(admin.addedAt)}</span>
-                    </div>
-                  </div>
-
-                  {admin.isSuperAdmin && (
-                    <p className="text-xs text-gray-500 mt-2">
-                      First admin created for this organization. Cannot be removed.
-                    </p>
-                  )}
+              <form onSubmit={handleAddAdmin} className="space-y-6">
+                <div>
+                  <label htmlFor="adminEmail" className="block text-gray-700 font-semibold mb-2">
+                    Admin Email Address
+                  </label>
+                  <input
+                    id="adminEmail"
+                    type="email"
+                    value={newAdminEmail}
+                    onChange={(e) => setNewAdminEmail(e.target.value)}
+                    placeholder="admin@example.com"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none text-lg font-medium"
+                    disabled={isAdding}
+                  />
+                  <p className="text-sm text-gray-500 mt-2 flex items-center gap-2">
+                    <Sparkles className="h-4 w-4" />
+                    A temporary password will be generated and displayed after creation.
+                  </p>
                 </div>
 
-                {/* Remove Button - Only visible to super admin */}
-                {!admin.isSuperAdmin && isSuperAdmin && (
+                <div className="flex gap-3">
                   <button
-                    onClick={() => handleRemoveAdmin(admin.userId, admin.email)}
-                    className="ml-4 text-red-600 hover:text-red-800 hover:bg-red-50 p-2 rounded-lg transition-colors"
-                    title="Remove admin"
+                    type="button"
+                    onClick={() => {
+                      setShowAddModal(false);
+                      setNewAdminEmail('');
+                      setError(null);
+                    }}
+                    className="flex-1 px-6 py-3 border-2 border-blue-400 bg-white text-blue-600 rounded-xl hover:bg-blue-50 transition-colors font-semibold text-lg"
+                    disabled={isAdding}
                   >
-                    <Trash2 className="h-5 w-5" />
+                    Cancel
                   </button>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {admins.length === 0 && (
-          <div className="px-6 py-12 text-center text-gray-500">
-            <ShieldAlert className="h-12 w-12 mx-auto mb-3 text-gray-400" />
-            <p>No admins found</p>
-          </div>
+                  <button
+                    type="submit"
+                    disabled={isAdding}
+                    className="flex-1 bg-blue-500 text-white px-6 py-3 rounded-xl hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 font-semibold text-lg shadow-lg"
+                  >
+                    {isAdding ? (
+                      <>
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        Adding...
+                      </>
+                    ) : (
+                      <>
+                        <UserPlus className="h-5 w-5" />
+                        Add Admin
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
         )}
-      </div>
-
-      {/* Info Box */}
-      <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <div className="flex items-start gap-3">
-          <AlertCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-          <div className="text-sm text-blue-800">
-            <p className="font-medium mb-1">Admin Permissions:</p>
-            <ul className="list-disc list-inside space-y-1 text-blue-700">
-              <li>Only the organization super admin can add or remove admins</li>
-              <li>The super admin (first admin) cannot be removed</li>
-              <li>All admins have full access to manage students, classes, and content</li>
-              <li>Regular admins can view the admin list but cannot modify it</li>
-            </ul>
-          </div>
-        </div>
-      </div>
+      </AnimatePresence>
     </div>
   );
 };

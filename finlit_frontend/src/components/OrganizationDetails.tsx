@@ -1,14 +1,12 @@
 /**
  * Organization Details Component
- * Beautiful admin dashboard with slick UI matching Case Study and Module design
- * Features: Indigo/blue color scheme, rounded cards, smooth animations, clean typography
+ * Styled exactly like What is Money module - colorful boxes, white backgrounds, same design
  */
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ArrowLeft,
   Building2,
   Users,
   Calendar,
@@ -167,14 +165,14 @@ const OrganizationDetails: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex justify-center items-center">
+      <div className="min-h-screen flex justify-center items-center" style={{ background: 'linear-gradient(120deg, #e0f7fa 0%, #e8f5e9 50%, #e3f2fd 100%)' }}>
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           className="text-center"
         >
-          <Loader2 className="h-12 w-12 animate-spin text-indigo-600 mx-auto mb-4" />
-          <p className="text-gray-500 font-medium tracking-wide">LOADING ORGANIZATION</p>
+          <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
+          <p className="text-gray-600 font-semibold tracking-wide">Loading Organization...</p>
         </motion.div>
       </div>
     );
@@ -182,20 +180,20 @@ const OrganizationDetails: React.FC = () => {
 
   if (!organization) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+      <div className="min-h-screen flex items-center justify-center p-6" style={{ background: 'linear-gradient(120deg, #e0f7fa 0%, #e8f5e9 50%, #e3f2fd 100%)' }}>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center max-w-md bg-white rounded-3xl p-10 shadow-2xl border border-gray-100"
+          className="text-center max-w-md bg-white rounded-3xl p-10 shadow-xl border border-gray-100"
         >
-          <div className="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
-            <AlertCircle className="text-red-600" size={48} />
+          <div className="w-20 h-20 bg-red-100 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+            <AlertCircle className="text-red-600 h-10 w-10" />
           </div>
-          <h1 className="text-3xl font-black text-gray-900 mb-3">Organization Not Found</h1>
-          <p className="text-gray-500 mb-8 text-lg">The organization you're looking for could not be found.</p>
+          <h1 className="text-3xl font-bold text-gray-800 mb-3">Organization Not Found</h1>
+          <p className="text-gray-600 mb-8 text-lg">The organization you're looking for could not be found.</p>
           <button
             onClick={() => navigate('/admin-setup')}
-            className="px-8 py-4 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200"
+            className="px-10 py-4 rounded-2xl bg-blue-500 text-white font-bold text-lg shadow-xl hover:bg-blue-600 transition"
           >
             Back to Admin Setup
           </button>
@@ -205,117 +203,30 @@ const OrganizationDetails: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Header with gradient */}
-      <div className="bg-white border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <motion.button
-            onClick={() => navigate('/admin-setup')}
-            className="flex items-center gap-2 text-gray-500 hover:text-indigo-600 transition-colors font-medium group mb-6"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            whileHover={{ x: -4 }}
-          >
-            <div className="p-2 rounded-lg bg-gray-100 group-hover:bg-indigo-50 transition-colors">
-              <ArrowLeft size={18} />
+    <div className="min-h-screen relative overflow-x-hidden" style={{ background: 'linear-gradient(120deg, #e0f7fa 0%, #e8f5e9 50%, #e3f2fd 100%)' }}>
+      {/* Back Button */}
+      <button
+        className="absolute top-4 left-4 px-4 py-2 rounded-lg text-blue-600 hover:bg-white/50 backdrop-blur-sm font-medium transition z-50 shadow-sm border border-blue-100"
+        onClick={() => navigate('/admin-setup')}
+      >
+        ← Back to Organizations
+      </button>
+
+      <div className="max-w-5xl mx-auto pt-16 px-6">
+        {/* Header Section */}
+        <motion.div
+          className="text-center mb-12"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <div className="flex justify-center mb-6">
+            <div className="w-20 h-20 rounded-2xl bg-blue-500 flex items-center justify-center shadow-lg">
+              <Building2 className="h-10 w-10 text-white" />
             </div>
-            <span>All Organizations</span>
-          </motion.button>
-
-          <div className="flex items-center justify-between">
-            <motion.div
-              className="flex items-center gap-6"
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              <div className="w-20 h-20 bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-800 rounded-2xl flex items-center justify-center shadow-xl">
-                <Building2 className="h-10 w-10 text-white" />
-              </div>
-              <div>
-                <h1 className="text-4xl font-black text-slate-900 mb-2 tracking-tight">{organization.name}</h1>
-                <div className="flex items-center gap-2 text-gray-600">
-                  <Mail className="h-4 w-4" />
-                  <span className="text-lg">{organization.contactEmail}</span>
-                </div>
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="hidden lg:block"
-            >
-              <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-6 border border-indigo-100">
-                <div className="flex items-center gap-3 mb-2">
-                  <Sparkles className="h-5 w-5 text-indigo-600" />
-                  <span className="text-sm font-bold text-indigo-900 uppercase tracking-wider">Organization ID</span>
-                </div>
-                <p className="font-mono text-sm text-gray-600">{orgId}</p>
-              </div>
-            </motion.div>
           </div>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <motion.div
-            className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-shadow cursor-pointer"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            whileHover={{ y: -4 }}
-          >
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-indigo-100 rounded-xl">
-                <Users className="h-6 w-6 text-indigo-600" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Total Admins</p>
-                <p className="text-3xl font-black text-slate-900">{organization.admins.length}</p>
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.div
-            className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-shadow cursor-pointer"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            whileHover={{ y: -4 }}
-          >
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-amber-100 rounded-xl">
-                <Shield className="h-6 w-6 text-amber-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-1">Super Admin</p>
-                <p className="text-lg font-bold text-slate-900 truncate">
-                  {organization.admins.find(a => a.isSuperAdmin)?.email || 'N/A'}
-                </p>
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.div
-            className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-shadow cursor-pointer"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            whileHover={{ y: -4 }}
-          >
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-green-100 rounded-xl">
-                <Calendar className="h-6 w-6 text-green-600" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Created</p>
-                <p className="text-lg font-bold text-slate-900">{formatDate(organization.createdAt)}</p>
-              </div>
-            </div>
-          </motion.div>
-        </div>
+          <h1 className="text-5xl font-bold mb-4 text-gray-800">{organization.name}</h1>
+          <p className="text-xl text-gray-600">{organization.contactEmail}</p>
+        </motion.div>
 
         {/* Status Messages */}
         <AnimatePresence>
@@ -331,7 +242,7 @@ const OrganizationDetails: React.FC = () => {
                 <h3 className="text-lg font-bold text-red-900">Error</h3>
                 <p className="text-red-700 mt-1">{error}</p>
               </div>
-              <button onClick={() => setError(null)} className="text-red-600 hover:text-red-800 p-2 hover:bg-red-100 rounded-lg transition-colors">
+              <button onClick={() => setError(null)} className="text-red-600 hover:text-red-800">
                 <X className="h-5 w-5" />
               </button>
             </motion.div>
@@ -368,43 +279,101 @@ const OrganizationDetails: React.FC = () => {
                   </div>
                 )}
               </div>
-              <button onClick={() => setSuccess(null)} className="text-green-600 hover:text-green-800 p-2 hover:bg-green-100 rounded-lg transition-colors">
+              <button onClick={() => setSuccess(null)} className="text-green-600 hover:text-green-800">
                 <X className="h-5 w-5" />
               </button>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Tabs */}
-        <div className="mb-8">
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-2 inline-flex gap-2">
-            <button
-              onClick={() => setActiveTab('admins')}
-              className={`px-6 py-3 rounded-xl font-bold transition-all ${
-                activeTab === 'admins'
-                  ? 'bg-indigo-600 text-white shadow-lg'
-                  : 'text-gray-600 hover:bg-gray-50'
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                Admins ({organization.admins.length})
+        {/* Stats Cards - Same style as What is Money intro boxes */}
+        <div className="space-y-6 mb-12">
+          <motion.div
+            className="p-8 rounded-3xl shadow-xl bg-white"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            <div className="flex items-start gap-4">
+              <div className="w-16 h-16 rounded-2xl bg-blue-500 flex items-center justify-center shadow-lg flex-shrink-0">
+                <Users className="h-8 w-8 text-white" />
               </div>
-            </button>
-            <button
-              onClick={() => setActiveTab('locks')}
-              className={`px-6 py-3 rounded-xl font-bold transition-all ${
-                activeTab === 'locks'
-                  ? 'bg-indigo-600 text-white shadow-lg'
-                  : 'text-gray-600 hover:bg-gray-50'
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <Lock className="h-5 w-5" />
-                Module Access Control
+              <div>
+                <h3 className="text-2xl font-bold text-gray-800 mb-3">Total Admins</h3>
+                <p className="text-gray-700 text-lg leading-relaxed">
+                  This organization has <span className="font-bold text-blue-600">{organization.admins.length}</span> administrator{organization.admins.length !== 1 ? 's' : ''} managing access and permissions.
+                </p>
               </div>
-            </button>
-          </div>
+            </div>
+          </motion.div>
+
+          <motion.div
+            className="p-8 rounded-3xl shadow-xl bg-white"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+          >
+            <div className="flex items-start gap-4">
+              <div className="w-16 h-16 rounded-2xl bg-green-500 flex items-center justify-center shadow-lg flex-shrink-0">
+                <Shield className="h-8 w-8 text-white" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold text-gray-800 mb-3">Super Admin</h3>
+                <p className="text-gray-700 text-lg leading-relaxed">
+                  The primary administrator is <span className="font-bold text-green-600">{organization.admins.find(a => a.isSuperAdmin)?.email || 'N/A'}</span>
+                </p>
+              </div>
+            </div>
+          </motion.div>
+
+          <motion.div
+            className="p-8 rounded-3xl shadow-xl bg-white"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6 }}
+          >
+            <div className="flex items-start gap-4">
+              <div className="w-16 h-16 rounded-2xl bg-purple-500 flex items-center justify-center shadow-lg flex-shrink-0">
+                <Calendar className="h-8 w-8 text-white" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold text-gray-800 mb-3">Organization Created</h3>
+                <p className="text-gray-700 text-lg leading-relaxed">
+                  Established on <span className="font-bold text-purple-600">{formatDate(organization.createdAt)}</span>
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Tabs - Styled like What is Money gradient boxes */}
+        <div className="flex justify-center gap-4 mb-8">
+          <button
+            onClick={() => setActiveTab('admins')}
+            className={`px-8 py-4 rounded-2xl font-bold text-lg shadow-xl transition ${
+              activeTab === 'admins'
+                ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white'
+                : 'bg-white text-gray-700 hover:shadow-2xl'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <Users className="h-6 w-6" />
+              Manage Admins
+            </div>
+          </button>
+          <button
+            onClick={() => setActiveTab('locks')}
+            className={`px-8 py-4 rounded-2xl font-bold text-lg shadow-xl transition ${
+              activeTab === 'locks'
+                ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white'
+                : 'bg-white text-gray-700 hover:shadow-2xl'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <Lock className="h-6 w-6" />
+              Module Access
+            </div>
+          </button>
         </div>
 
         {/* Tab Content */}
@@ -415,99 +384,81 @@ const OrganizationDetails: React.FC = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
+              className="space-y-6 mb-12"
             >
               {/* Add Admin Button */}
-              <div className="mb-6">
-                <motion.button
+              <div className="flex justify-center mb-8">
+                <button
                   onClick={() => setShowAddModal(true)}
-                  className="bg-indigo-600 text-white px-8 py-4 rounded-2xl hover:bg-indigo-700 transition-all flex items-center gap-3 shadow-xl shadow-indigo-200 font-bold text-lg"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  className="px-10 py-4 rounded-2xl bg-blue-500 text-white font-bold text-lg shadow-xl hover:bg-blue-600 transition flex items-center gap-3"
                 >
                   <UserPlus className="h-6 w-6" />
                   Add New Admin
-                </motion.button>
+                </button>
               </div>
 
-              {/* Admins List */}
-              <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
-                <div className="px-8 py-6 bg-gradient-to-r from-indigo-50 via-purple-50 to-indigo-50 border-b border-gray-200">
-                  <h2 className="text-2xl font-black text-slate-900">
-                    Organization Admins ({organization.admins.length})
-                  </h2>
-                </div>
-
-                <div className="divide-y divide-gray-100">
-                  {organization.admins.map((admin, index) => (
-                    <motion.div
-                      key={admin.userId}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="px-8 py-6 hover:bg-slate-50 transition-colors"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-4 mb-3">
-                            <div className={`p-3 rounded-xl ${admin.isSuperAdmin ? 'bg-amber-100' : 'bg-indigo-100'}`}>
-                              {admin.isSuperAdmin ? (
-                                <Shield className="h-6 w-6 text-amber-600" />
-                              ) : (
-                                <ShieldAlert className="h-6 w-6 text-indigo-600" />
-                              )}
-                            </div>
-                            <div>
-                              <div className="flex items-center gap-3">
-                                <span className="font-bold text-xl text-slate-900">
-                                  {admin.displayName || 'Admin'}
-                                </span>
-                                {admin.isSuperAdmin && (
-                                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-amber-100 text-amber-800 border border-amber-200">
-                                    <Award className="h-3 w-3 mr-1" />
-                                    Super Admin
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="ml-16 space-y-2">
-                            <div className="flex items-center gap-2 text-gray-600">
-                              <Mail className="h-4 w-4" />
-                              <span className="font-medium">{admin.email}</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-gray-500">
-                              <Clock className="h-4 w-4" />
-                              <span className="text-sm">Added {formatDate(admin.addedAt)}</span>
-                            </div>
-                          </div>
-
-                          {admin.isSuperAdmin && (
-                            <div className="ml-16 mt-3 bg-amber-50 border border-amber-200 rounded-xl p-3">
-                              <p className="text-sm text-amber-900 font-medium">
-                                First admin created for this organization. Cannot be removed.
-                              </p>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Remove Button */}
-                        {!admin.isSuperAdmin && (
-                          <motion.button
-                            onClick={() => handleRemoveAdmin(admin.userId, admin.email, admin.isSuperAdmin)}
-                            className="ml-4 text-red-600 hover:text-white hover:bg-red-600 p-3 rounded-xl transition-all border-2 border-red-200 hover:border-red-600"
-                            title="Remove admin"
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                          >
-                            <Trash2 className="h-5 w-5" />
-                          </motion.button>
+              {/* Admin Cards - Same style as What is Money boxes */}
+              {organization.admins.map((admin, index) => (
+                <motion.div
+                  key={admin.userId}
+                  className="p-8 rounded-3xl shadow-xl bg-white"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <div className="flex items-start gap-4">
+                    <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0 ${
+                      admin.isSuperAdmin ? 'bg-amber-500' : 'bg-blue-500'
+                    }`}>
+                      {admin.isSuperAdmin ? (
+                        <Shield className="h-8 w-8 text-white" />
+                      ) : (
+                        <ShieldAlert className="h-8 w-8 text-white" />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-3">
+                        <h3 className="text-2xl font-bold text-gray-800">
+                          {admin.displayName || 'Admin'}
+                        </h3>
+                        {admin.isSuperAdmin && (
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                            <Award className="h-3 w-3 mr-1" />
+                            Super Admin
+                          </span>
                         )}
                       </div>
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-gray-700">
+                          <Mail className="h-5 w-5 text-gray-500" />
+                          <span className="text-lg font-medium">{admin.email}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <Clock className="h-5 w-5 text-gray-500" />
+                          <span>Added {formatDate(admin.addedAt)}</span>
+                        </div>
+                      </div>
+                      {admin.isSuperAdmin && (
+                        <div className="mt-4 bg-amber-50 border border-amber-200 rounded-xl p-3">
+                          <p className="text-sm text-amber-900 font-medium">
+                            ⭐ First admin created for this organization. Cannot be removed.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                    {!admin.isSuperAdmin && (
+                      <button
+                        onClick={() => handleRemoveAdmin(admin.userId, admin.email, admin.isSuperAdmin)}
+                        className="px-4 py-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-all border-2 border-red-200 font-bold flex items-center gap-2"
+                        title="Remove admin"
+                      >
+                        <Trash2 className="h-5 w-5" />
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                </motion.div>
+              ))}
             </motion.div>
           )}
 
@@ -517,6 +468,7 @@ const OrganizationDetails: React.FC = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
+              className="mb-12"
             >
               <ModuleLockManager
                 organizationId={orgId!}
@@ -529,7 +481,7 @@ const OrganizationDetails: React.FC = () => {
         </AnimatePresence>
       </div>
 
-      {/* Add Admin Modal */}
+      {/* Add Admin Modal - Styled like What is Money */}
       <AnimatePresence>
         {showAddModal && (
           <motion.div
@@ -552,10 +504,10 @@ const OrganizationDetails: React.FC = () => {
             >
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-4">
-                  <div className="p-3 bg-indigo-100 rounded-xl">
-                    <UserPlus className="h-6 w-6 text-indigo-600" />
+                  <div className="w-12 h-12 rounded-xl bg-blue-500 flex items-center justify-center shadow-lg">
+                    <UserPlus className="h-6 w-6 text-white" />
                   </div>
-                  <h2 className="text-2xl font-black text-slate-900">Add New Admin</h2>
+                  <h2 className="text-2xl font-bold text-gray-800">Add New Admin</h2>
                 </div>
                 <button
                   onClick={() => {
@@ -563,7 +515,7 @@ const OrganizationDetails: React.FC = () => {
                     setNewAdminEmail('');
                     setError(null);
                   }}
-                  className="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="text-gray-400 hover:text-gray-600"
                 >
                   <X className="h-6 w-6" />
                 </button>
@@ -571,7 +523,7 @@ const OrganizationDetails: React.FC = () => {
 
               <form onSubmit={handleAddAdmin} className="space-y-6">
                 <div>
-                  <label htmlFor="adminEmail" className="block text-sm font-bold text-gray-700 mb-2">
+                  <label htmlFor="adminEmail" className="block text-gray-700 font-semibold mb-2">
                     Admin Email Address
                   </label>
                   <input
@@ -580,7 +532,7 @@ const OrganizationDetails: React.FC = () => {
                     value={newAdminEmail}
                     onChange={(e) => setNewAdminEmail(e.target.value)}
                     placeholder="admin@example.com"
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all font-medium text-gray-900"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none text-lg font-medium"
                     disabled={isAdding}
                   />
                   <p className="text-sm text-gray-500 mt-2 flex items-center gap-2">
@@ -597,7 +549,7 @@ const OrganizationDetails: React.FC = () => {
                       setNewAdminEmail('');
                       setError(null);
                     }}
-                    className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors font-bold"
+                    className="flex-1 px-6 py-3 border-2 border-blue-400 bg-white text-blue-600 rounded-xl hover:bg-blue-50 transition-colors font-semibold text-lg"
                     disabled={isAdding}
                   >
                     Cancel
@@ -605,7 +557,7 @@ const OrganizationDetails: React.FC = () => {
                   <button
                     type="submit"
                     disabled={isAdding}
-                    className="flex-1 bg-indigo-600 text-white px-6 py-3 rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 font-bold shadow-lg"
+                    className="flex-1 bg-blue-500 text-white px-6 py-3 rounded-xl hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 font-semibold text-lg shadow-lg"
                   >
                     {isAdding ? (
                       <>

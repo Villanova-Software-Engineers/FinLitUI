@@ -580,7 +580,7 @@ const AdminDashboard: React.FC = () => {
           )}
 
           {/* Analytics View */}
-          {currentView === 'analytics' && (user.role === 'admin' || selectedOrg) ? (
+          {currentView === 'analytics' && ((user.role === 'admin' && user.organizationId) || (user.role === 'owner' && selectedOrg)) ? (
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
               {/* Class Codes Panel for Analytics */}
               <div className="xl:col-span-3">
@@ -872,7 +872,7 @@ const AdminDashboard: React.FC = () => {
           ) : null}
 
           {/* Main Grid */}
-          {currentView === 'students' && (user.role === 'admin' || selectedOrg) ? (
+          {currentView === 'students' && ((user.role === 'admin' && user.organizationId) || (user.role === 'owner' && selectedOrg)) ? (
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
               {/* Class Codes Panel */}
               <div className="xl:col-span-3">
@@ -1392,7 +1392,7 @@ const AdminDashboard: React.FC = () => {
           )}
 
           {/* Module Locks View */}
-          {currentView === 'module-locks' && user && (user.role === 'admin' || selectedOrg) ? (
+          {currentView === 'module-locks' && user && ((user.role === 'admin' && user.organizationId) || (user.role === 'owner' && selectedOrg)) ? (
             <div className={`${cardClass} rounded-2xl p-6 shadow-xl border`}>
               {user.organizationId || selectedOrg?.id ? (
                 <ModuleLockManager
