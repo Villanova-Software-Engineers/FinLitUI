@@ -29,6 +29,14 @@ export interface ContentLock {
   lockedBy: string; // userId who last modified the lock
 }
 
+// Week-specific lock status for case studies
+export interface WeekLock {
+  lockedBySuperAdmin: boolean;
+  lockedByOrgAdmin: boolean;
+  lockedAt: Date;
+  lockedBy: string;
+}
+
 // Organization structure in Firestore
 export interface Organization {
   id: string;
@@ -40,7 +48,8 @@ export interface Organization {
   createdAt: Date;
   // Content locking for this organization
   lockedModules?: { [moduleId: string]: ContentLock };
-  lockedCaseStudies?: { [caseStudyId: string]: ContentLock };
+  lockedCaseStudies?: { [caseStudyId: string]: ContentLock }; // Legacy: whole case study lock
+  lockedCaseStudyWeeks?: { [weekNumber: string]: WeekLock }; // Granular per-week locks
 }
 
 // Class/Code structure in Firestore (created by admin)

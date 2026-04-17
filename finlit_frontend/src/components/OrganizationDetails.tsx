@@ -1,10 +1,12 @@
 /**
  * Organization Details Component
- * Allows website super admins (owners) to view and manage admins for any organization
+ * Beautiful admin dashboard with slick UI matching Case Study and Module design
+ * Features: Indigo/blue color scheme, rounded cards, smooth animations, clean typography
  */
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft,
   Building2,
@@ -22,6 +24,8 @@ import {
   Loader2,
   AlertCircle,
   Lock,
+  Sparkles,
+  Award,
 } from 'lucide-react';
 import { useAuthContext } from '../auth/context/AuthContext';
 import {
@@ -29,7 +33,7 @@ import {
   addOrganizationAdmin,
   removeOrganizationAdmin,
 } from '../firebase/firestore.service';
-import type { Organization, OrganizationAdmin } from '../auth/types/auth.types';
+import type { Organization } from '../auth/types/auth.types';
 import ModuleLockManager from './ModuleLockManager';
 
 const OrganizationDetails: React.FC = () => {
@@ -163,140 +167,223 @@ const OrganizationDetails: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex justify-center items-center">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      <div className="min-h-screen bg-slate-50 flex justify-center items-center">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center"
+        >
+          <Loader2 className="h-12 w-12 animate-spin text-indigo-600 mx-auto mb-4" />
+          <p className="text-gray-500 font-medium tracking-wide">LOADING ORGANIZATION</p>
+        </motion.div>
       </div>
     );
   }
 
   if (!organization) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6">
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-            <h2 className="text-xl font-bold text-red-800 mb-2">Organization Not Found</h2>
-            <p className="text-red-700 mb-4">The organization you're looking for could not be found.</p>
-            <button
-              onClick={() => navigate('/admin-setup')}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Back to Admin Setup
-            </button>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center max-w-md bg-white rounded-3xl p-10 shadow-2xl border border-gray-100"
+        >
+          <div className="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
+            <AlertCircle className="text-red-600" size={48} />
           </div>
-        </div>
+          <h1 className="text-3xl font-black text-gray-900 mb-3">Organization Not Found</h1>
+          <p className="text-gray-500 mb-8 text-lg">The organization you're looking for could not be found.</p>
+          <button
+            onClick={() => navigate('/admin-setup')}
+            className="px-8 py-4 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200"
+          >
+            Back to Admin Setup
+          </button>
+        </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="mb-6">
-          <button
+    <div className="min-h-screen bg-slate-50">
+      {/* Header with gradient */}
+      <div className="bg-white border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <motion.button
             onClick={() => navigate('/admin-setup')}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
+            className="flex items-center gap-2 text-gray-500 hover:text-indigo-600 transition-colors font-medium group mb-6"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            whileHover={{ x: -4 }}
           >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Admin Setup
-          </button>
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
-              <Building2 className="h-6 w-6 text-white" />
+            <div className="p-2 rounded-lg bg-gray-100 group-hover:bg-indigo-50 transition-colors">
+              <ArrowLeft size={18} />
             </div>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">{organization.name}</h1>
-              <p className="text-gray-600">{organization.contactEmail}</p>
-            </div>
+            <span>All Organizations</span>
+          </motion.button>
+
+          <div className="flex items-center justify-between">
+            <motion.div
+              className="flex items-center gap-6"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <div className="w-20 h-20 bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-800 rounded-2xl flex items-center justify-center shadow-xl">
+                <Building2 className="h-10 w-10 text-white" />
+              </div>
+              <div>
+                <h1 className="text-4xl font-black text-slate-900 mb-2 tracking-tight">{organization.name}</h1>
+                <div className="flex items-center gap-2 text-gray-600">
+                  <Mail className="h-4 w-4" />
+                  <span className="text-lg">{organization.contactEmail}</span>
+                </div>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="hidden lg:block"
+            >
+              <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-6 border border-indigo-100">
+                <div className="flex items-center gap-3 mb-2">
+                  <Sparkles className="h-5 w-5 text-indigo-600" />
+                  <span className="text-sm font-bold text-indigo-900 uppercase tracking-wider">Organization ID</span>
+                </div>
+                <p className="font-mono text-sm text-gray-600">{orgId}</p>
+              </div>
+            </motion.div>
           </div>
         </div>
+      </div>
 
-        {/* Organization Info */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <div className="flex items-center gap-2 text-gray-600 mb-1">
-                <Users className="h-4 w-4" />
-                <span className="text-sm font-medium">Total Admins</span>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <motion.div
+            className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-shadow cursor-pointer"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            whileHover={{ y: -4 }}
+          >
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-indigo-100 rounded-xl">
+                <Users className="h-6 w-6 text-indigo-600" />
               </div>
-              <p className="text-2xl font-bold text-gray-900">{organization.admins.length}</p>
-            </div>
-            <div>
-              <div className="flex items-center gap-2 text-gray-600 mb-1">
-                <Shield className="h-4 w-4" />
-                <span className="text-sm font-medium">Super Admin</span>
+              <div>
+                <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Total Admins</p>
+                <p className="text-3xl font-black text-slate-900">{organization.admins.length}</p>
               </div>
-              <p className="text-lg font-semibold text-gray-900">
-                {organization.admins.find(a => a.isSuperAdmin)?.email || 'N/A'}
-              </p>
             </div>
-            <div>
-              <div className="flex items-center gap-2 text-gray-600 mb-1">
-                <Calendar className="h-4 w-4" />
-                <span className="text-sm font-medium">Created</span>
+          </motion.div>
+
+          <motion.div
+            className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-shadow cursor-pointer"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            whileHover={{ y: -4 }}
+          >
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-amber-100 rounded-xl">
+                <Shield className="h-6 w-6 text-amber-600" />
               </div>
-              <p className="text-lg font-semibold text-gray-900">
-                {formatDate(organization.createdAt)}
-              </p>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-1">Super Admin</p>
+                <p className="text-lg font-bold text-slate-900 truncate">
+                  {organization.admins.find(a => a.isSuperAdmin)?.email || 'N/A'}
+                </p>
+              </div>
             </div>
-          </div>
+          </motion.div>
+
+          <motion.div
+            className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-shadow cursor-pointer"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            whileHover={{ y: -4 }}
+          >
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-green-100 rounded-xl">
+                <Calendar className="h-6 w-6 text-green-600" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Created</p>
+                <p className="text-lg font-bold text-slate-900">{formatDate(organization.createdAt)}</p>
+              </div>
+            </div>
+          </motion.div>
         </div>
 
         {/* Status Messages */}
-        {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
-            <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
-            <div className="flex-1">
-              <h3 className="text-sm font-medium text-red-800">Error</h3>
-              <p className="text-sm text-red-700 mt-1">{error}</p>
-            </div>
-            <button onClick={() => setError(null)} className="text-red-600 hover:text-red-800">
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-        )}
+        <AnimatePresence>
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="mb-6 bg-red-50 border-2 border-red-200 rounded-2xl p-6 flex items-start gap-4"
+            >
+              <AlertCircle className="h-6 w-6 text-red-600 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-red-900">Error</h3>
+                <p className="text-red-700 mt-1">{error}</p>
+              </div>
+              <button onClick={() => setError(null)} className="text-red-600 hover:text-red-800 p-2 hover:bg-red-100 rounded-lg transition-colors">
+                <X className="h-5 w-5" />
+              </button>
+            </motion.div>
+          )}
 
-        {success && (
-          <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">
-            <Check className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
-            <div className="flex-1">
-              <h3 className="text-sm font-medium text-green-800">Success</h3>
-              <p className="text-sm text-green-700 mt-1">{success}</p>
-              {generatedPassword && (
-                <div className="mt-3 bg-white border border-green-300 rounded-lg p-3">
-                  <p className="text-sm font-medium text-gray-900 mb-2">
-                    Generated Password (share this with the new admin):
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <code className="flex-1 bg-gray-50 px-3 py-2 rounded border text-sm font-mono">
-                      {generatedPassword}
-                    </code>
-                    <button
-                      onClick={() => copyToClipboard(generatedPassword)}
-                      className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
-                    >
-                      {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                      {copied ? 'Copied!' : 'Copy'}
-                    </button>
+          {success && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="mb-6 bg-green-50 border-2 border-green-200 rounded-2xl p-6 flex items-start gap-4"
+            >
+              <Check className="h-6 w-6 text-green-600 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-green-900">Success</h3>
+                <p className="text-green-700 mt-1">{success}</p>
+                {generatedPassword && (
+                  <div className="mt-4 bg-white border-2 border-green-300 rounded-xl p-4">
+                    <p className="text-sm font-bold text-gray-900 mb-3">
+                      Generated Password (share this with the new admin):
+                    </p>
+                    <div className="flex items-center gap-3">
+                      <code className="flex-1 bg-gray-50 px-4 py-3 rounded-lg border-2 border-gray-200 text-base font-mono font-semibold text-slate-900">
+                        {generatedPassword}
+                      </code>
+                      <button
+                        onClick={() => copyToClipboard(generatedPassword)}
+                        className="px-5 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors flex items-center gap-2 font-bold shadow-lg"
+                      >
+                        {copied ? <Check className="h-5 w-5" /> : <Copy className="h-5 w-5" />}
+                        {copied ? 'Copied!' : 'Copy'}
+                      </button>
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
-            <button onClick={() => setSuccess(null)} className="text-green-600 hover:text-green-800">
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-        )}
+                )}
+              </div>
+              <button onClick={() => setSuccess(null)} className="text-green-600 hover:text-green-800 p-2 hover:bg-green-100 rounded-lg transition-colors">
+                <X className="h-5 w-5" />
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Tabs */}
-        <div className="mb-6 border-b border-gray-200">
-          <nav className="flex gap-4">
+        <div className="mb-8">
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-2 inline-flex gap-2">
             <button
               onClick={() => setActiveTab('admins')}
-              className={`px-4 py-2 border-b-2 font-medium transition-colors ${
+              className={`px-6 py-3 rounded-xl font-bold transition-all ${
                 activeTab === 'admins'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-600 hover:text-gray-900'
+                  ? 'bg-indigo-600 text-white shadow-lg'
+                  : 'text-gray-600 hover:bg-gray-50'
               }`}
             >
               <div className="flex items-center gap-2">
@@ -306,10 +393,10 @@ const OrganizationDetails: React.FC = () => {
             </button>
             <button
               onClick={() => setActiveTab('locks')}
-              className={`px-4 py-2 border-b-2 font-medium transition-colors ${
+              className={`px-6 py-3 rounded-xl font-bold transition-all ${
                 activeTab === 'locks'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-600 hover:text-gray-900'
+                  ? 'bg-indigo-600 text-white shadow-lg'
+                  : 'text-gray-600 hover:bg-gray-50'
               }`}
             >
               <div className="flex items-center gap-2">
@@ -317,47 +404,175 @@ const OrganizationDetails: React.FC = () => {
                 Module Access Control
               </div>
             </button>
-          </nav>
+          </div>
         </div>
 
         {/* Tab Content */}
-        {activeTab === 'admins' && (
-          <>
-            {/* Add Admin Button */}
-            <div className="mb-6">
-              <button
-                onClick={() => setShowAddModal(true)}
-                className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-sm"
-              >
-                <UserPlus className="h-5 w-5" />
-                Add New Admin
-              </button>
-            </div>
-          </>
-        )}
+        <AnimatePresence mode="wait">
+          {activeTab === 'admins' && (
+            <motion.div
+              key="admins"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+            >
+              {/* Add Admin Button */}
+              <div className="mb-6">
+                <motion.button
+                  onClick={() => setShowAddModal(true)}
+                  className="bg-indigo-600 text-white px-8 py-4 rounded-2xl hover:bg-indigo-700 transition-all flex items-center gap-3 shadow-xl shadow-indigo-200 font-bold text-lg"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <UserPlus className="h-6 w-6" />
+                  Add New Admin
+                </motion.button>
+              </div>
 
-        {/* Add Admin Modal */}
+              {/* Admins List */}
+              <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+                <div className="px-8 py-6 bg-gradient-to-r from-indigo-50 via-purple-50 to-indigo-50 border-b border-gray-200">
+                  <h2 className="text-2xl font-black text-slate-900">
+                    Organization Admins ({organization.admins.length})
+                  </h2>
+                </div>
+
+                <div className="divide-y divide-gray-100">
+                  {organization.admins.map((admin, index) => (
+                    <motion.div
+                      key={admin.userId}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="px-8 py-6 hover:bg-slate-50 transition-colors"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-4 mb-3">
+                            <div className={`p-3 rounded-xl ${admin.isSuperAdmin ? 'bg-amber-100' : 'bg-indigo-100'}`}>
+                              {admin.isSuperAdmin ? (
+                                <Shield className="h-6 w-6 text-amber-600" />
+                              ) : (
+                                <ShieldAlert className="h-6 w-6 text-indigo-600" />
+                              )}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-3">
+                                <span className="font-bold text-xl text-slate-900">
+                                  {admin.displayName || 'Admin'}
+                                </span>
+                                {admin.isSuperAdmin && (
+                                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                                    <Award className="h-3 w-3 mr-1" />
+                                    Super Admin
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="ml-16 space-y-2">
+                            <div className="flex items-center gap-2 text-gray-600">
+                              <Mail className="h-4 w-4" />
+                              <span className="font-medium">{admin.email}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-gray-500">
+                              <Clock className="h-4 w-4" />
+                              <span className="text-sm">Added {formatDate(admin.addedAt)}</span>
+                            </div>
+                          </div>
+
+                          {admin.isSuperAdmin && (
+                            <div className="ml-16 mt-3 bg-amber-50 border border-amber-200 rounded-xl p-3">
+                              <p className="text-sm text-amber-900 font-medium">
+                                First admin created for this organization. Cannot be removed.
+                              </p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Remove Button */}
+                        {!admin.isSuperAdmin && (
+                          <motion.button
+                            onClick={() => handleRemoveAdmin(admin.userId, admin.email, admin.isSuperAdmin)}
+                            className="ml-4 text-red-600 hover:text-white hover:bg-red-600 p-3 rounded-xl transition-all border-2 border-red-200 hover:border-red-600"
+                            title="Remove admin"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            <Trash2 className="h-5 w-5" />
+                          </motion.button>
+                        )}
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {activeTab === 'locks' && user && (
+            <motion.div
+              key="locks"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+            >
+              <ModuleLockManager
+                organizationId={orgId!}
+                organizationName={organization.name}
+                userId={user.id}
+                isSuperAdmin={true}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Add Admin Modal */}
+      <AnimatePresence>
         {showAddModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-gray-900">Add New Admin</h2>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            onClick={() => {
+              setShowAddModal(false);
+              setNewAdminEmail('');
+              setError(null);
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-8"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-indigo-100 rounded-xl">
+                    <UserPlus className="h-6 w-6 text-indigo-600" />
+                  </div>
+                  <h2 className="text-2xl font-black text-slate-900">Add New Admin</h2>
+                </div>
                 <button
                   onClick={() => {
                     setShowAddModal(false);
                     setNewAdminEmail('');
                     setError(null);
                   }}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-100 rounded-lg transition-colors"
                 >
                   <X className="h-6 w-6" />
                 </button>
               </div>
 
-              <form onSubmit={handleAddAdmin}>
-                <div className="mb-4">
-                  <label htmlFor="adminEmail" className="block text-sm font-medium text-gray-700 mb-2">
-                    Admin Email
+              <form onSubmit={handleAddAdmin} className="space-y-6">
+                <div>
+                  <label htmlFor="adminEmail" className="block text-sm font-bold text-gray-700 mb-2">
+                    Admin Email Address
                   </label>
                   <input
                     id="adminEmail"
@@ -365,10 +580,11 @@ const OrganizationDetails: React.FC = () => {
                     value={newAdminEmail}
                     onChange={(e) => setNewAdminEmail(e.target.value)}
                     placeholder="admin@example.com"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all font-medium text-gray-900"
                     disabled={isAdding}
                   />
-                  <p className="text-xs text-gray-500 mt-2">
+                  <p className="text-sm text-gray-500 mt-2 flex items-center gap-2">
+                    <Sparkles className="h-4 w-4" />
                     A temporary password will be generated and displayed after creation.
                   </p>
                 </div>
@@ -381,7 +597,7 @@ const OrganizationDetails: React.FC = () => {
                       setNewAdminEmail('');
                       setError(null);
                     }}
-                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors font-bold"
                     disabled={isAdding}
                   >
                     Cancel
@@ -389,106 +605,26 @@ const OrganizationDetails: React.FC = () => {
                   <button
                     type="submit"
                     disabled={isAdding}
-                    className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="flex-1 bg-indigo-600 text-white px-6 py-3 rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 font-bold shadow-lg"
                   >
                     {isAdding ? (
                       <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <Loader2 className="h-5 w-5 animate-spin" />
                         Adding...
                       </>
                     ) : (
                       <>
-                        <UserPlus className="h-4 w-4" />
+                        <UserPlus className="h-5 w-5" />
                         Add Admin
                       </>
                     )}
                   </button>
                 </div>
               </form>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         )}
-
-        {/* Admins Tab Content */}
-        {activeTab === 'admins' && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="px-6 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900">
-                Organization Admins ({organization.admins.length})
-              </h2>
-            </div>
-
-            <div className="divide-y divide-gray-200">
-              {organization.admins.map((admin) => (
-                <div
-                  key={admin.userId}
-                  className="px-6 py-4 hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="flex items-center gap-2">
-                          {admin.isSuperAdmin ? (
-                            <Shield className="h-5 w-5 text-yellow-600" />
-                          ) : (
-                            <ShieldAlert className="h-5 w-5 text-blue-600" />
-                          )}
-                          <span className="font-medium text-gray-900">
-                            {admin.displayName || 'Admin'}
-                          </span>
-                        </div>
-                        {admin.isSuperAdmin && (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                            Super Admin
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="flex items-center gap-4 text-sm text-gray-600">
-                        <div className="flex items-center gap-1">
-                          <Mail className="h-4 w-4" />
-                          <span>{admin.email}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Clock className="h-4 w-4" />
-                          <span>Added {formatDate(admin.addedAt)}</span>
-                        </div>
-                      </div>
-
-                      {admin.isSuperAdmin && (
-                        <p className="text-xs text-gray-500 mt-2">
-                          First admin created for this organization. Cannot be removed.
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Remove Button */}
-                    {!admin.isSuperAdmin && (
-                      <button
-                        onClick={() => handleRemoveAdmin(admin.userId, admin.email, admin.isSuperAdmin)}
-                        className="ml-4 text-red-600 hover:text-red-800 hover:bg-red-50 p-2 rounded-lg transition-colors"
-                        title="Remove admin"
-                      >
-                        <Trash2 className="h-5 w-5" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Module Locks Tab Content */}
-        {activeTab === 'locks' && user && (
-          <ModuleLockManager
-            organizationId={orgId!}
-            organizationName={organization.name}
-            userId={user.id}
-            isSuperAdmin={true}
-          />
-        )}
-      </div>
+      </AnimatePresence>
     </div>
   );
 };

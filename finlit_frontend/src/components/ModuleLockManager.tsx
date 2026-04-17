@@ -24,9 +24,11 @@ import {
   setModuleLockByOrgAdmin,
   setCaseStudyLockBySuperAdmin,
   setCaseStudyLockByOrgAdmin,
+  setCaseStudyWeekLockBySuperAdmin,
+  setCaseStudyWeekLockByOrgAdmin,
 } from '../firebase/firestore.service';
 import { MODULES } from '../hooks/useModuleScore';
-import type { ContentLock } from '../auth/types/auth.types';
+import type { ContentLock, WeekLock } from '../auth/types/auth.types';
 
 interface ModuleLockManagerProps {
   organizationId: string;
@@ -50,6 +52,7 @@ const ModuleLockManager: React.FC<ModuleLockManagerProps> = ({
 }) => {
   const [moduleLocks, setModuleLocks] = useState<{ [key: string]: ContentLock }>({});
   const [caseStudyLocks, setCaseStudyLocks] = useState<{ [key: string]: ContentLock }>({});
+  const [caseStudyWeekLocks, setCaseStudyWeekLocks] = useState<{ [key: string]: WeekLock }>({});
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -93,9 +96,16 @@ const ModuleLockManager: React.FC<ModuleLockManagerProps> = ({
     { id: MODULES.GIVING.id, name: MODULES.GIVING.name, icon: '💝', phase: 'Phase 5: Advanced' },
   ];
 
-  // Case studies
-  const caseStudies: ModuleInfo[] = [
-    { id: 'permanent-case-study', name: 'Weekly Case Studies', icon: '📚' },
+  // Case study weeks (8 weeks)
+  const caseStudyWeeks: ModuleInfo[] = [
+    { id: '1', name: 'Week 1 Case Study', icon: '📚' },
+    { id: '2', name: 'Week 2 Case Study', icon: '📚' },
+    { id: '3', name: 'Week 3 Case Study', icon: '📚' },
+    { id: '4', name: 'Week 4 Case Study', icon: '📚' },
+    { id: '5', name: 'Week 5 Case Study', icon: '📚' },
+    { id: '6', name: 'Week 6 Case Study', icon: '📚' },
+    { id: '7', name: 'Week 7 Case Study', icon: '📚' },
+    { id: '8', name: 'Week 8 Case Study', icon: '📚' },
   ];
 
   useEffect(() => {
@@ -108,6 +118,7 @@ const ModuleLockManager: React.FC<ModuleLockManagerProps> = ({
       const locks = await getOrganizationLocks(organizationId);
       setModuleLocks(locks.modules);
       setCaseStudyLocks(locks.caseStudies);
+      setCaseStudyWeekLocks(locks.caseStudyWeeks);
     } catch (err) {
       console.error('Error loading locks:', err);
       setError('Failed to load content locks');
@@ -175,6 +186,39 @@ const ModuleLockManager: React.FC<ModuleLockManagerProps> = ({
       await loadLocks();
     } catch (err: any) {
       setError(err.message || `Failed to ${isCurrentlyLocked ? 'unlock' : 'lock'} case study`);
+      setTimeout(() => setError(null), 3000);
+    } finally {
+      setProcessing(null);
+    }
+  };
+
+  const toggleCaseStudyWeekLock = async (weekNumber: number, weekName: string) => {
+    const weekKey = weekNumber.toString();
+    const currentLock = caseStudyWeekLocks[weekKey];
+    const isCurrentlyLocked = currentLock?.lockedBySuperAdmin || currentLock?.lockedByOrgAdmin;
+
+    if (!isSuperAdmin && currentLock?.lockedBySuperAdmin) {
+      setError('Cannot modify case study weeks locked by super admin');
+      setTimeout(() => setError(null), 3000);
+      return;
+    }
+
+    try {
+      setProcessing(`week-${weekNumber}`);
+      setError(null);
+      setSuccess(null);
+
+      if (isSuperAdmin) {
+        await setCaseStudyWeekLockBySuperAdmin(organizationId, weekNumber, !isCurrentlyLocked, userId);
+      } else {
+        await setCaseStudyWeekLockByOrgAdmin(organizationId, weekNumber, !isCurrentlyLocked, userId);
+      }
+
+      setSuccess(`${weekName} ${isCurrentlyLocked ? 'unlocked' : 'locked'} successfully`);
+      setTimeout(() => setSuccess(null), 3000);
+      await loadLocks();
+    } catch (err: any) {
+      setError(err.message || `Failed to ${isCurrentlyLocked ? 'unlock' : 'lock'} case study week`);
       setTimeout(() => setError(null), 3000);
     } finally {
       setProcessing(null);
@@ -506,30 +550,35 @@ const ModuleLockManager: React.FC<ModuleLockManagerProps> = ({
         )}
       </div>
 
-      {/* Case Studies */}
+      {/* Case Study Weeks */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <div className="px-6 py-4 bg-gradient-to-r from-purple-50 to-pink-50 border-b border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900">
-            Case Studies
+            Case Study Weeks (8 Weeks)
           </h3>
+          <p className="text-sm text-gray-600 mt-1">
+            Control access to individual case study weeks
+          </p>
         </div>
 
         <div className="divide-y divide-gray-200">
-          {caseStudies.map((caseStudy) => {
-            const lock = caseStudyLocks[caseStudy.id];
+          {caseStudyWeeks.map((week) => {
+            const weekNumber = parseInt(week.id);
+            const weekKey = week.id;
+            const lock = caseStudyWeekLocks[weekKey];
             const isLocked = lock?.lockedBySuperAdmin || lock?.lockedByOrgAdmin;
             const canModify = isSuperAdmin || !lock?.lockedBySuperAdmin;
 
             return (
               <div
-                key={caseStudy.id}
+                key={week.id}
                 className="px-6 py-4 hover:bg-gray-50 transition-colors"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <span className="text-2xl">{caseStudy.icon}</span>
-                      <span className="font-medium text-gray-900">{caseStudy.name}</span>
+                      <span className="text-2xl">{week.icon}</span>
+                      <span className="font-medium text-gray-900">{week.name}</span>
                       {getStatusBadge(lock, 'caseStudy')}
                     </div>
                     {lock && (
@@ -540,8 +589,8 @@ const ModuleLockManager: React.FC<ModuleLockManagerProps> = ({
                   </div>
 
                   <button
-                    onClick={() => toggleCaseStudyLock(caseStudy.id, caseStudy.name)}
-                    disabled={!canModify || processing === caseStudy.id}
+                    onClick={() => toggleCaseStudyWeekLock(weekNumber, week.name)}
+                    disabled={!canModify || processing === `week-${weekNumber}`}
                     className={`ml-4 px-4 py-2 rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${
                       isLocked
                         ? 'bg-green-600 text-white hover:bg-green-700'
@@ -549,7 +598,7 @@ const ModuleLockManager: React.FC<ModuleLockManagerProps> = ({
                     }`}
                     title={!canModify ? 'Locked by super admin' : ''}
                   >
-                    {processing === caseStudy.id ? (
+                    {processing === `week-${weekNumber}` ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : isLocked ? (
                       <Unlock className="h-4 w-4" />
