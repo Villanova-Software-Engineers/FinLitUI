@@ -42,6 +42,7 @@ import {
   Trophy,
   Target,
   UserCog,
+  Lock,
 } from 'lucide-react';
 import { useAuthContext } from '../auth/context/AuthContext';
 import {
@@ -52,6 +53,7 @@ import {
 } from '../firebase/firestore.service';
 import type { ClassCode, StudentWithProgress, Organization } from '../auth/types/auth.types';
 import { MODULES } from '../hooks/useModuleScore';
+import ModuleLockManager from './ModuleLockManager';
 
 const formatDateTime = (date: Date): string => {
   return new Intl.DateTimeFormat('en-US', {
@@ -90,7 +92,7 @@ const AdminDashboard: React.FC = () => {
   const [loadingOrgs, setLoadingOrgs] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
-  const [currentView, setCurrentView] = useState<'students' | 'analytics'>('students');
+  const [currentView, setCurrentView] = useState<'students' | 'analytics' | 'module-locks'>('students');
 
   useEffect(() => {
     if (user?.role !== 'admin' && user?.role !== 'owner') {
@@ -374,6 +376,18 @@ const AdminDashboard: React.FC = () => {
           >
             <BarChart3 size={20} />
             Class Analytics
+          </button>
+
+          <button
+            onClick={() => setCurrentView('module-locks')}
+            className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-bold rounded-xl transition-all duration-200 ${
+              currentView === 'module-locks'
+                ? 'text-white bg-gradient-to-br from-brand-400 to-brand-500 shadow-lg shadow-brand-500/40'
+                : `${textSecondaryClass} hover:bg-gray-100 ${darkMode ? 'hover:bg-white/10' : ''}`
+            }`}
+          >
+            <Lock size={20} />
+            Module Access
           </button>
 
           {user?.role === 'owner' && (
@@ -1376,6 +1390,36 @@ const AdminDashboard: React.FC = () => {
               <p className={textSecondaryClass}>Choose an organization from above to access student data</p>
             </div>
           )}
+
+          {/* Module Locks View */}
+          {currentView === 'module-locks' && user && (user.role === 'admin' || selectedOrg) ? (
+            <div className={`${cardClass} rounded-2xl p-6 shadow-xl border`}>
+              {user.organizationId || selectedOrg?.id ? (
+                <ModuleLockManager
+                  organizationId={(user.organizationId || selectedOrg?.id)!}
+                  organizationName={(user.organizationName || selectedOrg?.name)!}
+                  userId={user.id}
+                  isSuperAdmin={user.role === 'owner'}
+                />
+              ) : (
+                <div className="text-center py-12">
+                  <div className={`w-24 h-24 ${darkMode ? 'bg-navy-700' : 'bg-gray-100'} rounded-full flex items-center justify-center mx-auto mb-6`}>
+                    <Lock className={textSecondaryClass} size={48} />
+                  </div>
+                  <h3 className={`text-xl font-bold ${textClass} mb-2`}>No organization selected</h3>
+                  <p className={textSecondaryClass}>Select an organization to manage module access</p>
+                </div>
+              )}
+            </div>
+          ) : currentView === 'module-locks' ? (
+            <div className={`${cardClass} rounded-2xl p-12 text-center shadow-xl border`}>
+              <div className={`w-24 h-24 ${darkMode ? 'bg-navy-700' : 'bg-gray-100'} rounded-full flex items-center justify-center mx-auto mb-6`}>
+                <Building2 className={textSecondaryClass} size={48} />
+              </div>
+              <h3 className={`text-xl font-bold ${textClass} mb-2`}>Select an organization to continue</h3>
+              <p className={textSecondaryClass}>Choose an organization from above to manage module access</p>
+            </div>
+          ) : null}
         </div>
       </main>
 

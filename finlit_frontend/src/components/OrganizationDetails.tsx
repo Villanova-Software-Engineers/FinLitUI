@@ -21,6 +21,7 @@ import {
   X,
   Loader2,
   AlertCircle,
+  Lock,
 } from 'lucide-react';
 import { useAuthContext } from '../auth/context/AuthContext';
 import {
@@ -29,6 +30,7 @@ import {
   removeOrganizationAdmin,
 } from '../firebase/firestore.service';
 import type { Organization, OrganizationAdmin } from '../auth/types/auth.types';
+import ModuleLockManager from './ModuleLockManager';
 
 const OrganizationDetails: React.FC = () => {
   const { user } = useAuthContext();
@@ -44,6 +46,7 @@ const OrganizationDetails: React.FC = () => {
   const [success, setSuccess] = useState<string | null>(null);
   const [generatedPassword, setGeneratedPassword] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [activeTab, setActiveTab] = useState<'admins' | 'locks'>('admins');
 
   // Redirect if not owner
   if (!user || user.role !== 'owner') {
@@ -285,16 +288,53 @@ const OrganizationDetails: React.FC = () => {
           </div>
         )}
 
-        {/* Add Admin Button */}
-        <div className="mb-6">
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-sm"
-          >
-            <UserPlus className="h-5 w-5" />
-            Add New Admin
-          </button>
+        {/* Tabs */}
+        <div className="mb-6 border-b border-gray-200">
+          <nav className="flex gap-4">
+            <button
+              onClick={() => setActiveTab('admins')}
+              className={`px-4 py-2 border-b-2 font-medium transition-colors ${
+                activeTab === 'admins'
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Admins ({organization.admins.length})
+              </div>
+            </button>
+            <button
+              onClick={() => setActiveTab('locks')}
+              className={`px-4 py-2 border-b-2 font-medium transition-colors ${
+                activeTab === 'locks'
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <Lock className="h-5 w-5" />
+                Module Access Control
+              </div>
+            </button>
+          </nav>
         </div>
+
+        {/* Tab Content */}
+        {activeTab === 'admins' && (
+          <>
+            {/* Add Admin Button */}
+            <div className="mb-6">
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-sm"
+              >
+                <UserPlus className="h-5 w-5" />
+                Add New Admin
+              </button>
+            </div>
+          </>
+        )}
 
         {/* Add Admin Modal */}
         {showAddModal && (
@@ -369,73 +409,85 @@ const OrganizationDetails: React.FC = () => {
           </div>
         )}
 
-        {/* Admins List */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="px-6 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">
-              Organization Admins ({organization.admins.length})
-            </h2>
-          </div>
+        {/* Admins Tab Content */}
+        {activeTab === 'admins' && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="px-6 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Organization Admins ({organization.admins.length})
+              </h2>
+            </div>
 
-          <div className="divide-y divide-gray-200">
-            {organization.admins.map((admin) => (
-              <div
-                key={admin.userId}
-                className="px-6 py-4 hover:bg-gray-50 transition-colors"
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="flex items-center gap-2">
-                        {admin.isSuperAdmin ? (
-                          <Shield className="h-5 w-5 text-yellow-600" />
-                        ) : (
-                          <ShieldAlert className="h-5 w-5 text-blue-600" />
+            <div className="divide-y divide-gray-200">
+              {organization.admins.map((admin) => (
+                <div
+                  key={admin.userId}
+                  className="px-6 py-4 hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="flex items-center gap-2">
+                          {admin.isSuperAdmin ? (
+                            <Shield className="h-5 w-5 text-yellow-600" />
+                          ) : (
+                            <ShieldAlert className="h-5 w-5 text-blue-600" />
+                          )}
+                          <span className="font-medium text-gray-900">
+                            {admin.displayName || 'Admin'}
+                          </span>
+                        </div>
+                        {admin.isSuperAdmin && (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                            Super Admin
+                          </span>
                         )}
-                        <span className="font-medium text-gray-900">
-                          {admin.displayName || 'Admin'}
-                        </span>
                       </div>
+
+                      <div className="flex items-center gap-4 text-sm text-gray-600">
+                        <div className="flex items-center gap-1">
+                          <Mail className="h-4 w-4" />
+                          <span>{admin.email}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Clock className="h-4 w-4" />
+                          <span>Added {formatDate(admin.addedAt)}</span>
+                        </div>
+                      </div>
+
                       {admin.isSuperAdmin && (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                          Super Admin
-                        </span>
+                        <p className="text-xs text-gray-500 mt-2">
+                          First admin created for this organization. Cannot be removed.
+                        </p>
                       )}
                     </div>
 
-                    <div className="flex items-center gap-4 text-sm text-gray-600">
-                      <div className="flex items-center gap-1">
-                        <Mail className="h-4 w-4" />
-                        <span>{admin.email}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-4 w-4" />
-                        <span>Added {formatDate(admin.addedAt)}</span>
-                      </div>
-                    </div>
-
-                    {admin.isSuperAdmin && (
-                      <p className="text-xs text-gray-500 mt-2">
-                        First admin created for this organization. Cannot be removed.
-                      </p>
+                    {/* Remove Button */}
+                    {!admin.isSuperAdmin && (
+                      <button
+                        onClick={() => handleRemoveAdmin(admin.userId, admin.email, admin.isSuperAdmin)}
+                        className="ml-4 text-red-600 hover:text-red-800 hover:bg-red-50 p-2 rounded-lg transition-colors"
+                        title="Remove admin"
+                      >
+                        <Trash2 className="h-5 w-5" />
+                      </button>
                     )}
                   </div>
-
-                  {/* Remove Button */}
-                  {!admin.isSuperAdmin && (
-                    <button
-                      onClick={() => handleRemoveAdmin(admin.userId, admin.email, admin.isSuperAdmin)}
-                      className="ml-4 text-red-600 hover:text-red-800 hover:bg-red-50 p-2 rounded-lg transition-colors"
-                      title="Remove admin"
-                    >
-                      <Trash2 className="h-5 w-5" />
-                    </button>
-                  )}
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Module Locks Tab Content */}
+        {activeTab === 'locks' && user && (
+          <ModuleLockManager
+            organizationId={orgId!}
+            organizationName={organization.name}
+            userId={user.id}
+            isSuperAdmin={true}
+          />
+        )}
       </div>
     </div>
   );
