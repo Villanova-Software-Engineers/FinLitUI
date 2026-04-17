@@ -44,6 +44,7 @@ import type {
   MoneyPersonalityResult,
   SavedCalculation,
   ContentLock,
+  WeekLock,
 } from '../auth/types/auth.types';
 
 // Type helper for Firestore documents with serverTimestamp
@@ -2242,7 +2243,7 @@ export async function isModuleAccessible(
 }
 
 /**
- * Check if a case study is accessible to a student
+ * Check if a case study is accessible to a student (legacy - checks whole case study)
  */
 export async function isCaseStudyAccessible(
   organizationId: string,
@@ -2264,20 +2265,120 @@ export async function isCaseStudyAccessible(
 }
 
 /**
+ * Lock/Unlock a specific case study week for an organization (Super Admin only)
+ */
+export async function setCaseStudyWeekLockBySuperAdmin(
+  organizationId: string,
+  weekNumber: number,
+  locked: boolean,
+  userId: string
+): Promise<void> {
+  const orgRef = doc(db, ORGANIZATIONS, organizationId);
+  const org = await getOrganization(organizationId);
+
+  if (!org) {
+    throw new Error('Organization not found');
+  }
+
+  const lockedCaseStudyWeeks = org.lockedCaseStudyWeeks || {};
+  const weekKey = weekNumber.toString();
+
+  if (locked) {
+    lockedCaseStudyWeeks[weekKey] = {
+      lockedBySuperAdmin: true,
+      lockedByOrgAdmin: false,
+      lockedAt: new Date(),
+      lockedBy: userId,
+    };
+  } else {
+    delete lockedCaseStudyWeeks[weekKey];
+  }
+
+  await updateDoc(orgRef, {
+    lockedCaseStudyWeeks,
+  });
+}
+
+/**
+ * Lock/Unlock a specific case study week for students (Org Admin only)
+ */
+export async function setCaseStudyWeekLockByOrgAdmin(
+  organizationId: string,
+  weekNumber: number,
+  locked: boolean,
+  userId: string
+): Promise<void> {
+  const orgRef = doc(db, ORGANIZATIONS, organizationId);
+  const org = await getOrganization(organizationId);
+
+  if (!org) {
+    throw new Error('Organization not found');
+  }
+
+  const lockedCaseStudyWeeks = org.lockedCaseStudyWeeks || {};
+  const weekKey = weekNumber.toString();
+  const existingLock = lockedCaseStudyWeeks[weekKey];
+
+  if (existingLock?.lockedBySuperAdmin) {
+    throw new Error('Cannot modify case study week locked by super admin');
+  }
+
+  if (locked) {
+    lockedCaseStudyWeeks[weekKey] = {
+      lockedBySuperAdmin: false,
+      lockedByOrgAdmin: true,
+      lockedAt: new Date(),
+      lockedBy: userId,
+    };
+  } else {
+    delete lockedCaseStudyWeeks[weekKey];
+  }
+
+  await updateDoc(orgRef, {
+    lockedCaseStudyWeeks,
+  });
+}
+
+/**
+ * Check if a specific case study week is accessible to a student
+ */
+export async function isCaseStudyWeekAccessible(
+  organizationId: string,
+  weekNumber: number
+): Promise<boolean> {
+  const org = await getOrganization(organizationId);
+
+  if (!org) {
+    return true;
+  }
+
+  const weekKey = weekNumber.toString();
+  const lock = org.lockedCaseStudyWeeks?.[weekKey];
+
+  if (!lock) {
+    return true;
+  }
+
+  return !(lock.lockedBySuperAdmin || lock.lockedByOrgAdmin);
+}
+
+/**
  * Get all locked content for an organization
  */
 export async function getOrganizationLocks(organizationId: string): Promise<{
   modules: { [moduleId: string]: ContentLock };
   caseStudies: { [caseStudyId: string]: ContentLock };
+  caseStudyWeeks: { [weekNumber: string]: WeekLock };
 }> {
   const org = await getOrganization(organizationId);
 
   if (!org) {
-    return { modules: {}, caseStudies: {} };
+    return { modules: {}, caseStudies: {}, caseStudyWeeks: {} };
   }
 
   return {
     modules: org.lockedModules || {},
     caseStudies: org.lockedCaseStudies || {},
+    caseStudyWeeks: org.lockedCaseStudyWeeks || {},
   };
 }

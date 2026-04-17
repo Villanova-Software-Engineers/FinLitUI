@@ -38,6 +38,7 @@ import {
   saveCaseStudyProgress,
   completeCaseStudy,
   isCaseStudyAccessible,
+  isCaseStudyWeekAccessible,
 } from '../firebase/firestore.service';
 import { shuffleQuizOptions } from '../utils/shuffleQuizOptions';
 
@@ -99,9 +100,15 @@ const CaseStudyPage: React.FC = () => {
     try {
       const study = await getActiveCaseStudy();
 
-      // Check if case study is locked by admin
+      // Check if case study week is locked by admin
       if (study && user?.organizationId && user?.role === 'student') {
-        const accessible = await isCaseStudyAccessible(user.organizationId, study.id);
+        // Check week-specific lock first (new granular approach)
+        const weekAccessible = await isCaseStudyWeekAccessible(user.organizationId, currentWeek);
+
+        // Also check legacy whole case study lock for backwards compatibility
+        const caseStudyAccessible = await isCaseStudyAccessible(user.organizationId, study.id);
+
+        const accessible = weekAccessible && caseStudyAccessible;
         setIsLocked(!accessible);
 
         if (!accessible) {
