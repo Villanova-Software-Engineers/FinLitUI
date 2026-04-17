@@ -5,7 +5,7 @@
  * IMMERSIVE FULL-WIDTH DESIGN
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   BookOpen,
@@ -29,7 +29,7 @@ import {
   Quote,
   Zap,
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useAuthContext } from '../auth/context/AuthContext';
 import type { CaseStudy, CaseStudyProgress } from '../auth/types/auth.types';
 import {
@@ -38,13 +38,15 @@ import {
   saveCaseStudyProgress,
   completeCaseStudy,
 } from '../firebase/firestore.service';
+import { shuffleQuizOptions } from '../utils/shuffleQuizOptions';
 
 const CaseStudyPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuthContext();
+  const { week: weekParam } = useParams<{ week: string }>();
 
   const [caseStudy, setCaseStudy] = useState<CaseStudy | null>(null);
-  const [progress, setProgress] = useState<CaseStudyProgress | null>(null);
+  const [, setProgress] = useState<CaseStudyProgress | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
@@ -52,6 +54,39 @@ const CaseStudyPage: React.FC = () => {
   const [currentQuizIndex, setCurrentQuizIndex] = useState(0);
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [finalScore, setFinalScore] = useState<{ score: number; passed: boolean } | null>(null);
+  const currentWeek = parseInt(weekParam || '1');
+
+  // Get content for current week (supports both multi-week and legacy formats)
+  const weekContent = useMemo(() => {
+    if (!caseStudy) return null;
+    const weeksData = caseStudy.weeks as Record<string | number, typeof caseStudy.case_study> | undefined;
+    const content = weeksData?.[currentWeek] || weeksData?.[String(currentWeek)] || caseStudy.case_study;
+    return content;
+  }, [caseStudy, currentWeek]);
+
+  // Shuffle quiz options once when content changes
+  const shuffledQuiz = useMemo(() => {
+    if (!weekContent?.quiz) return [];
+
+    // Convert case study quiz format to shuffleQuizOptions format
+    const quizForShuffle = weekContent.quiz.map((q) => ({
+      question: q.question,
+      options: q.options,
+      correctIndex: q.options.findIndex(opt => opt === q.answer),
+      teaching_point: q.teaching_point,
+      answer: q.answer, // Keep original answer for reference
+    }));
+
+    const shuffled = shuffleQuizOptions(quizForShuffle);
+
+    // Convert back to case study format with shuffled options
+    return shuffled.map(q => ({
+      question: q.question,
+      options: q.options,
+      answer: q.options[q.correctIndex], // Update answer to match new position
+      teaching_point: q.teaching_point,
+    }));
+  }, [weekContent]);
 
   useEffect(() => {
     loadCaseStudy();
@@ -64,11 +99,15 @@ const CaseStudyPage: React.FC = () => {
       setCaseStudy(study);
 
       if (study && user) {
-        const userProgress = await getCaseStudyProgress(user.id, study.id);
+        // currentWeek is already set from URL params (line 57)
+
+        const userProgress = await getCaseStudyProgress(user.id, study.id, currentWeek);
         setProgress(userProgress);
         if (userProgress?.completedAt) {
           setQuizCompleted(true);
-          setFinalScore({ score: userProgress.score || 0, passed: (userProgress.score || 0) >= 70 });
+          // Calculate if passed based on score percentage
+          const passed = (userProgress.score || 0) >= 75;
+          setFinalScore({ score: userProgress.score || 0, passed });
         }
       }
     } catch (err) {
@@ -84,26 +123,28 @@ const CaseStudyPage: React.FC = () => {
     setSelectedAnswer(answer);
     setShowResult(true);
 
-    const currentQuestion = caseStudy.case_study.quiz[currentQuizIndex];
+    if (!weekContent) return;
+
+    const currentQuestion = shuffledQuiz[currentQuizIndex];
     const isCorrect = answer === currentQuestion.answer;
 
     await saveCaseStudyProgress(
       user.id,
       caseStudy.id,
-      caseStudy.case_study.week,
+      currentWeek,
       currentQuizIndex,
       answer,
       isCorrect
     );
 
-    const updatedProgress = await getCaseStudyProgress(user.id, caseStudy.id);
+    const updatedProgress = await getCaseStudyProgress(user.id, caseStudy.id, currentWeek);
     setProgress(updatedProgress);
   };
 
   const handleNextQuestion = async () => {
-    if (!caseStudy || !user) return;
+    if (!caseStudy || !user || !weekContent) return;
 
-    if (currentQuizIndex < caseStudy.case_study.quiz.length - 1) {
+    if (currentQuizIndex < shuffledQuiz.length - 1) {
       setCurrentQuizIndex(currentQuizIndex + 1);
       setSelectedAnswer(null);
       setShowResult(false);
@@ -111,16 +152,22 @@ const CaseStudyPage: React.FC = () => {
       const result = await completeCaseStudy(
         user.id,
         caseStudy.id,
-        caseStudy.case_study.quiz.length
+        shuffledQuiz.length,
+        currentWeek
       );
       setFinalScore(result);
       setQuizCompleted(true);
     }
   };
 
-  const content = caseStudy?.case_study;
+  // Get images for current week (supports both multi-week and legacy formats)
+  const images = caseStudy?.weekImages?.[currentWeek] || {
+    personImageUrl: caseStudy?.personImageUrl || '',
+    companyImageUrl1: caseStudy?.companyImageUrl1 || '',
+    companyImageUrl2: caseStudy?.companyImageUrl2 || '',
+  };
 
-  const pages = content ? [
+  const pages = weekContent ? [
     { title: 'Intro', icon: BookOpen, key: 'intro' },
     { title: 'Who?', icon: User, key: 'who' },
     { title: 'What?', icon: TrendingUp, key: 'what' },
@@ -144,7 +191,7 @@ const CaseStudyPage: React.FC = () => {
     );
   }
 
-  if (!caseStudy || !content) {
+  if (!caseStudy || !weekContent) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="text-center max-w-md bg-white rounded-3xl p-10 shadow-2xl border border-gray-100">
@@ -170,13 +217,13 @@ const CaseStudyPage: React.FC = () => {
       <header className="bg-white border-b border-gray-100 py-2 sm:py-3 px-3 sm:px-6 z-30 shrink-0">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <button
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate('/case-study')}
             className="flex items-center gap-1 sm:gap-2 text-gray-500 hover:text-indigo-600 transition-colors font-medium group"
           >
             <div className="p-1.5 sm:p-2 rounded-lg bg-gray-100 group-hover:bg-indigo-50 transition-colors">
               <ArrowLeft size={16} className="sm:w-[18px] sm:h-[18px]" />
             </div>
-            <span className="hidden sm:inline">Dashboard</span>
+            <span className="hidden sm:inline">All Weeks</span>
           </button>
 
           {/* Expanded Progress Bar */}
@@ -197,8 +244,8 @@ const CaseStudyPage: React.FC = () => {
 
           <div className="flex items-center gap-2 sm:gap-3">
             <span className="text-right">
-              <span className="block text-[10px] sm:text-xs font-bold text-gray-900 leading-tight truncate max-w-[80px] sm:max-w-none">{content.subject}</span>
-              <span className="block text-[8px] sm:text-[10px] font-semibold text-gray-400 uppercase">Week {content.week}</span>
+              <span className="block text-[10px] sm:text-xs font-bold text-gray-900 leading-tight truncate max-w-[80px] sm:max-w-none">{weekContent.subject}</span>
+              <span className="block text-[8px] sm:text-[10px] font-semibold text-gray-400 uppercase">Week {currentWeek}</span>
             </span>
           </div>
         </div>
@@ -226,13 +273,13 @@ const CaseStudyPage: React.FC = () => {
                       transition={{ delay: 0.2 }}
                     >
                       <span className="inline-block px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-indigo-50 text-indigo-600 font-bold text-[10px] sm:text-xs uppercase tracking-wider mb-3 sm:mb-6 border border-indigo-100">
-                        Case Study • Week {content.week}
+                        Case Study • Week {currentWeek}
                       </span>
                       <h1 className="text-2xl sm:text-4xl lg:text-6xl font-black text-slate-900 mb-3 sm:mb-6 leading-tight tracking-tight">
-                        {content.subject}
+                        {weekContent.subject}
                       </h1>
                       <p className="text-base sm:text-xl lg:text-2xl text-slate-500 font-medium mb-6 sm:mb-10 leading-relaxed max-w-lg">
-                        {content.topic}
+                        {weekContent.topic}
                       </p>
 
                       <div className="grid grid-cols-2 gap-2 sm:gap-4 max-w-md">
@@ -241,7 +288,7 @@ const CaseStudyPage: React.FC = () => {
                           <div className="text-[10px] sm:text-xs text-slate-500 font-semibold uppercase">Read Time</div>
                         </div>
                         <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-gray-50 border border-gray-100">
-                          <div className="font-bold text-slate-900 text-sm sm:text-lg mb-0.5 sm:mb-1">{content.quiz.length} Questions</div>
+                          <div className="font-bold text-slate-900 text-sm sm:text-lg mb-0.5 sm:mb-1">{weekContent.quiz.length} Questions</div>
                           <div className="text-[10px] sm:text-xs text-slate-500 font-semibold uppercase">Knowledge Check</div>
                         </div>
                       </div>
@@ -260,13 +307,13 @@ const CaseStudyPage: React.FC = () => {
                       transition={{ duration: 0.6 }}
                     >
                       <img
-                        src={caseStudy.personImageUrl}
-                        alt={content.subject}
+                        src={images.personImageUrl}
+                        alt={weekContent.subject}
                         className="w-32 h-32 sm:w-64 sm:h-64 lg:w-80 lg:h-80 rounded-full object-cover border-4 sm:border-[8px] border-white/20 shadow-2xl mb-4 sm:mb-8 mx-auto"
                       />
                       <div className="flex justify-center gap-2 sm:gap-4">
-                        <img src={caseStudy.companyImageUrl1} alt="" className="w-10 h-10 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl object-cover bg-white/90 shadow-lg p-0.5 sm:p-1" />
-                        <img src={caseStudy.companyImageUrl2} alt="" className="w-10 h-10 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl object-cover bg-white/90 shadow-lg p-0.5 sm:p-1" />
+                        <img src={images.companyImageUrl1} alt="" className="w-10 h-10 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl object-cover bg-white/90 shadow-lg p-0.5 sm:p-1" />
+                        <img src={images.companyImageUrl2} alt="" className="w-10 h-10 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl object-cover bg-white/90 shadow-lg p-0.5 sm:p-1" />
                       </div>
                     </motion.div>
                   </div>
@@ -280,8 +327,8 @@ const CaseStudyPage: React.FC = () => {
                     <div className="relative w-full max-w-[120px] sm:max-w-sm">
                       <div className="absolute inset-0 bg-indigo-900/5 rounded-xl sm:rounded-2xl transform rotate-3"></div>
                       <img
-                        src={caseStudy.personImageUrl}
-                        alt={content.subject}
+                        src={images.personImageUrl}
+                        alt={weekContent.subject}
                         className="relative w-full h-auto aspect-square sm:aspect-[3/4] object-cover object-top rounded-xl sm:rounded-2xl shadow-xl"
                       />
                     </div>
@@ -296,11 +343,11 @@ const CaseStudyPage: React.FC = () => {
                     </div>
 
                     <h2 className="text-xl sm:text-3xl lg:text-5xl font-black text-slate-900 mb-4 sm:mb-8 leading-tight">
-                      Who is {content.subject}?
+                      Who is {weekContent.subject}?
                     </h2>
 
                     <p className="text-sm sm:text-lg lg:text-2xl text-slate-600 leading-relaxed font-medium mb-6 sm:mb-10 text-pretty">
-                      {content.who_is_this.content}
+                      {weekContent.who_is_this.content}
                     </p>
 
                     <div className="flex flex-wrap gap-2 sm:gap-3">
@@ -328,17 +375,17 @@ const CaseStudyPage: React.FC = () => {
                       </div>
 
                       <h2 className="text-xl sm:text-3xl lg:text-5xl font-black text-slate-900 mb-3 sm:mb-6 leading-tight">
-                        {content.what_happened.title}
+                        {weekContent.what_happened.title}
                       </h2>
                       <p className="text-sm sm:text-lg lg:text-xl text-slate-600 leading-relaxed font-medium text-pretty">
-                        {content.what_happened.content}
+                        {weekContent.what_happened.content}
                       </p>
                     </div>
 
                     <div className="relative group">
                       <div className="absolute inset-0 bg-purple-200 rounded-xl sm:rounded-3xl transform rotate-3 group-hover:rotate-1 transition-transform"></div>
                       <img
-                        src={caseStudy.companyImageUrl1}
+                        src={images.companyImageUrl1}
                         alt="Company context"
                         className="relative w-full aspect-video rounded-xl sm:rounded-3xl object-cover shadow-2xl transform -rotate-1 group-hover:rotate-0 transition-transform"
                       />
@@ -365,18 +412,18 @@ const CaseStudyPage: React.FC = () => {
                     </div>
 
                     <h2 className="text-xl sm:text-3xl lg:text-5xl font-black text-slate-900 mb-4 sm:mb-8 text-center lg:text-left">
-                      {content.money_idea.title}
+                      {weekContent.money_idea.title}
                     </h2>
 
                     <div className="bg-amber-50 p-4 sm:p-8 rounded-xl sm:rounded-3xl border border-amber-100 mb-4 sm:mb-8">
                       <p className="text-sm sm:text-lg lg:text-2xl text-amber-900 font-medium leading-relaxed">
-                        {content.money_idea.what_it_means}
+                        {weekContent.money_idea.what_it_means}
                       </p>
                     </div>
 
-                    {content.money_idea.formula && (
+                    {weekContent.money_idea.formula && (
                       <div className="font-mono text-sm sm:text-xl lg:text-3xl text-slate-700 font-bold bg-slate-100 p-3 sm:p-6 rounded-xl sm:rounded-2xl inline-block max-w-fit overflow-x-auto">
-                        {content.money_idea.formula.replace(/\$\$/g, '')}
+                        {weekContent.money_idea.formula.replace(/\$\$/g, '')}
                       </div>
                     )}
                   </div>
@@ -404,18 +451,18 @@ const CaseStudyPage: React.FC = () => {
                           <Quote size={60} className="sm:w-[120px] sm:h-[120px]" />
                         </div>
                         <p className="relative text-base sm:text-2xl lg:text-3xl font-medium text-slate-700 leading-relaxed text-pretty">
-                          "{content.money_idea.why_it_matters}"
+                          "{weekContent.money_idea.why_it_matters}"
                         </p>
                       </div>
 
                       <div className="bg-emerald-50 rounded-xl sm:rounded-3xl p-4 sm:p-8 lg:p-10 flex items-center gap-4 sm:gap-6 border border-emerald-100">
                         <img
-                          src={caseStudy.personImageUrl}
+                          src={images.personImageUrl}
                           alt="Expert"
                           className="w-14 h-14 sm:w-20 sm:h-20 rounded-full object-cover border-2 sm:border-4 border-white shadow-lg shrink-0"
                         />
                         <div>
-                          <h4 className="font-bold text-emerald-900 text-sm sm:text-lg mb-0.5 sm:mb-1">{content.subject}'s Strategy</h4>
+                          <h4 className="font-bold text-emerald-900 text-sm sm:text-lg mb-0.5 sm:mb-1">{weekContent.subject}'s Strategy</h4>
                           <p className="text-emerald-700 leading-snug text-xs sm:text-base">Understanding this principle is key to long-term wealth building.</p>
                         </div>
                       </div>
@@ -447,11 +494,11 @@ const CaseStudyPage: React.FC = () => {
                     <div className="prose prose-sm sm:prose-lg prose-red">
                       <h3 className="text-lg sm:text-2xl font-bold text-red-600 mb-3 sm:mb-6">Critical Considerations</h3>
                       <p className="text-sm sm:text-xl text-slate-600 leading-relaxed">
-                        {content.money_idea.risk}
+                        {weekContent.money_idea.risk}
                       </p>
 
                       <div className="mt-6 sm:mt-10 bg-red-50 rounded-xl sm:rounded-2xl p-4 sm:p-6 flex items-start gap-3 sm:gap-4">
-                        <img src={caseStudy.companyImageUrl1} alt="Risk" className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg object-cover bg-red-200" />
+                        <img src={images.companyImageUrl1} alt="Risk" className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg object-cover bg-red-200" />
                         <div>
                           <h4 className="font-bold text-red-900 text-xs sm:text-sm uppercase mb-0.5 sm:mb-1">Lesson</h4>
                           <p className="text-red-700 text-xs sm:text-sm font-medium">Always calculate the downside before jumping in.</p>
@@ -473,11 +520,11 @@ const CaseStudyPage: React.FC = () => {
                     </div>
 
                     <h2 className="text-lg sm:text-2xl lg:text-4xl font-black text-slate-900 mb-6 sm:mb-12 leading-tight px-2">
-                      "{content.money_idea.real_life}"
+                      "{weekContent.money_idea.real_life}"
                     </h2>
 
                     <div className="bg-slate-50 rounded-xl sm:rounded-3xl p-4 sm:p-8 lg:p-10 border border-slate-100 inline-flex flex-col md:flex-row items-center gap-4 sm:gap-8 text-left max-w-3xl">
-                      <img src={caseStudy.companyImageUrl2} alt="Example" className="w-20 h-20 sm:w-32 sm:h-32 rounded-xl sm:rounded-2xl object-cover shadow-lg" />
+                      <img src={images.companyImageUrl2} alt="Example" className="w-20 h-20 sm:w-32 sm:h-32 rounded-xl sm:rounded-2xl object-cover shadow-lg" />
                       <div>
                         <h3 className="text-lg sm:text-2xl font-bold text-slate-800 mb-1 sm:mb-2">Apply this today</h3>
                         <p className="text-slate-600 text-sm sm:text-lg">
@@ -506,19 +553,19 @@ const CaseStudyPage: React.FC = () => {
                         <h2 className="text-2xl sm:text-5xl font-black text-slate-900 mb-2 sm:mb-4">{finalScore.passed ? 'Nailed It!' : 'Nice Try!'}</h2>
                         <p className="text-lg sm:text-2xl text-slate-500 mb-6 sm:mb-10">You scored <span className="font-bold text-slate-900">{finalScore.score}%</span> on this case study.</p>
                         <button
-                          onClick={() => navigate('/dashboard')}
+                          onClick={() => navigate('/case-study')}
                           className="w-full py-3 sm:py-5 bg-slate-900 text-white rounded-xl sm:rounded-2xl font-bold text-base sm:text-xl hover:bg-slate-800 transition-all shadow-xl hover:shadow-2xl"
                         >
-                          Complete & Return Home
+                          {finalScore.passed ? 'Continue to Next Week →' : 'Back to Roadmap'}
                         </button>
                       </motion.div>
                     ) : (
                       <div className="max-w-4xl w-full">
                         <div className="flex justify-between items-end mb-4 sm:mb-10 border-b border-gray-100 pb-3 sm:pb-6">
                           <div>
-                            <span className="text-xs sm:text-sm font-bold text-indigo-600 uppercase tracking-wider block mb-1 sm:mb-2">Question {currentQuizIndex + 1} of {content.quiz.length}</span>
+                            <span className="text-xs sm:text-sm font-bold text-indigo-600 uppercase tracking-wider block mb-1 sm:mb-2">Question {currentQuizIndex + 1} of {shuffledQuiz.length}</span>
                             <h2 className="text-lg sm:text-3xl lg:text-4xl font-bold text-slate-900 leading-tight">
-                              {content.quiz[currentQuizIndex].question}
+                              {shuffledQuiz[currentQuizIndex].question}
                             </h2>
                           </div>
                           <div className="hidden lg:block text-slate-300">
@@ -527,9 +574,9 @@ const CaseStudyPage: React.FC = () => {
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6">
-                          {content.quiz[currentQuizIndex].options.map((option, idx) => {
+                          {shuffledQuiz[currentQuizIndex].options.map((option: string, idx: number) => {
                             const isSelected = selectedAnswer === option;
-                            const isCorrect = option === content.quiz[currentQuizIndex].answer;
+                            const isCorrect = option === shuffledQuiz[currentQuizIndex].answer;
                             const showCorrectness = showResult && (isSelected || isCorrect);
 
                             return (
@@ -571,7 +618,7 @@ const CaseStudyPage: React.FC = () => {
                             <div className="flex-1">
                               <h4 className="font-bold text-indigo-400 uppercase tracking-wider text-xs sm:text-sm mb-1 sm:mb-2">Teaching Point</h4>
                               <p className="text-sm sm:text-lg leading-relaxed text-slate-200">
-                                {content.quiz[currentQuizIndex].teaching_point}
+                                {shuffledQuiz[currentQuizIndex].teaching_point}
                               </p>
                             </div>
                             <button

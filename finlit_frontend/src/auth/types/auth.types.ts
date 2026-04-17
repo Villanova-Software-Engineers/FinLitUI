@@ -247,18 +247,29 @@ export interface CaseStudyContent {
   quiz: CaseStudyQuizQuestion[];
 }
 
+// Week-specific images for case studies
+export interface WeekImages {
+  personImageUrl: string;
+  companyImageUrl1: string;
+  companyImageUrl2: string;
+}
+
 // Case Study document in Firestore
 export interface CaseStudy {
   id: string;
-  case_study: CaseStudyContent;
-  // Image URLs (stored in Firebase Storage)
-  personImageUrl: string;      // Image of the person (e.g., Elon Musk)
-  companyImageUrl1: string;    // First company/related image
-  companyImageUrl2: string;    // Second company/related image
+  weeks: { [weekNumber: number]: CaseStudyContent }; // All weeks (1-8)
+  weekImages: { [weekNumber: number]: WeekImages };   // Images per week
   isActive: boolean;           // Whether this is the current week's case study
+  activeWeek?: number;         // Which week is currently active (for multi-week support)
   createdAt: Date;
   createdBy: string;
   updatedAt?: Date;
+
+  // Legacy support (for old single-week case studies)
+  case_study?: CaseStudyContent;
+  personImageUrl?: string;
+  companyImageUrl1?: string;
+  companyImageUrl2?: string;
 }
 
 // Case Study progress tracking for students

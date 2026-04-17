@@ -36,6 +36,7 @@ import QuizQuestionsAdmin from "./components/QuizQuestionsAdmin";
 import DailyChallengeAdmin from "./components/DailyChallengeAdmin";
 import CaseStudyAdmin from "./components/CaseStudyAdmin";
 import CaseStudyPage from "./pages/CaseStudy";
+import CaseStudyRoadmap from "./pages/CaseStudyRoadmap";
 import EconomicNewsQuiz from "./components/EconomicNewsQuiz";
 import Certificate from "./components/Certificate";
 import FinancialTools from "./components/FinancialTools";
@@ -509,9 +510,17 @@ function App() {
             }
           />
 
-          {/* Case Study Route */}
+          {/* Case Study Routes */}
           <Route
             path="/case-study"
+            element={
+              <ProtectedRoute>
+                <CaseStudyRoadmap />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/case-study/:week"
             element={
               <ProtectedRoute>
                 <CaseStudyPage />

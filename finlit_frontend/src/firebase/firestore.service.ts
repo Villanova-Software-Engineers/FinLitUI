@@ -1184,10 +1184,12 @@ const CASE_STUDIES = 'caseStudies';
 export async function uploadCaseStudyImage(
   file: File,
   caseStudyId: string,
-  imageType: 'person' | 'company1' | 'company2'
+  imageType: 'person' | 'company1' | 'company2',
+  weekNumber?: number
 ): Promise<string> {
   const fileExtension = file.name.split('.').pop() || 'jpg';
-  const fileName = `case-studies/${caseStudyId}/${imageType}.${fileExtension}`;
+  const weekPath = weekNumber ? `/week-${weekNumber}` : '';
+  const fileName = `case-studies/${caseStudyId}${weekPath}/${imageType}.${fileExtension}`;
   const storageRef = ref(storage, fileName);
 
   await uploadBytes(storageRef, file);
@@ -1221,47 +1223,130 @@ export async function deleteCaseStudyImage(
 }
 
 /**
- * Create a new case study
+ * Create/Update the permanent case study (adds weeks to existing one)
+ * There is only ONE case study that accumulates all weeks
  */
 export async function createCaseStudy(
-  caseStudyContent: CaseStudyContent,
-  personImage: File,
-  companyImage1: File,
-  companyImage2: File,
+  weeksContent: { [weekNumber: number]: CaseStudyContent },
+  weekImages: { [weekNumber: number]: { person: File | null; company1: File | null; company2: File | null } },
   createdBy: string
 ): Promise<CaseStudy> {
-  // Create the document first to get the ID
-  const caseStudyRef = doc(collection(db, CASE_STUDIES));
-  const caseStudyId = caseStudyRef.id;
+  const PERMANENT_CASE_STUDY_ID = 'permanent-case-study';
+  const caseStudyRef = doc(db, CASE_STUDIES, PERMANENT_CASE_STUDY_ID);
 
-  // Upload images in parallel
-  const [personImageUrl, companyImageUrl1, companyImageUrl2] = await Promise.all([
-    uploadCaseStudyImage(personImage, caseStudyId, 'person'),
-    uploadCaseStudyImage(companyImage1, caseStudyId, 'company1'),
-    uploadCaseStudyImage(companyImage2, caseStudyId, 'company2'),
-  ]);
+  // Get existing case study to determine week offset
+  const existingDoc = await getDoc(caseStudyRef);
+  let weekOffset = 0;
+  let existingWeeks: { [weekNumber: number]: CaseStudyContent } = {};
+  let existingWeekImages: { [week: number]: { personImageUrl: string; companyImageUrl1: string; companyImageUrl2: string } } = {};
+  let isFirstTime = false;
+
+  if (existingDoc.exists()) {
+    const data = existingDoc.data();
+    existingWeeks = data.weeks || {};
+    existingWeekImages = data.weekImages || {};
+
+    // Find the maximum week number in existing data
+    const existingWeekNumbers = Object.keys(existingWeeks).map(Number);
+    if (existingWeekNumbers.length > 0) {
+      weekOffset = Math.max(...existingWeekNumbers);
+    }
+  } else {
+    isFirstTime = true;
+  }
+
+  // Renumber new weeks to append after existing ones
+  // Normalize incoming weeks to be sequential starting from 1
+  const renumberedWeeks: { [weekNumber: number]: CaseStudyContent } = {};
+  const renumberedImageSlots: { [weekNumber: number]: typeof weekImages[number] } = {};
+
+  // Sort incoming weeks to get sequential order
+  const incomingWeeks = Object.keys(weeksContent).map(Number).sort((a, b) => a - b);
+
+  incomingWeeks.forEach((originalWeek, index) => {
+    // New week number = weekOffset + sequential index (starting from 1)
+    const newWeekNumber = weekOffset + index + 1;
+    const content = weeksContent[originalWeek];
+
+    renumberedWeeks[newWeekNumber] = {
+      ...content,
+      week: newWeekNumber,
+    };
+
+    if (weekImages[originalWeek]) {
+      renumberedImageSlots[newWeekNumber] = weekImages[originalWeek];
+    }
+  });
+
+  // Upload all images for new weeks in parallel
+  const uploadPromises: Promise<{ week: number; type: string; url: string }>[] = [];
+
+  Object.entries(renumberedImageSlots).forEach(([weekStr, images]) => {
+    const week = Number(weekStr);
+
+    if (images?.person) {
+      uploadPromises.push(
+        uploadCaseStudyImage(images.person, PERMANENT_CASE_STUDY_ID, 'person', week)
+          .then(url => ({ week, type: 'person', url }))
+      );
+    }
+    if (images?.company1) {
+      uploadPromises.push(
+        uploadCaseStudyImage(images.company1, PERMANENT_CASE_STUDY_ID, 'company1', week)
+          .then(url => ({ week, type: 'company1', url }))
+      );
+    }
+    if (images?.company2) {
+      uploadPromises.push(
+        uploadCaseStudyImage(images.company2, PERMANENT_CASE_STUDY_ID, 'company2', week)
+          .then(url => ({ week, type: 'company2', url }))
+      );
+    }
+  });
+
+  const uploadedImages = await Promise.all(uploadPromises);
+
+  // Organize new images by week
+  const newWeekImageUrls: { [week: number]: { personImageUrl: string; companyImageUrl1: string; companyImageUrl2: string } } = {};
+
+  uploadedImages.forEach(({ week, type, url }) => {
+    if (!newWeekImageUrls[week]) {
+      newWeekImageUrls[week] = { personImageUrl: '', companyImageUrl1: '', companyImageUrl2: '' };
+    }
+
+    if (type === 'person') newWeekImageUrls[week].personImageUrl = url;
+    else if (type === 'company1') newWeekImageUrls[week].companyImageUrl1 = url;
+    else if (type === 'company2') newWeekImageUrls[week].companyImageUrl2 = url;
+  });
+
+  // Merge with existing weeks and images
+  const mergedWeeks = { ...existingWeeks, ...renumberedWeeks };
+  const mergedWeekImages = { ...existingWeekImages, ...newWeekImageUrls };
+
+  // Auto-detect first available week
+  const allWeekNumbers = Object.keys(mergedWeeks).map(Number).sort((a, b) => a - b);
+  const firstWeek = allWeekNumbers.length > 0 ? allWeekNumbers[0] : 1;
 
   const caseStudyData = {
-    case_study: caseStudyContent,
-    personImageUrl,
-    companyImageUrl1,
-    companyImageUrl2,
-    isActive: false, // Not active until explicitly set
-    createdAt: serverTimestamp(),
-    createdBy,
+    weeks: mergedWeeks,
+    weekImages: mergedWeekImages,
+    isActive: isFirstTime ? false : existingDoc.data()?.isActive || false,
+    activeWeek: isFirstTime ? firstWeek : existingDoc.data()?.activeWeek || firstWeek,
+    createdAt: isFirstTime ? serverTimestamp() : existingDoc.data()?.createdAt,
+    updatedAt: serverTimestamp(),
+    createdBy: isFirstTime ? createdBy : existingDoc.data()?.createdBy,
   };
 
-  await setDoc(caseStudyRef, caseStudyData);
+  await setDoc(caseStudyRef, caseStudyData, { merge: true });
 
   return {
-    id: caseStudyId,
-    case_study: caseStudyContent,
-    personImageUrl,
-    companyImageUrl1,
-    companyImageUrl2,
-    isActive: false,
-    createdAt: new Date(),
-    createdBy,
+    id: PERMANENT_CASE_STUDY_ID,
+    weeks: mergedWeeks,
+    weekImages: mergedWeekImages,
+    isActive: caseStudyData.isActive as boolean,
+    activeWeek: caseStudyData.activeWeek as number,
+    createdAt: isFirstTime ? new Date() : (existingDoc.data()?.createdAt as Timestamp)?.toDate() || new Date(),
+    createdBy: caseStudyData.createdBy as string,
   };
 }
 
@@ -1288,23 +1373,27 @@ export async function getAllCaseStudies(): Promise<CaseStudy[]> {
  * Get the currently active case study (for students)
  */
 export async function getActiveCaseStudy(): Promise<CaseStudy | null> {
-  const q = query(
-    collection(db, CASE_STUDIES),
-    where('isActive', '==', true)
-  );
+  // Always fetch the permanent case study (only one exists)
+  const PERMANENT_CASE_STUDY_ID = 'permanent-case-study';
+  const caseStudyRef = doc(db, CASE_STUDIES, PERMANENT_CASE_STUDY_ID);
+  const snapshot = await getDoc(caseStudyRef);
 
-  const snapshot = await getDocs(q);
-
-  if (snapshot.empty) {
+  if (!snapshot.exists()) {
     return null;
   }
 
-  const doc = snapshot.docs[0];
+  const data = snapshot.data();
+
+  // Only return if it's marked as active
+  if (!data.isActive) {
+    return null;
+  }
+
   return {
-    id: doc.id,
-    ...doc.data(),
-    createdAt: (doc.data().createdAt as Timestamp)?.toDate() || new Date(),
-    updatedAt: doc.data().updatedAt ? (doc.data().updatedAt as Timestamp)?.toDate() : undefined,
+    id: snapshot.id,
+    ...data,
+    createdAt: (data.createdAt as Timestamp)?.toDate() || new Date(),
+    updatedAt: data.updatedAt ? (data.updatedAt as Timestamp)?.toDate() : undefined,
   } as CaseStudy;
 }
 
@@ -1328,33 +1417,102 @@ export async function getCaseStudyById(caseStudyId: string): Promise<CaseStudy |
 }
 
 /**
- * Set a case study as active (deactivates all others)
+ * Activate the permanent case study
  */
-export async function setActiveCaseStudy(caseStudyId: string): Promise<void> {
-  // First, deactivate all case studies
-  const allCaseStudies = await getAllCaseStudies();
+export async function setActiveCaseStudy(caseStudyId?: string): Promise<void> {
+  const PERMANENT_CASE_STUDY_ID = 'permanent-case-study';
+  const caseStudyRef = doc(db, CASE_STUDIES, PERMANENT_CASE_STUDY_ID);
+  const caseStudyDoc = await getDoc(caseStudyRef);
 
-  const deactivatePromises = allCaseStudies
-    .filter(cs => cs.isActive)
-    .map(cs => updateDoc(doc(db, CASE_STUDIES, cs.id), { isActive: false }));
+  if (!caseStudyDoc.exists()) {
+    throw new Error('Permanent case study does not exist. Please add weeks first.');
+  }
 
-  await Promise.all(deactivatePromises);
+  const data = caseStudyDoc.data();
+  let firstWeek = 1;
+  if (data.weeks) {
+    const weekNumbers = Object.keys(data.weeks).map(Number).sort((a, b) => a - b);
+    if (weekNumbers.length > 0) {
+      firstWeek = weekNumbers[0];
+    }
+  }
 
-  // Then activate the selected one
-  await updateDoc(doc(db, CASE_STUDIES, caseStudyId), {
+  await updateDoc(caseStudyRef, {
     isActive: true,
+    activeWeek: data.activeWeek || firstWeek,
     updatedAt: serverTimestamp(),
   });
 }
 
 /**
- * Deactivate a case study
+ * Deactivate the permanent case study
  */
-export async function deactivateCaseStudy(caseStudyId: string): Promise<void> {
-  await updateDoc(doc(db, CASE_STUDIES, caseStudyId), {
+export async function deactivateCaseStudy(caseStudyId?: string): Promise<void> {
+  const PERMANENT_CASE_STUDY_ID = 'permanent-case-study';
+  await updateDoc(doc(db, CASE_STUDIES, PERMANENT_CASE_STUDY_ID), {
     isActive: false,
     updatedAt: serverTimestamp(),
   });
+}
+
+/**
+ * Set the active week for the permanent case study
+ */
+export async function setActiveWeek(caseStudyId: string, weekNumber: number): Promise<void> {
+  const PERMANENT_CASE_STUDY_ID = 'permanent-case-study';
+  await updateDoc(doc(db, CASE_STUDIES, PERMANENT_CASE_STUDY_ID), {
+    activeWeek: weekNumber,
+    updatedAt: serverTimestamp(),
+  });
+}
+
+/**
+ * Migrate case study weeks: shift all week numbers by an offset
+ * This updates both weeks content and weekImages keys
+ */
+export async function migrateCaseStudyWeeks(caseStudyId: string, offset: number): Promise<void> {
+  const caseStudyRef = doc(db, CASE_STUDIES, caseStudyId);
+  const caseStudyDoc = await getDoc(caseStudyRef);
+
+  if (!caseStudyDoc.exists()) {
+    throw new Error('Case study not found');
+  }
+
+  const data = caseStudyDoc.data();
+  const oldWeeks = data.weeks || {};
+  const oldWeekImages = data.weekImages || {};
+
+  // Create new weeks object with shifted keys
+  const newWeeks: Record<number, CaseStudyContent> = {};
+  const newWeekImages: Record<number, { personImageUrl: string; companyImageUrl1: string; companyImageUrl2: string }> = {};
+
+  // Shift week content
+  for (const [weekKey, content] of Object.entries(oldWeeks)) {
+    const oldWeekNum = Number(weekKey);
+    const newWeekNum = oldWeekNum + offset;
+    const weekContent = content as CaseStudyContent;
+    newWeeks[newWeekNum] = {
+      ...weekContent,
+      week: newWeekNum, // Update the week number inside the content too
+    };
+  }
+
+  // Shift week images
+  for (const [weekKey, images] of Object.entries(oldWeekImages)) {
+    const oldWeekNum = Number(weekKey);
+    const newWeekNum = oldWeekNum + offset;
+    newWeekImages[newWeekNum] = images as { personImageUrl: string; companyImageUrl1: string; companyImageUrl2: string };
+  }
+
+  // Update the document
+  await updateDoc(caseStudyRef, {
+    weeks: newWeeks,
+    weekImages: newWeekImages,
+    activeWeek: (data.activeWeek || 1) + offset,
+    updatedAt: serverTimestamp(),
+  });
+
+  console.log(`Migrated case study ${caseStudyId}: shifted weeks by ${offset}`);
 }
 
 /**
@@ -1437,9 +1595,9 @@ export async function saveCaseStudyProgress(
   const data = snapshot.data();
   const caseStudyProgressArray: CaseStudyProgress[] = data.caseStudyProgress || [];
 
-  // Find existing progress for this case study
+  // Find existing progress for this case study AND week
   let existingProgressIndex = caseStudyProgressArray.findIndex(
-    p => p.caseStudyId === caseStudyId
+    p => p.caseStudyId === caseStudyId && p.week === week
   );
 
   let currentProgress: CaseStudyProgress;
@@ -1491,10 +1649,13 @@ export async function saveCaseStudyProgress(
 
 /**
  * Get case study progress for a student
+ * If week is provided, returns progress for that specific week
+ * If week is not provided, returns the most recent week's progress
  */
 export async function getCaseStudyProgress(
   userId: string,
-  caseStudyId: string
+  caseStudyId: string,
+  week?: number
 ): Promise<CaseStudyProgress | null> {
   const progressRef = doc(db, STUDENT_PROGRESS, userId);
   const snapshot = await getDoc(progressRef);
@@ -1506,16 +1667,27 @@ export async function getCaseStudyProgress(
   const data = snapshot.data();
   const caseStudyProgressArray: CaseStudyProgress[] = data.caseStudyProgress || [];
 
-  return caseStudyProgressArray.find(p => p.caseStudyId === caseStudyId) || null;
+  if (week !== undefined) {
+    // Return progress for specific week
+    return caseStudyProgressArray.find(p => p.caseStudyId === caseStudyId && p.week === week) || null;
+  } else {
+    // Return the most recent week's progress (highest week number)
+    const allProgress = caseStudyProgressArray.filter(p => p.caseStudyId === caseStudyId);
+    if (allProgress.length === 0) return null;
+    return allProgress.reduce((latest, current) =>
+      current.week > latest.week ? current : latest
+    );
+  }
 }
 
 /**
- * Mark a case study as completed and calculate final score
+ * Mark a case study week as completed and calculate final score
  */
 export async function completeCaseStudy(
   userId: string,
   caseStudyId: string,
-  totalQuestions: number
+  totalQuestions: number,
+  week: number
 ): Promise<{ score: number; passed: boolean }> {
   const progressRef = doc(db, STUDENT_PROGRESS, userId);
   const snapshot = await getDoc(progressRef);
@@ -1528,7 +1700,7 @@ export async function completeCaseStudy(
   const caseStudyProgressArray: CaseStudyProgress[] = data.caseStudyProgress || [];
 
   const progressIndex = caseStudyProgressArray.findIndex(
-    p => p.caseStudyId === caseStudyId
+    p => p.caseStudyId === caseStudyId && p.week === week
   );
 
   if (progressIndex < 0) {
@@ -1538,7 +1710,9 @@ export async function completeCaseStudy(
   const progress = caseStudyProgressArray[progressIndex];
   const correctCount = progress.correctAnswers.length;
   const score = Math.round((correctCount / totalQuestions) * 100);
-  const passed = score >= 70; // 70% to pass
+  // Dynamic pass threshold: need 75% or more correct to pass
+  const requiredCorrect = Math.ceil(totalQuestions * 0.75);
+  const passed = correctCount >= requiredCorrect;
 
   // Update progress with completion info
   caseStudyProgressArray[progressIndex] = {
