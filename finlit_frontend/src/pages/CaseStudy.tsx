@@ -294,20 +294,21 @@ const CaseStudyPage: React.FC = () => {
       </header>
 
       {/* Main Content - Full Height & Width */}
-      <main className="flex-1 overflow-y-auto overflow-x-hidden p-2 sm:p-4 md:p-6 bg-slate-50">
-        <div className="max-w-7xl mx-auto h-full grid place-items-center">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentPage}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-              className="w-full h-full min-h-[400px] sm:min-h-[500px] md:min-h-[600px] flex flex-col select-none"
-            >
+      <main className="flex-1 min-h-0 overflow-hidden bg-slate-50 flex items-center justify-center">
+        <div className="w-[125%] h-[125%] origin-center scale-[0.8] p-2 sm:p-4 md:p-6">
+          <div className="max-w-7xl mx-auto h-full">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentPage}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                className="w-full h-full flex flex-col select-none"
+              >
               {/* Page 0: Introduction */}
               {currentPage === 0 && (
-                <div className="flex-1 bg-white rounded-xl sm:rounded-3xl shadow-xl border border-gray-100 overflow-hidden grid lg:grid-cols-2">
+                <div className="flex-1 bg-white rounded-xl sm:rounded-3xl shadow-xl border border-gray-100 overflow-y-auto grid lg:grid-cols-2">
                   <div className="order-2 lg:order-1 p-4 sm:p-8 lg:p-16 flex flex-col justify-center">
                     <motion.div
                       initial={{ opacity: 0, x: -20 }}
@@ -364,7 +365,7 @@ const CaseStudyPage: React.FC = () => {
 
               {/* Page 1: Who Is This? */}
               {currentPage === 1 && (
-                <div className="flex-1 bg-white rounded-xl sm:rounded-3xl shadow-xl border border-gray-100 overflow-hidden grid lg:grid-cols-12 gap-0 relative">
+                <div className="flex-1 bg-white rounded-xl sm:rounded-3xl shadow-xl border border-gray-100 overflow-y-auto grid lg:grid-cols-12 gap-0 relative">
                   <div className="lg:col-span-5 relative h-44 sm:h-64 lg:h-auto bg-slate-50 flex items-center justify-center p-3 sm:p-6 lg:p-10">
                     <div className="relative w-full max-w-[120px] sm:max-w-sm">
                       <div className="absolute inset-0 bg-indigo-900/5 rounded-xl sm:rounded-2xl transform rotate-3"></div>
@@ -405,7 +406,7 @@ const CaseStudyPage: React.FC = () => {
 
               {/* Page 2: What Happened? */}
               {currentPage === 2 && (
-                <div className="flex-1 bg-white rounded-xl sm:rounded-3xl shadow-xl border border-gray-100 overflow-hidden flex flex-col">
+                <div className="flex-1 bg-white rounded-xl sm:rounded-3xl shadow-xl border border-gray-100 overflow-y-auto flex flex-col">
                   <div className="h-1.5 sm:h-2 bg-gradient-to-r from-purple-500 to-indigo-500"></div>
                   <div className="flex-1 p-4 sm:p-8 lg:p-16 grid lg:grid-cols-2 gap-6 sm:gap-12 lg:gap-20 items-center">
                     <div>
@@ -444,7 +445,7 @@ const CaseStudyPage: React.FC = () => {
 
               {/* Page 3: The Concept */}
               {currentPage === 3 && (
-                <div className="flex-1 bg-white rounded-xl sm:rounded-3xl shadow-xl border border-gray-100 overflow-hidden flex flex-col justify-center p-4 sm:p-8 lg:p-16">
+                <div className="flex-1 bg-white rounded-xl sm:rounded-3xl shadow-xl border border-gray-100 overflow-y-auto flex flex-col justify-center p-4 sm:p-8 lg:p-16">
                   <div className="max-w-4xl mx-auto w-full">
                     <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-8 justify-center lg:justify-start">
                       <div className="p-2 sm:p-3 bg-amber-100 rounded-lg sm:rounded-xl text-amber-600">
@@ -516,7 +517,7 @@ const CaseStudyPage: React.FC = () => {
 
               {/* Page 5: The Risk */}
               {currentPage === 5 && (
-                <div className="flex-1 bg-white rounded-xl sm:rounded-3xl shadow-xl border border-gray-100 overflow-hidden grid lg:grid-cols-2">
+                <div className="flex-1 bg-white rounded-xl sm:rounded-3xl shadow-xl border border-gray-100 overflow-y-auto grid lg:grid-cols-2">
                   <div className="bg-red-600 p-6 sm:p-12 lg:p-20 flex flex-col justify-center text-white relative overflow-hidden min-h-[200px] sm:min-h-[280px]">
                     <AlertTriangle className="absolute -right-8 sm:-right-12 -bottom-8 sm:-bottom-12 text-red-500 w-48 h-48 sm:w-96 sm:h-96 opacity-50" />
                     <div className="relative z-10">
@@ -594,7 +595,7 @@ const CaseStudyPage: React.FC = () => {
 
               {/* Page 7: Quiz */}
               {currentPage === 7 && (
-                <div className="flex-1 bg-white rounded-xl sm:rounded-3xl shadow-xl border border-gray-100 overflow-hidden flex flex-col">
+                <div className="flex-1 bg-white rounded-xl sm:rounded-3xl shadow-xl border border-gray-100 overflow-y-auto flex flex-col">
                   <div className="flex-1 p-4 sm:p-8 lg:p-20 flex flex-col justify-center items-center overflow-y-auto">
                     {quizCompleted && finalScore ? (
                       <motion.div
@@ -690,8 +691,9 @@ const CaseStudyPage: React.FC = () => {
                   </div>
                 </div>
               )}
-            </motion.div>
-          </AnimatePresence>
+              </motion.div>
+            </AnimatePresence>
+          </div>
         </div>
       </main>
 
