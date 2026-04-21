@@ -997,7 +997,7 @@ const FinLitApp: React.FC = () => {
 
               {/* Row 1: Daily Challenge + Learning Path */}
               {/* Daily Challenge */}
-              <div className="bg-amber-50 rounded-lg p-4 sm:p-6 shadow-sm border border-amber-100">
+              <div id="daily-challenge" className="bg-amber-50 rounded-lg p-4 sm:p-6 shadow-sm border border-amber-100">
                 <div className="flex justify-between items-center mb-3 sm:mb-4">
                   <h2 className="text-xl sm:text-2xl font-bold">Daily Challenge</h2>
                   <div className="relative flex items-center">
@@ -1336,7 +1336,7 @@ const FinLitApp: React.FC = () => {
                   const reqs = [
                     { label: `All ${totalModules} Modules`, met: completedModules === totalModules, progress: `${completedModules}/${totalModules}`, icon: '🎯', route: '/game' },
                     { label: '1 Case Study', met: caseStudiesDone >= 1, progress: `${Math.min(caseStudiesDone, 1)}/1`, icon: '📚', route: '/case-study' },
-                    { label: '4 Daily Challenges', met: dailyDone >= 4, progress: `${Math.min(dailyDone, 4)}/4`, icon: '⚡', route: null as string | null },
+                    { label: '4 Daily Challenges', met: dailyDone >= 4, progress: `${Math.min(dailyDone, 4)}/4`, icon: '⚡', route: '#daily-challenge' },
                     { label: '1 Quick Quiz', met: quizDone >= 1, progress: `${Math.min(quizDone, 1)}/1`, icon: '🧠', route: '/economic-quiz' },
                     { label: '1 Personality Test', met: personalityDone, progress: personalityDone ? '1/1' : '0/1', icon: '💭', route: '/money-personality' },
                   ];
@@ -1349,7 +1349,13 @@ const FinLitApp: React.FC = () => {
                       {reqs.map((req, idx) => (
                         <button
                           key={idx}
-                          onClick={() => req.route && navigate(req.route)}
+                          onClick={() => {
+                            if (req.route === '#daily-challenge') {
+                              document.getElementById('daily-challenge')?.scrollIntoView({ behavior: 'smooth' });
+                            } else if (req.route) {
+                              navigate(req.route);
+                            }
+                          }}
                           disabled={!req.route}
                           className={`w-full flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg text-left ${
                             req.met
