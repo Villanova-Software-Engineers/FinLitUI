@@ -1800,6 +1800,62 @@ export async function updateCaseStudyImage(
 }
 
 /**
+ * Update a case study's week-specific image
+ */
+export async function updateCaseStudyWeekImage(
+  caseStudyId: string,
+  weekNumber: number,
+  imageType: 'person' | 'company1' | 'company2',
+  newImage: File
+): Promise<string> {
+  // Get the file extension
+  const ext = newImage.name.split('.').pop()?.toLowerCase() || 'jpg';
+
+  // Create storage path for week-specific image
+  const storagePath = `case-studies/${caseStudyId}/week${weekNumber}/${imageType}.${ext}`;
+  const storageRef = ref(storage, storagePath);
+
+  // Upload the new image
+  await uploadBytes(storageRef, newImage);
+  const newUrl = await getDownloadURL(storageRef);
+
+  // Get current weekImages data
+  const caseStudyRef = doc(db, CASE_STUDIES, caseStudyId);
+  const caseStudyDoc = await getDoc(caseStudyRef);
+
+  if (!caseStudyDoc.exists()) {
+    throw new Error('Case study not found');
+  }
+
+  const data = caseStudyDoc.data();
+  const weekImages = data.weekImages || {};
+  const currentWeekImages = weekImages[weekNumber] || {};
+
+  // Update the specific image URL
+  const fieldName = imageType === 'person'
+    ? 'personImageUrl'
+    : imageType === 'company1'
+      ? 'companyImageUrl1'
+      : 'companyImageUrl2';
+
+  const updatedWeekImages = {
+    ...weekImages,
+    [weekNumber]: {
+      ...currentWeekImages,
+      [fieldName]: newUrl,
+    },
+  };
+
+  // Update the document
+  await updateDoc(caseStudyRef, {
+    weekImages: updatedWeekImages,
+    updatedAt: serverTimestamp(),
+  });
+
+  return newUrl;
+}
+
+/**
  * Delete a case study and all its images
  */
 export async function deleteCaseStudy(caseStudyId: string): Promise<void> {
