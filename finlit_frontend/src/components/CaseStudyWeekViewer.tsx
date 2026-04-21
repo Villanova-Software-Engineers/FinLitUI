@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { XCircle, Eye, Edit3, Save, X, ChevronRight } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { XCircle, Eye, Edit3, Save, X, ChevronRight, Upload, Image, Loader2 } from 'lucide-react';
 import type { CaseStudy, CaseStudyContent } from '../auth/types/auth.types';
+import { updateCaseStudyWeekImage } from '../firebase/firestore.service';
 
 interface CaseStudyWeekViewerProps {
   caseStudy: CaseStudy;
@@ -30,6 +31,16 @@ export const CaseStudyWeekViewer: React.FC<CaseStudyWeekViewerProps> = ({
   onClose,
 }) => {
   const [currentSection, setCurrentSection] = useState(0);
+  const [uploadingImage, setUploadingImage] = useState<string | null>(null);
+  const [localImageUrls, setLocalImageUrls] = useState<{
+    personImageUrl?: string;
+    companyImageUrl1?: string;
+    companyImageUrl2?: string;
+  }>({});
+
+  const personInputRef = useRef<HTMLInputElement>(null);
+  const company1InputRef = useRef<HTMLInputElement>(null);
+  const company2InputRef = useRef<HTMLInputElement>(null);
 
   // Get content for the selected week
   const weeksData = caseStudy.weeks as Record<string | number, typeof editedContent> | undefined;
@@ -43,6 +54,47 @@ export const CaseStudyWeekViewer: React.FC<CaseStudyWeekViewerProps> = ({
 
   const weekImagesData = caseStudy.weekImages as Record<string | number, any> | undefined;
   const weekImageData = weekImagesData?.[selectedWeek] || weekImagesData?.[String(selectedWeek)];
+
+  // Merge local (newly uploaded) images with existing ones
+  const displayImages = {
+    personImageUrl: localImageUrls.personImageUrl || weekImageData?.personImageUrl || '',
+    companyImageUrl1: localImageUrls.companyImageUrl1 || weekImageData?.companyImageUrl1 || '',
+    companyImageUrl2: localImageUrls.companyImageUrl2 || weekImageData?.companyImageUrl2 || '',
+  };
+
+  const handleImageUpload = async (
+    imageType: 'person' | 'company1' | 'company2',
+    file: File
+  ) => {
+    if (!file) return;
+
+    setUploadingImage(imageType);
+    try {
+      const newUrl = await updateCaseStudyWeekImage(
+        caseStudy.id,
+        selectedWeek,
+        imageType,
+        file
+      );
+
+      // Update local state to show the new image immediately
+      const fieldName = imageType === 'person'
+        ? 'personImageUrl'
+        : imageType === 'company1'
+          ? 'companyImageUrl1'
+          : 'companyImageUrl2';
+
+      setLocalImageUrls(prev => ({
+        ...prev,
+        [fieldName]: newUrl,
+      }));
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      alert('Failed to upload image. Please try again.');
+    } finally {
+      setUploadingImage(null);
+    }
+  };
 
   const sections = [
     { title: 'Overview', key: 'overview' },
@@ -189,6 +241,153 @@ export const CaseStudyWeekViewer: React.FC<CaseStudyWeekViewerProps> = ({
                       className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                     />
                   </div>
+
+                  {/* Image Upload Section */}
+                  <div className="border-t border-slate-200 pt-6 mt-6">
+                    <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
+                      <Image size={20} />
+                      Week Images
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      {/* Person Image */}
+                      <div className="space-y-3">
+                        <label className="block text-sm font-semibold text-slate-700">Person Image</label>
+                        <div className="relative group">
+                          <div className="w-full aspect-square rounded-xl overflow-hidden bg-slate-100 border-2 border-dashed border-slate-300">
+                            {displayImages.personImageUrl ? (
+                              <img
+                                src={displayImages.personImageUrl}
+                                alt="Person"
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-slate-400">
+                                <Image size={48} />
+                              </div>
+                            )}
+                            {uploadingImage === 'person' && (
+                              <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                                <Loader2 className="w-8 h-8 text-white animate-spin" />
+                              </div>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => personInputRef.current?.click()}
+                            disabled={uploadingImage !== null}
+                            className="mt-2 w-full px-3 py-2 bg-indigo-500 text-white rounded-lg text-sm font-medium hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                          >
+                            <Upload size={16} />
+                            {displayImages.personImageUrl ? 'Replace' : 'Upload'}
+                          </button>
+                          <input
+                            ref={personInputRef}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) handleImageUpload('person', file);
+                              e.target.value = '';
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Company Image 1 */}
+                      <div className="space-y-3">
+                        <label className="block text-sm font-semibold text-slate-700">Company Image 1</label>
+                        <div className="relative group">
+                          <div className="w-full aspect-square rounded-xl overflow-hidden bg-slate-100 border-2 border-dashed border-slate-300">
+                            {displayImages.companyImageUrl1 ? (
+                              <img
+                                src={displayImages.companyImageUrl1}
+                                alt="Company 1"
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-slate-400">
+                                <Image size={48} />
+                              </div>
+                            )}
+                            {uploadingImage === 'company1' && (
+                              <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                                <Loader2 className="w-8 h-8 text-white animate-spin" />
+                              </div>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => company1InputRef.current?.click()}
+                            disabled={uploadingImage !== null}
+                            className="mt-2 w-full px-3 py-2 bg-indigo-500 text-white rounded-lg text-sm font-medium hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                          >
+                            <Upload size={16} />
+                            {displayImages.companyImageUrl1 ? 'Replace' : 'Upload'}
+                          </button>
+                          <input
+                            ref={company1InputRef}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) handleImageUpload('company1', file);
+                              e.target.value = '';
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Company Image 2 */}
+                      <div className="space-y-3">
+                        <label className="block text-sm font-semibold text-slate-700">Company Image 2</label>
+                        <div className="relative group">
+                          <div className="w-full aspect-square rounded-xl overflow-hidden bg-slate-100 border-2 border-dashed border-slate-300">
+                            {displayImages.companyImageUrl2 ? (
+                              <img
+                                src={displayImages.companyImageUrl2}
+                                alt="Company 2"
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-slate-400">
+                                <Image size={48} />
+                              </div>
+                            )}
+                            {uploadingImage === 'company2' && (
+                              <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                                <Loader2 className="w-8 h-8 text-white animate-spin" />
+                              </div>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => company2InputRef.current?.click()}
+                            disabled={uploadingImage !== null}
+                            className="mt-2 w-full px-3 py-2 bg-indigo-500 text-white rounded-lg text-sm font-medium hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                          >
+                            <Upload size={16} />
+                            {displayImages.companyImageUrl2 ? 'Replace' : 'Upload'}
+                          </button>
+                          <input
+                            ref={company2InputRef}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) handleImageUpload('company2', file);
+                              e.target.value = '';
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-4">
+                      Images are uploaded immediately when selected. Supported formats: JPG, PNG, GIF, WebP
+                    </p>
+                  </div>
                 </>
               ) : (
                 <>
@@ -197,23 +396,29 @@ export const CaseStudyWeekViewer: React.FC<CaseStudyWeekViewerProps> = ({
                     <p className="text-slate-700">{weekContent.topic}</p>
                   </div>
 
-                  {weekImageData && (
+                  {(displayImages.personImageUrl || displayImages.companyImageUrl1 || displayImages.companyImageUrl2) && (
                     <div className="flex gap-4 justify-center">
-                      <img
-                        src={weekImageData.personImageUrl}
-                        alt="Person"
-                        className="w-32 h-32 rounded-full object-cover shadow-lg border-4 border-white"
-                      />
-                      <img
-                        src={weekImageData.companyImageUrl1}
-                        alt="Company 1"
-                        className="w-32 h-32 rounded-xl object-cover shadow-lg"
-                      />
-                      <img
-                        src={weekImageData.companyImageUrl2}
-                        alt="Company 2"
-                        className="w-32 h-32 rounded-xl object-cover shadow-lg"
-                      />
+                      {displayImages.personImageUrl && (
+                        <img
+                          src={displayImages.personImageUrl}
+                          alt="Person"
+                          className="w-32 h-32 rounded-full object-cover shadow-lg border-4 border-white"
+                        />
+                      )}
+                      {displayImages.companyImageUrl1 && (
+                        <img
+                          src={displayImages.companyImageUrl1}
+                          alt="Company 1"
+                          className="w-32 h-32 rounded-xl object-cover shadow-lg"
+                        />
+                      )}
+                      {displayImages.companyImageUrl2 && (
+                        <img
+                          src={displayImages.companyImageUrl2}
+                          alt="Company 2"
+                          className="w-32 h-32 rounded-xl object-cover shadow-lg"
+                        />
+                      )}
                     </div>
                   )}
                 </>
