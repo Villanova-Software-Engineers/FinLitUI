@@ -3,10 +3,12 @@ import { Download, Lock, Check, BookOpen, Zap, Brain, Award } from 'lucide-react
 import { useAuthContext } from '../auth/context/AuthContext';
 import { useModuleScore, MODULES } from '../hooks/useModuleScore';
 import DashboardLayout from './DashboardLayout';
+import { getCertificateData, saveCertificateData } from '../firebase/firestore.service';
+import type { CertificateData } from '../auth/types/auth.types';
 
 // Certificate requirements
 const CERT_REQUIREMENTS = {
-  CASE_STUDIES: 1,
+  CASE_STUDIES: 0,
   DAILY_CHALLENGES: 4,
   QUICK_QUIZZES: 1,
   PERSONALITY_TEST: 1,
@@ -19,12 +21,8 @@ const Certificate: React.FC = () => {
   const [certificateImage, setCertificateImage] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
-  const currentDate = new Date().toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
+  const [certificateData, setCertificateData] = useState<CertificateData | null>(null);
+  const [isLoadingCertData, setIsLoadingCertData] = useState(true);
 
   // Certificate requirements checks
   const allModules = Object.values(MODULES);
@@ -33,7 +31,13 @@ const Certificate: React.FC = () => {
   const hasCompletedAllModules = completedModules === totalModules;
 
   // Activity requirements
-  const completedCaseStudies = (progress?.caseStudyProgress || []).filter(cs => cs.completedAt).length;
+  // Count unique completed case study weeks (avoid counting duplicates)
+  const completedCaseStudyWeeks = new Set(
+    (progress?.caseStudyProgress || [])
+      .filter(cs => cs.completedAt)
+      .map(cs => cs.week)
+  );
+  const completedCaseStudies = completedCaseStudyWeeks.size;
   const dailyChallengesCompleted = progress?.dailyChallengesCompleted ?? 0;
   // Check quickQuizzesCompleted counter, OR check if user has answered quiz questions (for backward compatibility)
   const quickQuizzesFromCounter = progress?.quickQuizzesCompleted ?? 0;
@@ -58,7 +62,7 @@ const Certificate: React.FC = () => {
       route: '/game',
     },
     {
-      label: `Complete ${CERT_REQUIREMENTS.CASE_STUDIES} case study`,
+      label: `Complete ${CERT_REQUIREMENTS.CASE_STUDIES} case studies`,
       met: caseStudyMet,
       progress: `${Math.min(completedCaseStudies, CERT_REQUIREMENTS.CASE_STUDIES)}/${CERT_REQUIREMENTS.CASE_STUDIES}`,
       icon: BookOpen,
@@ -96,25 +100,39 @@ const Certificate: React.FC = () => {
 
   const generateCertificate = useCallback(async () => {
     const canvas = canvasRef.current;
-    if (!canvas || isGenerating) return;
-    
+    if (!canvas || isGenerating || !user) return;
+
     setIsGenerating(true);
     setError(null);
     setCertificateImage(null);
-    
+
     try {
+      // First, check if certificate data already exists or save new data
+      let certData = certificateData;
+      if (!certData) {
+        const existingData = await getCertificateData(user.id);
+        if (existingData) {
+          certData = existingData;
+        } else {
+          // Save new certificate data
+          const studentName = user.displayName || user.email?.split('@')[0] || 'Student';
+          certData = await saveCertificateData(user.id, studentName);
+        }
+        setCertificateData(certData);
+      }
+
       const ctx = canvas.getContext('2d');
       if (!ctx) {
         throw new Error('Canvas context not available');
       }
-      
-      // Set canvas dimensions
-      canvas.width = 800;
-      canvas.height = 600;
-      
+
+      // Set canvas dimensions (match the new certificate image aspect ratio)
+      canvas.width = 1414;
+      canvas.height = 1000;
+
       // Load the certificate background image with cache busting and retry logic
       const img = new Image();
-      
+
       const loadImageWithRetry = (attempts = 3): Promise<void> => {
         return new Promise((resolve, reject) => {
           const attemptLoad = (attemptsLeft: number) => {
@@ -122,70 +140,72 @@ const Certificate: React.FC = () => {
               reject(new Error('Failed to load certificate image after multiple attempts'));
               return;
             }
-            
+
             img.onload = () => {
               console.log('Certificate image loaded successfully');
               resolve();
             };
-            
+
             img.onerror = () => {
               console.warn(`Image load attempt failed, ${attemptsLeft - 1} attempts remaining`);
               // Retry with cache busting
               setTimeout(() => attemptLoad(attemptsLeft - 1), 1000);
             };
-            
-            // Add cache busting parameter
+
+            // Add cache busting parameter - use the new certificate.png
             const cacheBuster = new Date().getTime();
-            img.src = `/cert.png?v=${cacheBuster}`;
+            img.src = `/certificate.png?v=${cacheBuster}`;
           };
-          
+
           attemptLoad(attempts);
         });
       };
-      
+
       // Wait for image to load
       await loadImageWithRetry();
-      
+
       // Clear canvas and draw background
-      ctx.clearRect(0, 0, 800, 600);
-      ctx.drawImage(img, 0, 0, 800, 600);
-      
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
       // Set text properties
-      ctx.fillStyle = '#2c3e50';
+      ctx.fillStyle = '#1a1a2e';
       ctx.textAlign = 'center';
       ctx.shadowColor = 'rgba(0, 0, 0, 0.1)';
       ctx.shadowBlur = 2;
       ctx.shadowOffsetX = 1;
       ctx.shadowOffsetY = 1;
-      
-      // Student Name (at 54% from top)
-      ctx.font = 'bold 48px serif';
-      const studentName = user?.displayName || user?.email?.split('@')[0] || 'Student';
-      ctx.fillText(studentName, 400, 350);
-      
-      // Date (at 16% from bottom, 45% from left)
-      ctx.font = 'bold 24px serif';
-      const dateY = 600 - (18 * 6);
-      const dateX = 45 * 8;
-      ctx.fillText(currentDate, dateX, dateY);
-      
-      // Certificate ID (at 16% from bottom, 75% from right)
-      const certId = `FL-${new Date().getFullYear()}-${user?.id?.slice(0, 6).toUpperCase() || 'CERT01'}`;
-      const certX = 800 - (25 * 8);
-      ctx.fillText(certId, certX, dateY);
-      
+
+      // Student Name - centered below "THIS IS TO CERTIFY THAT"
+      ctx.font = 'bold 52px Garamond, Times New Roman, serif';
+      ctx.fillText(certData.studentName, canvas.width / 2, 480);
+
+      // Format the completion date
+      const formattedDate = certData.completionDate.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+
+      // Certificate ID (left side, moved up 2 steps and right)
+      ctx.font = 'bold 20px Garamond, Times New Roman, serif';
+      ctx.fillText(certData.certificateId, 420, 790);
+
+      // Date of Completion (right side, moved up 2 steps and right)
+      ctx.fillText(formattedDate, 1010, 790);
+
       // Convert to image and set state
       const imageData = canvas.toDataURL('image/jpeg', 0.95);
       setCertificateImage(imageData);
       console.log('Certificate generated successfully');
-      
+
     } catch (err) {
       console.error('Certificate generation failed:', err);
       setError(err instanceof Error ? err.message : 'Failed to generate certificate');
     } finally {
       setIsGenerating(false);
     }
-  }, [user, currentDate, isGenerating]);
+  }, [user, certificateData, isGenerating]);
 
   const downloadJPG = () => {
     if (!certificateImage) return;
@@ -199,25 +219,53 @@ const Certificate: React.FC = () => {
     document.body.removeChild(link);
   };
 
+  // Load existing certificate data on mount
+  useEffect(() => {
+    const loadCertificateData = async () => {
+      if (!user || !allRequirementsMet) {
+        setIsLoadingCertData(false);
+        return;
+      }
+
+      try {
+        const existingData = await getCertificateData(user.id);
+        if (existingData) {
+          setCertificateData(existingData);
+        }
+      } catch (err) {
+        console.error('Error loading certificate data:', err);
+      } finally {
+        setIsLoadingCertData(false);
+      }
+    };
+
+    loadCertificateData();
+  }, [user?.id, allRequirementsMet]);
+
+  // Generate certificate after data is loaded
   useEffect(() => {
     console.log('Certificate useEffect triggered, user:', user?.displayName || 'No user');
+
+    // Wait for certificate data loading to complete
+    if (isLoadingCertData) return;
+
     // Reset states
     setCertificateImage(null);
     setError(null);
     setIsGenerating(false);
-    
+
     const timer = setTimeout(() => {
       console.log('Attempting to generate certificate...');
       if (user && allRequirementsMet) {
         generateCertificate();
       }
     }, 500);
-    
+
     return () => {
       console.log('Cleaning up certificate generation timer');
       clearTimeout(timer);
     };
-  }, [user?.id, user?.displayName, user?.email, allRequirementsMet]);
+  }, [user?.id, user?.displayName, user?.email, allRequirementsMet, isLoadingCertData]);
   
   // If not completed, show access denied page with requirements tracker
   if (!allRequirementsMet) {

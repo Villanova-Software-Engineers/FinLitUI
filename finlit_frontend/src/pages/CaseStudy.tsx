@@ -37,11 +37,10 @@ import {
   getCaseStudyProgress,
   saveCaseStudyProgress,
   completeCaseStudy,
+  resetCaseStudyWeekProgress,
   isCaseStudyAccessible,
   isCaseStudyWeekAccessible,
 } from '../firebase/firestore.service';
-import { shuffleQuizOptions } from '../utils/shuffleQuizOptions';
-
 const CaseStudyPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuthContext();
@@ -57,6 +56,7 @@ const CaseStudyPage: React.FC = () => {
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [finalScore, setFinalScore] = useState<{ score: number; passed: boolean } | null>(null);
   const [isLocked, setIsLocked] = useState(false);
+  const [isSequentialLocked, setIsSequentialLocked] = useState(false);
   const currentWeek = parseInt(weekParam || '1');
 
   // Get content for current week (supports both multi-week and legacy formats)
@@ -71,29 +71,32 @@ const CaseStudyPage: React.FC = () => {
   const shuffledQuiz = useMemo(() => {
     if (!weekContent?.quiz) return [];
 
-    // Convert case study quiz format to shuffleQuizOptions format
-    const quizForShuffle = weekContent.quiz.map((q) => ({
-      question: q.question,
-      options: q.options,
-      correctIndex: q.options.findIndex(opt => opt === q.answer),
-      teaching_point: q.teaching_point,
-      answer: q.answer, // Keep original answer for reference
-    }));
+    // Shuffle options for each question while preserving the correct answer
+    return weekContent.quiz.map((q) => {
+      const correctAnswer = q.answer;
+      const shuffledOptions = [...q.options].sort(() => Math.random() - 0.5);
 
-    const shuffled = shuffleQuizOptions(quizForShuffle);
-
-    // Convert back to case study format with shuffled options
-    return shuffled.map(q => ({
-      question: q.question,
-      options: q.options,
-      answer: q.options[q.correctIndex], // Update answer to match new position
-      teaching_point: q.teaching_point,
-    }));
+      return {
+        question: q.question,
+        options: shuffledOptions,
+        answer: correctAnswer, // Keep original answer - it will match one of the shuffled options
+        teaching_point: q.teaching_point,
+      };
+    });
   }, [weekContent]);
 
   useEffect(() => {
+    // Reset states when week changes
+    setIsLocked(false);
+    setIsSequentialLocked(false);
+    setQuizCompleted(false);
+    setFinalScore(null);
+    setCurrentPage(0);
+    setSelectedAnswer(null);
+    setShowResult(false);
+    setCurrentQuizIndex(0);
     loadCaseStudy();
-  }, [user]);
+  }, [user, currentWeek]);
 
   const loadCaseStudy = async () => {
     setLoading(true);
@@ -113,6 +116,19 @@ const CaseStudyPage: React.FC = () => {
 
         if (!accessible) {
           setCaseStudy(null);
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Check sequential access - must complete previous week first (except week 1)
+      if (study && user && currentWeek > 1) {
+        const prevWeekProgress = await getCaseStudyProgress(user.id, study.id, currentWeek - 1);
+
+        // If previous week is not completed, this week is locked
+        if (!prevWeekProgress?.completedAt) {
+          setIsSequentialLocked(true);
+          setCaseStudy(study); // Still set case study for the locked UI to show week info
           setLoading(false);
           return;
         }
@@ -182,6 +198,21 @@ const CaseStudyPage: React.FC = () => {
     }
   };
 
+  const handleRetakeQuiz = async () => {
+    if (!caseStudy || !user) return;
+
+    // Reset progress for this week
+    await resetCaseStudyWeekProgress(user.id, caseStudy.id, currentWeek);
+
+    // Reset local state
+    setCurrentQuizIndex(0);
+    setSelectedAnswer(null);
+    setShowResult(false);
+    setQuizCompleted(false);
+    setFinalScore(null);
+    setProgress(null);
+  };
+
   // Get images for current week (supports both multi-week and legacy formats)
   const images = caseStudy?.weekImages?.[currentWeek] || {
     personImageUrl: caseStudy?.personImageUrl || '',
@@ -228,6 +259,37 @@ const CaseStudyPage: React.FC = () => {
           >
             Back to Dashboard
           </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (isSequentialLocked) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="text-center max-w-md bg-white rounded-3xl p-10 shadow-2xl border border-amber-100">
+          <div className="w-24 h-24 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Shield className="text-amber-600" size={48} />
+          </div>
+          <h1 className="text-3xl font-black text-gray-900 mb-3">🔒 Complete Previous Week First</h1>
+          <p className="text-gray-500 mb-8 text-lg">
+            You need to complete Week {currentWeek - 1} before you can access Week {currentWeek}.
+            Case studies must be completed in order.
+          </p>
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={() => navigate(`/case-study/${currentWeek - 1}`)}
+              className="px-8 py-4 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200"
+            >
+              Go to Week {currentWeek - 1}
+            </button>
+            <button
+              onClick={() => navigate('/case-study')}
+              className="px-8 py-4 bg-gray-200 text-gray-700 rounded-2xl font-bold hover:bg-gray-300 transition-colors"
+            >
+              View All Weeks
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -609,12 +671,29 @@ const CaseStudyPage: React.FC = () => {
                         </div>
                         <h2 className="text-2xl sm:text-5xl font-black text-slate-900 mb-2 sm:mb-4">{finalScore.passed ? 'Nailed It!' : 'Nice Try!'}</h2>
                         <p className="text-lg sm:text-2xl text-slate-500 mb-6 sm:mb-10">You scored <span className="font-bold text-slate-900">{finalScore.score}%</span> on this case study.</p>
-                        <button
-                          onClick={() => navigate('/case-study')}
-                          className="w-full py-3 sm:py-5 bg-slate-900 text-white rounded-xl sm:rounded-2xl font-bold text-base sm:text-xl hover:bg-slate-800 transition-all shadow-xl hover:shadow-2xl"
-                        >
-                          {finalScore.passed ? 'Continue to Next Week →' : 'Back to Roadmap'}
-                        </button>
+                        {finalScore.passed ? (
+                          <button
+                            onClick={() => navigate('/case-study')}
+                            className="w-full py-3 sm:py-5 bg-slate-900 text-white rounded-xl sm:rounded-2xl font-bold text-base sm:text-xl hover:bg-slate-800 transition-all shadow-xl hover:shadow-2xl"
+                          >
+                            Continue to Next Week →
+                          </button>
+                        ) : (
+                          <div className="space-y-3">
+                            <button
+                              onClick={handleRetakeQuiz}
+                              className="w-full py-3 sm:py-5 bg-indigo-600 text-white rounded-xl sm:rounded-2xl font-bold text-base sm:text-xl hover:bg-indigo-700 transition-all shadow-xl hover:shadow-2xl"
+                            >
+                              Retake Quiz
+                            </button>
+                            <button
+                              onClick={() => navigate('/case-study')}
+                              className="w-full py-3 sm:py-5 bg-slate-200 text-slate-700 rounded-xl sm:rounded-2xl font-bold text-base sm:text-xl hover:bg-slate-300 transition-all"
+                            >
+                              Back to Roadmap
+                            </button>
+                          </div>
+                        )}
                       </motion.div>
                     ) : (
                       <div className="max-w-4xl w-full">

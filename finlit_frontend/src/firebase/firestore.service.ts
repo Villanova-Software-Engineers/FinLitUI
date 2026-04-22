@@ -45,6 +45,7 @@ import type {
   SavedCalculation,
   ContentLock,
   WeekLock,
+  CertificateData,
 } from '../auth/types/auth.types';
 
 // Type helper for Firestore documents with serverTimestamp
@@ -2012,11 +2013,11 @@ export async function completeCaseStudy(
   const requiredCorrect = Math.ceil(totalQuestions * 0.75);
   const passed = correctCount >= requiredCorrect;
 
-  // Update progress with completion info
+  // Update progress with completion info - only set completedAt if passed
   caseStudyProgressArray[progressIndex] = {
     ...progress,
     score,
-    completedAt: new Date(),
+    ...(passed && { completedAt: new Date() }),
   };
 
   await updateDoc(progressRef, {
@@ -2025,6 +2026,33 @@ export async function completeCaseStudy(
   });
 
   return { score, passed };
+}
+
+/**
+ * Reset case study week progress to allow retaking
+ */
+export async function resetCaseStudyWeekProgress(
+  userId: string,
+  caseStudyId: string,
+  week: number
+): Promise<void> {
+  const progressRef = doc(db, STUDENT_PROGRESS, userId);
+  const snapshot = await getDoc(progressRef);
+
+  if (!snapshot.exists()) return;
+
+  const data = snapshot.data();
+  const caseStudyProgressArray: CaseStudyProgress[] = data.caseStudyProgress || [];
+
+  // Remove progress for this specific week
+  const updatedProgress = caseStudyProgressArray.filter(
+    p => !(p.caseStudyId === caseStudyId && p.week === week)
+  );
+
+  await updateDoc(progressRef, {
+    caseStudyProgress: updatedProgress,
+    lastActivityAt: serverTimestamp(),
+  });
 }
 
 // ============== Money Personality Functions ==============
@@ -2436,5 +2464,86 @@ export async function getOrganizationLocks(organizationId: string): Promise<{
     modules: org.lockedModules || {},
     caseStudies: org.lockedCaseStudies || {},
     caseStudyWeeks: org.lockedCaseStudyWeeks || {},
+  };
+}
+
+// ============== Certificate Functions ==============
+
+/**
+ * Generate a unique certificate ID
+ */
+function generateCertificateId(userId: string): string {
+  const year = new Date().getFullYear();
+  const userSuffix = userId.slice(0, 6).toUpperCase();
+  return `FL-${year}-${userSuffix}`;
+}
+
+/**
+ * Save certificate data for a user
+ * Only saves if certificate doesn't already exist
+ */
+export async function saveCertificateData(
+  userId: string,
+  studentName: string
+): Promise<CertificateData> {
+  const progressRef = doc(db, STUDENT_PROGRESS, userId);
+  const snapshot = await getDoc(progressRef);
+
+  if (!snapshot.exists()) {
+    throw new Error('Student progress not found');
+  }
+
+  const data = snapshot.data();
+
+  // If certificate already exists, return existing data
+  if (data.certificateData) {
+    return {
+      ...data.certificateData,
+      completionDate: (data.certificateData.completionDate as Timestamp)?.toDate() || new Date(),
+      generatedAt: (data.certificateData.generatedAt as Timestamp)?.toDate() || new Date(),
+    };
+  }
+
+  // Generate new certificate data
+  const certificateData: CertificateData = {
+    certificateId: generateCertificateId(userId),
+    studentName,
+    completionDate: new Date(),
+    generatedAt: new Date(),
+  };
+
+  await updateDoc(progressRef, {
+    certificateData,
+    lastActivityAt: serverTimestamp(),
+  });
+
+  return certificateData;
+}
+
+/**
+ * Get certificate data for a user
+ * Returns null if no certificate exists
+ */
+export async function getCertificateData(
+  userId: string
+): Promise<CertificateData | null> {
+  const progressRef = doc(db, STUDENT_PROGRESS, userId);
+  const snapshot = await getDoc(progressRef);
+
+  if (!snapshot.exists()) {
+    return null;
+  }
+
+  const data = snapshot.data();
+  const certificateData = data.certificateData as CertificateData | undefined;
+
+  if (!certificateData) {
+    return null;
+  }
+
+  return {
+    ...certificateData,
+    completionDate: (certificateData.completionDate as unknown as Timestamp)?.toDate() || new Date(),
+    generatedAt: (certificateData.generatedAt as unknown as Timestamp)?.toDate() || new Date(),
   };
 }

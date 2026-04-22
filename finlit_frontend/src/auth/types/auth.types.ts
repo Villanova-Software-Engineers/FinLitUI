@@ -164,6 +164,7 @@ export interface StudentProgress {
   savedCalculations?: SavedCalculation[]; // Financial tools saved calculations
   dailyChallengesCompleted?: number; // Total daily challenges completed (for certificate)
   quickQuizzesCompleted?: number; // Total quick quiz sets completed (for certificate)
+  certificateData?: CertificateData; // Certificate data (persisted on first generation)
 }
 
 export interface SignInRequest {
@@ -311,6 +312,16 @@ export interface CaseStudyProgress {
   correctAnswers: number[];    // Indices of correctly answered questions
   completedAt?: Date;
   score?: number;              // Final score (correct/total * 100)
+}
+
+// ============ CERTIFICATE TYPES ============
+
+// Certificate data stored in Firestore
+export interface CertificateData {
+  certificateId: string;        // Unique certificate ID (e.g., FL-2026-ABC123)
+  studentName: string;          // Name displayed on certificate
+  completionDate: Date;         // Date of completion
+  generatedAt: Date;            // When the certificate was first generated
 }
 
 // ============ MONEY PERSONALITY TYPES ============
