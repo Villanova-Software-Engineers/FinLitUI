@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import {
   UserPlus,
   Trash2,
@@ -20,6 +21,7 @@ import {
   Sparkles,
   Award,
   Users,
+  ArrowLeft,
 } from 'lucide-react';
 import {
   getOrganizationAdmins,
@@ -40,6 +42,7 @@ const AdminManagement: React.FC<AdminManagementProps> = ({
   currentUserId,
   organizationName,
 }) => {
+  const navigate = useNavigate();
   const [admins, setAdmins] = useState<OrganizationAdmin[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -165,6 +168,17 @@ const AdminManagement: React.FC<AdminManagementProps> = ({
   return (
     <div className="min-h-screen relative overflow-x-hidden pb-12" style={{ background: 'linear-gradient(120deg, #e0f7fa 0%, #e8f5e9 50%, #e3f2fd 100%)' }}>
       <div className="max-w-5xl mx-auto pt-16 px-6">
+        {/* Back Button */}
+        <div className="mb-8">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 text-gray-700 hover:text-blue-600 transition-colors font-medium"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            Back
+          </button>
+        </div>
+
         {/* Header Section */}
         <motion.div
           className="text-center mb-12"
