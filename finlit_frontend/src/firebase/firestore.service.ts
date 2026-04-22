@@ -41,6 +41,7 @@ import type {
   CaseStudy,
   CaseStudyContent,
   CaseStudyProgress,
+  CaseStudyAttempt,
   MoneyPersonalityResult,
   SavedCalculation,
   ContentLock,
@@ -619,6 +620,10 @@ export async function getStudentProgress(userId: string): Promise<StudentProgres
   const caseStudyProgress = data.caseStudyProgress?.map((cs: any) => ({
     ...cs,
     completedAt: cs.completedAt ? (cs.completedAt as Timestamp)?.toDate() : undefined,
+    attemptHistory: (cs.attemptHistory || []).map((attempt: any) => ({
+      ...attempt,
+      completedAt: (attempt.completedAt as Timestamp)?.toDate() || new Date(),
+    })),
   })) || undefined;
 
   return {
@@ -1919,7 +1924,7 @@ export async function saveCaseStudyProgress(
 
   // Update answers
   currentProgress.quizAnswers[questionIndex] = selectedAnswer;
-  if (isCorrect) {
+  if (isCorrect && !currentProgress.correctAnswers.includes(questionIndex)) {
     currentProgress.correctAnswers.push(questionIndex);
   }
 
@@ -1981,18 +1986,19 @@ export async function getCaseStudyProgress(
 
 /**
  * Mark a case study week as completed and calculate final score
+ * Tracks attempt history similar to module attempts
  */
 export async function completeCaseStudy(
   userId: string,
   caseStudyId: string,
   totalQuestions: number,
   week: number
-): Promise<{ score: number; passed: boolean }> {
+): Promise<{ score: number; passed: boolean; attemptNumber: number }> {
   const progressRef = doc(db, STUDENT_PROGRESS, userId);
   const snapshot = await getDoc(progressRef);
 
   if (!snapshot.exists()) {
-    return { score: 0, passed: false };
+    return { score: 0, passed: false, attemptNumber: 0 };
   }
 
   const data = snapshot.data();
@@ -2003,7 +2009,7 @@ export async function completeCaseStudy(
   );
 
   if (progressIndex < 0) {
-    return { score: 0, passed: false };
+    return { score: 0, passed: false, attemptNumber: 0 };
   }
 
   const progress = caseStudyProgressArray[progressIndex];
@@ -2013,11 +2019,31 @@ export async function completeCaseStudy(
   const requiredCorrect = Math.ceil(totalQuestions * 0.75);
   const passed = correctCount >= requiredCorrect;
 
-  // Update progress with completion info - only set completedAt if passed
+  // Track attempt history
+  const currentAttempts = progress.attempts || 0;
+  const newAttemptNumber = currentAttempts + 1;
+  const now = new Date();
+
+  const newAttempt: CaseStudyAttempt = {
+    attemptNumber: newAttemptNumber,
+    score,
+    correctCount,
+    totalQuestions,
+    passed,
+    completedAt: now,
+  };
+
+  const existingHistory = progress.attemptHistory || [];
+
+  // Update progress with completion info and attempt history
+  // Only set completedAt if passed (for first pass tracking)
+  // But always track attempts
   caseStudyProgressArray[progressIndex] = {
     ...progress,
     score,
-    ...(passed && { completedAt: new Date() }),
+    attempts: newAttemptNumber,
+    attemptHistory: [...existingHistory, newAttempt],
+    ...(passed && !progress.completedAt && { completedAt: now }),
   };
 
   await updateDoc(progressRef, {
@@ -2025,11 +2051,12 @@ export async function completeCaseStudy(
     lastActivityAt: serverTimestamp(),
   });
 
-  return { score, passed };
+  return { score, passed, attemptNumber: newAttemptNumber };
 }
 
 /**
  * Reset case study week progress to allow retaking
+ * Preserves attempt history for admin tracking
  */
 export async function resetCaseStudyWeekProgress(
   userId: string,
@@ -2044,13 +2071,33 @@ export async function resetCaseStudyWeekProgress(
   const data = snapshot.data();
   const caseStudyProgressArray: CaseStudyProgress[] = data.caseStudyProgress || [];
 
-  // Remove progress for this specific week
-  const updatedProgress = caseStudyProgressArray.filter(
-    p => !(p.caseStudyId === caseStudyId && p.week === week)
+  // Find existing progress for this week
+  const existingIndex = caseStudyProgressArray.findIndex(
+    p => p.caseStudyId === caseStudyId && p.week === week
   );
 
+  if (existingIndex < 0) return;
+
+  const existingProgress = caseStudyProgressArray[existingIndex];
+
+  // Reset quiz answers but preserve attempt history
+  // IMPORTANT: Create a completely new object to avoid any reference issues
+  const resetProgress: CaseStudyProgress = {
+    caseStudyId,
+    week,
+    quizAnswers: {},  // Empty object - no questions answered yet
+    correctAnswers: [],  // Empty array - no correct answers yet
+    // Preserve attempt tracking
+    attempts: existingProgress.attempts || 0,
+    attemptHistory: existingProgress.attemptHistory || [],
+    // Don't reset completedAt or score - those track best result
+    // They will be updated if student passes again
+  };
+
+  caseStudyProgressArray[existingIndex] = resetProgress;
+
   await updateDoc(progressRef, {
-    caseStudyProgress: updatedProgress,
+    caseStudyProgress: caseStudyProgressArray,
     lastActivityAt: serverTimestamp(),
   });
 }
