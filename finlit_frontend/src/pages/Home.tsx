@@ -1325,7 +1325,13 @@ const FinLitApp: React.FC = () => {
                 </div>
 
                 {(() => {
-                  const caseStudiesDone = (progress?.caseStudyProgress || []).filter(cs => cs.completedAt).length;
+                  // Count unique completed case study weeks (avoid counting duplicates)
+                  const completedCaseStudyWeeks = new Set(
+                    (progress?.caseStudyProgress || [])
+                      .filter(cs => cs.completedAt)
+                      .map(cs => cs.week)
+                  );
+                  const caseStudiesDone = completedCaseStudyWeeks.size;
                   const dailyDone = progress?.dailyChallengesCompleted ?? 0;
                   // Check quickQuizzesCompleted counter, OR check if user has answered quiz questions (backward compatibility)
                   const quizFromCounter = progress?.quickQuizzesCompleted ?? 0;
@@ -1335,7 +1341,7 @@ const FinLitApp: React.FC = () => {
 
                   const reqs = [
                     { label: `All ${totalModules} Modules`, met: completedModules === totalModules, progress: `${completedModules}/${totalModules}`, icon: '🎯', route: '/game' },
-                    { label: '1 Case Study', met: caseStudiesDone >= 1, progress: `${Math.min(caseStudiesDone, 1)}/1`, icon: '📚', route: '/case-study' },
+                    { label: '15 Case Studies', met: caseStudiesDone >= 15, progress: `${Math.min(caseStudiesDone, 15)}/15`, icon: '📚', route: '/case-study' },
                     { label: '4 Daily Challenges', met: dailyDone >= 4, progress: `${Math.min(dailyDone, 4)}/4`, icon: '⚡', route: '#daily-challenge' },
                     { label: '1 Quick Quiz', met: quizDone >= 1, progress: `${Math.min(quizDone, 1)}/1`, icon: '🧠', route: '/economic-quiz' },
                     { label: '1 Personality Test', met: personalityDone, progress: personalityDone ? '1/1' : '0/1', icon: '💭', route: '/money-personality' },

@@ -26,6 +26,7 @@ import {
   setCaseStudyLockByOrgAdmin,
   setCaseStudyWeekLockBySuperAdmin,
   setCaseStudyWeekLockByOrgAdmin,
+  getActiveCaseStudy,
 } from '../firebase/firestore.service';
 import { MODULES } from '../hooks/useModuleScore';
 import type { ContentLock, WeekLock } from '../auth/types/auth.types';
@@ -53,6 +54,7 @@ const ModuleLockManager: React.FC<ModuleLockManagerProps> = ({
   const [moduleLocks, setModuleLocks] = useState<{ [key: string]: ContentLock }>({});
   const [caseStudyLocks, setCaseStudyLocks] = useState<{ [key: string]: ContentLock }>({});
   const [caseStudyWeekLocks, setCaseStudyWeekLocks] = useState<{ [key: string]: WeekLock }>({});
+  const [caseStudyWeeks, setCaseStudyWeeks] = useState<ModuleInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -96,18 +98,6 @@ const ModuleLockManager: React.FC<ModuleLockManagerProps> = ({
     { id: MODULES.GIVING.id, name: MODULES.GIVING.name, icon: '💝', phase: 'Phase 5: Advanced' },
   ];
 
-  // Case study weeks (8 weeks)
-  const caseStudyWeeks: ModuleInfo[] = [
-    { id: '1', name: 'Week 1 Case Study', icon: '📚' },
-    { id: '2', name: 'Week 2 Case Study', icon: '📚' },
-    { id: '3', name: 'Week 3 Case Study', icon: '📚' },
-    { id: '4', name: 'Week 4 Case Study', icon: '📚' },
-    { id: '5', name: 'Week 5 Case Study', icon: '📚' },
-    { id: '6', name: 'Week 6 Case Study', icon: '📚' },
-    { id: '7', name: 'Week 7 Case Study', icon: '📚' },
-    { id: '8', name: 'Week 8 Case Study', icon: '📚' },
-  ];
-
   useEffect(() => {
     loadLocks();
   }, [organizationId]);
@@ -115,10 +105,28 @@ const ModuleLockManager: React.FC<ModuleLockManagerProps> = ({
   const loadLocks = async () => {
     try {
       setLoading(true);
+
+      // Load locks
       const locks = await getOrganizationLocks(organizationId);
       setModuleLocks(locks.modules);
       setCaseStudyLocks(locks.caseStudies);
       setCaseStudyWeekLocks(locks.caseStudyWeeks);
+
+      // Load case study weeks dynamically from Firebase
+      const caseStudy = await getActiveCaseStudy();
+      if (caseStudy?.weeks) {
+        const weeksData = caseStudy.weeks as Record<string | number, any>;
+        const weekNumbers = Object.keys(weeksData).map(Number).sort((a, b) => a - b);
+        const weeks: ModuleInfo[] = weekNumbers.map(weekNum => {
+          const weekContent = weeksData[weekNum] || weeksData[String(weekNum)];
+          return {
+            id: String(weekNum),
+            name: weekContent?.subject ? `Week ${weekNum}: ${weekContent.subject}` : `Week ${weekNum} Case Study`,
+            icon: '📚',
+          };
+        });
+        setCaseStudyWeeks(weeks);
+      }
     } catch (err) {
       console.error('Error loading locks:', err);
       setError('Failed to load content locks');
@@ -554,7 +562,7 @@ const ModuleLockManager: React.FC<ModuleLockManagerProps> = ({
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <div className="px-6 py-4 bg-gradient-to-r from-purple-50 to-pink-50 border-b border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900">
-            Case Study Weeks (8 Weeks)
+            Case Study Weeks ({caseStudyWeeks.length} Weeks)
           </h3>
           <p className="text-sm text-gray-600 mt-1">
             Control access to individual case study weeks
