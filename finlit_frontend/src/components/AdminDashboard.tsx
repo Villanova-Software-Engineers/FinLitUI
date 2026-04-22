@@ -26,7 +26,6 @@ import {
   BookOpen,
   Menu,
   X,
-  Flame,
   HelpCircle,
   Search,
   Moon,
@@ -38,7 +37,6 @@ import {
   Puzzle,
   FileText,
   Calculator,
-  Calendar,
   Trophy,
   Target,
   UserCog,
@@ -252,11 +250,6 @@ const AdminDashboard: React.FC = () => {
         baseData[`${getModuleName(module.moduleId)} Passed`] = module.passed ? 'Yes' : 'No';
       });
 
-      // Daily Challenge
-      baseData['Last Daily Challenge'] = student.progress?.lastDailyChallengeDate
-        ? new Date(student.progress.lastDailyChallengeDate).toLocaleDateString()
-        : 'Not completed';
-
       // Crossword Progress
       baseData['Crossword Words Solved'] = student.progress?.crosswordProgress?.correctWords.length ?? 0;
       baseData['Crossword Week ID'] = student.progress?.crosswordProgress?.weekId ?? 'N/A';
@@ -433,16 +426,6 @@ const AdminDashboard: React.FC = () => {
             </button>
           )}
 
-          <button
-            onClick={() => {
-              navigate('/daily-challenge-admin');
-              setMobileMenuOpen(false);
-            }}
-            className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${textSecondaryClass} hover:bg-gray-100 ${darkMode ? 'hover:bg-white/10' : ''}`}
-          >
-            <Flame size={20} />
-            Daily Challenges
-          </button>
 
           {user?.role === 'owner' && (
             <button
@@ -688,27 +671,6 @@ const AdminDashboard: React.FC = () => {
                     </div>
                   ) : (
                 <div className="space-y-6">
-                  {/* Daily Challenge Stats */}
-                  <div className={`${darkMode ? 'bg-navy-700' : 'bg-gradient-to-br from-orange-50 to-red-50'} rounded-xl p-6 border ${darkMode ? 'border-navy-600' : 'border-orange-200'}`}>
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-red-500 rounded-xl flex items-center justify-center">
-                        <Flame className="text-white" size={24} />
-                      </div>
-                      <h3 className={`text-lg font-bold ${textClass}`}>Daily Challenge</h3>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <p className={`text-xs font-semibold ${textSecondaryClass} uppercase tracking-wide mb-1`}>Participation</p>
-                        <p className={`text-3xl font-bold ${textClass}`}>
-                          {students.filter(s => s.progress?.lastDailyChallengeDate).length}/{students.length}
-                        </p>
-                        <p className={`text-sm ${textSecondaryClass} mt-1`}>
-                          {Math.round((students.filter(s => s.progress?.lastDailyChallengeDate).length / students.length) * 100)}% completed
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
                   {/* Crossword Stats */}
                   <div className={`${darkMode ? 'bg-navy-700' : 'bg-gradient-to-br from-purple-50 to-pink-50'} rounded-xl p-6 border ${darkMode ? 'border-navy-600' : 'border-purple-200'}`}>
                     <div className="flex items-center gap-3 mb-4">
@@ -1108,29 +1070,6 @@ const AdminDashboard: React.FC = () => {
                         ) : (
                           <p className={`text-sm ${textSecondaryClass}`}>No module progress yet</p>
                         )}
-
-                        {/* Daily Challenge Section */}
-                        <div className={`mt-10 pt-8 border-t ${darkMode ? 'border-navy-700' : 'border-gray-200'}`}>
-                          <h4 className={`text-lg font-bold ${textClass} mb-4 flex items-center gap-2`}>
-                            <Flame className="text-orange-500" size={20} />
-                            Daily Challenge
-                          </h4>
-                          {selectedStudent.progress?.lastDailyChallengeDate ? (
-                            <div className={`${darkMode ? 'bg-navy-700' : 'bg-gray-50'} rounded-xl p-4`}>
-                              <div className="flex items-center gap-3">
-                                <Calendar className="text-brand-500" size={18} />
-                                <div>
-                                  <p className={`text-sm font-semibold ${textClass}`}>Last Completed</p>
-                                  <p className={`text-xs ${textSecondaryClass} mt-1`}>
-                                    {new Date(selectedStudent.progress.lastDailyChallengeDate).toLocaleDateString()}
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                          ) : (
-                            <p className={`text-sm ${textSecondaryClass}`}>No daily challenge completed yet</p>
-                          )}
-                        </div>
 
                         {/* Crossword Progress Section */}
                         <div className={`mt-10 pt-8 border-t ${darkMode ? 'border-navy-700' : 'border-gray-200'}`}>
