@@ -304,6 +304,16 @@ export interface CaseStudy {
   companyImageUrl2?: string;
 }
 
+// Individual case study attempt record
+export interface CaseStudyAttempt {
+  attemptNumber: number;
+  score: number;              // Percentage score (0-100)
+  correctCount: number;       // Number of correct answers
+  totalQuestions: number;     // Total number of questions
+  passed: boolean;            // 75% to pass
+  completedAt: Date;
+}
+
 // Case Study progress tracking for students
 export interface CaseStudyProgress {
   caseStudyId: string;
@@ -312,6 +322,8 @@ export interface CaseStudyProgress {
   correctAnswers: number[];    // Indices of correctly answered questions
   completedAt?: Date;
   score?: number;              // Final score (correct/total * 100)
+  attempts?: number;           // Total number of attempts
+  attemptHistory?: CaseStudyAttempt[];  // All attempts with timestamps
 }
 
 // ============ CERTIFICATE TYPES ============

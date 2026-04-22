@@ -49,9 +49,10 @@ import {
   createClassCode,
   getClassCodesByOrganization,
   getStudentsWithProgress,
-  getAllOrganizations
+  getAllOrganizations,
+  getActiveCaseStudy
 } from '../firebase/firestore.service';
-import type { ClassCode, StudentWithProgress, Organization } from '../auth/types/auth.types';
+import type { ClassCode, StudentWithProgress, Organization, CaseStudy } from '../auth/types/auth.types';
 import { MODULES } from '../hooks/useModuleScore';
 import ModuleLockManager from './ModuleLockManager';
 
@@ -85,6 +86,7 @@ const AdminDashboard: React.FC = () => {
   const [createdCode, setCreatedCode] = useState<ClassCode | null>(null);
   const [selectedStudent, setSelectedStudent] = useState<StudentWithProgress | null>(null);
   const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
+  const [expandedCaseStudies, setExpandedCaseStudies] = useState<Set<string>>(new Set());
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
@@ -93,6 +95,8 @@ const AdminDashboard: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const [currentView, setCurrentView] = useState<'students' | 'analytics' | 'module-locks'>('students');
+  const [totalCaseStudyWeeks, setTotalCaseStudyWeeks] = useState<number>(0);
+  const [activeCaseStudyId, setActiveCaseStudyId] = useState<string | null>(null);
 
   useEffect(() => {
     if (user?.role !== 'admin' && user?.role !== 'owner') {
@@ -104,7 +108,24 @@ const AdminDashboard: React.FC = () => {
     } else {
       loadClassCodes(user?.organizationId);
     }
+    // Load case study to get total weeks
+    loadCaseStudyWeeks();
   }, [user, navigate]);
+
+  const loadCaseStudyWeeks = async () => {
+    try {
+      const caseStudy = await getActiveCaseStudy();
+      if (caseStudy) {
+        setActiveCaseStudyId(caseStudy.id);
+        if (caseStudy.weeks) {
+          const weekCount = Object.keys(caseStudy.weeks).length;
+          setTotalCaseStudyWeeks(weekCount);
+        }
+      }
+    } catch {
+      // Silently fail - total weeks will show as 0
+    }
+  };
 
   const loadOrganizations = async () => {
     setLoadingOrgs(true);
@@ -162,6 +183,15 @@ const AdminDashboard: React.FC = () => {
       const newSet = new Set(prev);
       if (newSet.has(moduleId)) newSet.delete(moduleId);
       else newSet.add(moduleId);
+      return newSet;
+    });
+  };
+
+  const toggleCaseStudyExpanded = (caseStudyKey: string) => {
+    setExpandedCaseStudies(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(caseStudyKey)) newSet.delete(caseStudyKey);
+      else newSet.add(caseStudyKey);
       return newSet;
     });
   };
@@ -1178,41 +1208,100 @@ const AdminDashboard: React.FC = () => {
                             <FileText className="text-indigo-500" size={20} />
                             Case Studies
                           </h4>
-                          {selectedStudent.progress?.caseStudyProgress && selectedStudent.progress.caseStudyProgress.length > 0 ? (
+                          {(() => {
+                            const allProgress = selectedStudent.progress?.caseStudyProgress || [];
+                            // Filter to only show progress for the active case study
+                            const filteredProgress = activeCaseStudyId
+                              ? allProgress.filter(cs => cs.caseStudyId === activeCaseStudyId)
+                              : allProgress;
+                            return filteredProgress.length > 0 ? (
                             <div className="space-y-3">
-                              {selectedStudent.progress.caseStudyProgress.map((caseStudy, index) => (
-                                <div key={index} className={`${darkMode ? 'bg-navy-700' : 'bg-gray-50'} rounded-xl p-4`}>
-                                  <div className="flex items-center justify-between mb-3">
-                                    <div>
-                                      <p className={`text-sm font-semibold ${textClass}`}>Week {caseStudy.week}</p>
-                                      <p className={`text-xs ${textSecondaryClass} mt-1`}>
-                                        {caseStudy.completedAt ? formatDateTime(caseStudy.completedAt) : 'In Progress'}
-                                      </p>
+                              {filteredProgress.map((caseStudy, index) => {
+                                const caseStudyKey = `${caseStudy.caseStudyId}-${caseStudy.week}`;
+                                const hasPassed = caseStudy.completedAt !== undefined;
+                                return (
+                                  <div key={index} className={`border ${darkMode ? 'border-navy-700' : 'border-gray-200'} rounded-xl overflow-hidden`}>
+                                    <div
+                                      className={`flex items-center justify-between px-4 py-3 cursor-pointer ${darkMode ? 'hover:bg-navy-700' : 'hover:bg-gray-50'} transition-colors`}
+                                      onClick={() => toggleCaseStudyExpanded(caseStudyKey)}
+                                    >
+                                      <div className="flex items-center gap-3">
+                                        {hasPassed ? (
+                                          <CheckCircle className="text-green-500" size={18} />
+                                        ) : (
+                                          <XCircle className={textSecondaryClass} size={18} />
+                                        )}
+                                        <span className={`text-sm font-semibold ${textClass}`}>Week {caseStudy.week}</span>
+                                        {caseStudy.attempts && caseStudy.attempts > 1 && (
+                                          <span className={`text-xs ${textSecondaryClass}`}>({caseStudy.attempts} attempts)</span>
+                                        )}
+                                      </div>
+                                      <div className="flex items-center gap-4">
+                                        {caseStudy.score !== undefined && (
+                                          <span className={`text-sm ${
+                                            caseStudy.score >= 75 ? 'text-green-500' : textSecondaryClass
+                                          }`}>{caseStudy.score}%</span>
+                                        )}
+                                        <span className={`text-xs px-3 py-1 rounded-full font-semibold ${
+                                          hasPassed
+                                            ? 'bg-green-500/10 text-green-500'
+                                            : `${darkMode ? 'bg-navy-700 text-gray-400' : 'bg-gray-100 text-gray-500'}`
+                                        }`}>
+                                          {hasPassed ? 'Passed' : 'Not passed'}
+                                        </span>
+                                        {expandedCaseStudies.has(caseStudyKey) ? <ChevronUp size={16} className={textSecondaryClass} /> : <ChevronDown size={16} className={textSecondaryClass} />}
+                                      </div>
                                     </div>
-                                    {caseStudy.score !== undefined && (
-                                      <div className={`px-4 py-2 rounded-lg ${
-                                        caseStudy.score >= 80
-                                          ? 'bg-green-500/10 text-green-500'
-                                          : caseStudy.score >= 60
-                                          ? 'bg-yellow-500/10 text-yellow-500'
-                                          : 'bg-red-500/10 text-red-500'
-                                      }`}>
-                                        <p className="text-lg font-bold">{caseStudy.score}%</p>
+                                    {expandedCaseStudies.has(caseStudyKey) && (
+                                      <div className={`${darkMode ? 'bg-navy-700' : 'bg-gray-50'} px-4 py-4 border-t ${darkMode ? 'border-navy-600' : 'border-gray-200'}`}>
+                                        {caseStudy.attemptHistory && caseStudy.attemptHistory.length > 0 ? (
+                                          <>
+                                            <p className={`text-xs font-semibold ${textSecondaryClass} mb-3 uppercase tracking-wide`}>Attempt History</p>
+                                            <table className="w-full text-sm">
+                                              <thead>
+                                                <tr className={textSecondaryClass}>
+                                                  <th className="text-left pb-2 font-semibold">#</th>
+                                                  <th className="text-left pb-2 font-semibold">Score</th>
+                                                  <th className="text-left pb-2 font-semibold">Correct</th>
+                                                  <th className="text-left pb-2 font-semibold">Result</th>
+                                                  <th className="text-left pb-2 font-semibold">Date</th>
+                                                </tr>
+                                              </thead>
+                                              <tbody>
+                                                {caseStudy.attemptHistory.map((attempt, idx) => (
+                                                  <tr key={idx} className={textClass}>
+                                                    <td className="py-1.5">{attempt.attemptNumber}</td>
+                                                    <td>{attempt.score}%</td>
+                                                    <td>{attempt.correctCount}/{attempt.totalQuestions}</td>
+                                                    <td>{attempt.passed ? <span className="text-green-500 font-semibold">Pass</span> : <span className={textSecondaryClass}>Fail</span>}</td>
+                                                    <td className={textSecondaryClass}>{formatDateTime(attempt.completedAt)}</td>
+                                                  </tr>
+                                                ))}
+                                              </tbody>
+                                            </table>
+                                          </>
+                                        ) : (
+                                          <div className="text-xs">
+                                            <p className={textSecondaryClass}>
+                                              Correct Answers: <span className={`font-semibold ${textClass}`}>{caseStudy.correctAnswers.length}/{Object.keys(caseStudy.quizAnswers).length}</span>
+                                            </p>
+                                            {caseStudy.completedAt && (
+                                              <p className={`${textSecondaryClass} mt-1`}>
+                                                Completed: {formatDateTime(caseStudy.completedAt)}
+                                              </p>
+                                            )}
+                                          </div>
+                                        )}
                                       </div>
                                     )}
                                   </div>
-                                  <div className="grid grid-cols-2 gap-3 text-xs">
-                                    <div>
-                                      <span className={textSecondaryClass}>Correct Answers: </span>
-                                      <span className={`font-semibold ${textClass}`}>{caseStudy.correctAnswers.length}/{Object.keys(caseStudy.quizAnswers).length}</span>
-                                    </div>
-                                  </div>
-                                </div>
-                              ))}
+                                );
+                              })}
                             </div>
                           ) : (
                             <p className={`text-sm ${textSecondaryClass}`}>No case studies completed yet</p>
-                          )}
+                          );
+                          })()}
                         </div>
 
                         {/* Money Personality Section */}
@@ -1304,7 +1393,7 @@ const AdminDashboard: React.FC = () => {
                               <th className={`px-6 py-4 text-left text-xs font-bold ${textSecondaryClass} uppercase tracking-wide`}>Student</th>
                               <th className={`px-6 py-4 text-left text-xs font-bold ${textSecondaryClass} uppercase tracking-wide`}>XP</th>
                               <th className={`px-6 py-4 text-left text-xs font-bold ${textSecondaryClass} uppercase tracking-wide`}>Progress</th>
-                              <th className={`px-6 py-4 text-left text-xs font-bold ${textSecondaryClass} uppercase tracking-wide`}>Joined</th>
+                              <th className={`px-6 py-4 text-left text-xs font-bold ${textSecondaryClass} uppercase tracking-wide`}>Case Study</th>
                               <th className={`px-6 py-4 text-right text-xs font-bold ${textSecondaryClass} uppercase tracking-wide`}>Actions</th>
                             </tr>
                           </thead>
@@ -1348,7 +1437,29 @@ const AdminDashboard: React.FC = () => {
                                       </div>
                                     </div>
                                   </td>
-                                  <td className={`px-6 py-4 text-sm ${textSecondaryClass}`}>{student.registeredAt.toLocaleDateString()}</td>
+                                  <td className="px-6 py-4">
+                                    {(() => {
+                                      const allProgress = student.progress?.caseStudyProgress || [];
+                                      // Filter to only show progress for the active case study
+                                      const caseStudyProgress = activeCaseStudyId
+                                        ? allProgress.filter(cs => cs.caseStudyId === activeCaseStudyId)
+                                        : allProgress;
+                                      const passedCaseStudies = caseStudyProgress.filter(cs => cs.completedAt).length;
+                                      const totalAttempts = caseStudyProgress.reduce((sum, cs) => sum + (cs.attempts || 0), 0);
+                                      return (
+                                        <div className="flex items-center gap-2">
+                                          <span className={`text-sm font-semibold ${passedCaseStudies > 0 ? 'text-green-500' : textSecondaryClass}`}>
+                                            {passedCaseStudies}/{totalCaseStudyWeeks} passed
+                                          </span>
+                                          {totalAttempts > 0 && (
+                                            <span className={`text-xs ${textSecondaryClass}`}>
+                                              ({totalAttempts} {totalAttempts === 1 ? 'attempt' : 'attempts'})
+                                            </span>
+                                          )}
+                                        </div>
+                                      );
+                                    })()}
+                                  </td>
                                   <td className="px-6 py-4 text-right">
                                     <button
                                       onClick={() => setSelectedStudent(student)}
