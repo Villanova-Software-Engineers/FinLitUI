@@ -525,26 +525,22 @@ interface BalanceSheetBuilderProps {
 
 const BalanceSheetBuilder = ({ handlePrev, handleNext }: BalanceSheetBuilderProps) => {
   const lineItems = [
-    { id: '1', text: 'Cash ($50,000)', category: 'assets', subcategory: 'current', explanation: 'Cash is the most liquid current asset. It belongs in the Assets section under Current Assets.' },
-    { id: '2', text: 'Inventory ($30,000)', category: 'assets', subcategory: 'current', explanation: 'Inventory is a current asset that will be sold within the year.' },
-    { id: '3', text: 'Accounts Payable ($20,000)', category: 'liabilities', subcategory: 'current', explanation: 'Accounts Payable is money owed to suppliers - a current liability.' },
-    { id: '4', text: 'Building ($200,000)', category: 'assets', subcategory: 'noncurrent', explanation: 'A building is a long-term (non-current) asset that provides value for many years.' },
-    { id: '5', text: 'Long-term Loan ($100,000)', category: 'liabilities', subcategory: 'noncurrent', explanation: 'Long-term loans are non-current liabilities paid over multiple years.' },
-    { id: '6', text: 'Retained Earnings ($80,000)', category: 'equity', subcategory: '', explanation: 'Retained earnings are accumulated profits kept in the business - part of equity.' },
-    { id: '7', text: 'Equipment ($60,000)', category: 'assets', subcategory: 'noncurrent', explanation: 'Equipment is a non-current asset used over multiple years.' },
-    { id: '8', text: 'Share Capital ($120,000)', category: 'equity', subcategory: '', explanation: 'Share capital is money invested by owners - part of equity.' },
+    { id: '1', name: 'Cash', amount: 50000, category: 'assets', subcategory: 'assets-current', explanation: 'Cash is the most liquid current asset. It belongs in the Assets section under Current Assets.' },
+    { id: '2', name: 'Inventory', amount: 30000, category: 'assets', subcategory: 'assets-current', explanation: 'Inventory is a current asset that will be sold within the year.' },
+    { id: '3', name: 'Accounts Receivable', amount: 25000, category: 'assets', subcategory: 'assets-current', explanation: 'Accounts Receivable is money customers owe you - a current asset.' },
+    { id: '4', name: 'Building', amount: 200000, category: 'assets', subcategory: 'assets-noncurrent', explanation: 'A building is a long-term (non-current) asset that provides value for many years.' },
+    { id: '5', name: 'Equipment', amount: 60000, category: 'assets', subcategory: 'assets-noncurrent', explanation: 'Equipment is a non-current asset used over multiple years.' },
+    { id: '6', name: 'Accounts Payable', amount: 20000, category: 'liabilities', subcategory: 'liabilities-current', explanation: 'Accounts Payable is money owed to suppliers - a current liability.' },
+    { id: '7', name: 'Short-term Loan', amount: 15000, category: 'liabilities', subcategory: 'liabilities-current', explanation: 'Short-term loans are current liabilities due within one year.' },
+    { id: '8', name: 'Long-term Loan', amount: 100000, category: 'liabilities', subcategory: 'liabilities-noncurrent', explanation: 'Long-term loans are non-current liabilities paid over multiple years.' },
+    { id: '9', name: 'Share Capital', amount: 120000, category: 'equity', subcategory: 'equity', explanation: 'Share capital is money invested by owners - part of equity.' },
+    { id: '10', name: 'Retained Earnings', amount: 110000, category: 'equity', subcategory: 'equity', explanation: 'Retained earnings are accumulated profits kept in the business - part of equity.' },
   ];
 
   const [items, setItems] = useState(lineItems.map(item => ({ ...item, zone: 'bank' })));
   const [draggedItem, setDraggedItem] = useState<string | null>(null);
   const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
   const [checked, setChecked] = useState(false);
-
-  const zones = [
-    { id: 'assets', label: 'Assets', icon: '💼', color: 'from-blue-500 to-blue-600' },
-    { id: 'liabilities', label: 'Liabilities', icon: '📋', color: 'from-red-500 to-red-600' },
-    { id: 'equity', label: 'Equity', icon: '💎', color: 'from-green-500 to-green-600' }
-  ];
 
   const handleDragStart = (e: React.DragEvent, itemId: string) => {
     setDraggedItem(itemId);
@@ -599,24 +595,27 @@ const BalanceSheetBuilder = ({ handlePrev, handleNext }: BalanceSheetBuilderProp
     setChecked(true);
   };
 
-  const score = items.filter(item => item.zone === item.category).length;
-  const totalAssets = items.filter(i => i.zone === 'assets').reduce((sum, i) => {
-    const match = i.text.match(/\$(\d+,?\d+)/);
-    return sum + (match ? parseInt(match[1].replace(',', '')) : 0);
-  }, 0);
-  const totalLiab = items.filter(i => i.zone === 'liabilities').reduce((sum, i) => {
-    const match = i.text.match(/\$(\d+,?\d+)/);
-    return sum + (match ? parseInt(match[1].replace(',', '')) : 0);
-  }, 0);
-  const totalEquity = items.filter(i => i.zone === 'equity').reduce((sum, i) => {
-    const match = i.text.match(/\$(\d+,?\d+)/);
-    return sum + (match ? parseInt(match[1].replace(',', '')) : 0);
-  }, 0);
-  const balances = totalAssets === (totalLiab + totalEquity);
+  const score = items.filter(item => item.zone === item.subcategory && item.zone !== 'bank').length;
 
-  const getItemClass = (item: typeof items[0]) => {
-    if (!checked) return 'bg-white border-gray-300 shadow-sm';
-    return item.zone === item.category
+  // Calculate totals in real-time
+  const currentAssets = items.filter(i => i.zone === 'assets-current').reduce((sum, i) => sum + i.amount, 0);
+  const noncurrentAssets = items.filter(i => i.zone === 'assets-noncurrent').reduce((sum, i) => sum + i.amount, 0);
+  const totalAssets = currentAssets + noncurrentAssets;
+
+  const currentLiabilities = items.filter(i => i.zone === 'liabilities-current').reduce((sum, i) => sum + i.amount, 0);
+  const noncurrentLiabilities = items.filter(i => i.zone === 'liabilities-noncurrent').reduce((sum, i) => sum + i.amount, 0);
+  const totalLiabilities = currentLiabilities + noncurrentLiabilities;
+
+  const totalEquity = items.filter(i => i.zone === 'equity').reduce((sum, i) => sum + i.amount, 0);
+
+  const totalLiabEquity = totalLiabilities + totalEquity;
+  const balances = totalAssets === totalLiabEquity;
+
+  const getItemClass = (item: typeof items[0], inBank: boolean = false) => {
+    if (inBank) return 'bg-white border-gray-300 shadow-sm hover:shadow-lg hover:border-blue-400';
+    if (!checked) return 'bg-blue-50 border-blue-200 shadow-sm';
+    const isCorrect = item.zone === item.subcategory;
+    return isCorrect
       ? 'bg-green-100 border-green-500 text-green-900 shadow-md'
       : 'bg-red-100 border-red-500 text-red-900 shadow-md';
   };
@@ -626,10 +625,10 @@ const BalanceSheetBuilder = ({ handlePrev, handleNext }: BalanceSheetBuilderProp
       <motion.h2 className="text-4xl font-bold mb-4 text-center text-gray-800" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
         🎮 Balance Sheet Builder
       </motion.h2>
-      <p className="text-center text-gray-600 mb-8 text-lg">Drag line items to the correct section. The sheet must balance!</p>
+      <p className="text-center text-gray-600 mb-8 text-lg">Drag line items to build a balance sheet. Watch it balance in real-time!</p>
 
       {/* Item Bank */}
-      <div className="bg-gradient-to-r from-gray-100 to-gray-200 rounded-2xl p-5 mb-6 min-h-[80px] border-2 border-gray-300">
+      <div className="bg-gradient-to-r from-gray-100 to-gray-200 rounded-2xl p-5 mb-6 min-h-[100px] border-2 border-gray-300">
         <p className="text-sm font-semibold text-gray-700 mb-3 text-center">📦 Available Line Items</p>
         <div className="flex flex-wrap gap-3 justify-center">
           {items.filter(i => i.zone === 'bank').map(item => (
@@ -640,108 +639,263 @@ const BalanceSheetBuilder = ({ handlePrev, handleNext }: BalanceSheetBuilderProp
               onTouchStart={(e) => handleTouchStart(e, item.id)}
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
-              className={`${getItemClass(item)} border-2 rounded-xl px-4 py-3 text-sm font-medium cursor-grab active:cursor-grabbing transition-all hover:shadow-lg`}
+              className={`${getItemClass(item, true)} border-2 rounded-xl px-4 py-2 text-sm font-medium cursor-grab active:cursor-grabbing transition-all`}
             >
-              {item.text}
+              <div className="font-bold">{item.name}</div>
+              <div className="text-xs text-gray-600">${item.amount.toLocaleString()}</div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Drop Zones - Side by Side Layout */}
-      <div className="grid md:grid-cols-3 gap-4 mb-6">
-        {zones.map(zone => (
-          <div
-            key={zone.id}
-            data-drop-zone={zone.id}
-            onDragOver={handleDragOver}
-            onDrop={(e) => handleDrop(e, zone.id)}
-            className="bg-white border-3 border-gray-300 rounded-2xl overflow-hidden shadow-lg"
-          >
-            <div className={`bg-gradient-to-r ${zone.color} text-white p-4 text-center`}>
-              <div className="text-3xl mb-2">{zone.icon}</div>
-              <h3 className="font-bold text-lg">{zone.label}</h3>
-            </div>
-            <div className="p-4 min-h-[300px] space-y-2">
-              {items.filter(i => i.zone === zone.id).map(item => (
-                <div
-                  key={item.id}
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, item.id)}
-                  onTouchStart={(e) => handleTouchStart(e, item.id)}
-                  onTouchMove={handleTouchMove}
-                  onTouchEnd={handleTouchEnd}
-                  className={`${getItemClass(item)} border-2 rounded-xl px-3 py-2 text-sm font-medium cursor-grab active:cursor-grabbing`}
-                >
-                  {item.text}
+      {/* Balance Sheet - Similar to Step 5 Design */}
+      <motion.div className="bg-white border-2 border-gray-300 rounded-3xl overflow-hidden mb-6 shadow-xl" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+        <div className="bg-gray-800 text-white p-4 text-center">
+          <h3 className="text-2xl font-bold">Your Balance Sheet</h3>
+          <p className="text-sm text-gray-300">Drag items to the correct sections</p>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-0">
+          {/* ASSETS SIDE */}
+          <div className="bg-blue-50 p-6 border-r-2 border-gray-300">
+            <h4 className="font-bold text-xl text-blue-900 mb-4">ASSETS</h4>
+
+            {/* Current Assets Drop Zone */}
+            <div className="mb-4">
+              <p className="font-semibold text-blue-800 mb-2">Current Assets</p>
+              <div
+                data-drop-zone="assets-current"
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, 'assets-current')}
+                className="min-h-[120px] bg-white/50 border-2 border-dashed border-blue-300 rounded-xl p-3"
+              >
+                <div className="space-y-2">
+                  {items.filter(i => i.zone === 'assets-current').map(item => (
+                    <div
+                      key={item.id}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, item.id)}
+                      onTouchStart={(e) => handleTouchStart(e, item.id)}
+                      onTouchMove={handleTouchMove}
+                      onTouchEnd={handleTouchEnd}
+                      className={`${getItemClass(item)} border-2 rounded-lg px-3 py-2 cursor-grab active:cursor-grabbing`}
+                    >
+                      <div className="flex justify-between text-sm">
+                        <span className="font-medium">{item.name}</span>
+                        <span className="font-mono">${item.amount.toLocaleString()}</span>
+                      </div>
+                    </div>
+                  ))}
+                  {items.filter(i => i.zone === 'assets-current').length === 0 && (
+                    <p className="text-xs text-gray-400 text-center py-4">Drop current assets here</p>
+                  )}
                 </div>
-              ))}
+                <div className="flex justify-between border-t border-blue-300 pt-2 mt-2 font-bold text-sm">
+                  <span>Total Current Assets</span>
+                  <span className="font-mono">${currentAssets.toLocaleString()}</span>
+                </div>
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
 
-      {/* Balance Check */}
-      {checked && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="bg-white border-2 border-gray-300 rounded-2xl p-6 mb-6 shadow-lg"
-        >
-          <h3 className="font-bold text-xl text-gray-800 mb-4 text-center">Balance Check</h3>
-          <div className="grid md:grid-cols-3 gap-4 mb-4">
-            <div className="bg-blue-50 rounded-xl p-4 border-2 border-blue-300">
-              <p className="text-sm text-gray-600">Total Assets</p>
-              <p className="text-2xl font-bold text-blue-700">${totalAssets.toLocaleString()}</p>
+            {/* Non-Current Assets Drop Zone */}
+            <div className="mb-4">
+              <p className="font-semibold text-blue-800 mb-2">Non-Current Assets</p>
+              <div
+                data-drop-zone="assets-noncurrent"
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, 'assets-noncurrent')}
+                className="min-h-[120px] bg-white/50 border-2 border-dashed border-blue-300 rounded-xl p-3"
+              >
+                <div className="space-y-2">
+                  {items.filter(i => i.zone === 'assets-noncurrent').map(item => (
+                    <div
+                      key={item.id}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, item.id)}
+                      onTouchStart={(e) => handleTouchStart(e, item.id)}
+                      onTouchMove={handleTouchMove}
+                      onTouchEnd={handleTouchEnd}
+                      className={`${getItemClass(item)} border-2 rounded-lg px-3 py-2 cursor-grab active:cursor-grabbing`}
+                    >
+                      <div className="flex justify-between text-sm">
+                        <span className="font-medium">{item.name}</span>
+                        <span className="font-mono">${item.amount.toLocaleString()}</span>
+                      </div>
+                    </div>
+                  ))}
+                  {items.filter(i => i.zone === 'assets-noncurrent').length === 0 && (
+                    <p className="text-xs text-gray-400 text-center py-4">Drop non-current assets here</p>
+                  )}
+                </div>
+                <div className="flex justify-between border-t border-blue-300 pt-2 mt-2 font-bold text-sm">
+                  <span>Total Non-Current</span>
+                  <span className="font-mono">${noncurrentAssets.toLocaleString()}</span>
+                </div>
+              </div>
             </div>
-            <div className="bg-red-50 rounded-xl p-4 border-2 border-red-300">
-              <p className="text-sm text-gray-600">Total Liabilities</p>
-              <p className="text-2xl font-bold text-red-700">${totalLiab.toLocaleString()}</p>
-            </div>
-            <div className="bg-green-50 rounded-xl p-4 border-2 border-green-300">
-              <p className="text-sm text-gray-600">Total Equity</p>
-              <p className="text-2xl font-bold text-green-700">${totalEquity.toLocaleString()}</p>
-            </div>
-          </div>
-          <div className={`text-center p-4 rounded-xl border-2 ${balances ? 'bg-green-100 border-green-500' : 'bg-red-100 border-red-500'}`}>
-            <p className={`font-bold text-lg ${balances ? 'text-green-900' : 'text-red-900'}`}>
-              {balances ? '✓ Balance Sheet Balances!' : '✗ Does not balance'}
-            </p>
-            <p className="text-sm mt-1">
-              {balances
-                ? `Assets ($${totalAssets.toLocaleString()}) = Liabilities + Equity ($${(totalLiab + totalEquity).toLocaleString()})`
-                : `Assets ($${totalAssets.toLocaleString()}) ≠ Liabilities + Equity ($${(totalLiab + totalEquity).toLocaleString()})`
-              }
-            </p>
-          </div>
-        </motion.div>
-      )}
 
-      {/* Score and Explanations */}
-      <div className="flex justify-between items-center mb-6">
-        <span className="text-gray-600 font-semibold">Score: {checked ? `${score} / 8` : '? / 8'}</span>
+            <div className="border-t-2 border-blue-500 pt-3 font-bold text-lg flex justify-between">
+              <span>TOTAL ASSETS</span>
+              <span className="font-mono">${totalAssets.toLocaleString()}</span>
+            </div>
+          </div>
+
+          {/* LIABILITIES & EQUITY SIDE */}
+          <div className="bg-green-50 p-6">
+            <h4 className="font-bold text-xl text-green-900 mb-4">LIABILITIES & EQUITY</h4>
+
+            {/* Current Liabilities Drop Zone */}
+            <div className="mb-4">
+              <p className="font-semibold text-red-800 mb-2">Current Liabilities</p>
+              <div
+                data-drop-zone="liabilities-current"
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, 'liabilities-current')}
+                className="min-h-[100px] bg-white/50 border-2 border-dashed border-red-300 rounded-xl p-3"
+              >
+                <div className="space-y-2">
+                  {items.filter(i => i.zone === 'liabilities-current').map(item => (
+                    <div
+                      key={item.id}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, item.id)}
+                      onTouchStart={(e) => handleTouchStart(e, item.id)}
+                      onTouchMove={handleTouchMove}
+                      onTouchEnd={handleTouchEnd}
+                      className={`${getItemClass(item)} border-2 rounded-lg px-3 py-2 cursor-grab active:cursor-grabbing`}
+                    >
+                      <div className="flex justify-between text-sm">
+                        <span className="font-medium">{item.name}</span>
+                        <span className="font-mono">${item.amount.toLocaleString()}</span>
+                      </div>
+                    </div>
+                  ))}
+                  {items.filter(i => i.zone === 'liabilities-current').length === 0 && (
+                    <p className="text-xs text-gray-400 text-center py-4">Drop current liabilities here</p>
+                  )}
+                </div>
+                <div className="flex justify-between border-t border-red-300 pt-2 mt-2 font-bold text-sm">
+                  <span>Total Current Liab.</span>
+                  <span className="font-mono">${currentLiabilities.toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Non-Current Liabilities Drop Zone */}
+            <div className="mb-4">
+              <p className="font-semibold text-red-800 mb-2">Long-term Liabilities</p>
+              <div
+                data-drop-zone="liabilities-noncurrent"
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, 'liabilities-noncurrent')}
+                className="min-h-[80px] bg-white/50 border-2 border-dashed border-red-300 rounded-xl p-3"
+              >
+                <div className="space-y-2">
+                  {items.filter(i => i.zone === 'liabilities-noncurrent').map(item => (
+                    <div
+                      key={item.id}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, item.id)}
+                      onTouchStart={(e) => handleTouchStart(e, item.id)}
+                      onTouchMove={handleTouchMove}
+                      onTouchEnd={handleTouchEnd}
+                      className={`${getItemClass(item)} border-2 rounded-lg px-3 py-2 cursor-grab active:cursor-grabbing`}
+                    >
+                      <div className="flex justify-between text-sm">
+                        <span className="font-medium">{item.name}</span>
+                        <span className="font-mono">${item.amount.toLocaleString()}</span>
+                      </div>
+                    </div>
+                  ))}
+                  {items.filter(i => i.zone === 'liabilities-noncurrent').length === 0 && (
+                    <p className="text-xs text-gray-400 text-center py-4">Drop long-term liabilities here</p>
+                  )}
+                </div>
+                <div className="flex justify-between border-t border-red-300 pt-2 mt-2 font-bold text-sm">
+                  <span>Total Liabilities</span>
+                  <span className="font-mono">${totalLiabilities.toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Equity Drop Zone */}
+            <div className="mb-4">
+              <p className="font-semibold text-green-800 mb-2">Equity</p>
+              <div
+                data-drop-zone="equity"
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, 'equity')}
+                className="min-h-[100px] bg-white/50 border-2 border-dashed border-green-300 rounded-xl p-3"
+              >
+                <div className="space-y-2">
+                  {items.filter(i => i.zone === 'equity').map(item => (
+                    <div
+                      key={item.id}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, item.id)}
+                      onTouchStart={(e) => handleTouchStart(e, item.id)}
+                      onTouchMove={handleTouchMove}
+                      onTouchEnd={handleTouchEnd}
+                      className={`${getItemClass(item)} border-2 rounded-lg px-3 py-2 cursor-grab active:cursor-grabbing`}
+                    >
+                      <div className="flex justify-between text-sm">
+                        <span className="font-medium">{item.name}</span>
+                        <span className="font-mono">${item.amount.toLocaleString()}</span>
+                      </div>
+                    </div>
+                  ))}
+                  {items.filter(i => i.zone === 'equity').length === 0 && (
+                    <p className="text-xs text-gray-400 text-center py-4">Drop equity items here</p>
+                  )}
+                </div>
+                <div className="flex justify-between border-t border-green-300 pt-2 mt-2 font-bold text-sm">
+                  <span>Total Equity</span>
+                  <span className="font-mono">${totalEquity.toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="border-t-2 border-green-500 pt-3 font-bold text-lg flex justify-between">
+              <span>TOTAL LIAB. + EQUITY</span>
+              <span className="font-mono">${totalLiabEquity.toLocaleString()}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className={`p-4 text-center text-sm font-semibold ${balances && totalAssets > 0 ? 'bg-green-100 text-green-900' : totalAssets > 0 ? 'bg-red-100 text-red-900' : 'bg-gray-100 text-gray-700'}`}>
+          {balances && totalAssets > 0
+            ? '✓ Balance Sheet Balances! Assets = Liabilities + Equity'
+            : totalAssets > 0
+              ? `✗ Does not balance: Assets ($${totalAssets.toLocaleString()}) ≠ Liabilities + Equity ($${totalLiabEquity.toLocaleString()})`
+              : 'Start dragging items to build your balance sheet'}
+        </div>
+      </motion.div>
+
+      {/* Check Button */}
+      <div className="flex justify-center mb-6">
         <button
           onClick={checkAnswers}
           disabled={items.some(i => i.zone === 'bank')}
-          className="px-6 py-3 bg-blue-500 text-white rounded-xl font-semibold hover:bg-blue-600 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+          className="px-8 py-4 bg-blue-500 text-white rounded-xl font-bold text-lg hover:bg-blue-600 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
         >
-          Check Answers
+          {checked ? `Score: ${score} / ${items.length}` : 'Check My Answers'}
         </button>
       </div>
 
+      {/* Feedback and Explanations */}
       {checked && (
         <>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`${score === 8 && balances ? 'bg-green-50 border-green-500' : 'bg-yellow-50 border-yellow-500'} border-l-4 p-6 rounded-2xl mb-6`}
+            className={`${score === items.length && balances ? 'bg-green-50 border-green-500' : 'bg-yellow-50 border-yellow-500'} border-l-4 p-6 rounded-2xl mb-6`}
           >
-            <p className={`${score === 8 && balances ? 'text-green-900' : 'text-yellow-900'} font-semibold text-lg`}>
-              {score === 8 && balances
+            <p className={`${score === items.length && balances ? 'text-green-900' : 'text-yellow-900'} font-semibold text-lg`}>
+              {score === items.length && balances
                 ? '🎉 Perfect! All items correctly placed and the balance sheet balances!'
-                : score === 8
-                  ? '👍 All items placed correctly! But check if it balances.'
-                  : `📚 ${score}/8 correct. Review the explanations below.`
+                : score === items.length
+                  ? '👍 All items placed correctly! And the sheet balances.'
+                  : `📚 ${score}/${items.length} correct. Review the explanations below.`
               }
             </p>
           </motion.div>
@@ -754,8 +908,8 @@ const BalanceSheetBuilder = ({ handlePrev, handleNext }: BalanceSheetBuilderProp
           >
             <h3 className="text-xl font-bold text-gray-800 mb-4">📖 Explanations</h3>
             <div className="space-y-3">
-              {items.map((item) => {
-                const isCorrect = item.zone === item.category;
+              {items.filter(i => i.zone !== 'bank').map((item) => {
+                const isCorrect = item.zone === item.subcategory;
                 return (
                   <div key={item.id} className={`p-4 rounded-xl border-2 ${isCorrect ? 'bg-green-50 border-green-300' : 'bg-red-50 border-red-300'}`}>
                     <div className="flex items-start gap-3 mb-2">
@@ -763,10 +917,22 @@ const BalanceSheetBuilder = ({ handlePrev, handleNext }: BalanceSheetBuilderProp
                         {isCorrect ? '✓' : '✗'}
                       </span>
                       <div className="flex-1">
-                        <p className="font-semibold text-gray-800">{item.text}</p>
+                        <p className="font-semibold text-gray-800">{item.name} (${item.amount.toLocaleString()})</p>
                         <p className={`text-sm ${isCorrect ? 'text-green-800' : 'text-red-800'} mt-1`}>
-                          {!isCorrect && `You placed it in: ${item.zone}. `}
-                          Correct category: <span className="font-bold capitalize">{item.category}</span>
+                          {!isCorrect && `You placed it in: ${
+                            item.zone === 'assets-current' ? 'Current Assets' :
+                            item.zone === 'assets-noncurrent' ? 'Non-Current Assets' :
+                            item.zone === 'liabilities-current' ? 'Current Liabilities' :
+                            item.zone === 'liabilities-noncurrent' ? 'Long-term Liabilities' :
+                            item.zone === 'equity' ? 'Equity' : item.zone
+                          }. `}
+                          Correct section: <span className="font-bold">{
+                            item.subcategory === 'assets-current' ? 'Current Assets' :
+                            item.subcategory === 'assets-noncurrent' ? 'Non-Current Assets' :
+                            item.subcategory === 'liabilities-current' ? 'Current Liabilities' :
+                            item.subcategory === 'liabilities-noncurrent' ? 'Long-term Liabilities' :
+                            'Equity'
+                          }</span>
                         </p>
                       </div>
                     </div>
@@ -780,8 +946,8 @@ const BalanceSheetBuilder = ({ handlePrev, handleNext }: BalanceSheetBuilderProp
       )}
 
       <div className="bg-blue-50 border-2 border-blue-200 rounded-2xl p-6 mb-8">
-        <h3 className="font-bold text-blue-900 mb-2">Game 2 Preview — Ratio Calculator</h3>
-        <p className="text-blue-800">Next, you'll calculate key financial ratios from a balance sheet!</p>
+        <h3 className="font-bold text-blue-900 mb-2">Next Up: Ratio Calculator</h3>
+        <p className="text-blue-800">You'll calculate key financial ratios from a balance sheet!</p>
       </div>
 
       <div className="flex justify-center gap-4 pb-12">
@@ -789,7 +955,7 @@ const BalanceSheetBuilder = ({ handlePrev, handleNext }: BalanceSheetBuilderProp
           ← Back
         </button>
         <button onClick={handleNext} className="px-8 py-4 rounded-2xl bg-blue-500 text-white font-semibold text-lg shadow-lg hover:bg-blue-600">
-          Game 2 →
+          Next: Game 2 →
         </button>
       </div>
     </div>
