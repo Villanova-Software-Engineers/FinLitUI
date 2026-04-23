@@ -849,19 +849,14 @@ const TaxBasics = () => {
       setQuizCompleted(true);
 
       const percentage = (finalScore / quizQuestions.length) * 100;
-      console.log('Tax Basics Quiz - Score:', finalScore, '/', quizQuestions.length, '=', percentage.toFixed(1) + '%');
 
-      if (percentage >= 80) {
-        try {
-          console.log('Saving score to Firebase:', MODULES.TAX_BASICS.id, percentage);
-          const result = await saveScore(MODULES.TAX_BASICS.id, percentage);
-          console.log('Score saved successfully:', result);
-          // Refresh progress to ensure the UI updates
-          await refreshProgress();
-          console.log('Progress refreshed');
-        } catch (error) {
-          console.error('Error saving score:', error);
-        }
+      // Save score for all attempts (both pass and fail)
+      try {
+        const result = await saveScore(MODULES.TAX_BASICS.id, percentage);
+        // Refresh progress to ensure the UI updates
+        await refreshProgress();
+      } catch (error) {
+        console.error('Error saving score:', error);
       }
     }
   };
