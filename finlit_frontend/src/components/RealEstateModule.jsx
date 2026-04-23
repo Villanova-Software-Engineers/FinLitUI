@@ -686,9 +686,8 @@ const RealEstateModule = () => {
       setQuizCompleted(true);
 
       const percentage = (finalScore / shuffledQuestions.length) * 100;
-      if (percentage >= 80) {
-        saveScore(MODULES.REAL_ESTATE.id, percentage);
-      }
+      // Save score for all attempts (both pass and fail)
+      saveScore(MODULES.REAL_ESTATE.id, percentage);
     }
   };
 

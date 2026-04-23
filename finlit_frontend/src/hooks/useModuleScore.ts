@@ -45,6 +45,10 @@ export const MODULES = {
   WHAT_IS_MONEY: { id: 'what-is-money', name: 'What is Money', maxScore: 100 },
   REAL_ESTATE: { id: 'real-estate', name: 'Real Estate', maxScore: 100 },
   INFLATION_DEFLATION: { id: 'inflation-deflation', name: 'Inflation & Deflation', maxScore: 100 },
+  ACCOUNTING: { id: 'accounting', name: 'What is Accounting', maxScore: 100 },
+  BALANCE_SHEET: { id: 'balance-sheet', name: 'Balance Sheet', maxScore: 100 },
+  INCOME_STATEMENT: { id: 'income-statement', name: 'Income Statement', maxScore: 100 },
+  CASH_FLOW_STATEMENT: { id: 'cash-flow-statement', name: 'Cash Flow Statement', maxScore: 100 },
 } as const;
 
 export type ModuleId = typeof MODULES[keyof typeof MODULES]['id'];

@@ -137,7 +137,7 @@ const DEFAULT_DAILY_QUESTIONS = [
   { question: "What most affects your credit score?", options: ["Your income level", "Payment history", "Number of bank accounts", "Your age"], correct: 1 },
 ];
 
-// Modules - All 23 modules in order
+// Modules - All 27 modules in order
 const LEARNING_MODULES = [
   { id: MODULES.WHAT_IS_MONEY.id, title: "What is Money", subtitle: "Money Fundamentals", icon: "💵", route: "/what-is-money", points: 100 },
   { id: MODULES.BUDGETING_50_30_20.id, title: "Budgeting Basics", subtitle: "50-30-20 Rule", icon: "💰", route: "/50-30-20", points: 100 },
@@ -159,6 +159,10 @@ const LEARNING_MODULES = [
   { id: MODULES.INVESTMENT_VEHICLES.id, title: "Investment Vehicles", subtitle: "ETFs & Mutual Funds", icon: "🚗", route: "/investment-vehicles", points: 150 },
   { id: MODULES.REAL_ESTATE.id, title: "Real Estate", subtitle: "Property Investment", icon: "🏠", route: "/real-estate", points: 200 },
   { id: MODULES.RETIREMENT_ACCOUNTS.id, title: "Retirement Accounts", subtitle: "401(k) & Roth IRA", icon: "🏛️", route: "/retirement-accounts", points: 200 },
+  { id: MODULES.ACCOUNTING.id, title: "What is Accounting", subtitle: "Business Language", icon: "📋", route: "/accounting", points: 200 },
+  { id: MODULES.BALANCE_SHEET.id, title: "Balance Sheet", subtitle: "Financial Statements", icon: "⚖️", route: "/balance-sheet", points: 200 },
+  { id: MODULES.INCOME_STATEMENT.id, title: "Income Statement", subtitle: "Profit & Loss", icon: "📊", route: "/income-statement", points: 200 },
+  { id: MODULES.CASH_FLOW_STATEMENT.id, title: "Cash Flow Statement", subtitle: "Where Money Moves", icon: "💧", route: "/cash-flow-statement", points: 200 },
   { id: MODULES.CRYPTO.id, title: "Cryptocurrency", subtitle: "Digital Assets", icon: "🪙", route: "/crypto", points: 200 },
   { id: MODULES.INVESTMENT_BANKING.id, title: "Investment Banking", subtitle: "IPO Knowledge", icon: "🏦", route: "/investment-quiz", points: 150 },
   { id: MODULES.GIVING.id, title: "Giving Back", subtitle: "Charitable Giving", icon: "❤️", route: "/giving", points: 150 },

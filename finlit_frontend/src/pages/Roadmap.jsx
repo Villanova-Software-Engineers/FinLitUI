@@ -53,31 +53,39 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 0.7], [0, 1]);
     MODULES.BANKING.id,                // 4. Banking Basics
     MODULES.EMERGENCY_FUND.id,         // 5. Emergency Fund
 
-    // Phase 2 — Taxes, Saving & Credit
-    MODULES.TAX_BASICS.id,             // 6. Tax Basics
-    MODULES.INTEREST_RATES.id,         // 7. Interest Rates
-    MODULES.CREDIT_SCORE.id,           // 8. Credit Score Mastery
-    MODULES.DEBT_MANAGEMENT.id,        // 9. Debt Management
-    MODULES.CONSUMER_TRAPS.id,         // 10. Consumer Traps
+    // Phase 2 — Financial Statements
+    MODULES.CASH_FLOW_STATEMENT.id,    // 6. Cash Flow Statement
+
+    // Phase 3 — Taxes, Saving & Credit
+    MODULES.TAX_BASICS.id,             // 7. Tax Basics
+    MODULES.INTEREST_RATES.id,         // 8. Interest Rates
+    MODULES.CREDIT_SCORE.id,           // 9. Credit Score Mastery
+    MODULES.DEBT_MANAGEMENT.id,        // 10. Debt Management
+    MODULES.CONSUMER_TRAPS.id,         // 11. Consumer Traps
 
     // Phase 3 — Protection
-    MODULES.RISK_TAKING.id,            // 11. Risk Management
-    MODULES.INSURANCE.id,              // 12. Insurance Protection
-    MODULES.FINANCIAL_SAFETY.id,       // 13. Financial Safety
+    MODULES.RISK_TAKING.id,            // 12. Risk Management
+    MODULES.INSURANCE.id,              // 13. Insurance Protection
+    MODULES.FINANCIAL_SAFETY.id,       // 14. Financial Safety
 
     // Phase 4 — Investing & Assets
-    MODULES.COMPOUNDING.id,            // 14. Power of Compounding
-    MODULES.INFLATION_DEFLATION.id,    // 15. Inflation & Deflation
-    MODULES.BONDS.id,                  // 16. Bonds
-    MODULES.STOCK_MARKET.id,           // 17. Stock Market Basics
-    MODULES.INVESTMENT_VEHICLES.id,    // 18. Investment Vehicles
-    MODULES.REAL_ESTATE.id,            // 19. Real Estate
-    MODULES.RETIREMENT_ACCOUNTS.id,    // 20. Retirement Accounts
+    MODULES.COMPOUNDING.id,            // 15. Power of Compounding
+    MODULES.INFLATION_DEFLATION.id,    // 16. Inflation & Deflation
+    MODULES.BONDS.id,                  // 17. Bonds
+    MODULES.STOCK_MARKET.id,           // 18. Stock Market Basics
+    MODULES.INVESTMENT_VEHICLES.id,    // 19. Investment Vehicles
+    MODULES.REAL_ESTATE.id,            // 20. Real Estate
+    MODULES.RETIREMENT_ACCOUNTS.id,    // 21. Retirement Accounts
 
-    // Phase 5 — Advanced
-    MODULES.CRYPTO.id,                 // 21. Crypto Fundamentals
-    MODULES.INVESTMENT_BANKING.id,     // 22. Investment Banking
-    MODULES.GIVING.id,                 // 23. Giving Back
+    // Phase 5 — Accounting
+    MODULES.ACCOUNTING.id,             // 22. What is Accounting
+    MODULES.BALANCE_SHEET.id,          // 23. Balance Sheet
+    MODULES.INCOME_STATEMENT.id,       // 24. Income Statement
+
+    // Phase 6 — Advanced (Chapter 3)
+    MODULES.CRYPTO.id,                 // 25. Crypto Fundamentals
+    MODULES.INVESTMENT_BANKING.id,     // 26. Investment Banking
+    MODULES.GIVING.id,                 // 27. Giving Back
   ];
 
   // Check if a module is accessible (previous module passed AND not locked by admin)
@@ -373,9 +381,63 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 0.7], [0, 1]);
       quizType: "mcq"
     },
 
-    // Phase 5 — Advanced
+    // Phase 5 — Accounting
     {
       id: 21,
+      moduleId: MODULES.ACCOUNTING.id,
+      title: "What is Accounting",
+      subtitle: "Business Language",
+      icon: "📋",
+      color: "#f3e7f9",
+      position: "left",
+      route: "/accounting",
+      component: "accounting-module",
+      description: "Master accounting fundamentals: the accounting equation, debits & credits, and financial reporting.",
+      quizType: "interactive"
+    },
+    {
+      id: 22,
+      moduleId: MODULES.BALANCE_SHEET.id,
+      title: "Balance Sheet",
+      subtitle: "Financial Statements",
+      icon: "⚖️",
+      color: "#e0f2fe",
+      position: "right",
+      route: "/balance-sheet",
+      component: "balance-sheet-module",
+      description: "Learn to read and analyze balance sheets, understand assets, liabilities, and equity.",
+      quizType: "interactive"
+    },
+    {
+      id: 23,
+      moduleId: MODULES.INCOME_STATEMENT.id,
+      title: "Income Statement",
+      subtitle: "Profit & Loss",
+      icon: "📊",
+      color: "#d1fae5",
+      position: "left",
+      route: "/income-statement",
+      component: "income-statement-module",
+      description: "Master the income statement: from revenue to net income, understand COGS, operating expenses, and profit margins.",
+      quizType: "interactive"
+    },
+    {
+      id: 24,
+      moduleId: MODULES.CASH_FLOW_STATEMENT.id,
+      title: "Cash Flow Statement",
+      subtitle: "Where Money Moves",
+      icon: "💧",
+      color: "#cffafe",
+      position: "right",
+      route: "/cash-flow-statement",
+      component: "cash-flow-statement-module",
+      description: "Learn how cash actually flows through a business: operating, investing, and financing activities, and master free cash flow analysis.",
+      quizType: "interactive"
+    },
+
+    // Phase 6 — Advanced
+    {
+      id: 25,
       moduleId: MODULES.CRYPTO.id,
       title: "Crypto Fundamentals",
       subtitle: "Digital Assets",
@@ -388,7 +450,7 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 0.7], [0, 1]);
       quizType: "mcq"
     },
     {
-      id: 22,
+      id: 26,
       moduleId: MODULES.INVESTMENT_BANKING.id,
       title: "Investment Banking",
       subtitle: "IPO Knowledge",
@@ -401,7 +463,7 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 0.7], [0, 1]);
       quizType: "true-false"
     },
     {
-      id: 23,
+      id: 27,
       moduleId: MODULES.GIVING.id,
       title: "Giving Back",
       subtitle: "Charitable Giving",
@@ -423,39 +485,47 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 0.7], [0, 1]);
     }));
   }, [getModuleStatus]);
 
-  // Split modules into two parts (12 modules in part 1, 11 modules in part 2)
-  const part1Modules = allModules.slice(0, 12);
-  const part2Modules = allModules.slice(12, 23);
+  // Split modules into three chapters
+  const chapter1Modules = allModules.slice(0, 12);      // Modules 1-12
+  const chapter2Modules = allModules.slice(12, 24);     // Modules 13-24 (ending at Cash Flow Statement)
+  const chapter3Modules = allModules.slice(24, 27);     // Modules 25-27 (Crypto, Investment Banking, Giving Back)
 
-  // Check if Part 1 is complete (all 12 modules passed)
-  const isPart1Complete = part1Modules.every(m => m.status === 'Completed');
+  // Check if chapters are complete
+  const isChapter1Complete = chapter1Modules.every(m => m.status === 'Completed');
+  const isChapter2Complete = chapter2Modules.every(m => m.status === 'Completed');
 
-  // Auto-determine which part to show based on completion
-  const getInitialPart = () => {
-    if (!isPart1Complete) return 1;
-    // If part 1 is complete, automatically show part 2
-    return 2;
+  // Auto-determine which chapter to show based on completion
+  const getInitialChapter = () => {
+    if (!isChapter1Complete) return 1;
+    if (!isChapter2Complete) return 2;
+    // If chapter 1 and 2 are complete, show chapter 3
+    return 3;
   };
 
-  const [currentPart, setCurrentPart] = useState(getInitialPart);
+  const [currentChapter, setCurrentChapter] = useState(getInitialChapter);
   const [manualNavigation, setManualNavigation] = useState(false);
 
-  // Auto-switch to Part 2 when Part 1 becomes complete (only if user hasn't manually navigated)
+  // Auto-switch chapters when previous chapter becomes complete (only if user hasn't manually navigated)
   useEffect(() => {
-    if (isPart1Complete && currentPart === 1 && !manualNavigation) {
-      setCurrentPart(2);
+    if (isChapter1Complete && currentChapter === 1 && !manualNavigation) {
+      setCurrentChapter(2);
     }
-  }, [isPart1Complete, currentPart, manualNavigation]);
+    if (isChapter2Complete && currentChapter === 2 && !manualNavigation) {
+      setCurrentChapter(3);
+    }
+  }, [isChapter1Complete, isChapter2Complete, currentChapter, manualNavigation]);
 
-  // Get current part's modules
-  const currentModules = currentPart === 1 ? part1Modules : part2Modules;
+  // Get current chapter's modules
+  const currentModules = currentChapter === 1 ? chapter1Modules :
+                         currentChapter === 2 ? chapter2Modules :
+                         chapter3Modules;
 
   // Reveal modules based on path draw progress
   // Modules should appear slightly ahead of path reaching them
   const currentModulesLength = currentModules.length;
 
   useEffect(() => {
-    // Reset when currentPart changes
+    // Reset when currentChapter changes
     setPathProgress(0);
     setVisibleModules(3);
     // Scroll to top when changing parts
@@ -472,7 +542,7 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 0.7], [0, 1]);
     return () => {
       unsubscribe();
     };
-  }, [pathDrawProgress, currentModulesLength, currentPart]);
+  }, [pathDrawProgress, currentModulesLength, currentChapter]);
 
   const [activeModule, setActiveModule] = useState(null);
 
@@ -623,18 +693,18 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 0.7], [0, 1]);
       </div>
 
       {/* Road Map with Curved Path */}
-      <div key={currentPart} className="max-w-4xl mx-auto relative mb-16 pb-20" style={{ minHeight: pathProgress >= 0.55 ? 'auto' : `${currentModules.length * 500}px` }}>
+      <div key={currentChapter} className="max-w-4xl mx-auto relative mb-16 pb-20" style={{ minHeight: pathProgress >= 0.55 ? 'auto' : `${currentModules.length * 500}px` }}>
 
         {/* Path visual - Creating a curved, winding path */}
 <svg
-  key={`svg-path-${currentPart}`}
+  key={`svg-path-${currentChapter}`}
   className="absolute top-0 left-0 w-full pointer-events-none"
 height={svgHeight}
   viewBox={`0 0 100 ${svgHeight / 5}`}   // maintain ~5:1 ratio
   preserveAspectRatio="none"
 >
   <motion.path
-    key={`motion-path-${currentPart}`}
+    key={`motion-path-${currentChapter}`}
     d="M50,0 Q60,30 40,60 Q20,90 60,120 Q100,150 50,180 Q0,210 50,240 Q100,270 50,300 Q0,330 50,360 Q100,390 50,420 Q0,450 50,480 Q100,510 50,540 Q0,570 50,600 Q100,630 50,660 Q0,690 50,720 Q100,750 50,780 C60,800 55,820 50,840"
     stroke="#3182ce"
     strokeWidth="4"
@@ -801,30 +871,53 @@ height={svgHeight}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          {currentPart === 1 ? (
+          {currentChapter === 1 ? (
             <button
               onClick={() => {
                 setManualNavigation(true);
-                setCurrentPart(2);
+                setCurrentChapter(2);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
               className="px-8 py-3 bg-blue-500 text-white rounded-xl font-bold hover:bg-blue-600 transition-all shadow-lg"
             >
               Continue to Chapter 2 →
             </button>
-          ) : (
-            <div className="flex flex-col items-center gap-4">
+          ) : currentChapter === 2 ? (
+            <div className="flex justify-center gap-4">
               <button
                 onClick={() => {
                   setManualNavigation(true);
-                  setCurrentPart(1);
+                  setCurrentChapter(1);
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
                 className="px-6 py-2 bg-white text-gray-600 rounded-xl font-medium hover:bg-gray-50 transition-all shadow-sm border border-gray-200"
               >
                 ← Back to Chapter 1
               </button>
-              {part2Modules.every(m => m.status === 'Completed') && (
+              <button
+                onClick={() => {
+                  setManualNavigation(true);
+                  setCurrentChapter(3);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className="px-8 py-3 bg-blue-500 text-white rounded-xl font-bold hover:bg-blue-600 transition-all shadow-lg"
+              >
+                Continue to Chapter 3 →
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-4">
+              <button
+                onClick={() => {
+                  setManualNavigation(true);
+                  setCurrentChapter(2);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className="px-6 py-2 bg-white text-gray-600 rounded-xl font-medium hover:bg-gray-50 transition-all shadow-sm border border-gray-200"
+              >
+                ← Back to Chapter 2
+              </button>
+              {chapter3Modules.every(m => m.status === 'Completed') && (
                 <div className="inline-block bg-green-100 text-green-800 px-4 py-2 rounded-full font-medium">
                   🏆 Congratulations! You've completed all modules!
                 </div>

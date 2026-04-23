@@ -30,6 +30,10 @@ import ConsumerTrapsModule from "./components/ConsumerTrapsModule";
 import WhatIsMoneyModule from "./components/WhatIsMoneyModule";
 import RealEstateModule from "./components/RealEstateModule";
 import InflationDeflationModule from "./components/InflationDeflationModule";
+import AccountingModule from "./components/AccountingModule";
+import BalanceSheetModule from "./components/BalanceSheetModule";
+import IncomeStatementModule from "./components/IncomeStatementModule";
+import CashFlowStatementModule from "./components/CashFlowStatementModule";
 import AdminSetup from "./components/AdminSetup";
 import AdminDashboard from "./components/AdminDashboard";
 import QuizQuestionsAdmin from "./components/QuizQuestionsAdmin";
@@ -381,6 +385,46 @@ function App() {
               <ProtectedRoute>
                 <ModuleAccessControl moduleId={MODULES.INFLATION_DEFLATION.id} moduleName="Inflation & Deflation">
                   <InflationDeflationModule />
+                </ModuleAccessControl>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/accounting"
+            element={
+              <ProtectedRoute>
+                <ModuleAccessControl moduleId={MODULES.ACCOUNTING.id} moduleName="What is Accounting">
+                  <AccountingModule />
+                </ModuleAccessControl>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/balance-sheet"
+            element={
+              <ProtectedRoute>
+                <ModuleAccessControl moduleId={MODULES.BALANCE_SHEET.id} moduleName="Balance Sheet">
+                  <BalanceSheetModule />
+                </ModuleAccessControl>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/income-statement"
+            element={
+              <ProtectedRoute>
+                <ModuleAccessControl moduleId={MODULES.INCOME_STATEMENT.id} moduleName="Income Statement">
+                  <IncomeStatementModule />
+                </ModuleAccessControl>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/cash-flow-statement"
+            element={
+              <ProtectedRoute>
+                <ModuleAccessControl moduleId={MODULES.CASH_FLOW_STATEMENT.id} moduleName="Cash Flow Statement">
+                  <CashFlowStatementModule />
                 </ModuleAccessControl>
               </ProtectedRoute>
             }

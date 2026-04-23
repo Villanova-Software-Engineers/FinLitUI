@@ -62,7 +62,7 @@ const ModuleLockManager: React.FC<ModuleLockManagerProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [showOnlyLocked, setShowOnlyLocked] = useState(false);
 
-  // Module order matching the Roadmap (all 23 modules in sequential order)
+  // Module order matching the Roadmap (all 27 modules in sequential order)
   const allModules: ModuleInfo[] = [
     // Phase 1 — Foundations
     { id: MODULES.WHAT_IS_MONEY.id, name: MODULES.WHAT_IS_MONEY.name, icon: '💵', phase: 'Phase 1: Foundations' },
@@ -92,10 +92,16 @@ const ModuleLockManager: React.FC<ModuleLockManagerProps> = ({
     { id: MODULES.REAL_ESTATE.id, name: MODULES.REAL_ESTATE.name, icon: '🏠', phase: 'Phase 4: Investing & Assets' },
     { id: MODULES.RETIREMENT_ACCOUNTS.id, name: MODULES.RETIREMENT_ACCOUNTS.name, icon: '👴', phase: 'Phase 4: Investing & Assets' },
 
-    // Phase 5 — Advanced
-    { id: MODULES.CRYPTO.id, name: MODULES.CRYPTO.name, icon: '₿', phase: 'Phase 5: Advanced' },
-    { id: MODULES.INVESTMENT_BANKING.id, name: MODULES.INVESTMENT_BANKING.name, icon: '🏦', phase: 'Phase 5: Advanced' },
-    { id: MODULES.GIVING.id, name: MODULES.GIVING.name, icon: '💝', phase: 'Phase 5: Advanced' },
+    // Phase 5 — Accounting
+    { id: MODULES.ACCOUNTING.id, name: MODULES.ACCOUNTING.name, icon: '📋', phase: 'Phase 5: Accounting' },
+    { id: MODULES.BALANCE_SHEET.id, name: MODULES.BALANCE_SHEET.name, icon: '⚖️', phase: 'Phase 5: Accounting' },
+    { id: MODULES.INCOME_STATEMENT.id, name: MODULES.INCOME_STATEMENT.name, icon: '📊', phase: 'Phase 5: Accounting' },
+    { id: MODULES.CASH_FLOW_STATEMENT.id, name: MODULES.CASH_FLOW_STATEMENT.name, icon: '💧', phase: 'Phase 5: Accounting' },
+
+    // Phase 6 — Advanced
+    { id: MODULES.CRYPTO.id, name: MODULES.CRYPTO.name, icon: '₿', phase: 'Phase 6: Advanced' },
+    { id: MODULES.INVESTMENT_BANKING.id, name: MODULES.INVESTMENT_BANKING.name, icon: '🏦', phase: 'Phase 6: Advanced' },
+    { id: MODULES.GIVING.id, name: MODULES.GIVING.name, icon: '💝', phase: 'Phase 6: Advanced' },
   ];
 
   useEffect(() => {
