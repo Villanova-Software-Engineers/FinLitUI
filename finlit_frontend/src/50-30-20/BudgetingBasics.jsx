@@ -791,11 +791,9 @@ const BudgetingBasics = () => {
       setScore(finalScore);
       setQuizCompleted(true);
 
-      // Save to Firebase - need 80% (8 out of 10)
+      // Save to Firebase - save score for all attempts (both pass and fail)
       const percentage = (finalScore / quizQuestions.length) * 100;
-      if (percentage >= 80) {
-        saveScore(MODULES.BUDGETING_50_30_20.id, percentage);
-      }
+      saveScore(MODULES.BUDGETING_50_30_20.id, percentage);
     }
   };
 
