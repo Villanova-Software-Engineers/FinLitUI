@@ -464,7 +464,7 @@ const ScheduleManager: React.FC<ScheduleManagerProps> = ({ classCodes, organizat
 
   // ─────────────────────────────────────────────────────────────────────────
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="w-full">
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-900 mb-1">Content Scheduler</h2>
         <p className="text-gray-600">Set release and due dates for modules and case study weeks, per class code.</p>
@@ -485,10 +485,10 @@ const ScheduleManager: React.FC<ScheduleManagerProps> = ({ classCodes, organizat
         </div>
       )}
 
-      <div className={`grid gap-6 ${sidebarOpen ? 'grid-cols-1 xl:grid-cols-12' : 'grid-cols-1'}`}>
+      <div className={`grid ${sidebarOpen ? 'grid-cols-1 xl:grid-cols-12' : 'grid-cols-1'}`}>
         {/* ── Left: class selector ─────────────────────────────────────── */}
         {sidebarOpen && (
-          <div className="xl:col-span-3 space-y-4">
+          <div className="xl:col-span-3 space-y-4 pr-6">
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
               <div className="px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200 flex items-center justify-between">
                 <div>
@@ -500,12 +500,12 @@ const ScheduleManager: React.FC<ScheduleManagerProps> = ({ classCodes, organizat
                 </button>
               </div>
               {classCodes.length === 0 ? (
-                <p className="p-4 text-center text-sm text-gray-500">No class codes yet.</p>
+                <p className="px-4 py-4 text-center text-sm text-gray-500">No class codes yet.</p>
               ) : (
-                <div className="divide-y divide-gray-100 max-h-[320px] overflow-y-auto">
+                <div className="max-h-[320px] overflow-y-auto">
                   {classCodes.map(code => (
                     <button key={code.id} onClick={() => setSelectedClassCode(code)}
-                      className={`w-full px-4 py-3 text-left transition-colors ${selectedClassCode?.id === code.id ? 'bg-blue-50 border-l-4 border-blue-500' : 'hover:bg-gray-50'}`}>
+                      className={`w-full px-4 py-3 text-left transition-colors border-b border-gray-100 ${selectedClassCode?.id === code.id ? 'bg-blue-50 border-l-4 border-blue-500' : 'hover:bg-gray-50'}`}>
                       <p className="text-sm font-semibold text-gray-800">{code.name}</p>
                       <p className="text-xs text-gray-400 font-mono mt-0.5">{code.code}</p>
                     </button>
@@ -521,7 +521,7 @@ const ScheduleManager: React.FC<ScheduleManagerProps> = ({ classCodes, organizat
             </div>
 
             {/* Legend */}
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 space-y-1.5">
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm px-4 py-4 space-y-1.5">
               <p className="text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Status</p>
               {[['bg-blue-500','Upcoming — not released'],['bg-green-500','Active — open'],['bg-red-500','Locked — past due'],['bg-orange-500','Past due — report only']].map(([color, label]) => (
                 <div key={label} className="flex items-center gap-2 text-xs text-gray-600">
