@@ -668,7 +668,7 @@ const QuizPage = ({
             Retake Quiz
           </button>
           <button
-            onClick={() => navigate('/roadmap')}
+            onClick={() => navigate('/game')}
             className="px-8 py-4 rounded-xl border-2 border-slate-300 text-slate-700 hover:bg-slate-50 font-bold text-lg transition-all"
           >
             Back to Roadmap
@@ -771,7 +771,7 @@ const AccountingModule = () => {
     <div className="min-h-screen relative overflow-x-hidden" style={{ background: 'linear-gradient(120deg, #f3e7f9 0%, #e9f5f2 50%, #e8f0fd 100%)' }}>
       <button
         className="absolute top-4 left-4 px-4 py-2 rounded-lg text-purple-600 hover:bg-white/50 backdrop-blur-sm font-medium transition z-50 shadow-sm border border-purple-100"
-        onClick={() => navigate('/roadmap')}
+        onClick={() => navigate('/game')}
       >
         ← Back to Roadmap
       </button>

@@ -102,6 +102,9 @@ const ModuleLockManager: React.FC<ModuleLockManagerProps> = ({
     { id: MODULES.CRYPTO.id, name: MODULES.CRYPTO.name, icon: '₿', phase: 'Phase 6: Advanced' },
     { id: MODULES.INVESTMENT_BANKING.id, name: MODULES.INVESTMENT_BANKING.name, icon: '🏦', phase: 'Phase 6: Advanced' },
     { id: MODULES.GIVING.id, name: MODULES.GIVING.name, icon: '💝', phase: 'Phase 6: Advanced' },
+    { id: MODULES.GLOBAL_MARKETS.id, name: MODULES.GLOBAL_MARKETS.name, icon: '🌍', phase: 'Phase 6: Advanced' },
+    { id: MODULES.ESG_INVESTING.id, name: MODULES.ESG_INVESTING.name, icon: '🌱', phase: 'Phase 6: Advanced' },
+    { id: MODULES.NEGOTIATING.id, name: MODULES.NEGOTIATING.name, icon: '🤝', phase: 'Phase 6: Advanced' },
   ];
 
   useEffect(() => {

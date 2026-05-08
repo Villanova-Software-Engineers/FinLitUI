@@ -166,6 +166,9 @@ const LEARNING_MODULES = [
   { id: MODULES.CRYPTO.id, title: "Cryptocurrency", subtitle: "Digital Assets", icon: "🪙", route: "/crypto", points: 200 },
   { id: MODULES.INVESTMENT_BANKING.id, title: "Investment Banking", subtitle: "IPO Knowledge", icon: "🏦", route: "/investment-quiz", points: 150 },
   { id: MODULES.GIVING.id, title: "Giving Back", subtitle: "Charitable Giving", icon: "❤️", route: "/giving", points: 150 },
+  { id: MODULES.GLOBAL_MARKETS.id, title: "Global Markets", subtitle: "International Finance", icon: "🌍", route: "/global-markets", points: 200 },
+  { id: MODULES.ESG_INVESTING.id, title: "ESG Investing", subtitle: "Environmental, Social, Governance", icon: "🌱", route: "/esg-investing", points: 200 },
+  { id: MODULES.NEGOTIATING.id, title: "Negotiating", subtitle: "Effective Negotiation Skills", icon: "🤝", route: "/negotiating", points: 200 },
 ];
 
 const FinLitApp: React.FC = () => {

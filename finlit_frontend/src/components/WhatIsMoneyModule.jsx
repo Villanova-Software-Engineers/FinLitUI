@@ -506,15 +506,10 @@ const QuizPage = ({ currentQuestion, selectedAnswer, showAnswerResult, score, ha
         <h2 className="text-5xl font-black text-slate-900 mb-4">{score >= 8 ? 'Outstanding!' : 'Keep Learning!'}</h2>
         <p className="text-2xl text-slate-500 mb-10">You scored <span className="font-bold text-slate-900">{score}/{shuffledQuestions.length}</span> ({((score / shuffledQuestions.length) * 100).toFixed(0)}%)</p>
 
-        {score >= 8 ? (
+        {score >= 8 && (
           <div className="bg-green-50 border-2 border-green-500 rounded-2xl p-8 mb-10">
             <p className="text-green-800 font-bold text-xl mb-2">🎊 Congratulations! You passed!</p>
             <p className="text-green-700 text-lg">You've mastered the What is Money module</p>
-          </div>
-        ) : (
-          <div className="bg-amber-50 border-2 border-amber-500 rounded-2xl p-8 mb-10">
-            <p className="text-amber-800 font-bold text-xl mb-2">You need 80% to pass (8/10 correct)</p>
-            <p className="text-amber-700 text-lg">Review the material and try again - you're getting there!</p>
           </div>
         )}
 
@@ -526,7 +521,7 @@ const QuizPage = ({ currentQuestion, selectedAnswer, showAnswerResult, score, ha
             Retake Quiz
           </button>
           <button
-            onClick={() => navigate('/roadmap')}
+            onClick={() => navigate('/game')}
             className="px-8 py-4 rounded-xl border-2 border-slate-300 text-slate-700 hover:bg-slate-50 font-bold text-lg transition-all"
           >
             Back to Roadmap
@@ -629,7 +624,7 @@ const WhatIsMoneyModule = () => {
     <div className="min-h-screen relative overflow-x-hidden" style={{ background: 'linear-gradient(120deg, #e0f7fa 0%, #e8f5e9 50%, #e3f2fd 100%)' }}>
       <button
         className="absolute top-4 left-4 px-4 py-2 rounded-lg text-blue-600 hover:bg-white/50 backdrop-blur-sm font-medium transition z-50 shadow-sm border border-blue-100"
-        onClick={() => navigate('/roadmap')}
+        onClick={() => navigate('/game')}
       >
         ← Back to Roadmap
       </button>

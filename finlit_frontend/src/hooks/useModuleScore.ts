@@ -49,6 +49,9 @@ export const MODULES = {
   BALANCE_SHEET: { id: 'balance-sheet', name: 'Balance Sheet', maxScore: 100 },
   INCOME_STATEMENT: { id: 'income-statement', name: 'Income Statement', maxScore: 100 },
   CASH_FLOW_STATEMENT: { id: 'cash-flow-statement', name: 'Cash Flow Statement', maxScore: 100 },
+  GLOBAL_MARKETS: { id: 'global-markets', name: 'Global Markets', maxScore: 100 },
+  ESG_INVESTING: { id: 'esg-investing', name: 'ESG & Ethical Investing', maxScore: 100 },
+  NEGOTIATING: { id: 'negotiating', name: 'The Art of Negotiating', maxScore: 100 },
 } as const;
 
 export type ModuleId = typeof MODULES[keyof typeof MODULES]['id'];

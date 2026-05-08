@@ -24,7 +24,9 @@ import {
   getActiveCaseStudy,
   getCaseStudyProgress,
   isCaseStudyWeekAccessible,
+  getContentSchedulesByClassCode,
 } from '../firebase/firestore.service';
+import type { ContentSchedule } from '../auth/types/auth.types';
 
 const CaseStudyRoadmap: React.FC = () => {
   const navigate = useNavigate();
@@ -33,6 +35,10 @@ const CaseStudyRoadmap: React.FC = () => {
   const [caseStudy, setCaseStudy] = useState<CaseStudy | null>(null);
   const [allProgress, setAllProgress] = useState<CaseStudyProgress[]>([]);
   const [lockedWeeks, setLockedWeeks] = useState<Set<number>>(new Set());
+  // Weeks locked by schedule (release date in future, or due date passed + lock action)
+  const [scheduledLockedWeeks, setScheduledLockedWeeks] = useState<Set<number>>(new Set());
+  // Schedule data per week for displaying due dates to students
+  const [weekSchedules, setWeekSchedules] = useState<Record<number, ContentSchedule>>({});
   const [loading, setLoading] = useState(true);
   const [hoveredWeek, setHoveredWeek] = useState<number | null>(null);
 
@@ -72,6 +78,33 @@ const CaseStudyRoadmap: React.FC = () => {
             }
           }
           setLockedWeeks(adminLockedWeeks);
+        }
+
+        // Check content schedules for students with a class code
+        if (user.role === 'student' && user.classCode) {
+          const schedules = await getContentSchedulesByClassCode(user.classCode);
+          const now = new Date();
+          const schedLockedWeeks = new Set<number>();
+          const schedByWeek: Record<number, ContentSchedule> = {};
+
+          schedules
+            .filter(s => s.contentType === 'caseStudyWeek')
+            .forEach(s => {
+              const weekNum = parseInt(s.contentId, 10);
+              if (isNaN(weekNum)) return;
+              schedByWeek[weekNum] = s;
+              // Lock if not yet released
+              if (s.releaseDate > now) {
+                schedLockedWeeks.add(weekNum);
+              }
+              // Lock if due date passed and action is 'lock'
+              if (s.dueDate && s.dueDate < now && s.onDueDateAction === 'lock') {
+                schedLockedWeeks.add(weekNum);
+              }
+            });
+
+          setScheduledLockedWeeks(schedLockedWeeks);
+          setWeekSchedules(schedByWeek);
         }
       }
     } catch (err) {
@@ -122,16 +155,26 @@ const CaseStudyRoadmap: React.FC = () => {
     : [1, 2, 3, 4, 5, 6, 7, 8];
 
   // Check completion status for each week
-  const getWeekStatus = (week: number): 'locked' | 'admin_locked' | 'completed' | 'available' => {
+  const getWeekStatus = (week: number): 'locked' | 'admin_locked' | 'schedule_locked' | 'overdue_locked' | 'completed' | 'available' => {
     // Check if admin has locked this week
     if (lockedWeeks.has(week)) {
       return 'admin_locked';
     }
 
+    // Check schedule locks
+    if (scheduledLockedWeeks.has(week)) {
+      const sched = weekSchedules[week];
+      const now = new Date();
+      if (sched?.dueDate && sched.dueDate < now && sched.onDueDateAction === 'lock') {
+        return 'overdue_locked';
+      }
+      return 'schedule_locked';
+    }
+
     // Find progress for this specific week
     const weekProgress = allProgress.find(p => p.week === week);
 
-    // Week 1 is always unlocked (unless admin locked)
+    // Week 1 is always unlocked (unless admin/schedule locked)
     if (week === 1) {
       return weekProgress?.completedAt ? 'completed' : 'available';
     }
@@ -140,11 +183,9 @@ const CaseStudyRoadmap: React.FC = () => {
     const prevWeekProgress = allProgress.find(p => p.week === week - 1);
 
     if (!prevWeekProgress?.completedAt) {
-      // Previous week not completed, this week is locked
       return 'locked';
     }
 
-    // Previous week is completed, check if this week is completed
     return weekProgress?.completedAt ? 'completed' : 'available';
   };
 
@@ -225,10 +266,13 @@ const CaseStudyRoadmap: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
           {weeks.map((week, index) => {
             const status = getWeekStatus(week);
-            const isLocked = status === 'locked' || status === 'admin_locked';
+            const isLocked = status === 'locked' || status === 'admin_locked' || status === 'schedule_locked' || status === 'overdue_locked';
             const isAdminLocked = status === 'admin_locked';
+            const isScheduleLocked = status === 'schedule_locked';
+            const isOverdueLocked = status === 'overdue_locked';
             const isCompleted = status === 'completed';
             const isHovered = hoveredWeek === week;
+            const weekSched = weekSchedules[week];
 
             // Get week content
             const weeksData = caseStudy.weeks as Record<string | number, any> | undefined;
@@ -284,6 +328,16 @@ const CaseStudyRoadmap: React.FC = () => {
                             <Lock size={14} />
                             Instructor Locked
                           </div>
+                        ) : isOverdueLocked ? (
+                          <div className="flex items-center gap-1 px-3 py-1 bg-red-500 text-white rounded-full text-xs font-bold shadow-lg">
+                            <Lock size={14} />
+                            Past Due
+                          </div>
+                        ) : isScheduleLocked ? (
+                          <div className="flex items-center gap-1 px-3 py-1 bg-blue-600 text-white rounded-full text-xs font-bold shadow-lg">
+                            <Calendar size={14} />
+                            {weekSched ? `Opens ${weekSched.releaseDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : 'Scheduled'}
+                          </div>
                         ) : isLocked ? (
                           <div className="flex items-center gap-1 px-3 py-1 bg-gray-800 text-white rounded-full text-xs font-bold shadow-lg">
                             <Lock size={14} />
@@ -292,7 +346,7 @@ const CaseStudyRoadmap: React.FC = () => {
                         ) : (
                           <div className="flex items-center gap-1 px-3 py-1 bg-blue-500 text-white rounded-full text-xs font-bold shadow-lg">
                             <TrendingUp size={14} />
-                            Available
+                            {weekSched?.dueDate ? `Due ${weekSched.dueDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : 'Available'}
                           </div>
                         )}
                       </div>

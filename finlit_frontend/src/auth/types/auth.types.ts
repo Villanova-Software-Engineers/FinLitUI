@@ -336,6 +336,22 @@ export interface CertificateData {
   generatedAt: Date;            // When the certificate was first generated
 }
 
+// ============ CONTENT SCHEDULE TYPES ============
+
+// Schedule for releasing/closing content on a specific date, per class code
+export interface ContentSchedule {
+  id: string;
+  contentType: 'module' | 'caseStudyWeek';
+  contentId: string; // moduleId (e.g. 'bonds') or weekNumber as string (e.g. '3')
+  classCode: string;
+  organizationId: string;
+  releaseDate: Date; // When content becomes accessible to students
+  dueDate?: Date; // Optional deadline
+  onDueDateAction: 'lock' | 'report-only'; // What happens after the due date passes
+  scheduledBy: string; // userId of admin who created/last updated this schedule
+  scheduledAt: Date;
+}
+
 // ============ MONEY PERSONALITY TYPES ============
 
 // Money Personality quiz result

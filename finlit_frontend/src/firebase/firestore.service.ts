@@ -47,6 +47,7 @@ import type {
   ContentLock,
   WeekLock,
   CertificateData,
+  ContentSchedule,
 } from '../auth/types/auth.types';
 
 // Type helper for Firestore documents with serverTimestamp
@@ -59,6 +60,7 @@ const ORGANIZATIONS = 'organizations';
 const CLASS_CODES = 'classCodes';
 const USERS = 'users';
 const STUDENT_PROGRESS = 'studentProgress';
+const CONTENT_SCHEDULES = 'contentSchedules';
 
 // ============== Helper Functions ==============
 
@@ -2592,5 +2594,158 @@ export async function getCertificateData(
     ...certificateData,
     completionDate: (certificateData.completionDate as unknown as Timestamp)?.toDate() || new Date(),
     generatedAt: (certificateData.generatedAt as unknown as Timestamp)?.toDate() || new Date(),
+  };
+}
+
+// ============== Content Schedule Functions ==============
+
+/**
+ * Create or update a content schedule for a specific class code.
+ * One schedule per (classCode, contentType, contentId) — existing one is replaced.
+ */
+export async function setContentSchedule(
+  classCode: string,
+  organizationId: string,
+  contentType: 'module' | 'caseStudyWeek',
+  contentId: string,
+  releaseDate: Date,
+  dueDate: Date | null,
+  onDueDateAction: 'lock' | 'report-only',
+  scheduledBy: string
+): Promise<ContentSchedule> {
+  // Find and delete any existing schedule for this (classCode, contentType, contentId)
+  const existingQuery = query(
+    collection(db, CONTENT_SCHEDULES),
+    where('classCode', '==', classCode),
+    where('contentType', '==', contentType),
+    where('contentId', '==', contentId)
+  );
+  const existingSnap = await getDocs(existingQuery);
+  for (const existingDoc of existingSnap.docs) {
+    await deleteDoc(existingDoc.ref);
+  }
+
+  const scheduleRef = doc(collection(db, CONTENT_SCHEDULES));
+  const data: Record<string, unknown> = {
+    contentType,
+    contentId,
+    classCode,
+    organizationId,
+    releaseDate: Timestamp.fromDate(releaseDate),
+    onDueDateAction,
+    scheduledBy,
+    scheduledAt: serverTimestamp(),
+  };
+  if (dueDate) {
+    data.dueDate = Timestamp.fromDate(dueDate);
+  }
+  await setDoc(scheduleRef, data);
+
+  return {
+    id: scheduleRef.id,
+    contentType,
+    contentId,
+    classCode,
+    organizationId,
+    releaseDate,
+    dueDate: dueDate ?? undefined,
+    onDueDateAction,
+    scheduledBy,
+    scheduledAt: new Date(),
+  };
+}
+
+/**
+ * Get all content schedules for a class code.
+ */
+export async function getContentSchedulesByClassCode(
+  classCode: string
+): Promise<ContentSchedule[]> {
+  const q = query(
+    collection(db, CONTENT_SCHEDULES),
+    where('classCode', '==', classCode)
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map(d => {
+    const data = d.data();
+    return {
+      id: d.id,
+      contentType: data.contentType,
+      contentId: data.contentId,
+      classCode: data.classCode,
+      organizationId: data.organizationId,
+      releaseDate: (data.releaseDate as Timestamp).toDate(),
+      dueDate: data.dueDate ? (data.dueDate as Timestamp).toDate() : undefined,
+      onDueDateAction: data.onDueDateAction,
+      scheduledBy: data.scheduledBy,
+      scheduledAt: (data.scheduledAt as Timestamp)?.toDate() || new Date(),
+    } as ContentSchedule;
+  });
+}
+
+/**
+ * Get all schedules for an organization (all class codes).
+ */
+export async function getContentSchedulesByOrganization(
+  organizationId: string
+): Promise<ContentSchedule[]> {
+  const q = query(
+    collection(db, CONTENT_SCHEDULES),
+    where('organizationId', '==', organizationId)
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map(d => {
+    const data = d.data();
+    return {
+      id: d.id,
+      contentType: data.contentType,
+      contentId: data.contentId,
+      classCode: data.classCode,
+      organizationId: data.organizationId,
+      releaseDate: (data.releaseDate as Timestamp).toDate(),
+      dueDate: data.dueDate ? (data.dueDate as Timestamp).toDate() : undefined,
+      onDueDateAction: data.onDueDateAction,
+      scheduledBy: data.scheduledBy,
+      scheduledAt: (data.scheduledAt as Timestamp)?.toDate() || new Date(),
+    } as ContentSchedule;
+  });
+}
+
+/**
+ * Delete a content schedule by ID.
+ */
+export async function deleteContentSchedule(scheduleId: string): Promise<void> {
+  await deleteDoc(doc(db, CONTENT_SCHEDULES, scheduleId));
+}
+
+/**
+ * Get schedule for a specific content item and class code.
+ */
+export async function getScheduleForContent(
+  classCode: string,
+  contentType: 'module' | 'caseStudyWeek',
+  contentId: string
+): Promise<ContentSchedule | null> {
+  const q = query(
+    collection(db, CONTENT_SCHEDULES),
+    where('classCode', '==', classCode),
+    where('contentType', '==', contentType),
+    where('contentId', '==', contentId)
+  );
+  const snap = await getDocs(q);
+  if (snap.empty) return null;
+  const d = snap.docs[0];
+  const data = d.data();
+  return {
+    id: d.id,
+    contentType: data.contentType,
+    contentId: data.contentId,
+    classCode: data.classCode,
+    organizationId: data.organizationId,
+    releaseDate: (data.releaseDate as Timestamp).toDate(),
+    dueDate: data.dueDate ? (data.dueDate as Timestamp).toDate() : undefined,
+    onDueDateAction: data.onDueDateAction,
+    scheduledBy: data.scheduledBy,
+    scheduledAt: (data.scheduledAt as Timestamp)?.toDate() || new Date(),
   };
 }

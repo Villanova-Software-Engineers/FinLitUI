@@ -41,7 +41,7 @@ const Games = () => {
       id: 'daily-challenge',
       title: 'Daily Challenge',
       description: 'Build your streak with daily financial quests',
-      image: '/dailyc.png',
+      image: '/dailyc.jpg',
       route: '/',
       difficulty: 'Dynamic',
       estimatedTime: '2-3 min',

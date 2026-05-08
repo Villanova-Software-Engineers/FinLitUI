@@ -1115,7 +1115,7 @@ const RetirementAccountsModule = () => {
               Retake Quiz
             </button>
             <button
-              onClick={() => navigate('/roadmap')}
+              onClick={() => navigate('/game')}
               className="px-8 py-4 rounded-xl border-2 border-slate-300 text-slate-700 hover:bg-slate-50 font-bold text-lg transition-all"
             >
               Back to Roadmap

@@ -41,6 +41,7 @@ import {
   Target,
   UserCog,
   Lock,
+  CalendarDays,
 } from 'lucide-react';
 import { useAuthContext } from '../auth/context/AuthContext';
 import {
@@ -50,9 +51,10 @@ import {
   getAllOrganizations,
   getActiveCaseStudy
 } from '../firebase/firestore.service';
-import type { ClassCode, StudentWithProgress, Organization, CaseStudy } from '../auth/types/auth.types';
+import type { ClassCode, StudentWithProgress, Organization } from '../auth/types/auth.types';
 import { MODULES } from '../hooks/useModuleScore';
 import ModuleLockManager from './ModuleLockManager';
+import ScheduleManager from './ScheduleManager';
 
 const formatDateTime = (date: Date): string => {
   return new Intl.DateTimeFormat('en-US', {
@@ -92,7 +94,7 @@ const AdminDashboard: React.FC = () => {
   const [loadingOrgs, setLoadingOrgs] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
-  const [currentView, setCurrentView] = useState<'students' | 'analytics' | 'module-locks'>('students');
+  const [currentView, setCurrentView] = useState<'students' | 'analytics' | 'module-locks' | 'schedule'>('students');
   const [totalCaseStudyWeeks, setTotalCaseStudyWeeks] = useState<number>(0);
   const [activeCaseStudyId, setActiveCaseStudyId] = useState<string | null>(null);
 
@@ -411,6 +413,18 @@ const AdminDashboard: React.FC = () => {
           >
             <Lock size={20} />
             Module Access
+          </button>
+
+          <button
+            onClick={() => setCurrentView('schedule')}
+            className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-bold rounded-xl transition-all duration-200 ${
+              currentView === 'schedule'
+                ? 'text-white bg-gradient-to-br from-brand-400 to-brand-500 shadow-lg shadow-brand-500/40'
+                : `${textSecondaryClass} hover:bg-gray-100 ${darkMode ? 'hover:bg-white/10' : ''}`
+            }`}
+          >
+            <CalendarDays size={20} />
+            Schedule
           </button>
 
           {user?.role === 'owner' && (
@@ -864,7 +878,7 @@ const AdminDashboard: React.FC = () => {
           ) : null}
 
           {/* Main Grid */}
-          {currentView === 'students' && ((user.role === 'admin' && user.organizationId) || (user.role === 'owner' && selectedOrg)) ? (
+          {currentView === 'students' ? ((user.role === 'admin' && user.organizationId) || (user.role === 'owner' && selectedOrg)) ? (
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
               {/* Class Codes Panel */}
               <div className="xl:col-span-3">
@@ -1439,7 +1453,7 @@ const AdminDashboard: React.FC = () => {
               <h3 className={`text-xl font-bold ${textClass} mb-2`}>Select an organization to continue</h3>
               <p className={textSecondaryClass}>Choose an organization from above to access student data</p>
             </div>
-          )}
+          ) : null}
 
           {/* Module Locks View */}
           {currentView === 'module-locks' && user && ((user.role === 'admin' && user.organizationId) || (user.role === 'owner' && selectedOrg)) ? (
@@ -1468,6 +1482,35 @@ const AdminDashboard: React.FC = () => {
               </div>
               <h3 className={`text-xl font-bold ${textClass} mb-2`}>Select an organization to continue</h3>
               <p className={textSecondaryClass}>Choose an organization from above to manage module access</p>
+            </div>
+          ) : null}
+
+          {/* Schedule View */}
+          {currentView === 'schedule' && user && ((user.role === 'admin' && user.organizationId) || (user.role === 'owner' && selectedOrg)) ? (
+            <div className={`${cardClass} rounded-2xl p-6 shadow-xl border`}>
+              {classCodes.length > 0 ? (
+                <ScheduleManager
+                  classCodes={classCodes}
+                  organizationId={(user.organizationId || selectedOrg?.id)!}
+                  userId={user.id}
+                />
+              ) : (
+                <div className="text-center py-12">
+                  <div className={`w-24 h-24 ${darkMode ? 'bg-navy-700' : 'bg-gray-100'} rounded-full flex items-center justify-center mx-auto mb-6`}>
+                    <CalendarDays className={textSecondaryClass} size={48} />
+                  </div>
+                  <h3 className={`text-xl font-bold ${textClass} mb-2`}>No class codes yet</h3>
+                  <p className={textSecondaryClass}>Create a class code first to start scheduling content</p>
+                </div>
+              )}
+            </div>
+          ) : currentView === 'schedule' ? (
+            <div className={`${cardClass} rounded-2xl p-12 text-center shadow-xl border`}>
+              <div className={`w-24 h-24 ${darkMode ? 'bg-navy-700' : 'bg-gray-100'} rounded-full flex items-center justify-center mx-auto mb-6`}>
+                <Building2 className={textSecondaryClass} size={48} />
+              </div>
+              <h3 className={`text-xl font-bold ${textClass} mb-2`}>Select an organization to continue</h3>
+              <p className={textSecondaryClass}>Choose an organization from above to manage schedules</p>
             </div>
           ) : null}
         </div>

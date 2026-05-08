@@ -614,7 +614,7 @@ const QuizPage = ({ currentQuestion, selectedAnswer, showAnswerResult, score, ha
             Retake Quiz
           </button>
           <button
-            onClick={() => navigate('/roadmap')}
+            onClick={() => navigate('/game')}
             className="px-8 py-4 rounded-xl border-2 border-slate-300 text-slate-700 hover:bg-slate-50 font-bold text-lg transition-all"
           >
             Back to Roadmap
@@ -717,7 +717,7 @@ const RealEstateModule = () => {
     <div className="min-h-screen relative overflow-x-hidden" style={{ background: 'linear-gradient(120deg, #e0f7fa 0%, #e8f5e9 50%, #e3f2fd 100%)' }}>
       <button
         className="absolute top-4 left-4 px-4 py-2 rounded-lg text-blue-600 hover:bg-white/50 backdrop-blur-sm font-medium transition z-50 shadow-sm border border-blue-100"
-        onClick={() => navigate('/roadmap')}
+        onClick={() => navigate('/game')}
       >
         ← Back to Roadmap
       </button>
