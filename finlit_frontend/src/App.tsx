@@ -34,6 +34,9 @@ import AccountingModule from "./components/AccountingModule";
 import BalanceSheetModule from "./components/BalanceSheetModule";
 import IncomeStatementModule from "./components/IncomeStatementModule";
 import CashFlowStatementModule from "./components/CashFlowStatementModule";
+import GlobalMarketsModule from "./components/GlobalMarketsModule";
+import ESGInvestingModule from "./components/ESGInvestingModule";
+import NegotiatingModule from "./components/NegotiatingModule";
 import AdminSetup from "./components/AdminSetup";
 import AdminDashboard from "./components/AdminDashboard";
 import QuizQuestionsAdmin from "./components/QuizQuestionsAdmin";
@@ -350,6 +353,16 @@ function App() {
             }
           />
           <Route
+            path="/global-markets"
+            element={
+              <ProtectedRoute>
+                <ModuleAccessControl moduleId={MODULES.GLOBAL_MARKETS.id} moduleName="Global Markets">
+                  <GlobalMarketsModule />
+                </ModuleAccessControl>
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/consumer-traps"
             element={
               <ProtectedRoute>
@@ -425,6 +438,26 @@ function App() {
               <ProtectedRoute>
                 <ModuleAccessControl moduleId={MODULES.CASH_FLOW_STATEMENT.id} moduleName="Cash Flow Statement">
                   <CashFlowStatementModule />
+                </ModuleAccessControl>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/esg-investing"
+            element={
+              <ProtectedRoute>
+                <ModuleAccessControl moduleId={MODULES.ESG_INVESTING.id} moduleName="ESG & Ethical Investing">
+                  <ESGInvestingModule />
+                </ModuleAccessControl>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/negotiating"
+            element={
+              <ProtectedRoute>
+                <ModuleAccessControl moduleId={MODULES.NEGOTIATING.id} moduleName="The Art of Negotiating">
+                  <NegotiatingModule />
                 </ModuleAccessControl>
               </ProtectedRoute>
             }

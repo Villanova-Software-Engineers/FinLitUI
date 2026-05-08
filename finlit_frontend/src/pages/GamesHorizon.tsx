@@ -54,7 +54,7 @@ const GamesHorizon = () => {
       estimatedTime: '2-3 min',
       xpReward: 5,
       category: 'Quest',
-      image: '/dc.png',
+      image: '/dc.jpg',
       bgGradient: 'from-teal-500 to-green-500',
       iconBg: 'bg-teal-50',
       iconColor: 'text-teal-600',

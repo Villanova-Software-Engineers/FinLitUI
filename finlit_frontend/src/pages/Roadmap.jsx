@@ -86,6 +86,9 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 0.7], [0, 1]);
     MODULES.CRYPTO.id,                 // 25. Crypto Fundamentals
     MODULES.INVESTMENT_BANKING.id,     // 26. Investment Banking
     MODULES.GIVING.id,                 // 27. Giving Back
+    MODULES.GLOBAL_MARKETS.id,         // 28. Global Markets
+    MODULES.ESG_INVESTING.id,          // 29. ESG & Ethical Investing
+    MODULES.NEGOTIATING.id,            // 30. The Art of Negotiating
   ];
 
   // Check if a module is accessible (previous module passed AND not locked by admin)
@@ -475,6 +478,45 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 0.7], [0, 1]);
       description: "Understand the importance of giving back and how to allocate for charitable causes.",
       quizType: "mcq"
     },
+    {
+      id: 28,
+      moduleId: MODULES.GLOBAL_MARKETS.id,
+      title: "Global Markets",
+      subtitle: "World Economies",
+      icon: "🌐",
+      color: "#ccfbf1",
+      position: "right",
+      route: "/global-markets",
+      component: "global-markets-module",
+      description: "Understand how world economies connect through trade flows, exchange rates, and financial contagion.",
+      quizType: "mcq"
+    },
+    {
+      id: 29,
+      moduleId: MODULES.ESG_INVESTING.id,
+      title: "ESG & Ethical Investing",
+      subtitle: "Values-Aligned Finance",
+      icon: "🌱",
+      color: "#d1fae5",
+      position: "left",
+      route: "/esg-investing",
+      component: "esg-investing-module",
+      description: "Learn how Environmental, Social, and Governance factors shape modern investing — and how to align your portfolio with your values.",
+      quizType: "mcq"
+    },
+    {
+      id: 30,
+      moduleId: MODULES.NEGOTIATING.id,
+      title: "The Art of Negotiating",
+      subtitle: "Raises & Offers",
+      icon: "🤝",
+      color: "#fef3c7",
+      position: "right",
+      route: "/negotiating",
+      component: "negotiating-module",
+      description: "Master salary negotiation: research market rates, use your BATNA, deliver confident counter-offers, and ask for more at any job.",
+      quizType: "scenario"
+    },
   ];
 
   // Compute modules with dynamic status
@@ -488,7 +530,7 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 0.7], [0, 1]);
   // Split modules into three chapters
   const chapter1Modules = allModules.slice(0, 12);      // Modules 1-12
   const chapter2Modules = allModules.slice(12, 24);     // Modules 13-24 (ending at Cash Flow Statement)
-  const chapter3Modules = allModules.slice(24, 27);     // Modules 25-27 (Crypto, Investment Banking, Giving Back)
+  const chapter3Modules = allModules.slice(24);          // Modules 25+ (Crypto, Investment Banking, Giving Back, Global Markets, ESG...)
 
   // Check if chapters are complete
   const isChapter1Complete = chapter1Modules.every(m => m.status === 'Completed');

@@ -88,20 +88,20 @@ const AboutUs: React.FC = () => {
             className="bg-gradient-to-br from-brand-50 to-navy-50 rounded-3xl p-8 mb-8 border-2 border-brand-200"
           >
             <h2 className="text-2xl font-bold text-navy-800 mb-6 text-center">Why FinLit?</h2>
-            <div className="grid md:grid-cols-3 gap-4">
-              <div className="bg-white rounded-2xl p-6 text-center shadow-lg">
-                <div className="text-4xl font-bold bg-gradient-to-r from-brand-500 to-brand-600 bg-clip-text text-transparent mb-2">78%</div>
-                <p className="text-sm text-slate-600">of Americans live paycheck to paycheck</p>
+              <div className="grid md:grid-cols-3 gap-4">
+                <div className="bg-white rounded-2xl p-6 text-center shadow-lg">
+                  <div className="text-4xl font-bold bg-gradient-to-r from-brand-500 to-brand-600 bg-clip-text text-transparent mb-2">78%</div>
+                  <p className="text-sm text-slate-600">of people worldwide live paycheck to paycheck</p>
+                </div>
+                <div className="bg-white rounded-2xl p-6 text-center shadow-lg">
+                  <div className="text-4xl font-bold bg-gradient-to-r from-brand-500 to-brand-600 bg-clip-text text-transparent mb-2">57%</div>
+                  <p className="text-sm text-slate-600">of adults globally lack basic financial literacy</p>
+                </div>
+                <div className="bg-white rounded-2xl p-6 text-center shadow-lg">
+                  <div className="text-4xl font-bold bg-gradient-to-r from-brand-500 to-brand-600 bg-clip-text text-transparent mb-2">21%</div>
+                  <p className="text-sm text-slate-600">of countries mandate financial education in schools</p>
+                </div>
               </div>
-              <div className="bg-white rounded-2xl p-6 text-center shadow-lg">
-                <div className="text-4xl font-bold bg-gradient-to-r from-brand-500 to-brand-600 bg-clip-text text-transparent mb-2">57%</div>
-                <p className="text-sm text-slate-600">of U.S. adults are financially illiterate</p>
-              </div>
-              <div className="bg-white rounded-2xl p-6 text-center shadow-lg">
-                <div className="text-4xl font-bold bg-gradient-to-r from-brand-500 to-brand-600 bg-clip-text text-transparent mb-2">21</div>
-                <p className="text-sm text-slate-600">states require financial education in high school</p>
-              </div>
-            </div>
             <p className="text-slate-700 mt-6 text-center font-medium">
               We're working to change these statistics by making financial education accessible to all.
             </p>
