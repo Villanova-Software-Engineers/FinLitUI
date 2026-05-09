@@ -12,6 +12,7 @@ import {
   Timestamp,
   FieldValue,
   orderBy,
+  writeBatch,
 } from 'firebase/firestore';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { getSecondaryAuth, cleanupSecondaryApp, auth } from './config';
@@ -38,6 +39,7 @@ import type {
   QuizQuestion,
   QuickQuizProgress,
   DailyChallengeQuestion,
+  DailyChallengeCompletion,
   CaseStudy,
   CaseStudyContent,
   CaseStudyProgress,
@@ -824,39 +826,56 @@ export async function addAchievement(userId: string, achievement: string): Promi
 }
 
 /**
- * Complete daily challenge and award XP
- * Only awards XP once per day
+ * Complete daily challenge and award XP.
+ * Uses Eastern Time so the day matches the scheduled challenge date.
+ * Stores a full per-challenge completion record so history is preserved
+ * across schedule re-uploads and can be used for certificate requirements.
  */
-export async function completeDailyChallenge(userId: string, xpReward: number = 5): Promise<{ awarded: boolean; alreadyCompleted: boolean }> {
+export async function completeDailyChallenge(
+  userId: string,
+  xpReward: number = 5,
+  challengeId?: string
+): Promise<{ awarded: boolean; alreadyCompleted: boolean }> {
+  const today = getEdtDateString(); // Eastern Time — matches scheduledDate on challenges
+
   const progressRef = doc(db, STUDENT_PROGRESS, userId);
   const snapshot = await getDoc(progressRef);
-
-  if (!snapshot.exists()) {
-    return { awarded: false, alreadyCompleted: false };
-  }
+  if (!snapshot.exists()) return { awarded: false, alreadyCompleted: false };
 
   const data = snapshot.data();
-  const lastDailyChallengeDate = data.lastDailyChallengeDate;
+  const completions: DailyChallengeCompletion[] = data.dailyChallengeCompletions || [];
 
-  // Get today's date in YYYY-MM-DD format
-  const today = new Date().toISOString().split('T')[0];
+  // Already completed today? Check both the new completions array and the legacy date field
+  const alreadyDone =
+    completions.some(c => c.scheduledDate === today) ||
+    data.lastDailyChallengeDate === today;
 
-  // Check if already completed today
-  if (lastDailyChallengeDate === today) {
-    return { awarded: false, alreadyCompleted: true };
+  if (alreadyDone) return { awarded: false, alreadyCompleted: true };
+
+  // Resolve the challenge ID: use provided value, or look up today's active challenge
+  let resolvedId = challengeId;
+  if (!resolvedId) {
+    const active = await getActiveDailyChallengeQuestion();
+    resolvedId = active?.id ?? 'unknown';
   }
 
-  // Award XP and mark as completed
+  const newEntry: DailyChallengeCompletion = {
+    scheduledDate: today,
+    challengeId: resolvedId,
+    completedAt: new Date().toISOString(),
+  };
+
   const currentXP = data.totalXP || 0;
   const newTotalXP = currentXP + xpReward;
   const xpLevel = Math.floor(newTotalXP / 100) + 1;
-  const currentChallengesCompleted = data.dailyChallengesCompleted || 0;
+  const currentCount = data.dailyChallengesCompleted || 0;
 
   await updateDoc(progressRef, {
     totalXP: newTotalXP,
     xpLevel,
     lastDailyChallengeDate: today,
-    dailyChallengesCompleted: currentChallengesCompleted + 1,
+    dailyChallengesCompleted: currentCount + 1,
+    dailyChallengeCompletions: [...completions, newEntry],
     lastActivityAt: serverTimestamp(),
   });
 
@@ -1324,11 +1343,12 @@ export async function addDailyChallengeQuestion(
   options: string[],
   correct: number,
   createdBy: string,
-  explanation?: string
+  explanation?: string,
+  scheduledDate?: string
 ): Promise<DailyChallengeQuestion> {
   const challengeRef = doc(collection(db, DAILY_CHALLENGES));
 
-  const challengeData = {
+  const challengeData: Record<string, unknown> = {
     question,
     options,
     correct,
@@ -1336,6 +1356,8 @@ export async function addDailyChallengeQuestion(
     createdAt: serverTimestamp(),
     createdBy,
   };
+
+  if (scheduledDate) challengeData.scheduledDate = scheduledDate;
 
   await setDoc(challengeRef, challengeData);
 
@@ -1345,6 +1367,7 @@ export async function addDailyChallengeQuestion(
     options,
     correct,
     explanation: explanation || '',
+    scheduledDate,
     createdAt: new Date(),
     createdBy,
   };
@@ -1400,27 +1423,103 @@ export async function getActiveDailyChallenge(): Promise<string | null> {
 }
 
 /**
- * Get the active daily challenge question
+ * Returns today's date string (YYYY-MM-DD) in Eastern Time (handles EDT/EST automatically)
+ */
+export function getEdtDateString(date?: Date): string {
+  return (date || new Date()).toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+}
+
+/**
+ * Get the active daily challenge question.
+ * First checks for a challenge scheduled for today (Eastern Time).
+ * Falls back to the manually-set active challenge for legacy/unscheduled questions.
  */
 export async function getActiveDailyChallengeQuestion(): Promise<DailyChallengeQuestion | null> {
-  const activeChallengeId = await getActiveDailyChallenge();
-  
-  if (!activeChallengeId) {
-    return null;
+  const today = getEdtDateString();
+
+  // Priority: find a challenge whose scheduledDate matches today (Eastern Time)
+  const dateQuery = query(
+    collection(db, DAILY_CHALLENGES),
+    where('scheduledDate', '==', today)
+  );
+  const dateSnapshot = await getDocs(dateQuery);
+
+  if (!dateSnapshot.empty) {
+    const docSnap = dateSnapshot.docs[0];
+    return {
+      id: docSnap.id,
+      ...docSnap.data(),
+      createdAt: (docSnap.data().createdAt as Timestamp)?.toDate() || new Date(),
+    } as DailyChallengeQuestion;
   }
+
+  // Fallback: use the manually-set activeChallengeId from config (legacy behavior)
+  const activeChallengeId = await getActiveDailyChallenge();
+  if (!activeChallengeId) return null;
 
   const challengeRef = doc(db, DAILY_CHALLENGES, activeChallengeId);
   const snapshot = await getDoc(challengeRef);
-
-  if (!snapshot.exists()) {
-    return null;
-  }
+  if (!snapshot.exists()) return null;
 
   return {
     id: snapshot.id,
     ...snapshot.data(),
     createdAt: (snapshot.data().createdAt as Timestamp)?.toDate() || new Date(),
   } as DailyChallengeQuestion;
+}
+
+/**
+ * Delete all documents in the dailyChallenges collection
+ */
+export async function clearAllDailyChallenges(): Promise<void> {
+  const snapshot = await getDocs(collection(db, DAILY_CHALLENGES));
+  if (snapshot.empty) return;
+  const batch = writeBatch(db);
+  snapshot.docs.forEach(d => batch.delete(d.ref));
+  await batch.commit();
+}
+
+/**
+ * Bulk-add up to 30 daily challenge questions (each with a scheduledDate)
+ */
+export async function bulkAddDailyChallengeQuestions(
+  questions: Array<{
+    question: string;
+    options: string[];
+    correct: number;
+    explanation: string;
+    scheduledDate: string;
+  }>,
+  createdBy: string
+): Promise<DailyChallengeQuestion[]> {
+  const batch = writeBatch(db);
+  const added: DailyChallengeQuestion[] = [];
+
+  for (const q of questions) {
+    const ref = doc(collection(db, DAILY_CHALLENGES));
+    batch.set(ref, {
+      question: q.question,
+      options: q.options,
+      correct: q.correct,
+      explanation: q.explanation,
+      scheduledDate: q.scheduledDate,
+      createdAt: serverTimestamp(),
+      createdBy,
+    });
+    added.push({
+      id: ref.id,
+      question: q.question,
+      options: q.options,
+      correct: q.correct,
+      explanation: q.explanation,
+      scheduledDate: q.scheduledDate,
+      createdAt: new Date(),
+      createdBy,
+    });
+  }
+
+  await batch.commit();
+  return added;
 }
 
 // ============== Case Study Functions ==============

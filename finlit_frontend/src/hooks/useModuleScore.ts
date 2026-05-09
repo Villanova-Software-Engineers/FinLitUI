@@ -16,6 +16,7 @@ import {
   getQuickQuizProgress,
   getCurrentQuizVersion,
   incrementQuickQuizCompleted,
+  isModuleAccessible,
 } from '../firebase/firestore.service';
 import type { StudentProgress, ModuleScore, CrosswordProgress, QuizQuestion, QuickQuizProgress } from '../auth/types/auth.types';
 
@@ -88,7 +89,7 @@ interface UseModuleScoreReturn {
   isModulePassed: (moduleId: ModuleId) => boolean;
   resetModule: (moduleId: ModuleId) => Promise<void>;
   refreshProgress: () => Promise<void>;
-  submitDailyChallenge: () => Promise<{ awarded: boolean; alreadyCompleted: boolean }>;
+  submitDailyChallenge: (challengeId?: string) => Promise<{ awarded: boolean; alreadyCompleted: boolean }>;
   // Crossword functions
   saveCrossword: (answers: { [key: string]: string }, newlyCorrectWords: string[], allCorrectWords: string[]) => Promise<SaveCrosswordResult>;
   loadCrosswordProgress: () => Promise<CrosswordProgress | null>;
@@ -146,6 +147,14 @@ export const useModuleScore = (): UseModuleScoreReturn => {
     const module = Object.values(MODULES).find(m => m.id === moduleId);
     if (!module) {
       throw new Error('Invalid module ID');
+    }
+
+    // Check if module is accessible (not locked by admin) for students
+    if (user.role === 'student' && user.organizationId) {
+      const accessible = await isModuleAccessible(user.organizationId, moduleId);
+      if (!accessible) {
+        throw new Error('Module is locked by instructor');
+      }
     }
 
     const moduleScore = {
@@ -256,13 +265,13 @@ export const useModuleScore = (): UseModuleScoreReturn => {
   }, [user, refreshProgress]);
 
   // Submit daily challenge and award XP (5 XP, once per day)
-  const submitDailyChallenge = useCallback(async (): Promise<{ awarded: boolean; alreadyCompleted: boolean }> => {
+  const submitDailyChallenge = useCallback(async (challengeId?: string): Promise<{ awarded: boolean; alreadyCompleted: boolean }> => {
     if (!user) {
       return { awarded: false, alreadyCompleted: false };
     }
 
     try {
-      const result = await completeDailyChallenge(user.id, 5);
+      const result = await completeDailyChallenge(user.id, 5, challengeId);
       if (result.awarded) {
         await refreshProgress();
       }

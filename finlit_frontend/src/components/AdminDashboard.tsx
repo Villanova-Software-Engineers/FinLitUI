@@ -42,6 +42,7 @@ import {
   UserCog,
   Lock,
   CalendarDays,
+  Flame,
 } from 'lucide-react';
 import { useAuthContext } from '../auth/context/AuthContext';
 import {
@@ -241,6 +242,8 @@ const AdminDashboard: React.FC = () => {
         'Email': student.email,
         'Total XP': student.progress?.totalXP ?? 0,
         'Streak': student.progress?.streak ?? 0,
+        'Daily Challenges Completed': student.progress?.dailyChallengesCompleted ?? 0,
+        'Last Daily Challenge': student.progress?.lastDailyChallengeDate ?? 'Never',
         'Modules Passed': passedCount,
         'Total Modules': allSystemModules,
         'Registered': student.registeredAt.toLocaleDateString(),
@@ -685,6 +688,124 @@ const AdminDashboard: React.FC = () => {
                     </div>
                   ) : (
                 <div className="space-y-6">
+                  {/* Module Aggregate Stats */}
+                  <div className={`${darkMode ? 'bg-navy-700' : 'bg-gradient-to-br from-brand-50 to-blue-50'} rounded-xl p-6 border ${darkMode ? 'border-navy-600' : 'border-brand-200'}`}>
+                    <div className="flex items-center gap-3 mb-5">
+                      <div className="w-12 h-12 bg-gradient-to-br from-brand-400 to-brand-600 rounded-xl flex items-center justify-center">
+                        <BookOpen className="text-white" size={24} />
+                      </div>
+                      <div>
+                        <h3 className={`text-lg font-bold ${textClass}`}>Module Progress</h3>
+                        <p className={`text-sm ${textSecondaryClass}`}>{Object.values(MODULES).length} modules · per-module pass rates across the class</p>
+                      </div>
+                    </div>
+
+                    {/* Summary row */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                      <div>
+                        <p className={`text-xs font-semibold ${textSecondaryClass} uppercase tracking-wide mb-1`}>Avg Modules Passed</p>
+                        <p className={`text-3xl font-bold ${textClass}`}>
+                          {students.length > 0
+                            ? Math.round(students.reduce((sum, s) => sum + (s.progress?.moduleScores?.filter(m => m.passed).length ?? 0), 0) / students.length)
+                            : 0}
+                          <span className={`text-base font-normal ${textSecondaryClass} ml-1`}>/ {Object.values(MODULES).length}</span>
+                        </p>
+                      </div>
+                      <div>
+                        <p className={`text-xs font-semibold ${textSecondaryClass} uppercase tracking-wide mb-1`}>Completed All Modules</p>
+                        <p className={`text-3xl font-bold ${textClass}`}>
+                          {students.filter(s => (s.progress?.moduleScores?.filter(m => m.passed).length ?? 0) >= Object.values(MODULES).length).length}
+                          <span className={`text-base font-normal ${textSecondaryClass} ml-1`}>/ {students.length}</span>
+                        </p>
+                      </div>
+                      <div>
+                        <p className={`text-xs font-semibold ${textSecondaryClass} uppercase tracking-wide mb-1`}>Overall Pass Rate</p>
+                        <p className={`text-3xl font-bold text-brand-500`}>
+                          {(() => {
+                            const totalAttempts = students.reduce((sum, s) => sum + (s.progress?.moduleScores?.length ?? 0), 0);
+                            const totalPassed = students.reduce((sum, s) => sum + (s.progress?.moduleScores?.filter(m => m.passed).length ?? 0), 0);
+                            return totalAttempts > 0 ? Math.round((totalPassed / totalAttempts) * 100) : 0;
+                          })()}%
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Per-module table */}
+                    <div className="overflow-x-auto max-h-96 overflow-y-auto rounded-xl border border-slate-200/60">
+                      <table className="w-full text-sm">
+                        <thead className={`sticky top-0 ${darkMode ? 'bg-navy-800' : 'bg-white'} border-b ${darkMode ? 'border-navy-600' : 'border-gray-200'}`}>
+                          <tr>
+                            <th className={`text-left px-4 py-3 font-semibold ${textSecondaryClass} text-xs uppercase tracking-wide`}>Module</th>
+                            <th className={`text-center px-4 py-3 font-semibold ${textSecondaryClass} text-xs uppercase tracking-wide w-24`}>Attempted</th>
+                            <th className={`text-center px-4 py-3 font-semibold ${textSecondaryClass} text-xs uppercase tracking-wide w-20`}>Passed</th>
+                            <th className={`text-left px-4 py-3 font-semibold ${textSecondaryClass} text-xs uppercase tracking-wide w-44`}>Pass Rate</th>
+                            <th className={`text-center px-4 py-3 font-semibold ${textSecondaryClass} text-xs uppercase tracking-wide w-24`}>Avg Score</th>
+                          </tr>
+                        </thead>
+                        <tbody className={`divide-y ${darkMode ? 'divide-navy-600' : 'divide-gray-100'}`}>
+                          {(() => {
+                            const moduleStats = Object.values(MODULES).map(mod => {
+                              const attempted = students.filter(s => s.progress?.moduleScores?.some(m => m.moduleId === mod.id));
+                              const passed = students.filter(s => s.progress?.moduleScores?.some(m => m.moduleId === mod.id && m.passed));
+                              const scores = students.flatMap(s => s.progress?.moduleScores?.filter(m => m.moduleId === mod.id).map(m => m.score) ?? []);
+                              const avgScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
+                              const passRate = attempted.length > 0 ? Math.round((passed.length / attempted.length) * 100) : 0;
+                              return { id: mod.id, name: mod.name, attempted: attempted.length, passed: passed.length, passRate, avgScore };
+                            }).sort((a, b) => b.passRate - a.passRate || b.attempted - a.attempted);
+
+                            return moduleStats.map(mod => (
+                              <tr key={mod.id} className={`${darkMode ? 'hover:bg-navy-600' : 'hover:bg-gray-50'} transition-colors`}>
+                                <td className={`px-4 py-3 font-medium ${textClass}`}>{mod.name}</td>
+                                <td className={`px-4 py-3 text-center ${textSecondaryClass}`}>
+                                  {mod.attempted > 0 ? (
+                                    <span className={`font-semibold ${textClass}`}>{mod.attempted}</span>
+                                  ) : (
+                                    <span className={textSecondaryClass}>—</span>
+                                  )}
+                                </td>
+                                <td className="px-4 py-3 text-center">
+                                  {mod.passed > 0 ? (
+                                    <span className="font-semibold text-green-500">{mod.passed}</span>
+                                  ) : (
+                                    <span className={textSecondaryClass}>—</span>
+                                  )}
+                                </td>
+                                <td className="px-4 py-3">
+                                  {mod.attempted > 0 ? (
+                                    <div className="flex items-center gap-2">
+                                      <div className={`flex-1 h-2 rounded-full ${darkMode ? 'bg-navy-600' : 'bg-gray-200'}`}>
+                                        <div
+                                          className={`h-2 rounded-full transition-all ${
+                                            mod.passRate >= 70 ? 'bg-green-500' :
+                                            mod.passRate >= 40 ? 'bg-amber-500' : 'bg-red-400'
+                                          }`}
+                                          style={{ width: `${mod.passRate}%` }}
+                                        />
+                                      </div>
+                                      <span className={`text-xs font-bold w-9 text-right ${
+                                        mod.passRate >= 70 ? 'text-green-500' :
+                                        mod.passRate >= 40 ? 'text-amber-500' : 'text-red-400'
+                                      }`}>{mod.passRate}%</span>
+                                    </div>
+                                  ) : (
+                                    <span className={`text-xs ${textSecondaryClass}`}>Not attempted</span>
+                                  )}
+                                </td>
+                                <td className="px-4 py-3 text-center">
+                                  {mod.avgScore > 0 ? (
+                                    <span className={`font-semibold ${textClass}`}>{mod.avgScore}</span>
+                                  ) : (
+                                    <span className={textSecondaryClass}>—</span>
+                                  )}
+                                </td>
+                              </tr>
+                            ));
+                          })()}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
                   {/* Crossword Stats */}
                   <div className={`${darkMode ? 'bg-navy-700' : 'bg-gradient-to-br from-purple-50 to-pink-50'} rounded-xl p-6 border ${darkMode ? 'border-navy-600' : 'border-purple-200'}`}>
                     <div className="flex items-center gap-3 mb-4">
@@ -754,6 +875,43 @@ const AdminDashboard: React.FC = () => {
                             const totalCorrect = students.reduce((sum, s) => sum + (s.progress?.quickQuizProgress?.correctAnswers.length ?? 0), 0);
                             return totalAnswered > 0 ? Math.round((totalCorrect / totalAnswered) * 100) : 0;
                           })()}%
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Daily Challenge Stats */}
+                  <div className={`${darkMode ? 'bg-navy-700' : 'bg-gradient-to-br from-amber-50 to-orange-50'} rounded-xl p-6 border ${darkMode ? 'border-navy-600' : 'border-amber-200'}`}>
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center">
+                        <Flame className="text-white" size={24} />
+                      </div>
+                      <h3 className={`text-lg font-bold ${textClass}`}>Daily Challenges</h3>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <p className={`text-xs font-semibold ${textSecondaryClass} uppercase tracking-wide mb-1`}>Participation</p>
+                        <p className={`text-3xl font-bold ${textClass}`}>
+                          {students.filter(s => (s.progress?.dailyChallengesCompleted ?? 0) > 0).length}/{students.length}
+                        </p>
+                        <p className={`text-sm ${textSecondaryClass} mt-1`}>
+                          {students.length > 0
+                            ? Math.round((students.filter(s => (s.progress?.dailyChallengesCompleted ?? 0) > 0).length / students.length) * 100)
+                            : 0}% completed at least one
+                        </p>
+                      </div>
+                      <div>
+                        <p className={`text-xs font-semibold ${textSecondaryClass} uppercase tracking-wide mb-1`}>Avg per Student</p>
+                        <p className={`text-3xl font-bold ${textClass}`}>
+                          {students.length > 0
+                            ? Math.round(students.reduce((sum, s) => sum + (s.progress?.dailyChallengesCompleted ?? 0), 0) / students.length)
+                            : 0}
+                        </p>
+                      </div>
+                      <div>
+                        <p className={`text-xs font-semibold ${textSecondaryClass} uppercase tracking-wide mb-1`}>Total Completions</p>
+                        <p className={`text-3xl font-bold text-amber-500`}>
+                          {students.reduce((sum, s) => sum + (s.progress?.dailyChallengesCompleted ?? 0), 0)}
                         </p>
                       </div>
                     </div>
@@ -1257,6 +1415,61 @@ const AdminDashboard: React.FC = () => {
                           })()}
                         </div>
 
+                        {/* Daily Challenges Section */}
+                        <div className={`mt-10 pt-8 border-t ${darkMode ? 'border-navy-700' : 'border-gray-200'}`}>
+                          <h4 className={`text-lg font-bold ${textClass} mb-4 flex items-center gap-2`}>
+                            <Flame className="text-amber-500" size={20} />
+                            Daily Challenges
+                          </h4>
+                          <div className={`${darkMode ? 'bg-navy-700' : 'bg-gradient-to-br from-amber-50 to-orange-50'} rounded-xl p-4 border ${darkMode ? 'border-navy-600' : 'border-amber-200'}`}>
+                            <div className="grid grid-cols-2 gap-4 mb-4">
+                              <div>
+                                <p className={`text-xs font-semibold ${textSecondaryClass} uppercase tracking-wide mb-1`}>Total Completed</p>
+                                <p className={`text-3xl font-bold ${textClass}`}>
+                                  {selectedStudent.progress?.dailyChallengesCompleted ?? 0}
+                                </p>
+                              </div>
+                              <div>
+                                <p className={`text-xs font-semibold ${textSecondaryClass} uppercase tracking-wide mb-1`}>Last Completed</p>
+                                <p className={`text-sm font-medium ${textClass} mt-1`}>
+                                  {selectedStudent.progress?.lastDailyChallengeDate
+                                    ? new Date(selectedStudent.progress.lastDailyChallengeDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+                                    : <span className={textSecondaryClass}>Never</span>}
+                                </p>
+                              </div>
+                            </div>
+                            {selectedStudent.progress?.dailyChallengeCompletions && selectedStudent.progress.dailyChallengeCompletions.length > 0 && (
+                              <div>
+                                <p className={`text-xs font-semibold ${textSecondaryClass} uppercase tracking-wide mb-2`}>
+                                  Completion History ({selectedStudent.progress.dailyChallengeCompletions.length})
+                                </p>
+                                <div className="overflow-x-auto max-h-48 overflow-y-auto">
+                                  <table className="w-full text-sm">
+                                    <thead>
+                                      <tr className={textSecondaryClass}>
+                                        <th className="text-left pb-2 font-semibold">#</th>
+                                        <th className="text-left pb-2 font-semibold">Challenge Date</th>
+                                        <th className="text-left pb-2 font-semibold">Completed At</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {[...selectedStudent.progress.dailyChallengeCompletions]
+                                        .sort((a, b) => b.scheduledDate.localeCompare(a.scheduledDate))
+                                        .map((entry, idx) => (
+                                          <tr key={idx} className={textClass}>
+                                            <td className="py-1.5">{selectedStudent.progress!.dailyChallengeCompletions!.length - idx}</td>
+                                            <td>{new Date(entry.scheduledDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
+                                            <td className={textSecondaryClass}>{formatDateTime(new Date(entry.completedAt))}</td>
+                                          </tr>
+                                        ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
                         {/* Money Personality Section */}
                         <div className={`mt-10 pt-8 border-t ${darkMode ? 'border-navy-700' : 'border-gray-200'}`}>
                           <h4 className={`text-lg font-bold ${textClass} mb-4 flex items-center gap-2`}>
@@ -1346,6 +1559,7 @@ const AdminDashboard: React.FC = () => {
                               <th className={`px-6 py-4 text-left text-xs font-bold ${textSecondaryClass} uppercase tracking-wide`}>Student</th>
                               <th className={`px-6 py-4 text-left text-xs font-bold ${textSecondaryClass} uppercase tracking-wide`}>XP</th>
                               <th className={`px-6 py-4 text-left text-xs font-bold ${textSecondaryClass} uppercase tracking-wide`}>Progress</th>
+                              <th className={`px-6 py-4 text-left text-xs font-bold ${textSecondaryClass} uppercase tracking-wide`}>Daily Challenges</th>
                               <th className={`px-6 py-4 text-left text-xs font-bold ${textSecondaryClass} uppercase tracking-wide`}>Case Study</th>
                               <th className={`px-6 py-4 text-right text-xs font-bold ${textSecondaryClass} uppercase tracking-wide`}>Actions</th>
                             </tr>
@@ -1387,6 +1601,25 @@ const AdminDashboard: React.FC = () => {
                                           className="bg-gradient-to-r from-brand-400 to-brand-500 h-2 rounded-full transition-all duration-300"
                                           style={{width: `${progressPercentage}%`}}
                                         ></div>
+                                      </div>
+                                    </div>
+                                  </td>
+                                  <td className="px-6 py-4">
+                                    <div className="flex items-center gap-2">
+                                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${
+                                        (student.progress?.dailyChallengesCompleted ?? 0) > 0
+                                          ? 'bg-gradient-to-br from-amber-400 to-orange-500'
+                                          : darkMode ? 'bg-navy-600' : 'bg-gray-100'
+                                      }`}>
+                                        <Flame size={14} className={
+                                          (student.progress?.dailyChallengesCompleted ?? 0) > 0 ? 'text-white' : textSecondaryClass
+                                        } />
+                                      </div>
+                                      <div>
+                                        <span className={`text-sm font-bold ${textClass}`}>
+                                          {student.progress?.dailyChallengesCompleted ?? 0}
+                                        </span>
+                                        <span className={`text-xs ${textSecondaryClass} ml-1`}>done</span>
                                       </div>
                                     </div>
                                   </td>

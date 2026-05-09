@@ -9,7 +9,7 @@ import type { CertificateData } from '../auth/types/auth.types';
 // Certificate requirements
 const CERT_REQUIREMENTS = {
   CASE_STUDIES: 15,
-  DAILY_CHALLENGES: 4,
+  DAILY_CHALLENGES: 30,
   QUICK_QUIZZES: 1,
   PERSONALITY_TEST: 1,
 };

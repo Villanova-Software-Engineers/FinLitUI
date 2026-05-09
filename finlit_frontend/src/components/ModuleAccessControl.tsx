@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Lock, Play, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
 import { useModuleScore, MODULES, type ModuleId } from '../hooks/useModuleScore';
 import { useAuthContext } from '../auth/context/AuthContext';
-import { getScheduleForContent } from '../firebase/firestore.service';
+import { getScheduleForContent, isModuleAccessible as checkModuleAccessibility } from '../firebase/firestore.service';
 import type { ContentSchedule } from '../auth/types/auth.types';
 
 interface ModuleAccessControlProps {
@@ -35,6 +35,10 @@ const MODULE_ORDER: ModuleId[] = [
   MODULES.INVESTMENT_VEHICLES.id,
   MODULES.REAL_ESTATE.id,
   MODULES.RETIREMENT_ACCOUNTS.id,
+  MODULES.ACCOUNTING.id,
+  MODULES.BALANCE_SHEET.id,
+  MODULES.INCOME_STATEMENT.id,
+  MODULES.CASH_FLOW_STATEMENT.id,
   MODULES.CRYPTO.id,
   MODULES.INVESTMENT_BANKING.id,
   MODULES.GIVING.id,
@@ -57,6 +61,7 @@ const ModuleAccessControl: React.FC<ModuleAccessControlProps> = ({
   const { user } = useAuthContext();
 
   const [schedule, setSchedule] = useState<ContentSchedule | null | 'loading'>('loading');
+  const [adminAccessible, setAdminAccessible] = useState<boolean | 'loading'>('loading');
 
   // Load schedule for this module + classCode (students only)
   useEffect(() => {
@@ -68,6 +73,19 @@ const ModuleAccessControl: React.FC<ModuleAccessControlProps> = ({
     getScheduleForContent(user.classCode, 'module', moduleId)
       .then(s => { if (!cancelled) setSchedule(s); })
       .catch(() => { if (!cancelled) setSchedule(null); });
+    return () => { cancelled = true; };
+  }, [user, moduleId]);
+
+  // Load admin accessibility for this module (students only)
+  useEffect(() => {
+    if (!user || user.role !== 'student' || !user.organizationId) {
+      setAdminAccessible(true); // Non-students or students without org have access
+      return;
+    }
+    let cancelled = false;
+    checkModuleAccessibility(user.organizationId, moduleId)
+      .then(accessible => { if (!cancelled) setAdminAccessible(accessible); })
+      .catch(() => { if (!cancelled) setAdminAccessible(false); }); // Default to locked on error
     return () => { cancelled = true; };
   }, [user, moduleId]);
 
@@ -83,8 +101,8 @@ const ModuleAccessControl: React.FC<ModuleAccessControlProps> = ({
     return <>{children}</>;
   }
 
-  // Show loading spinner while schedule is being fetched
-  if (schedule === 'loading') {
+  // Show loading spinner while schedule and accessibility are being fetched
+  if (schedule === 'loading' || adminAccessible === 'loading') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
@@ -156,6 +174,47 @@ const ModuleAccessControl: React.FC<ModuleAccessControlProps> = ({
                 <p className="text-lg font-bold text-red-900 mt-1">{formatDate(schedule.dueDate)}</p>
                 <p className="text-xs text-red-600 mt-2">Contact your instructor if you need access</p>
               </div>
+            </div>
+            <div className="space-y-3">
+              <button
+                onClick={() => navigate('/game')}
+                className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-gradient-to-r from-red-500 to-orange-600 text-white rounded-xl hover:from-red-600 hover:to-orange-700 transition-all font-semibold shadow-md"
+              >
+                <Play className="w-5 h-5" fill="currentColor" />
+                View Learning Path
+              </button>
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all font-semibold"
+              >
+                <ArrowLeft className="w-5 h-5" />
+                Back to Dashboard
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Admin lock check: module locked by instructor
+  if (adminAccessible === false) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-100 flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+          <div className="bg-gradient-to-r from-red-500 to-orange-600 px-6 py-8 text-center">
+            <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Lock className="w-10 h-10 text-white" />
+            </div>
+            <h1 className="text-2xl font-bold text-white mb-2">Module Locked by Instructor</h1>
+            <p className="text-red-100 text-sm">This module has been locked by your instructor</p>
+          </div>
+          <div className="p-6">
+            <div className="text-center mb-6">
+              <h2 className="text-xl font-bold text-gray-800 mb-3">{moduleName}</h2>
+              <p className="text-gray-600 text-sm leading-relaxed">
+                Your instructor has restricted access to this module. Contact them if you need access.
+              </p>
             </div>
             <div className="space-y-3">
               <button

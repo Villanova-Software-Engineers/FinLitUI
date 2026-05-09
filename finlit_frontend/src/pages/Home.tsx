@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { useAuthContext } from '../auth/context/AuthContext';
 import { useModuleScore, MODULES } from '../hooks/useModuleScore';
 import HowToPlayModal from '../components/HowToPlayModal';
-import { getActiveDailyChallengeQuestion, getActiveCaseStudy } from '../firebase/firestore.service';
+import { getActiveDailyChallengeQuestion, getActiveCaseStudy, getEdtDateString } from '../firebase/firestore.service';
 import type { CaseStudy } from '../auth/types/auth.types';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase/config';
@@ -192,6 +192,7 @@ const FinLitApp: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showHowToPlay, setShowHowToPlay] = useState(false);
   const [previousChallengeId, setPreviousChallengeId] = useState<string | null>(null);
+  const [activeChallengeId, setActiveChallengeId] = useState<string | null>(null);
   const [showChallengeUpdateNotification, setShowChallengeUpdateNotification] = useState(false);
   const [activeCaseStudy, setActiveCaseStudy] = useState<CaseStudy | null>(null);
 
@@ -240,9 +241,9 @@ const FinLitApp: React.FC = () => {
             setShowChallengeUpdateNotification(true);
             setTimeout(() => setShowChallengeUpdateNotification(false), 4000);
           } else {
-            // Check if user already completed today's challenge
+            // Check if user already completed today's challenge (use Eastern Time to match challenge schedule)
             if (progress?.lastDailyChallengeDate) {
-              const today = new Date().toISOString().split('T')[0];
+              const today = getEdtDateString();
               if (progress.lastDailyChallengeDate === today) {
                 setAnswered(true);
                 setIsCorrect(true);
@@ -251,14 +252,15 @@ const FinLitApp: React.FC = () => {
             }
           }
           setPreviousChallengeId(activeChallenge.id);
+          setActiveChallengeId(activeChallenge.id);
         } else {
           // No active challenge, use default
           const defaultQ = DEFAULT_DAILY_QUESTIONS[new Date().getDate() % DEFAULT_DAILY_QUESTIONS.length];
           setDailyQuestion(defaultQ);
 
-          // Check if user already completed today's challenge
+          // Check if user already completed today's challenge (use Eastern Time to match challenge schedule)
           if (progress?.lastDailyChallengeDate) {
-            const today = new Date().toISOString().split('T')[0];
+            const today = getEdtDateString();
             if (progress.lastDailyChallengeDate === today) {
               setAnswered(true);
               setIsCorrect(true);
@@ -596,8 +598,8 @@ const FinLitApp: React.FC = () => {
     setAnswered(true);
 
     if (correct) {
-      // Award XP for correct answer (only once per day)
-      const result = await submitDailyChallenge();
+      // Award XP for correct answer (only once per day); pass challenge ID for completion history
+      const result = await submitDailyChallenge(activeChallengeId ?? undefined);
       if (result.awarded) {
         setXpAwarded(true);
       } else if (result.alreadyCompleted) {
@@ -1349,8 +1351,8 @@ const FinLitApp: React.FC = () => {
                   const reqs = [
                     { label: `All ${totalModules} Modules`, met: completedModules === totalModules, progress: `${completedModules}/${totalModules}`, icon: '🎯', route: '/game' },
                     { label: '15 Case Studies', met: caseStudiesDone >= 15, progress: `${Math.min(caseStudiesDone, 15)}/15`, icon: '📚', route: '/case-study' },
-                    { label: '4 Daily Challenges', met: dailyDone >= 4, progress: `${Math.min(dailyDone, 4)}/4`, icon: '⚡', route: '#daily-challenge' },
-                    { label: '1 Quick Quiz', met: quizDone >= 1, progress: `${Math.min(quizDone, 1)}/1`, icon: '🧠', route: '/economic-quiz' },
+                    { label: '30 Daily Challenges', met: dailyDone >= 30, progress: `${Math.min(dailyDone, 30)}/30`, icon: '⚡', route: '#daily-challenge' },
+                    { label: '5 Quick Quiz', met: quizDone >= 5, progress: `${Math.min(quizDone, 5)}/5`, icon: '🧠', route: '/economic-quiz' },
                     { label: '1 Personality Test', met: personalityDone, progress: personalityDone ? '1/1' : '0/1', icon: '💭', route: '/money-personality' },
                   ];
 
