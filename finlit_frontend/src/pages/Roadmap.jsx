@@ -53,34 +53,32 @@ const pathDrawProgress = useTransform(scrollYProgress, [0, 0.7], [0, 1]);
     MODULES.BANKING.id,                // 4. Banking Basics
     MODULES.EMERGENCY_FUND.id,         // 5. Emergency Fund
 
-    // Phase 2 — Financial Statements
-    MODULES.CASH_FLOW_STATEMENT.id,    // 6. Cash Flow Statement
-
-    // Phase 3 — Taxes, Saving & Credit
-    MODULES.TAX_BASICS.id,             // 7. Tax Basics
-    MODULES.INTEREST_RATES.id,         // 8. Interest Rates
-    MODULES.CREDIT_SCORE.id,           // 9. Credit Score Mastery
-    MODULES.DEBT_MANAGEMENT.id,        // 10. Debt Management
-    MODULES.CONSUMER_TRAPS.id,         // 11. Consumer Traps
+    // Phase 2 — Taxes, Saving & Credit
+    MODULES.TAX_BASICS.id,             // 6. Tax Basics
+    MODULES.INTEREST_RATES.id,         // 7. Interest Rates
+    MODULES.CREDIT_SCORE.id,           // 8. Credit Score Mastery
+    MODULES.DEBT_MANAGEMENT.id,        // 9. Debt Management
+    MODULES.CONSUMER_TRAPS.id,         // 10. Consumer Traps
 
     // Phase 3 — Protection
-    MODULES.RISK_TAKING.id,            // 12. Risk Management
-    MODULES.INSURANCE.id,              // 13. Insurance Protection
-    MODULES.FINANCIAL_SAFETY.id,       // 14. Financial Safety
+    MODULES.RISK_TAKING.id,            // 11. Risk Management
+    MODULES.INSURANCE.id,              // 12. Insurance Protection
+    MODULES.FINANCIAL_SAFETY.id,       // 13. Financial Safety
 
     // Phase 4 — Investing & Assets
-    MODULES.COMPOUNDING.id,            // 15. Power of Compounding
-    MODULES.INFLATION_DEFLATION.id,    // 16. Inflation & Deflation
-    MODULES.BONDS.id,                  // 17. Bonds
-    MODULES.STOCK_MARKET.id,           // 18. Stock Market Basics
-    MODULES.INVESTMENT_VEHICLES.id,    // 19. Investment Vehicles
-    MODULES.REAL_ESTATE.id,            // 20. Real Estate
-    MODULES.RETIREMENT_ACCOUNTS.id,    // 21. Retirement Accounts
+    MODULES.COMPOUNDING.id,            // 14. Power of Compounding
+    MODULES.INFLATION_DEFLATION.id,    // 15. Inflation & Deflation
+    MODULES.BONDS.id,                  // 16. Bonds
+    MODULES.STOCK_MARKET.id,           // 17. Stock Market Basics
+    MODULES.INVESTMENT_VEHICLES.id,    // 18. Investment Vehicles
+    MODULES.REAL_ESTATE.id,            // 19. Real Estate
+    MODULES.RETIREMENT_ACCOUNTS.id,    // 20. Retirement Accounts
 
     // Phase 5 — Accounting
-    MODULES.ACCOUNTING.id,             // 22. What is Accounting
-    MODULES.BALANCE_SHEET.id,          // 23. Balance Sheet
-    MODULES.INCOME_STATEMENT.id,       // 24. Income Statement
+    MODULES.ACCOUNTING.id,             // 21. What is Accounting
+    MODULES.BALANCE_SHEET.id,          // 22. Balance Sheet
+    MODULES.INCOME_STATEMENT.id,       // 23. Income Statement
+    MODULES.CASH_FLOW_STATEMENT.id,    // 24. Cash Flow Statement
 
     // Phase 6 — Advanced (Chapter 3)
     MODULES.CRYPTO.id,                 // 25. Crypto Fundamentals

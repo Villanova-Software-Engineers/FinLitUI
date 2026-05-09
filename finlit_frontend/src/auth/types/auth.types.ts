@@ -131,6 +131,7 @@ export interface DailyChallengeQuestion {
   explanation: string; // Explanation for the correct answer
   createdAt: Date;
   createdBy: string;
+  scheduledDate?: string; // YYYY-MM-DD (Eastern Time) — used for auto-rotation
 }
 
 // Saved Financial Tool Calculation
@@ -141,6 +142,13 @@ export interface SavedCalculation {
   data: Record<string, any>;
   results: Record<string, any>;
   savedAt: Date;
+}
+
+// Per-challenge completion record (preserves history across schedule re-uploads)
+export interface DailyChallengeCompletion {
+  scheduledDate: string;  // YYYY-MM-DD Eastern Time — the date the challenge was served
+  challengeId: string;    // Firestore document ID of the challenge
+  completedAt: string;    // ISO timestamp of when the user answered correctly
 }
 
 // Student progress document in Firestore
@@ -163,6 +171,7 @@ export interface StudentProgress {
   caseStudyProgress?: CaseStudyProgress[]; // Case study completion history
   savedCalculations?: SavedCalculation[]; // Financial tools saved calculations
   dailyChallengesCompleted?: number; // Total daily challenges completed (for certificate)
+  dailyChallengeCompletions?: DailyChallengeCompletion[]; // Full per-day completion history
   quickQuizzesCompleted?: number; // Total quick quiz sets completed (for certificate)
   certificateData?: CertificateData; // Certificate data (persisted on first generation)
 }
